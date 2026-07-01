@@ -598,7 +598,7 @@ const firebaseConfig = {
   measurementId:     "G-LSVKHVY5WH"
 };
 const BOSS_EMAILS  = [ "peter.durana@cromwell.sk", "sef@cromwell.sk" ];
-const ADMIN_EMAILS = [];   // doplň e-maily adminov ak treba
+const ADMIN_EMAILS = [ "miroslava.stalmaskova@cromwell.sk" ];
 const LIDER_EMAILS = {     // email → segmenty ktoré líder riadi
   "katarina.chmelova@cromwell.sk": ["ad","nad"],
   "michal.svec@cromwell.sk":       ["tlac"],
@@ -921,10 +921,45 @@ async function boot(){
   if(USE_FIREBASE){
     try{ backend=await firebaseBackend(); }
     catch(err){ console.error(err); banner("Nepodarilo sa načítať Firebase — skontroluj config a pripojenie. Beží demo režim."); backend=demoBackend(); demoStart(); return; }
-    banner(`Ostrý režim — Firebase projekt <b>${esc(firebaseConfig.projectId)}</b>. Záznamy sa zdieľajú medzi prihlásenými.`);
-    backend.onUser(u=>{ if(u){ state.user=u; showApp(); buildStatic(); backend.start(); render(); } else showLogin(); });
+    backend.onUser(u=>{
+      if(u){
+        state.user=u; showApp(); buildStatic(); backend.start(); render();
+        // Banner s tlačidlom importu (zobrazí sa len ak je DB prázdna)
+        setTimeout(async()=>{
+          const isEmpty = state.all.length===0;
+          const b=$("#banner"); b.classList.remove("hidden");
+          if(isEmpty){
+            b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <span class="grow">Databáza je prázdna. Chceš importovať reálne dáta z porád?</span>
+              <button id="importBtn" class="ai-btn" style="white-space:nowrap">⬇ Importovať dáta z porád</button>
+              <button id="skipImport" style="background:none;border:none;color:inherit;cursor:pointer;padding:4px 8px;font-weight:600">Preskočiť</button>`;
+            $("#skipImport").onclick=()=>b.classList.add("hidden");
+            $("#importBtn").onclick=()=>importDemoData();
+          } else {
+            b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+              <span class="grow">Ostrý režim — Firebase projekt <b>${esc(firebaseConfig.projectId)}</b>.</span>
+              <button onclick="document.getElementById('banner').classList.add('hidden')" style="background:none;border:none;color:inherit;cursor:pointer;padding:4px 8px;font-weight:600">✕</button>`;
+          }
+        }, 1500);
+      } else showLogin();
+    });
     wireLogin();
   } else { backend=demoBackend(); demoStart(); }
+}
+
+async function importDemoData(){
+  const btn=$("#importBtn");
+  btn.textContent="⏳ Importujem…"; btn.disabled=true;
+  const data=demoSeed();
+  let done=0;
+  for(const entry of data){
+    const {_suggested,...clean}=entry;
+    await backend.save({...clean, ownerUid:"demo_import"});
+    done++;
+    btn.textContent=`⏳ ${done}/${data.length}…`;
+  }
+  toast(`✓ Importovaných ${done} záznamov!`);
+  $("#banner").classList.add("hidden");
 }
 function demoStart(){
   banner(`Ukážkový (demo) režim — naplnené reálnymi záznamami z porád, vrátane cross-sell klientov a histórie. Dáta sú len v pamäti.`, true);
