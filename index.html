@@ -589,14 +589,24 @@ document.getElementById("loginLogo").src = LOGO;
    Vlož Firebase config → ostrý režim: prihlasovanie + spoločná databáza.
    ============================================================================ */
 const firebaseConfig = {
-  apiKey: "AIzaSyAi271i_qgsKiAeVBFOCbUfKccgyBClxSc",
-  authDomain: "cromwellgroup-tyzdenny-report.firebaseapp.com",
-  projectId: "cromwellgroup-tyzdenny-report",
-  storageBucket: "cromwellgroup-tyzdenny-report.firebasestorage.app",
+  apiKey:            "AIzaSyAi271i_qgsKiAeVBFOCbUfKccgyBClxSc",
+  authDomain:        "cromwellgroup-tyzdenny-report.firebaseapp.com",
+  projectId:         "cromwellgroup-tyzdenny-report",
+  storageBucket:     "cromwellgroup-tyzdenny-report.firebasestorage.app",
   messagingSenderId: "998598557554",
-  appId: "1:998598557554:web:dcf8a546fcf8423386e7eb",
-  measurementId: "G-LSVKHVY5WH"
+  appId:             "1:998598557554:web:dcf8a546fcf8423386e7eb",
+  measurementId:     "G-LSVKHVY5WH"
 };
+const BOSS_EMAILS  = [ "peter.durana@cromwell.sk", "sef@cromwell.sk" ];
+const ADMIN_EMAILS = [];   // doplň e-maily adminov ak treba
+const LIDER_EMAILS = {     // email → segmenty ktoré líder riadi
+  "katarina.chmelova@cromwell.sk": ["ad","nad"],
+  "michal.svec@cromwell.sk":       ["tlac"],
+  "adrian.csuba@digitance.sk":     ["digital"],
+  "lorincz@kolos.sk":              ["baliky"],
+  "miroslav.cvacho@zelenaposta.sk":["zelena"],
+};
+const USE_FIREBASE = !Object.values(firebaseConfig).some(v => v === "VLOZ_SEM" || !v);
 
 /* ============================================================================
    SLUŽBY & STAVY
@@ -855,10 +865,25 @@ async function firebaseBackend(){
   let unsub=null;
   async function resolveUser(u){
     const ref=doc(db,"users",u.uid); const snap=await getDoc(ref); let data=snap.exists()?snap.data():null;
-    const isBoss=BOSS_EMAILS.includes((u.email||"").toLowerCase());
-    if(!data){ data={name:u.displayName||u.email.split("@")[0], email:u.email, role:isBoss?"boss":"obchodnik"}; await setDoc(ref,data,{merge:true}); }
-    else if(isBoss && data.role!=="boss"){ data.role="boss"; await setDoc(ref,{role:"boss"},{merge:true}); }
-    return { name:data.name, email:u.email, key:(u.email||"").toLowerCase(), role:data.role, uid:u.uid };
+    const email=(u.email||"").toLowerCase();
+    const isAdmin=ADMIN_EMAILS.includes(email);
+    const isBoss=BOSS_EMAILS.includes(email);
+    const liderSegs=LIDER_EMAILS[email]||null;
+    // Určenie roly z e-mailu (priorita: admin > sef > lider > obchodnik)
+    const autoRole = isAdmin?"admin": isBoss?"sef": liderSegs?"lider":"obchodnik";
+    if(!data){
+      data={name:u.displayName||u.email.split("@")[0], email:u.email, role:autoRole, segments:liderSegs||[]};
+      await setDoc(ref,data,{merge:true});
+    } else {
+      // Aktualizuj rolu ak sa zmenila (napr. nový líder)
+      const updates={};
+      if(autoRole!=="obchodnik" && data.role!==autoRole) updates.role=autoRole;
+      if(liderSegs && JSON.stringify(data.segments||[])!==JSON.stringify(liderSegs)) updates.segments=liderSegs;
+      if(Object.keys(updates).length) await setDoc(ref,updates,{merge:true});
+      data={...data,...updates};
+    }
+    return { name:data.name, email:u.email, key:email, role:data.role||autoRole,
+             segments:data.segments||liderSegs||[], uid:u.uid };
   }
   return {
     mode:"firebase", auth,
@@ -906,9 +931,13 @@ function demoStart(){
   setDemoUser(); showApp(); buildStatic(); backend.start();
 }
 function setDemoUser(){
-  state.user = state.demoRole==="boss"
-    ? { name:"Peter Ďurana", email:"sef@cromwell.sk", key:"sef", role:"boss", uid:"demo" }
-    : { name:"Peter Prištic", email:"pristic@cromwell.sk", key:"prištic", role:"obchodnik", uid:"demo" };
+  const r=state.demoRole;
+  if(r==="boss")
+    state.user={ name:"Peter Ďurana", email:"peter.durana@cromwell.sk", key:"peter.durana@cromwell.sk", role:"sef", segments:[], uid:"demo" };
+  else if(r==="lider")
+    state.user={ name:"Katarína Chmelová", email:"katarina.chmelova@cromwell.sk", key:"katarina.chmelova@cromwell.sk", role:"lider", segments:["ad","nad"], uid:"demo" };
+  else
+    state.user={ name:"Peter Prištic", email:"pristic@cromwell.sk", key:"pristic@cromwell.sk", role:"obchodnik", segments:[], uid:"demo" };
 }
 function wireLogin(){
   $("#googleLogin").onclick=()=>backend.googleLogin().catch(e=>$("#loginErr").textContent=loginErr(e));
@@ -925,7 +954,7 @@ function loginErr(e){ const m=(e&&e.code)||"";
 function banner(html,withRole){
   const b=$("#banner"); b.classList.remove("hidden");
   const icon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>`;
-  const roleSel=withRole?`<span>Zobraziť ako:</span><select id="roleSel"><option value="boss"${state.demoRole==="boss"?" selected":""}>Šéf</option><option value="obchodnik"${state.demoRole==="obchodnik"?" selected":""}>Obchodník</option></select>`:"";
+  const roleSel=withRole?`<span>Zobraziť ako:</span><select id="roleSel"><option value="boss"${state.demoRole==="boss"?" selected":""}>Šéf</option><option value="lider"${state.demoRole==="lider"?" selected":""}>Líder (K. Chmelová)</option><option value="obchodnik"${state.demoRole==="obchodnik"?" selected":""}>Obchodník</option></select>`:"";
   b.innerHTML=`${icon}<span class="grow">${html}</span>${roleSel}`;
   if(withRole) $("#roleSel").onchange=e=>{ state.demoRole=e.target.value; setDemoUser(); state.view="dashboard"; state.activeClient=null; render(); };
 }
@@ -988,7 +1017,7 @@ function buildStatic(){
    ============================================================================ */
 function render(){
   $("#uName").textContent=state.user.name;
-  $("#uRole").textContent=state.user.role==="boss"?"Vedúci":"Obchodník";
+  $("#uRole").textContent=state.user.role==="sef"?"Šéf":state.user.role==="admin"?"Admin":state.user.role==="lider"?"Líder":"Obchodník";
   $("#uAvatar").textContent=initials(state.user.name);
 
   const {week}=parseWeekId(state.week);
@@ -1003,7 +1032,7 @@ function render(){
   document.querySelectorAll("[data-cnt]").forEach(c=>c.textContent=counts[c.dataset.cnt]||0);
   $("#mineCount").textContent=we.filter(isMine).length;
   $("#clientCount").textContent=clientIndex().length;
-  const myOpenTasks=state.tasks.filter(t=>t.status==="open"&&(state.user.role==="boss"||isMyTask(t)));
+  const myOpenTasks=state.tasks.filter(t=>t.status==="open"&&(canManageTasks()||isMyTask(t)));
   $("#taskCount").textContent=myOpenTasks.length;
 
   // datalist klientov
@@ -1024,6 +1053,16 @@ function render(){
 }
 function isMine(e){ const last=state.user.name.split(" ").pop().toLowerCase(); return (e.ownerKey||"")===state.user.key || (e.salesperson||"").toLowerCase().includes(last); }
 function isMyTask(t){ const last=state.user.name.split(" ").pop().toLowerCase(); return (t.assignee||"").toLowerCase().includes(last); }
+// Môže editovať záznam: admin/sef=všetko, líder=svojich obchodníkov v segmente, obchodník=len svoje
+function canEdit(e){
+  const r=state.user.role;
+  if(r==="admin"||r==="sef") return true;
+  if(isMine(e)) return true;
+  if(r==="lider" && (state.user.segments||[]).includes(e.segment)) return true;
+  return false;
+}
+// Môže zadávať/upravovať úlohy: admin/sef/líder=áno, obchodník=len označiť hotovo na svojej
+function canManageTasks(){ return ["admin","sef","lider"].includes(state.user.role); }
 function goClient(key){ state.activeClient=key; state.highlightClient=null; render(); window.scrollTo(0,0); }
 
 /* prejsť na segment + zvýrazniť klienta */
@@ -1150,13 +1189,13 @@ function notesBlock(e){
       item.innerHTML=`<div class="n-av">${initials(c.author)}</div><div class="n-body"><div class="n-head">${esc(c.author)}</div><div class="n-text">${esc(c.text)}</div></div>`;
       thread.appendChild(item);
     });
-    const canComment=state.user.role==="boss"||isMine(e);
+    const canComment=canEdit(e)||["sef","admin","lider"].includes(state.user.role);
     if(canComment){
       const addRow=el("div","note-add");
-      const input=el("input"); input.placeholder=state.user.role==="boss"?"Napíš poznámku obchodníkovi…":"Odpovedať šéfovi…";
+      const input=el("input"); input.placeholder=canManageTasks()?"Napíš poznámku obchodníkovi…":"Odpovedať šéfovi…";
       const btn=el("button",null,"Pridať");
       const submit=async()=>{ const text=input.value.trim(); if(!text) return;
-        const comment={ id:"c"+Math.random().toString(36).slice(2,8), author:state.user.name, role:state.user.role==="boss"?"boss":"obchodnik", text, ts:Date.now() };
+        const comment={ id:"c"+Math.random().toString(36).slice(2,8), author:state.user.name, role:["sef","admin","lider"].includes(state.user.role)?state.user.role:"obchodnik", text, ts:Date.now() };
         await backend.addComment(e.id,comment); toast("Poznámka pridaná"); };
       btn.onclick=submit; input.onkeydown=ev=>{ if(ev.key==="Enter") submit(); };
       addRow.appendChild(input); addRow.appendChild(btn); thread.appendChild(addRow);
@@ -1305,13 +1344,13 @@ function viewClientDetail(){
     const items=el("div","tl-items");
     c.entries.filter(e=>e.weekId===wk).sort((a,b)=>a.segment.localeCompare(b.segment)).forEach(e=>{
       const s=SEG[e.segment];
-      const canEdit=state.user.role==="boss"||isMine(e);
+      const canEditCard=canEdit(e);
       const card=el("div","tl-card"); card.style.gridTemplateColumns="4px 1fr";
       card.innerHTML=`<div style="background:${s.color}"></div><div class="tc-body">
         <div class="tc-top">${schip(e.segment, e.firma)} ${statusTag(e.status)}</div>
         <div class="tc-events">${esc(e.events||"")}</div>
         <div class="tc-foot"><span class="av">${initials(e.salesperson||"?")}</span>${esc(e.salesperson||"—")}</div></div>`;
-      if(canEdit){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
+      if(canEditCard){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
         ed.style.cssText="position:absolute;right:12px;top:12px"; ed.onclick=()=>openModal(e);
         const body=card.querySelector(".tc-body"); body.style.position="relative"; body.appendChild(ed); }
       card.querySelector(".tc-body").appendChild(notesBlock(e));
@@ -1441,7 +1480,7 @@ function entryCard(e,clients){
   const isKolos = e.firma==="KOLOS";
   const firmaLogoSrc = e.firma ? (isKolos ? LOGOS.kolos_s : LOGOS.post) : null;
   const card=el("div","entry"+(isHighlighted?" highlighted":"")); card.style.gridTemplateColumns="4px 1fr";
-  const canEdit=state.user.role==="boss"||isMine(e);
+  const canEdit=canEdit(e)||["sef","admin","lider"].includes(state.user.role);
   // cross-link tagy — každý segment ako klikateľné tlačidlo
   const xsTags=otherSegs.map(segId=>{
     const btn=el("button","xs-link");
@@ -1459,7 +1498,7 @@ function entryCard(e,clients){
     <div class="e-events">${esc(e.events||"")}</div>
     <div class="e-foot"><span class="obch"><span class="av">${initials(e.salesperson||"?")}</span>${esc(e.salesperson||"—")}</span></div></div>`;
   card.querySelector(".lk").onclick=()=>goClient(k);
-  if(canEdit){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`); ed.title="Upraviť"; ed.onclick=()=>openModal(e); card.querySelector(".e-actions").appendChild(ed); }
+  if(canEditE){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`); ed.title="Upraviť"; ed.onclick=()=>openModal(e); card.querySelector(".e-actions").appendChild(ed); }
   card.querySelector(".ebody").appendChild(notesBlock(e));
   return card;
 }
@@ -1480,7 +1519,7 @@ function viewTasks(){
   wrap.appendChild(el("div","page-h",`<div>
     <div class="eyebrow">Naprieč všetkými týždňami</div>
     <h1>Úlohy & termíny</h1>
-    <div class="sub">${state.user.role==="boss"?"Zadávaj úlohy obchodníkom a sleduj termíny.":"Úlohy, ktoré ti zadal vedúci."}</div></div><div></div>`));
+    <div class="sub">${canManageTasks()?"Zadávaj úlohy obchodníkom a sleduj termíny.":"Úlohy zadané tvojím vedúcim."}</div></div><div></div>`));
   const addBtn=el("button","btn solid","+ Nová úloha"); addBtn.onclick=()=>openTaskModal(null);
   wrap.querySelector(".page-h").lastElementChild.appendChild(addBtn);
 
@@ -1528,7 +1567,7 @@ function viewTasks(){
 function taskRow(t){
   const seg=t.segment?SEG[t.segment]:null;
   const dl=t.status==="open"?dueLabel(t.due):null;
-  const canEdit=state.user.role==="boss"||isMyTask(t);
+  const canEdit=canManageTasks()||isMyTask(t);
   const row=el("div","task-row"+(t.status==="done"?" done":"")+(dl&&dl.cls==="overdue"?" overdue":""));
   const check=el("button","t-check"+(t.status==="done"?" on":""), t.status==="done"?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`:"");
   check.onclick=()=>backend.toggleTask(t.id, t.status==="done"?"open":"done");
