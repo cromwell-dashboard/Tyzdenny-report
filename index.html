@@ -1515,7 +1515,7 @@ function entryCard(e,clients){
   const isKolos = e.firma==="KOLOS";
   const firmaLogoSrc = e.firma ? (isKolos ? LOGOS.kolos_s : LOGOS.post) : null;
   const card=el("div","entry"+(isHighlighted?" highlighted":"")); card.style.gridTemplateColumns="4px 1fr";
-  const canEdit=canEdit(e)||["sef","admin","lider"].includes(state.user.role);
+  const canEditE=canEdit(e);
   // cross-link tagy — každý segment ako klikateľné tlačidlo
   const xsTags=otherSegs.map(segId=>{
     const btn=el("button","xs-link");
