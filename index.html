@@ -387,6 +387,204 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .note-add button:hover{background:var(--brand-dark)}
 
 .hidden{display:none !important}
+
+/* ============================================================ MOBILE ≤ 768px */
+@media (max-width: 768px){
+
+  /* ── Topbar ─────────────────────────────────────────── */
+  .topbar{ height:54px; padding:0 12px; gap:8px }
+  .brand img{ height:20px }
+  .brand .divider,.brand .sub{ display:none }
+  .user .meta{ display:none }
+  .avatar{ width:30px; height:30px; font-size:11px }
+
+  /* Týždenný navigátor — kompaktný, centrovaný */
+  .weeknav{ gap:3px }
+  .weeknav .wk{ min-width:0; flex:1; padding:4px 8px }
+  .weeknav .wk b{ font-size:13px }
+  .weeknav .wk small{ font-size:10px }
+  .iconbtn{ width:30px; height:30px; border-radius:8px }
+  .today-link{ font-size:11px; padding:3px 4px }
+
+  /* ── Shell ──────────────────────────────────────────── */
+  .shell{ flex-direction:column; min-height:0 }
+  .rail{ display:none }
+  .main{
+    padding:14px 12px 90px; /* priestor pre bottom nav + FAB */
+    max-width:100%;
+  }
+
+  /* ── Page headings ──────────────────────────────────── */
+  .page-h{ flex-direction:column; align-items:flex-start; gap:10px; margin-bottom:14px }
+  .page-h h1{ font-size:21px }
+  .page-h .sub{ font-size:12px }
+  .seg-actions{ gap:8px; flex-wrap:wrap }
+  .seg-logo-box{ padding:7px 12px }
+  .seg-logo-box img{ height:18px }
+  .seg-logo-box img.kolos-logo{ height:13px }
+
+  /* ── Gridy → 1 stĺpec ──────────────────────────────── */
+  .grid2{ grid-template-columns:1fr; gap:12px }
+  .segcards{ grid-template-columns:1fr }
+  .svc-grid{ grid-template-columns:1fr }
+  .client-list{ grid-template-columns:1fr }
+  .xs-grid{ grid-template-columns:1fr }
+  .kpis{ grid-template-columns:repeat(2,1fr); gap:10px }
+
+  /* ── KPI karty ──────────────────────────────────────── */
+  .kpi{ padding:12px 13px }
+  .kpi .k-val{ font-size:22px }
+  .kpi .k-lbl{ font-size:11px }
+  .kpi .k-sub{ font-size:10.5px }
+
+  /* ── Entry karty ────────────────────────────────────── */
+  .entry .ebody{ padding:12px 13px }
+  .entry .e-client{ font-size:14px; gap:6px }
+  .entry .e-events{ font-size:12.5px }
+  .entry .e-foot{ margin-top:8px }
+
+  /* ── Timeline ───────────────────────────────────────── */
+  .tl{ margin-left:2px; padding-left:18px }
+  .tl-week .tl-wlabel{ font-size:12px }
+  .tl-card .tc-body{ padding:10px 12px }
+
+  /* ── Klienti ────────────────────────────────────────── */
+  .client{ padding:12px 13px }
+  .client .c-name{ font-size:14px }
+  .chiprow{ gap:5px }
+  .chip{ padding:5px 10px; font-size:12px }
+
+  /* ── Úlohy ──────────────────────────────────────────── */
+  .task-row{ gap:9px; padding:10px 12px }
+  .t-title{ font-size:13px }
+
+  /* ── Panels ─────────────────────────────────────────── */
+  .panel{ padding:14px 13px }
+  .panel h3{ font-size:13.5px }
+  .xs-panel{ padding:14px 13px }
+  .xs-card{ padding:11px 12px }
+
+  /* ── Toolbar / search ───────────────────────────────── */
+  .toolbar{ gap:8px; margin-bottom:12px }
+  .search{ max-width:100%; flex:1 1 auto }
+
+  /* ── AI banner ──────────────────────────────────────── */
+  .ai-banner{ flex-wrap:wrap; gap:10px; padding:13px 14px }
+  .ai-banner .ai-body b{ font-size:13px }
+  .ai-banner .ai-body p{ font-size:11.5px }
+  .ai-btn{ width:100%; justify-content:center; padding:10px }
+
+  /* ── Modal → bottom sheet ───────────────────────────── */
+  .scrim{ align-items:flex-end; padding:0 }
+  .modal{
+    border-radius:20px 20px 0 0;
+    max-height:92dvh;
+  }
+  .modal-h{ border-radius:20px 20px 0 0; padding:14px 18px }
+  .modal-b{ padding:16px 18px }
+  .modal-f{ padding:12px 18px }
+  .segpick{ grid-template-columns:1fr 1fr }
+  .segpick label{ padding:8px 10px; font-size:12.5px }
+  .firma-pick label{ font-size:12.5px; padding:7px 10px }
+  .field label{ font-size:12px }
+  .field input,.field select,.field textarea{
+    padding:11px 12px; font-size:15px; /* iOS nezoomuje pri font-size >= 16px */
+    border-radius:10px;
+  }
+  .field textarea{ min-height:100px }
+  .btn,.btn.solid,.ai-btn{ min-height:46px; font-size:14px }
+
+  /* ── Backlink ───────────────────────────────────────── */
+  .backlink{ font-size:13px; margin-bottom:10px }
+
+  /* ── Bars / segment summary ─────────────────────────── */
+  .bar-row{ grid-template-columns:100px 1fr auto }
+  .svc .svc-h{ padding:12px 13px }
+  .svc-row{ padding:7px 8px }
+  .svc-row .r-client{ font-size:13px }
+
+  /* ── Help ───────────────────────────────────────────── */
+  .help dt{ font-size:13px }
+  .help dd{ font-size:12.5px }
+}
+
+/* ============================================================ BOTTOM NAV */
+.bottom-nav{
+  display:none; /* skryté na desktope */
+  position:fixed; bottom:0; left:0; right:0; z-index:50;
+  height:62px;
+  background:#fff;
+  border-top:1px solid var(--line);
+  box-shadow:0 -2px 12px rgba(22,26,36,.08);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.bottom-nav .bn-item{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; border:none; background:none; color:var(--muted); font-family:inherit;
+  font-size:10px; font-weight:600; padding:6px 4px; cursor:pointer; min-height:44px;
+  position:relative;
+}
+.bottom-nav .bn-item svg{ width:22px; height:22px; stroke-width:1.8 }
+.bottom-nav .bn-item.active{ color:var(--brand) }
+.bottom-nav .bn-item.active svg{ stroke-width:2.3 }
+.bn-badge{
+  position:absolute; top:4px; right:calc(50% - 18px);
+  min-width:17px; height:17px; border-radius:20px; background:var(--red);
+  color:#fff; font-size:9px; font-weight:700; display:none; place-items:center;
+  padding:0 4px;
+}
+.bn-badge.show{ display:grid }
+.bn-services.active{ color:var(--brand) }
+
+/* ── FAB ─── */
+.mob-fab{
+  display:none;
+  position:fixed; bottom:74px; right:18px; z-index:51;
+  width:54px; height:54px; border-radius:50%; border:none;
+  background:var(--brand); color:#fff;
+  box-shadow:0 4px 18px rgba(62,86,203,.45);
+  place-items:center; cursor:pointer;
+  transition:transform .12s, box-shadow .12s;
+}
+.mob-fab:active{ transform:scale(.94); box-shadow:0 2px 10px rgba(62,86,203,.35) }
+.mob-fab svg{ width:24px; height:24px }
+
+/* ── Segment sheet ── */
+.seg-scrim{
+  display:none; position:fixed; inset:0; z-index:60;
+  background:rgba(22,26,36,.4); backdrop-filter:blur(2px);
+  align-items:flex-end;
+}
+.seg-scrim.open{ display:flex }
+.seg-sheet{
+  width:100%; background:#fff; border-radius:20px 20px 0 0;
+  padding-bottom:env(safe-area-inset-bottom);
+  animation:slideUp .22s ease;
+}
+@keyframes slideUp{ from{transform:translateY(100%)} to{transform:none} }
+.seg-sheet-h{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px 12px; font-weight:600; font-size:16px;
+  border-bottom:1px solid var(--line);
+}
+.seg-sheet-h button{ border:none; background:none; color:var(--muted); cursor:pointer; padding:4px }
+.seg-sheet-list{ padding:8px 12px 16px; display:flex; flex-direction:column; gap:4px }
+.seg-sheet-row{
+  display:flex; align-items:center; gap:14px; padding:13px 8px;
+  border-radius:12px; border:none; background:none; width:100%; text-align:left;
+  cursor:pointer; font-family:inherit;
+}
+.seg-sheet-row:active{ background:var(--line-2) }
+.seg-sheet-row .ss-dot{ width:12px; height:12px; border-radius:50%; flex:0 0 auto }
+.seg-sheet-row .ss-name{ flex:1; font-size:15px; font-weight:500; color:var(--ink) }
+.seg-sheet-row .ss-ct{ font-family:var(--mono); font-size:13px; color:var(--muted); font-weight:600 }
+.seg-sheet-row.active .ss-name{ color:var(--brand); font-weight:700 }
+.seg-sheet-row.active .ss-dot{ outline:2px solid var(--brand); outline-offset:2px }
+
+@media (max-width:768px){
+  .bottom-nav{ display:flex }
+  .mob-fab{ display:grid }
+}
 </style>
 </head>
 <body>
@@ -434,7 +632,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
     </div>
   </header>
 
-  <div class="mobnav" id="mobnav"></div>
+  <div class="mobnav hidden" id="mobnav"></div>
 
   <div class="shell">
     <aside class="rail">
@@ -528,6 +726,46 @@ input,select,textarea{font-family:inherit; font-size:14px}
   </div>
 </div>
 
+<!-- ====== MOBILE BOTTOM NAV ====== -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bn-item" data-view="dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+    <span>Prehľad</span>
+  </button>
+  <button class="bn-item" data-view="clients">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>Klienti</span>
+  </button>
+  <button class="bn-item bn-services" id="bnServices">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+    <span>Služby</span>
+  </button>
+  <button class="bn-item" data-view="tasks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg>
+    <span>Úlohy <span class="bn-badge" id="bnTaskBadge"></span></span>
+  </button>
+  <button class="bn-item" data-view="mine">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Moje</span>
+  </button>
+</nav>
+
+<!-- FAB -->
+<button class="mob-fab" id="mobFab" aria-label="Nový záznam">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<!-- Segment sheet (mobile) -->
+<div class="seg-scrim" id="segScrim">
+  <div class="seg-sheet" id="segSheet">
+    <div class="seg-sheet-h">
+      <span>Vyber službu</span>
+      <button id="segSheetClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="seg-sheet-list" id="segSheetList"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- ============================ TASK MODAL ============================ -->
@@ -605,6 +843,32 @@ const LIDER_EMAILS = {     // email → segmenty ktoré líder riadi
   "adrian.csuba@digitance.sk":     ["digital"],
   "lorincz@kolos.sk":              ["baliky"],
   "miroslav.cvacho@zelenaposta.sk":["zelena"],
+};
+
+// Obchodníci — email → {firma, segments}
+const OBCHODNIK_EMAILS = {
+  "alexandra.uhlarikova@cromwell.sk":  { firma:"Cromwell Post", segments:["ad","nad"] },
+  "stancek@kolos.sk":                  { firma:"KOLOS",         segments:["nad"] },
+  "dagmar.sevcechova@cromwell.sk":     { firma:"Cromwell Post", segments:["ad"] },
+  "prazenica@kolos.sk":               { firma:"KOLOS",         segments:["nad","ad","baliky"] },
+  "krajciova@kolos.sk":               { firma:"KOLOS",         segments:["baliky"] },
+  "mariana.pahokiova@digitance.sk":    { firma:"Digitance",     segments:["digital","baliky"] },
+  "miloslav.donar@cromwell.sk":        { firma:"Cromwell Post", segments:["tlac"] },
+  "peter.moravcik@cromwell.sk":        { firma:"Cromwell Post", segments:["nad"] },
+  "peter.papaj@cromwell.sk":           { firma:"Cromwell Post", segments:["tlac"] },
+  "simona.bucsekova@cromwell.sk":      { firma:"Cromwell Post", segments:["nad"] },
+  "tadeas.bilek@cromwell.sk":          { firma:"Cromwell Post", segments:["ad","nad"] },
+  "veronika.bajusova@cromwell.sk":     { firma:"Cromwell Post", segments:["ad"] },
+  "zuzana.davidova@cromwell.sk":       { firma:"Cromwell Post", segments:["nad","zelena"] },
+  "zuzana.kovalcikova@zelenaposta.sk": { firma:"Zelená pošta",  segments:["zelena"] },
+  "zuzana.dvorakova@zelenaposta.sk":   { firma:"Zelená pošta",  segments:["zelena"] },
+  "henrieta.kriskova@zelenaposta.sk":  { firma:"Zelená pošta",  segments:["zelena"] },
+  // Balíky — KOLOS
+  "felix.krause@kolos.sk":             { firma:"KOLOS",         segments:["baliky"] },
+  "pristic@kolos.sk":                  { firma:"KOLOS",         segments:["baliky"] },
+  // Zelená pošta
+  "roman.chalama@zelenaposta.sk":      { firma:"Zelená pošta",  segments:["zelena"] },
+  "miroslav.cvacho@zelenaposta.sk":    { firma:"Zelená pošta",  segments:["zelena"] },
 };
 const USE_FIREBASE = !Object.values(firebaseConfig).some(v => v === "VLOZ_SEM" || !v);
 
@@ -869,21 +1133,24 @@ async function firebaseBackend(){
     const isAdmin=ADMIN_EMAILS.includes(email);
     const isBoss=BOSS_EMAILS.includes(email);
     const liderSegs=LIDER_EMAILS[email]||null;
-    // Určenie roly z e-mailu (priorita: admin > sef > lider > obchodnik)
+    const obchInfo=OBCHODNIK_EMAILS[email]||null;
     const autoRole = isAdmin?"admin": isBoss?"sef": liderSegs?"lider":"obchodnik";
+    const autoSegs = liderSegs || obchInfo?.segments || [];
+    const autoFirma = obchInfo?.firma || null;
     if(!data){
-      data={name:u.displayName||u.email.split("@")[0], email:u.email, role:autoRole, segments:liderSegs||[]};
+      data={name:u.displayName||u.email.split("@")[0], email:u.email,
+            role:autoRole, segments:autoSegs, firma:autoFirma};
       await setDoc(ref,data,{merge:true});
     } else {
-      // Aktualizuj rolu ak sa zmenila (napr. nový líder)
       const updates={};
       if(autoRole!=="obchodnik" && data.role!==autoRole) updates.role=autoRole;
-      if(liderSegs && JSON.stringify(data.segments||[])!==JSON.stringify(liderSegs)) updates.segments=liderSegs;
+      if(autoSegs.length && JSON.stringify(data.segments||[])!==JSON.stringify(autoSegs)) updates.segments=autoSegs;
+      if(autoFirma && data.firma!==autoFirma) updates.firma=autoFirma;
       if(Object.keys(updates).length) await setDoc(ref,updates,{merge:true});
       data={...data,...updates};
     }
     return { name:data.name, email:u.email, key:email, role:data.role||autoRole,
-             segments:data.segments||liderSegs||[], uid:u.uid };
+             segments:data.segments||autoSegs, firma:data.firma||autoFirma, uid:u.uid };
   }
   return {
     mode:"firebase", auth,
@@ -960,6 +1227,44 @@ async function importDemoData(){
   }
   toast(`✓ Importovaných ${done} záznamov!`);
   $("#banner").classList.add("hidden");
+}
+
+function zelenaPosta26Entries(){
+  const W26="2026-W26";
+  const e=(client,obch,status,events)=>({
+    id:"zp26_"+Math.random().toString(36).slice(2,9),
+    segment:"zelena", weekId:W26, client, salesperson:obch, status, events,
+    firma:null, ownerKey:obch.toLowerCase(), ownerName:obch, ownerUid:"import_zp26",
+    comments:[], updatedAt:Date.now()
+  });
+  return [
+    e("Anasoft","Miro","jednanie","Bytové družstvo Petržalka (BDP) odmieta Anasoftu zaplatiť 75 000 € za oneskorené odoslanie zásielok.\nPo stretnutí v Anasofte vysvetlené, že všetky termíny zo strany ZP boli dodržané.\nPripravuje sa stretnutie v BD Petržalka."),
+    e("Mestá / obce","Miro","jednanie","Bratislava — stretnutie 10.6.2026, predložená ponuka, founded konto, návrh PoC. Potenciál 50 000 zásielok/rok.\nPiešťany — stretnutie 19.6.2026, počas prázdnin inštalácia Zelených tlačiarní, pilot dennej pošty, zapojenie 40 ľudí z MÚ.\nBojnice, Prievidza, Topoľčany, Komárno — predložená cenová ponuka, opätovné kontaktovanie.\nŽilina, Nové Zámky — stále sa snažíme dohodnúť termín stretnutia."),
+    e("Swan","Miro","jednanie","1.7.2026 — dohodnutý míting. Cieľ: rozširovať zapojenie aj oddelenia zákazníckej starostlivosti, ktorí spracovávajú listové zásielky — potvrdenia výpovedí a reklamácie."),
+    e("Zelená pošta interné","Miro","bezi","EBITDA za 05/2026 bude nižšia celkovo o 17 000 €:\n— dobropisy do ZPCZ za 10 000 € (rozhodol Slávek — treba komunikovať s Romanom a Petrom, vysvetliť oprávnenosť nákladov)\n— 5 000 € nezaúčtované náklady za BVS (CRW nevyfaktúroval za marec a apríl)\n— 2 000 € iné náklady.\nS Michalom Adamcom doriešené doplnenie % marže pri zákazkách v DMISe.\nS Tonkom Gaššayom odkonzultované dohadzovanie nákladov do zákaziek ZPC v DMISe.\nIncident: do kônt ZPC nechodia odberateľské faktúry — rozsah ani príčina zatiaľ neidentifikovaná, IT pracuje na riešení."),
+    e("Červený nos Clowndoctors","Zuzana K.","bezi","Posunutý kontakt nášho grafika na grafika z CNC — nastavenie a odsúhlasenie farebnosti, pripravený škálovník farieb.\nOdkomunikovaný posun termínov na dodanie materiálov pre jednotlivé mailingy z dôvodu zmeny distribučných blokov od 9/2026."),
+    e("Poradca podnikateľa","Zuzana K.","bezi","Príprava pravidelných reportov a štatistík pre klienta.\nRiešenie skladových zásob."),
+    e("Rieker","Zuzana K.","ponuka","Zadanie od klienta na nacenenie tlače, balenia a distribúcie zásielok na viaceré krajiny EU.\nPo odsúhlasení cenovej ponuky klientom pripravíme objednávku na dodávateľa a do výroby CRW."),
+    e("Resitech","Zuzana K.","ponuka","Požiadavka na zaslanie cenovej ponuky na balenie, tlač štítkov a distribúciu 4 000 / 5 000 / 10 000 ks.\nKlient sa k cenovej ponuke ešte nevyjadril."),
+    e("AGRO SK / PoleNova","Zuzana K.","bezi","Ďalšia objednávka na spracovanie zásielok PoleNova v počte 4 001 ks."),
+    e("Union zdravotná poisťovňa","Zuzana K.","bezi","Odchodové listy — 607 ks (Potvrdená / Doporučená zásielka).\nVýzvy na splnenie OP — 1 740 ks, odoslanie 25.6.2026 (DDVR).\nDodatky — problém s generovaním podkladov na strane klienta, navrhnuté alternatívne riešenie.\nKlient nakoniec zvládol interne, nahrávajú zásielky do konta samostatne (zatiaľ 2 095 ks od 22.6.2026) za pomoci našej telefonickej/emailovej konzultácie."),
+    e("RAJAPACK CZ","Zuzana K.","ponuka","Aktívne oslovený klient — zaslaná cenová kalkulácia na fóliovanie + odoslanie ako ZL D+4.\nPodaj ako Periodický katalóg nám pošta neschválila — riešime cez sieť AD CRW.\nRočný objem: 100 515 zásielok, 2 varianty:\n— Lepenie adresného štítka: tržby 73 785 EUR, marža 10,5 %\n— Prikladanie adresného A6 lístka: tržby 75 223 EUR, marža 10,5 %"),
+    e("REPRE","Zuzana K.","ponuka","Aktívne oslovený klient — zaslaná cenová ponuka na kompletizáciu katalógov (fólia, štítok) a ponuka na balíkové služby.\nKlienta sme kontaktovali mailom aj telefonicky, zatiaľ bez reakcie."),
+    e("Digitálna koalícia","Zuzana K.","potvrdene","Nový klient — vyhrali sme výberové konanie pre kampaň Online žiak.\nPredpokladaná tržba 20 000 EUR, marža 23 %.\nRealizácia v polovici 08/2026 — pred tým dotiahnuť zmluvu a formality."),
+    e("UZP","Roman","bezi","Riešenie a zaslanie dodatkov cca 3 000 ks cez konto.\nRiešenie online dotazov a reklamácií, storno zásielok v konte klienta UZP."),
+    e("Dôvera","Roman","bezi","Riešenie s výrobou / dodávateľom / klientom grafiky, ceny a objednania nových vylupovacích kariet v počte 10 000 ks."),
+    e("SLSP","Roman","pozastavene","Riešenie reklamácie od klienta — zásielka išla do zlej krajiny.\nChyba bola na strane klienta — zle pripravené dáta."),
+    e("Rieker","Roman","ponuka","Zadanie od klienta, ktoré sa robí každých 6 mesiacov.\nPožiadal som o ceny od dodávateľa — následne pripravím so Zuzkou K. cenovú ponuku.\nPo schválení klientom objednávka na dodávateľa a do výroby CRW."),
+    e("Cavanagh SK","Roman","bezi","Telefonický hovor s klientom — navigácia ako si dobiť kredit."),
+    e("Blue DRM","Zuzana D.","ponuka","Odosielaná kalkulácia k 4 mailingom AT/CZ — 11 200 ks spolu, obrat 1 700 €, marža 15 %.\nVyzdvihovanie 17 prepraviek vrátených zásielok z AT."),
+    e("Finclub","Zuzana D.","bezi","Zadaná tlač časopisu A4, 3 200 ks."),
+    e("Dôvera","Zuzana D.","bezi","Objednávka nových: obálok 200 000 ks, listov 100 000 ks, kariet IČP 50 000 ks.\nZriadenie nových prístupov do klientskej zóny."),
+    e("Zľavomat","Zuzana D.","ponuka","Príprava cenovej ponuky k tlači neštandardných obálok v 3 mutáciách."),
+    e("MUW","Zuzana D.","ponuka","Odoslaná kalkulácia na tlač + AD doporučených zásielok / PZ 5 000–10 000 ks.\nTržby 1 050–1 750 €, marža 60 %. Poštovné marža 0,50 €/ks.\nAvizovaný mailing 103 ks."),
+    e("Centropen","Zuzana D.","jednanie","Avizovanie nového mailingu na leto 2026."),
+    e("IBSA","Zuzana D.","bezi","Objednávka tlače letákov 3 200 ks, obrat 700 €, marža 34 %."),
+    e("Verteco Digital","Zuzana D.","ponuka","Nový klient — príprava kalkulácie na mailing 2× mesačne, 2 000 ks."),
+  ];
 }
 function demoStart(){
   banner(`Ukážkový (demo) režim — naplnené reálnymi záznamami z porád, vrátane cross-sell klientov a histórie. Dáta sú len v pamäti.`, true);
@@ -1045,6 +1350,27 @@ function buildStatic(){
   $("#taskModalClose").onclick=$("#taskCancelBtn").onclick=closeTaskModal;
   $("#taskScrim").onclick=e=>{ if(e.target===$("#taskScrim")) closeTaskModal(); };
   $("#taskSaveBtn").onclick=saveTaskFromModal; $("#taskDeleteBtn").onclick=deleteTaskFromModal;
+
+  // ── MOBILE: FAB ──
+  $("#mobFab").onclick=()=>openModal(null);
+
+  // ── MOBILE: bottom nav ──
+  $("#bottomNav").querySelectorAll(".bn-item[data-view]").forEach(b=>{
+    b.onclick=()=>{ state.view=b.dataset.view; state.activeClient=null; state.search=""; render(); };
+  });
+  // Služby tab → segment sheet
+  $("#bnServices").onclick=()=>openSegSheet();
+
+  // ── MOBILE: segment sheet ──
+  const segSheetList=$("#segSheetList");
+  SEGMENTS.forEach(s=>{
+    const row=el("button","seg-sheet-row");
+    row.innerHTML=`<span class="ss-dot" style="background:${s.color}"></span><span class="ss-name">${s.name}</span><span class="ss-ct" data-ssct="${s.id}">0</span>`;
+    row.onclick=()=>{ closeSegSheet(); state.view="segment"; state.segFilter=s.id; state.activeClient=null; render(); };
+    segSheetList.appendChild(row);
+  });
+  $("#segSheetClose").onclick=closeSegSheet;
+  $("#segScrim").onclick=e=>{ if(e.target===$("#segScrim")) closeSegSheet(); };
 }
 
 /* ============================================================================
@@ -1077,6 +1403,22 @@ function render(){
   document.querySelectorAll(".rail .navitem").forEach(b=>{ const v=b.dataset.view; b.classList.toggle("active", v==="segment"?(state.view==="segment"&&b.dataset.seg===state.segFilter):state.view===v); });
   document.querySelectorAll(".mobnav button").forEach(b=>{ const v=b.dataset.view; b.classList.toggle("active", v==="segment"?(state.view==="segment"&&b.dataset.seg===state.segFilter):state.view===v); });
 
+  // Bottom nav aktívne stavy
+  document.querySelectorAll(".bottom-nav .bn-item[data-view]").forEach(b=>{
+    b.classList.toggle("active", b.dataset.view===state.view && state.view!=="segment");
+  });
+  const bnSvc=$("#bnServices");
+  if(bnSvc) bnSvc.classList.toggle("active", state.view==="segment");
+  // Badge na úlohách
+  const overdueTasks=state.tasks.filter(t=>t.status==="open"&&dayDiff(t.due)<0&&(canManageTasks()||isMyTask(t)));
+  const badge=$("#bnTaskBadge");
+  if(badge){ if(overdueTasks.length){ badge.textContent=overdueTasks.length>9?"9+":overdueTasks.length; badge.classList.add("show"); } else badge.classList.remove("show"); }
+  // Segment sheet counts
+  document.querySelectorAll("[data-ssct]").forEach(c=>{
+    c.textContent=counts[c.dataset.ssct]||0;
+    c.closest(".seg-sheet-row")?.classList.toggle("active", state.view==="segment"&&state.segFilter===c.dataset.ssct);
+  });
+
   const c=$("#content"); c.innerHTML="";
   if(state.activeClient) c.appendChild(viewClientDetail());
   else if(state.view==="dashboard") c.appendChild(viewDashboard());
@@ -1086,6 +1428,347 @@ function render(){
   else if(state.view==="segment") c.appendChild(viewSegment());
   else if(state.view==="help") c.appendChild(viewHelp());
 }
+function importAllDepts25_26Entries(){
+  const ts=Date.now();
+  const E=(wk,seg,cl,ob,st,ev,fi)=>({
+    id:'imp_'+Math.random().toString(36).slice(2,9),
+    segment:seg, weekId:wk, client:cl, salesperson:ob, status:st, events:ev,
+    firma:fi||null, ownerKey:ob.toLowerCase(), ownerName:ob,
+    ownerUid:'bulk_import_25_26', comments:[], updatedAt:ts
+  });
+  return [
+  E("2026-W26","baliky",`PLATFORMY`,`Prištic / Lenghart`,"jednanie",`Stretnutie s platformou BASE — prepojenie napriamo, dočasne riešené cez Postis.
+Dohodnutá špecifikácia na prepojenie, registrácia v ich systéme.
+Očakávame API podklady na integráciu — zaslané, prejednanie s IT, nastavenie po cenovej ponuke.`,null),
+  E("2026-W26","baliky",`SUPPLY`,`Prištic`,"jednanie",`Prezentácia spoločného projektu balenie / fullfilment / last mile.
+Druhá úroveň: možný kapitálový vstup do spoločnosti.
+Poslaná ponuka do Poľska na 3 500 balíkov, prejednané riešenie zvozov. Požiadaný o zaslanie výsledkov za 2024 a 2025.`,null),
+  E("2026-W26","baliky",`SHIPMALL`,`Prištic`,"jednanie",`Riešenie doručovania do Maďarska, odhad 6 000 balíkov mesačne.
+Klient potvrdil, že ceny sú OK — aktuálne sa rozhoduje, či do projektu pôjde.
+Následná druhá úroveň: kúpa spoločnosti s 3 fullfilment skladmi v CZ a 1 v SK (Comgate CZ).`,null),
+  E("2026-W26","baliky",`BAJABEE`,`Praženica / Prištic`,"ponuka",`Príprava cenovej ponuky pre AD cca 100 000 ks/rok — krajiny SK, CZ a HU po cca 33%.
+Cenová ponuka odoslaná. Klient používa Neoship. Pripravujeme sa na meeting.`,null),
+  E("2026-W26","baliky",`Slovenský zväz včelárov`,`Praženica / Prištic`,"bezi",`Začali podávať prvé balíky.`,null),
+  E("2026-W26","baliky",`POST ONE`,`Prištic / Krause`,"bezi",`Testovanie doručovania do HR, SI a pobaltských krajín — všetky testy dopadli dobre, klient začal doručovať.
+Očakávaný objem: 800 ks pobaltie, 1 500–2 000 ks SI+HR.
+Klient už viac ako týždeň balíky podáva, čísla v zmysle očakávaní.`,null),
+  E("2026-W26","baliky",`Arménska pošta`,`Prištic / Krause`,"jednanie",`Logistika, sklad a triedenie v BA, odosielanie do Arménska.
+Fokus na krajiny DE, PL, IT, ES, BE, NL, GR, FR — cenníky nastavené pre veľké krajiny.
+Zmluva zaslaná, čakáme na pripomienky, následne riešenie integrácie.`,null),
+  E("2026-W26","baliky",`ONIO`,`Prištic / Štalmašková`,"bezi",`Riešenie nákladov za prepravu — od začiatku nesprávne nastavené, opravené od 06/2025.
+Riešenie nadrozmerov s Mad. poštou, fakturácia v HUF. Klient spokojný.`,null),
+  E("2026-W26","baliky",`KĹučka`,`Prištic`,"bezi",`Klient získaný na Slovensko. Začali podávať prvé balíky, očakávanie 800–1 200 ks mesačne.
+Následné riešenie CZ a HU (~2 000 spolu), SI a HR (~1 000), RO (~300–500 balíkov).`,null),
+  E("2026-W26","baliky",`GRANDCOM`,`Páhokiová / Prištic`,"bezi",`Klient získaný na SK a CZ (dobierka v CZ zatiaľ nerieši).
+Integroval sa cez Chameleoon, začali podávať prvé balíky, odhad 300 ks mesačne.
+Nastavená SL. pošta aj DPD SK — podáva už celé.`,null),
+  E("2026-W26","baliky",`STAMET`,`Krajčiová / Prištic`,"potvrdene",`Klient získaný na Slovensko a Čechy, cca 1 200 balíkov mesačne spolu.
+Osobné stretnutie, telefonicky potvrdené — začíname v 07/2026.`,null),
+  E("2026-W26","baliky",`StockLane`,`Krajčiová / Prištic`,"potvrdene",`Klient získaný pre EU.
+Osobné stretnutie, telefonicky potvrdené — začíname v 07/2026.`,null),
+  E("2026-W26","baliky",`GAFA AUTO`,`Krajčiová / Prištic`,"potvrdene",`Klient získaný pre EU.
+Osobné stretnutie, telefonicky potvrdené — začíname v 07/2026.`,null),
+  E("2026-W26","baliky",`J a J AUTO`,`Prištic`,"potvrdene",`Klient získaný pre EU. Osobné stretnutie, telefonicky potvrdené — začíname v 07/2026.
+Objem až do 10 000 balíkov mesačne. Podaj cez BA, zvoz z Bardejova vlastný.`,null),
+  E("2026-W26","baliky",`Biomila`,`Prištic / Krajčiová`,"jednanie",`Riešenie napojenia cez priamu integráciu API.`,null),
+  E("2026-W26","baliky",`Flowers Drive`,`Prištic / Krajčiová`,"bezi",`Pri väčšej veľkosti krabíc bude zvoz s prázdnym autom. Podaje musia byť v ten istý deň.
+Podaje aj do ČR. Zatiaľ spokojnosť.`,null),
+  E("2026-W26","baliky",`Dajana Rodriguez`,`Bajúsová / Prištic`,"jednanie",`Meeting s klientom a Veronikou — cena lákavá, riešenie len cez integráciu z ich strany.
+Preveruje vyťaženosť ich IT. Osobné stretnutie zrušené, pokračujeme e-mailom.`,null),
+  E("2026-W26","baliky",`ZENEA`,`Prištic`,"ponuka",`Odoslaná ponuka na pobaltie. SR/ČR — veľmi dobré podmienky. Čakáme na odsúhlasenie majiteľom.`,null),
+  E("2026-W26","baliky",`UPS – POST ONE`,`Prištic / Krause`,"bezi",`Meeting na doriešenie technických vecí na začatie spolupráce — USA, Kanada, Írsko.
+Nastavenie nového Expres produktu, úpravy v Postise, elektronická obchodná FA k precleniu.
+Testovanie prebehlo, všetko pripravené na štart.`,null),
+  E("2026-W26","baliky",`AUBIRI`,`Prištic`,"ponuka",`Odoslaná ponuka na celé EU. SR/ČR — veľmi dobré podmienky. Čakáme na ďalšie kroky.`,null),
+  E("2026-W26","baliky",`Global Mail`,`Prištic / Krause`,"jednanie",`Registrácia, doručovanie cez SL. poštu a One CZ. Nacenenie vytvorenia ich prostredia (SLA, paušály).
+Pripravená zmluva o nekradnutí klientov — právnici posudzujú. Záujem aj o listy, v budúcnosti tlač.`,null),
+  E("2026-W26","baliky",`E-Gate Germany GmbH`,`Krause`,"ponuka",`Klient oslovený na výstave v Berlíne — záujem o naše služby.
+Pripravená a zaslaná ponuka pre krajiny DE, PL, FR, IT, ES a palety DE, PL, CZ.`,null),
+  E("2026-W26","baliky",`Minifutky`,`Prištic`,"bezi",`Tento týždeň začali — prvé dni testovanie, postupne nárasty. Zvozy zabezpečené denne.`,null),
+  E("2026-W26","baliky",`ERBIA`,`Prištic`,"bezi",`Riešenie paliet na doručovanie do Billa. Spokojnosť so všetkými službami.`,null),
+  E("2026-W26","baliky",`NATURES`,`Prištic`,"jednanie",`Prejednanie rozširovania spolupráce do USA a Talianska. Maximalizácia objemov kampaniou.
+Nastavovanie zvozov. Nedarí sa naplno rozbehnúť Taliansko.`,null),
+  E("2026-W26","baliky",`CAPICAP`,`Šatalmašková / Prištic`,"bezi",`Celá EU. Prvý zvoz v piatok, nastavených 20 krajín, ostatné doplníme.
+Následujú denné zvozy a doručovanie. Nastavenie Slov. pošty cez BASE.`,null),
+  E("2026-W26","baliky",`IGLU Trading`,`Prištic / Krajčiová`,"bezi",`Klient postupne navyšuje objemy do SK, CZ — balíky bez API napojenia.`,null),
+  E("2026-W26","baliky",`ELIS DESIGN`,`Štalmašková / Krause`,"lead",`Klient oslovený na výstave v Prahe, zaslané podklady.`,null),
+  E("2026-W26","baliky",`BloomPress`,`Prištic / Krajčiová`,"bezi",`Aktívne oslovený klient, registrovaný — začne budúci týždeň SK a CZ. Na začiatku 100 ks mesačne.`,null),
+  E("2026-W26","baliky",`Cleansol`,`Prištic`,"bezi",`Nový klient, potvrdil spoluprácu, posiela cez SL. poštu. Registroval sa a začal odosielať.`,null),
+  E("2026-W26","baliky",`Trawera Print`,`Prištic / Krajčiová`,"lead",`Aktívne oslovený klient — registroval sa, začne neskôr, pripravuje podklady.`,null),
+  E("2026-W26","baliky",`Yacht Shop`,`Prištic / Krajčiová`,"ponuka",`Aktívne oslovený klient. Odhadovaný počet balíkov 360 ročne. Zaslaná cenová ponuka, čakáme na potvrdenie.`,null),
+  E("2026-W26","baliky",`GlasBau`,`Prištic / Krajčiová`,"bezi",`Aktívne oslovený klient — začal a rozšíril spoluprácu aj na palety. Odhad: 800 balíkov ročne + 100 paliet mesačne.`,null),
+  E("2026-W26","baliky",`Lezolep`,`Prištic / Krajčiová`,"bezi",`Aktívne oslovený klient, registrácia do Kolos Ship. Začala spolupráca od marca, prepravca SPS.`,null),
+  E("2026-W26","baliky",`NN Baits`,`Prištic / Krajčiová`,"bezi",`Aktívne oslovený klient, registrovaný. Rozšíri spoluprácu do 16 štátov EU + UK. Na SK využije SPS, SP a DPD.`,null),
+  E("2026-W26","baliky",`Votpecer`,`Prištic / Krajčiová`,"ponuka",`Klient navštívil KOLOS stránku a vyplnil kontaktný formulár. Prepravca SL. Pošta, čakáme na schvaľovacie procesy prepravy (pneumatiky).`,null),
+  E("2026-W26","baliky",`NonToxCity`,`Prištic / Krause`,"ponuka",`Klient vyplnil kontaktný formulár. Zaslaná upresnená ponuka. Čakáme na odpoveď.`,null),
+  E("2026-W26","baliky",`Node Advert s.r.o.`,`Prištic / Krajčiová`,"lead",`Klient sa registroval do Kolos Shipu. Upresnenie požiadaviek. Čakáme na odpoveď.`,null),
+  E("2026-W26","baliky",`Andra s.r.o.`,`Prištic / Krajčiová`,"bezi",`Klient začal podávať HU, SK aj CZ. Bude otvárať ďalší e-shop.
+Majiteľ pozná v DS ešte 2 e-shopy, ktoré sa pokúsi prepojiť s nami.`,null),
+  E("2026-W26","baliky",`Dropick`,`Prištic`,"jednanie",`Presun kuriérov z DPD a SPS do SL. pošty. Potvrdená spolupráca cez zasielanie vložením do boxu.
+Prebehli testy, pokračujeme v ich úprave — potom presun na všetkých kuriérov.`,null),
+  E("2026-W25","digital",`SPP`,`Csuba`,"jednanie",`Čakáme na stretnutie PK s board member SPP.
+Call k Peppol pre SPP — ideme naceniť effort na strane Print Office.
+Príprava ponuky pre pokračovanie kontraktu pre Print Office.`,null),
+  E("2026-W25","digital",`NN`,`Csuba`,"jednanie",`Riešenie detailov k personalizovaným videám.`,null),
+  E("2026-W25","digital",`Tatra banka`,`Csuba`,"ponuka",`Tvorba aktualizácie ponuky pre Peppol.`,null),
+  E("2026-W25","digital",`CIB`,`Csuba`,"jednanie",`Stretnutie k predstaveniu Fulopa. Zsuzsa im pošle materiál k omnichannel emailom.`,null),
+  E("2026-W25","digital",`MOL MOHU`,`Csuba`,"lead",`Stretnutie s Nagy Adrienn — dostaneme dopyt na nacenenie.`,null),
+  E("2026-W25","digital",`Generali`,`Csuba`,"jednanie",`Teams k Peppol, čakáme na vyplnenie Peppol dotazníka od nich.`,null),
+  E("2026-W25","digital",`Tatra Billing`,`Csuba`,"jednanie",`Príprava Dodatku 10.`,null),
+  E("2026-W25","digital",`Quadient`,`Csuba`,"jednanie",`Teams s Dušanom, Málkom, Lenghartom. Stanovenie smerovania biznisu a tvorby leadov k predaju OMS Quadient alebo OpenText.`,null),
+  E("2026-W25","digital",`Grandcom`,`Páhokiová`,"bezi",`Už bežiaci balíkový biznis — sledujeme priestor pre rozšírenie.`,null),
+  E("2026-W25","digital",`Demos trade`,`Páhokiová`,"lead",`Omnichannel lead — prvotné oslovenie.`,null),
+  E("2026-W25","digital",`BILLIK Trade`,`Páhokiová`,"lead",`Balíky lead.`,null),
+  E("2026-W25","digital",`Nohel Garden`,`Páhokiová`,"lead",`Omnichannel lead.`,null),
+  E("2026-W25","tlac",`Tesco`,`Papaj`,"bezi",`Databázy na BTS statementy majú 703 862 ks (SK 196 656 ks), dáta na produkciu očakávame budúci týždeň.
+Pre Maďarov naskladnených 10 000 ks plastových CC kariet.`,null),
+  E("2026-W25","tlac",`365.bank`,`Papaj`,"bezi",`Očakávame ďalšiu mini kampaň — list na dodávateľov cca 1 200 ks, obyčajné doručenie.`,null),
+  E("2026-W25","tlac",`CGOS / ZEPO`,`Papaj`,"bezi",`ZEPO CZ: budúci týždeň druhá vlna kampane Wedos pohľadnice, objem 25 000 zásielok.`,null),
+  E("2026-W25","tlac",`AZ Prima / Chytrá pošta`,`Papaj`,"jednanie",`Urgoval som Polčiaka kvôli začatiu párovania zásielok do našej siete — zatiaľ bez reakcie.`,null),
+  E("2026-W25","tlac",`ČSOB`,`Papaj`,"bezi",`Operatívne činnosti: úpravy šablón pre ex-sporiteľňu, príprava novej CTS komunikácie, requesty k projektu RCOLL.`,null),
+  E("2026-W25","tlac",`Viagem SK`,`Papaj`,"potvrdene",`Spolupráca potvrdená, klientovi zaslaná predvyplnená objednávka.
+Dáta by mali byť cca 5 000 denne, AD bude čakať na naše bloky.`,null),
+  E("2026-W25","tlac",`AD HOC — Dr.Max PL / Klarstein / Strabag`,`Papaj`,"jednanie",`Dr.Max PL: čakáme na feedback k ponuke na tlač katalógov, letákov a neadresnú distribúciu.
+Klarstein: 16 700 listov, zálohovka uhradená, podklady z 29.5. neúplné — čakáme na doposlanie.
+Strabag BVRZ: klient sa ozval na ponuku (tlač výplatných pások 4 000 CZ + 1 000 SK mesačne).`,null),
+  E("2026-W25","tlac",`SSE`,`Donar`,"bezi",`Alanata pripravila RFP v koordinácii s nami. Budget na 2 roky 100 000 €, prezentované vízie 2027.
+Získaná objednávka na 10 000 €. Pripravuje sa platba za upgrade Quadientu na V17 — 6 068 €.`,null),
+  E("2026-W25","tlac",`VšZP`,`Donar`,"potvrdene",`V tendri sme skončili na 1. mieste — 3-ročný kontrakt, suma 662 k€, marža 354 k€ (ročne 220 k€ revenue, 118 k€ marža).
+Žiadosť o doplnenie dokladov z colného úradu a bezúhonnosti — konzultované s ÚVO.
+Aktuálne: 2. dávka ročných zúčtovaní 77 500 ks, skenujeme zásielky a doručenky.`,null),
+  E("2026-W25","tlac",`Orange`,`Donar`,"jednanie",`Orange vypísal tender iba na digitálneho poštára — zúčastní sa Softip.
+Cromwell aktuálne nemá čo ponúknuť.`,null),
+  E("2026-W25","tlac",`SSD`,`Donar`,"bezi",`Zmluvu pripravili, my sme spripomienkovali a odoslali. Odporúčam uzavrieť zmluvu aj s CGOS (podmienky prenesené 1:1) — predídeme pokutám za nesplnenie SLA.`,null),
+  E("2026-W25","tlac",`Slovak Telekom / TMCZ / Digi`,`Donar`,"jednanie",`Peppol: Softip bol oslovený s ponukou na poštára — robíme mu PR na základe nášho odporúčania.
+Chcú zmeniť dodávateľa SAPovského riešenia — veľká príležitosť.`,null),
+  E("2026-W25","tlac",`ŽSSK`,`Donar`,"jednanie",`Zazmluvňovanie spomalené implementáciou nových SW nástrojov. Aktuálne po 2,5 mesiaci u generálnej riaditeľky na podpis.`,null),
+  E("2026-W25","tlac",`SLSP`,`Donar`,"jednanie",`Projekt prevzatia OMS — situácia sa mení zo dňa na deň, dohodnutý telefonát v polovici júna.
+Budeme dodávať 250 000 ks obalov na karty. Revenue 23 750 €, zisk 3 375 €.`,null),
+  E("2026-W25","tlac",`Generali`,`Donar`,"bezi",`Prvé kolo prezentácie interného riešenia Peppolu (Donoval) — pozitívny feedback.
+Projekt šablónovania úspešne začatý, očakávame ho 2 roky.`,null),
+  E("2026-W25","tlac",`Bonus Real`,`Donar`,"bezi",`Tlač kotúčikov — predané, zisk 3 700 €. Prevzaté, vyfaktúrované.`,null),
+  E("2026-W25","tlac",`De Vries`,`Praženica`,"ponuka",`Príprava CP pre skenovanie hlásení o pokutách z DP BA — vyzdvihnutie a dodanie hlásení pre testovanie skenovania pokutových hlásení, cca 4 700 ks.`,null),
+  E("2026-W25","tlac",`Dm drogerie markt`,`Praženica`,"bezi",`Reklamácie na zásielky bez vkladov — kombinácia chyby spracovania a prirodzených úbytkov, doriešené opravou resp. doposlaním.`,null),
+  E("2026-W25","ad",`Tesco`,`Bajúsová`,"potvrdene",`Dohodnutý timing BTS Statement mailingu — doručovanie v bloku 7.–8. 8. 2026.
+Objemy pred očistením DTB: 193 602 ks rewarded / 3 054 ks high reward. Dodatok bez zmeny.`,"Cromwell Post"),
+  E("2026-W25","ad",`Orange`,`Bajúsová`,"pozastavene",`MIRRI zásielky — Orange v tendri neuspel, zákazku získal Telekom.
+Odoslaný update dodatku s upravenými dodacími cenami.`,"Cromwell Post"),
+  E("2026-W25","ad",`ČSOB / exOTP`,`Bajúsová`,"bezi",`Spolupráca stabilizovaná, dodacie listy z TSYSu chodia riadne.
+Príprava harmonogramu párovania PK na 7–8/2026. Aktualizovaná cena + podmienky zberných jázd.
+Urgencia: faktúra za platobné karty z apríla nebola klientovi zaslaná.`,"Cromwell Post"),
+  E("2026-W25","ad",`PSS`,`Bajúsová`,"bezi",`Prijatá reklamácia na opakované doručenie zásielok mimo schránky — pobočka BA.`,"Cromwell Post"),
+  E("2026-W25","ad",`Dajana Rodriguez / Bloom Robbins`,`Bajúsová`,"jednanie",`Dajana Rodriguez — čakám na vyčíslenie nadnákladov za spracovanie júnovej kampane z výroby, aby som mohla vystaviť faktúru klientovi.`,"Cromwell Post"),
+  E("2026-W25","ad",`Generali`,`Ševcechová`,"bezi",`Bežná agenda.`,"Cromwell Post"),
+  E("2026-W25","ad",`365 banka`,`Ševcechová`,"bezi",`Bežná agenda.`,"Cromwell Post"),
+  E("2026-W25","ad",`SLSP`,`Ševcechová`,"bezi",`19.6. obed s teamom Austria Card pod vedením pani Lieskovskej.`,"Cromwell Post"),
+  E("2026-W25","ad",`Tatra Billing`,`Uhláriková`,"bezi",`Bežná agenda.`,"Cromwell Post"),
+  E("2026-W25","ad",`Ostatní klienti`,`Bajúsová / Ševcechová / Uhláriková`,"jednanie",`METRO — zmluva čiastočne upravená, trvajú na niektorých bodoch, posielajúm na právničku. Dopyt na podaj 3 000 zásielok D+4.
+XXXLutz/Möbelix — klient zviazaný na 150 000 ks ročne, motivačná hranica 175 000 ks.
+Viagem SK — akvizícia M. Švec, bude v starostlivosti T. Bíleka. Nastavujeme do systémov, prvý mailing na objednávku.
+RED POST Nadácia Christiania — 4 slepé DTB na vypárovanie (67% sortu, 44% zväzkovanie). Riešime podmienky spolupráce.
+Ikar — BUX mailing, zásielky neodišli zo skladu načas, väčšinu doručia v ďalšom bloku.
+CEWE — tlačíme 20 000 ks POS materiálov, dodávka budúci týždeň, revenue 1 300 €.`,"Cromwell Post"),
+  E("2026-W25","ad",`Pandan / Medikom`,`Popelková`,"bezi",`Príprava ďalšej distribúcie, návoz materiálov — náklad cca 11 t.`,"KOLOS"),
+  E("2026-W25","ad",`Politická strana Právo na pravdu`,`Praženica`,"ponuka",`CP na balenie directmail + AD 22 000 ks v 08/2026.`,"KOLOS"),
+  E("2026-W25","ad",`Bencont`,`Praženica`,"jednanie",`Urgencia po nedodaní výstupných potvrdení o doručení PZ+EPH — požiadavka v DMIS pri zadaní do výroby bola neriešená.`,"KOLOS"),
+  E("2026-W25","ad",`Tiskcentrum Brno / Koupelny`,`Praženica`,"bezi",`Objednávka balenia + AD pre katalógy Koupelny / Tiskcentrum Brno v 06/2026, cca 1 100 ks.`,"KOLOS"),
+  E("2026-W25","nad",`COOP JEDNOTA`,`Moravčík / Bucseková / Dávidová / Bílek`,"bezi",`Distribúcia celoslovenského letáku: 1 636 600 ks. KRUPINA: 148 000 ks, BREZNO: 30 000 ks.
+Ponúknutý predĺžený distribučný blok 19.–22. 12. 2026. Klient sa doposiaľ nevyjadril.`,"Cromwell Post"),
+  E("2026-W25","nad",`BIEDRONKA`,`Moravčík`,"ponuka",`Telefonicky kontaktovaný ohľadom cenovej ponuky a nového distribučného bloku — nereagoval.
+HR leták v procese, zatiaľ bez vyjadrenia k lokalitám.`,"Cromwell Post"),
+  E("2026-W25","nad",`TESCO`,`Dávidová`,"bezi",`Distribúcia v pokrytí 1 242 000 ks.`,"Cromwell Post"),
+  E("2026-W25","nad",`JYSK`,`Bucseková`,"bezi",`Distribúcia Reopen letáku Košice — 94 000 ks. Spoločná kontrola nad garant.`,"Cromwell Post"),
+  E("2026-W25","nad",`RED POST`,`Bucseková`,"bezi",`Distribúcia 13 materiálov, objem 1 953 000 ks:
+ACTION 651 000, MOJ OBCHOD 248 000, TOP DROGÉRIE 196 000, TERNO 188 000, COOP JEDNOTA KA 137 000, COOP JEDNOTA NZ 132 000, KRAJ 92 000, NAY 54 000, KORUNA 142 000, GOLDEN 39 000, ANTIK 28 000, PETRŽALSKE NOVINY 20 000, DR. OPTIK 26 000.`,"Cromwell Post"),
+  E("2026-W25","nad",`REGIONPRESS`,`Moravčík`,"pozastavene",`Distribúcia 39 mutácií novín: 1 365 230 ks + letáky (Lunter Zvolen 23 440, Diaľnica 46 990).
+Pohľadávky k 12.6.: po splatnosti 259 393 €, v splatnosti 160 900 €, celkom 420 293 €.
+Spoločné kontroly zastavené druhý týždeň zo strany klienta. Online stretnutie k metodike.`,"Cromwell Post"),
+  E("2026-W25","nad",`Billa`,`Stanček`,"bezi",`HL. leták: 1 163 350 ks (25g). Súbežný leták Záhorská Bystrica: 3 780 ks (10g). Súbežný leták vybrané predajne: 49 790 ks (10g).`,"Cromwell Post"),
+  E("2026-W25","nad",`Lidl`,`Stanček`,"bezi",`Leták FOOD: 565 550 ks (28g).`,"Cromwell Post"),
+  E("2026-W25","nad",`Petit Press`,`Stanček`,"bezi",`MY EXTRA: 63 940 ks (20g, 5 mutácií). Brezňan: 17 620 ks (20g).`,"Cromwell Post"),
+  E("2026-W25","nad",`Dm drogerie markt`,`Stanček`,"bezi",`Dm vždy výhodne express: 982 000 ks (13g).
+Otvorenie predajní: Žilina 11 000, Záhorská Bystrica 15 950, Trenčín 26 180 ks.`,"Cromwell Post"),
+  E("2026-W25","nad",`Potraviny FRESH`,`Stanček`,"bezi",`Distribúcia FRESH: 759 640 ks (15g). Neadresná distribúcia 709 440 ks, závoz na predajne 30 750 + 19 450 ks pošta.
+Celkovo 624 predajní, 359 v našej sieti, 265 pre SP.`,"Cromwell Post"),
+  E("2026-W25","nad",`PLANEO ELEKTRO`,`Stanček`,"bezi",`Distribúcia zatváracej kampane POLUS/VIVO: 28 000 ks. Tlačené cez RGP.`,"Cromwell Post"),
+  E("2026-W25","nad",`Ostatní klienti — Stanček`,`Stanček`,"bezi",`MAKOS 25 640 ks (14g). Obuv Obuty 4 000 ks (5g, 4 mutácie). Eurospar 66 240 ks (20g).
+COOP JEDNOTA Žilina/Rajec: 3 500 ks. TRADE TISING GVP: 21 000 ks. TRADE TISING KARMEN: 10 000 ks.
+LETNÝ KUTIL-GAZDA ND II.: 30 000 ks + ND III.: 40 000 ks.
+CBA SLOVAKIA: 20 000 ks. ČISTÁ STUDŇA ČD: 144 000 ks. BONUS MARKET: 24 000 ks (urgencia faktúr 7 000 €).
+VSE+ZSE Tatra Billing: 5 300 + 3 200 ks.`,"Cromwell Post"),
+  E("2026-W25","nad",`Cenové ponuky — volebné materiály`,`Praženica / Bílek`,"ponuka",`MARTIN IGNER: CP na tlač + ND v rámci SR vrátane obálkovania ~100–120 000 € bez DPH.
+EFFWAD: CP na tlač + ND Bratislava ~14 000 € bez DPH.
+VARÍNSKA TLAČIAREŇ: CP na ND ~250 000 ks, cca 9 250 € bez DPH.
+MARIANA HUDÁKOVÁ: CP na tlač + ND Senec, cca 1 000–1 300 € bez DPH.
+BISTRO MARATHON: CP na tlač + ND 10 000 ks BA. ZACHER-NA VÍNEČKO: 6 000 ks BA. FINDURA REALITY: 20 000 ks Svit/Kežmarok/Poprad.`,"Cromwell Post"),
+  E("2026-W25","nad",`HL. Mesto BA — Brožúra`,`Bajúsová`,"ponuka",`Predbežný záujem o poloadresné doručovanie. Kampaň plánovaná v lete.
+Čakáme na cenové porovnania a schválenie navýšenia rozpočtu (aby nemuseli vypisovať VO). Záujem aj o tlač brožúr.`,"Cromwell Post"),
+  E("2026-W25","nad",`DIAMONT FISH`,`Dávidová`,"potvrdene",`Klient akceptoval CP na neadresné doručovanie. Pokrytie cca 36 500 ks, fakturácia 1 140 €, zaslaná zálohovka. Distribúcia koncom júna.`,"Cromwell Post"),
+  E("2026-W25","nad",`Dm drogerie markt — zvýšený náklad`,`Praženica`,"jednanie",`Zvýšený náklad v 09+10/2026 mesiacoch o spolu cca 1 mil. ks.`,"Cromwell Post"),
+  E("2026-W25","nad",`COFIDIS`,`Praženica`,"ponuka",`Príprava CP na kampaň ND vrátane tlače, 80 000 ks.`,"Cromwell Post"),
+  E("2026-W25","zelena",`Potvrdené spolupráce — Modra / Ľubica`,`Miro`,"bezi",`Modra: zásielky vyprodukované a odoslané, rozširujeme spoluprácu o skenovanie doručeniek.
+Ľubica: zásielky vyprodukované a odovzdané klientovi.
+V oboch prípadoch drobné nedostatky (chýbajúce orámovania, ťažké odtrhávanie doručeniek) — výroba prisľúbila nápravu.`,null),
+  E("2026-W25","zelena",`Mestá / obce`,`Miro`,"jednanie",`Vysoký záujem vo všetkých mestách kde prebehlo stretnutie.
+Bratislava (10.6.): predložená ponuka, pilot dennej pošty cez Zelenú tlačiareň, potenciál 50 000 zásielok/rok.
+Piešťany (19.6.): inštalácia Zelených tlačiarní počas prázdnin, pilot dennej pošty, 40 ľudí z MÚ.
+Bojnice, Prievidza, Topoľčany, Komárno: predložené cenové ponuky.
+Žilina, Nové Zámky: dohodovanie termínu stretnutia.`,null),
+  E("2026-W25","zelena",`Swan`,`Miro`,"jednanie",`Rozšírenie zapojenia: oddelenie zákazníckej starostlivosti — spracovanie listových zásielok (potvrdenia výpovedí, reklamácie).`,null),
+  E("2026-W25","zelena",`BVS`,`Miro`,"jednanie",`Predĺženie platnosti zmluvy na produkciu zásielok s faktúrami do 30.6.2026. Dovtedy plánujú zrealizovať verejné obstarávanie.`,null),
+  E("2026-W25","zelena",`CoraGeo`,`Miro`,"bezi",`Hodnotiace stretnutie a optimalizácia spúšťania zapojenia ďalších miest cez DissRT — 29.6.2026.`,null),
+  E("2026-W25","zelena",`Červený nos Clowndoctors`,`Zuzana K.`,"bezi",`Mailing HM4 v spracovaní, schvaľovanie náhľadov, deduplikácia databázy, odsúhlasenie tlače vo výrobe.
+23 390 ks, obrat 16 600 EUR, marža 22%, príbal ceruzka/ZS, odoslanie 24.6.2026, doručovanie 28.–29.6.2026.
+Odkomunikovaná zmena distribučných blokov od 09/2026.`,null),
+  E("2026-W25","zelena",`Poradca podnikateľa`,`Zuzana K.`,"bezi",`Príprava pravidelných reportov a štatistík. Riešenie skladových zásob.`,null),
+  E("2026-W25","zelena",`IAD Investments`,`Zuzana K.`,"bezi",`701 zásielok — generovanie layoutov (adresy na listy) + nahrané cez konto klienta.`,null),
+  E("2026-W25","zelena",`AGRO SK / PoleNova`,`Zuzana K.`,"bezi",`Objednávka na spracovanie zásielok PoleNova 4 006 ks.
+Príprava automatizácie pokračuje — treba zriadiť konto, produkty a odkomunikovať požiadavky na prenos dát.`,null),
+  E("2026-W25","zelena",`Union zdravotná poisťovňa`,`Zuzana K.`,"bezi",`Odchodové listy 693 ks (Potvrdená/Doporučená). RKM screening 3 640 ks.
+Avizovaná ďalšia dávka Výziev na splnenie OP ~5 000 ks (DDVR) — budúci týždeň.
+Avizované spracovanie Dodatkov: nové produkty s väčšou spinkou, klient si bude zásielky nahrávať sám.`,null),
+  E("2026-W25","zelena",`RAJAPACK CZ`,`Zuzana K.`,"ponuka",`Aktívne oslovený klient: zadanie na CP pre fóliovanie + adresná distribúcia katalógov ročne cca 90 000 ks.
+Čakáme na info od D. Ševcechovej, či ich vieme zaradiť na Periodickú tlač.`,null),
+  E("2026-W25","zelena",`Nadácia Fides et Ratio`,`Zuzana K.`,"lead",`Požiadavka na nové produkty do konta — plánuje odoslať cca 1 000 zásielok s listami a niekoľko s knižkami.`,null),
+  E("2026-W25","zelena",`REPRE`,`Zuzana K.`,"ponuka",`Aktívne oslovený klient: CP na kompletizáciu katalógov (fólia, štítok) + ponuka na balíkové služby. Zatiaľ bez spätnej väzby.`,null),
+  E("2026-W25","zelena",`Digitálna koalícia`,`Zuzana K.`,"potvrdene",`Nový klient: vyhrali sme výberové konanie pre kampaň Online žiak.
+Predpokladaná tržba 20 000 EUR, marža 23%. Realizácia v polovici 08/2026 — dotiahnuť zmluvu a formality.`,null),
+  E("2026-W25","zelena",`EkoArt-SK`,`Roman`,"pozastavene",`Klient opätovne zrušil stretnutie a povedal, že nemá záujem o spoluprácu bez dovysvetlenia cenovej ponuky.`,null),
+  E("2026-W25","zelena",`UZP`,`Roman`,"bezi",`Online stretnutie s klientom k dovysvetleniu a opätovnému zaškoleniu Zelenej tlačiarne.`,null),
+  E("2026-W25","zelena",`TransData`,`Roman`,"pozastavene",`Telefonát s klientom — tento rok nebudeme robiť karty pre vysokoškolákov. Legislatívne zmeny od ministerstva školstva. Klient sám nevie čo a ako.`,null),
+  E("2026-W25","zelena",`UP / UZP podateľňa`,`Roman`,"pozastavene",`Klient po prieskume rozhodol pozastaviť outsourcing podateľne — nie je priorita. Nevie povedať kedy to spustia.`,null),
+  E("2026-W25","zelena",`Blue DRM`,`Zuzana D.`,"ponuka",`Kalkulácia k 4 mailingom AT/CZ — 11 200 ks spolu, obrat 1 700 €, marža 15%.
+Vyzdvihovanie 17 prepraviek vrátených zásielok z AT.`,null),
+  E("2026-W25","zelena",`Finclub`,`Zuzana D.`,"bezi",`Zadaná tlač časopisu A4, 3 200 ks.`,null),
+  E("2026-W25","zelena",`Dôvera`,`Zuzana D.`,"bezi",`Objednávka: obálky 200 000 ks, listy 100 000 ks, karty IČP 50 000 ks.
+Zriadenie nových prístupov do klientskej zóny.`,null),
+  E("2026-W25","zelena",`Zľavomat`,`Zuzana D.`,"ponuka",`Príprava CP k tlači neštandardných obálok v 3 mutáciách.`,null),
+  E("2026-W25","zelena",`MUW`,`Zuzana D.`,"ponuka",`Kalkulácia na tlač + AD doporučených zásielok/PZ 5 000–10 000 ks (1 050–1 750 € tržby, marža 60%). Avizovaný mailing 103 ks.`,null),
+  E("2026-W25","zelena",`Centropen`,`Zuzana D.`,"jednanie",`Avizovanie nového mailingu na leto 2026.`,null),
+  E("2026-W25","zelena",`IBSA`,`Zuzana D.`,"bezi",`Objednávka tlače letákov 3 200 ks, obrat 700 €, marža 34%.`,null),
+  E("2026-W25","zelena",`Verteco Digital`,`Zuzana D.`,"ponuka",`Nový klient — príprava kalkulácie na mailing 2× mesačne, 2 000 ks.`,null),
+  ];
+}
+
+function importW26TlacPostoveEntries(){
+  const ts=Date.now();
+  const E=(wk,seg,cl,ob,st,ev,fi)=>({
+    id:'imp_'+Math.random().toString(36).slice(2,9),
+    segment:seg, weekId:wk, client:cl, salesperson:ob, status:st, events:ev,
+    firma:fi||null, ownerKey:ob.toLowerCase(), ownerName:ob,
+    ownerUid:'import_w26_tlac_postove', comments:[], updatedAt:ts
+  });
+  return [
+  E("2026-W26","tlac",`Tesco`,`Papaj`,"bezi",`Podklady na BTS z CZ a HU máme, pracujeme s nimi. SK pošlú až budúci týždeň.
+Fakturácia dodávky 10 000 ks plastových CC kariet Maďarom.`,null),
+  E("2026-W26","tlac",`365.bank`,`Papaj`,"bezi",`Banka poslala OBJ na CR-28857, začíname s úpravami šablóny (rozsah 3MD).`,null),
+  E("2026-W26","tlac",`CGOS / ZEPO`,`Papaj`,"bezi",`ZEPO CZ: realizácia 2. vlny kampane Wedos pohľadnice, objem 22 000 zásielok.`,null),
+  E("2026-W26","tlac",`AZ Prima / Chytrá pošta SK`,`Papaj`,"jednanie",`Opätovne urgovaný Polčiak kvôli začatiu párovania zásielok do našej siete — stále bez reakcie.
+Realizácia testovacej dávky tlače pohľadníc (2 357 ks), celkový objem cez 20 000 ks.`,null),
+  E("2026-W26","tlac",`ČSOB`,`Papaj`,"bezi",`Žiadne mimoriadne udalosti ani požiadavky.`,null),
+  E("2026-W26","tlac",`Viagem SK`,`Papaj`,"jednanie",`Zaslaná predvyplnená objednávka za účelom vystavenia OBJ. Dáta by mali byť cca 5 000 denne.
+Klient OBJ tento týždeň nepodpísal — bol na dovolenke. Akcia sa spustí od budúceho týždňa.`,null),
+  E("2026-W26","tlac",`AD HOC — Klarstein / Strabag / Interné`,`Papaj`,"bezi",`Klarstein: zákazka (16 700 adresných listov) — schvaľujeme vizuál obálky aj náhľady, výroba budúci týždeň.
+Strabag BVRZ: klient sa ozval na ponuku (4 000 CZ + 1 000 SK mesačne), zaslaný update českého poštovného.
+INTERNÉ: spustená ostrá verzia Cromwell Print Calculator a Dashboard_live.
+INTERNÉ: Kolos Shipping Calculator v developerskej verzii, ostré spustenie v priebehu 1–2 týždňov.
+Drescher: priebežné úlohy z MVM tendrov a Yettel tendra.`,null),
+  E("2026-W26","tlac",`SSE`,`Donar`,"bezi",`RFP zverejnené. Spolu s Alanatou riešime implementáciu a nasadenie digitálneho poštára — zákazka cez 1 mil. faktúr.
+Pripravuje sa ďalšia objednávka — platba za upgrade Quadientu na V17: 6 068 €.`,null),
+  E("2026-W26","tlac",`VšZP`,`Donar`,"potvrdene",`V tendri na 1. mieste — 3-ročný kontrakt, suma 662 k€, marža 354 k€ (ročne 220 k€ revenue, 118 k€ marža).
+Požiadaní o predĺženie termínu pre sporný doklad (potvrdenie, že voči firme nie je súdne konanie). Máme 10 dní (do 7.7.2026).
+Podaná 2. dávka ročných zúčtovaní — 77 500 ks. Skenujeme zásielky a doručenky z 1. dávky.`,null),
+  E("2026-W26","tlac",`Orange`,`Donar`,"jednanie",`Orange vypísal tender iba na digitálneho poštára — zúčastní sa Softip.
+Cromwell aktuálne nemá čo ponúknuť.`,null),
+  E("2026-W26","tlac",`SSD`,`Donar`,"bezi",`Zmluva spripomienkovaná a odoslaná. Odporúčam uzavrieť zmluvu aj s CGOS (podmienky 1:1) — predídeme pokutám za nesplnenie SLA.`,null),
+  E("2026-W26","tlac",`Slovak Telekom / TMCZ / Digi`,`Donar`,"bezi",`23.6. obed s Vlasaným — pomohol s riešením Peppolu, odporučil nespájať poštára a implementátora.
+Telekom získal zákazku Digitálneho seniora z MIRRI — riešime implementáciu, obálky, dátové toky, layouting, reporting.
+Mimoriadna dávka DIGI: 54 000 ks listov o nástupníctve (riešené mimo PrintAppu).
+Teamsy s Telekomom 1.7. ohľadom zmeny dodávateľa SAPovského riešenia — veľká príležitosť.`,null),
+  E("2026-W26","tlac",`ŽSSK`,`Donar`,"jednanie",`Zazmluvňovanie spomalené implementáciou nových SW nástrojov. Aktuálne po 2,5 mesiaci u generálnej riaditeľky na podpis.`,null),
+  E("2026-W26","tlac",`SLSP`,`Donar`,"jednanie",`Stretnutie s Kolmačkovou 24.6. — projekt OMS zobrali od ČS, nemajú ujasnené šablónovanie (predpoklad externistov = veľký potenciál).
+Prezentované riešenie Peppolu Zuzke — pošle kolegyni, ktorá to má na starosti.
+Budeme dodávať 250 000 ks obalov na karty. Revenue 23 750 €, zisk 3 375 €.`,null),
+  E("2026-W26","tlac",`Generali`,`Donar`,"bezi",`Prvé kolo prezentácie interného riešenia Peppolu (Donoval) — pozitívny feedback, požiadali o nacenenie.
+Projekt šablónovania úspešne začatý, očakávame 2 roky.`,null),
+  E("2026-W26","tlac",`DATAFORM`,`Praženica`,"bezi",`Vyžiadanie CP pre produkciu ofsetu pre mailingy dm drogerie.
+Reklamácia dodaných darčekových kariet — do 24h vyrobené a pripravené na vyzdvihnutie v Dataform.`,null),
+  E("2026-W26","ad",`Tesco`,`Bajúsová`,"bezi",`BTS Statement mailing vo výrobe, distribúcia 7.–8. 8. 2026.
+Objemy pred očistením DTB: 193 602 ks rewarded / 3 054 ks high reward.
+Dodatok: opätovná urgencia od Doriny, od zaslania upravenej verzie nijako nereagovala.`,"Cromwell Post"),
+  E("2026-W26","ad",`ČSOB / exOTP`,`Bajúsová`,"jednanie",`PK — čakám na potvrdenie termínu dodania mesačnej dávky. Denné dávky sa párujú podľa dohody.
+Budúci týždeň pripravíme dodatok k zmluve (úprava DC — mesačné obnovy najneskôr 7.–8. cyklu).
+Zberné jazdy: klient vrátil spripomienkovaný dodatok (upravili výšku sankcií, škrtli podmienky úpravy cien, upravili náhradu škody). Budem ďalej vyjednávať.
+Urgovanú faktúru za PK z apríla klient obratom uhradil.`,"Cromwell Post"),
+  E("2026-W26","ad",`PSS`,`Bajúsová`,"bezi",`Príprava harmonogramu párovania 3Q/2026.
+V priebehu týždňa ďalšia reklamácia na nedoručenie zásielky. Prvá sťažnosť z BA na doručenie mimo schránky opodstatnená.
+Z PSS dostávame reklamácie veľmi sporadicky.`,"Cromwell Post"),
+  E("2026-W26","ad",`Dajana Rodriguez`,`Bajúsová`,"bezi",`Fakturácia júnového mailingu vrátane nadnákladov na spracovanie — klientovi vyúčtovaná takmer 4× vyššia sadba ako náklad z výroby.
+Komunikujeme ohľadom plánu kampaní na ďalšie obdobie, príprava harmonogramu.
+Pohľadávky vysporiadané.`,"Cromwell Post"),
+  E("2026-W26","ad",`Tatra Billing`,`Uhláriková`,"bezi",`Komunikácia ohľadom zmien v zmluvách ich klientov.`,"Cromwell Post"),
+  E("2026-W26","ad",`O2`,`Uhláriková`,"bezi",`Bez zmeny.`,"Cromwell Post"),
+  E("2026-W26","ad",`Digi / Telekom`,`Uhláriková`,"bezi",`Telekom vyhralo MIRRI — komunikácia s Telekomom a ministerstvom ohľadom požiadaviek na termíny, reporty.
+Párované do siete ako PZ, cena 1,65 €. Plánovaný termín podkladov: 26.6., druhá vlna 2.7. Objem zatiaľ neznámy (čakajú na DTB z ministerstva a podpis ministra). Doručovanie v 1. a 2. bloku.
+Digi: špeciálna akcia cca 49 000 zásielok, párujeme do siete, vývoz 26.6.`,"Cromwell Post"),
+  E("2026-W26","ad",`SSE`,`Uhláriková`,"jednanie",`Komunikácia ohľadom párovania v nových blokoch.
+Návrh: všetko budeme párovať a iba na špeciálnu požiadavku dáme zásielky na SP. Potrebná komunikácia s rôznymi oddeleniami, následne osobné stretnutie.`,"Cromwell Post"),
+  E("2026-W26","ad",`Generali`,`Ševcechová`,"bezi",`Bežná agenda.`,"Cromwell Post"),
+  E("2026-W26","ad",`365 banka`,`Ševcechová`,"bezi",`Bežná agenda.`,"Cromwell Post"),
+  E("2026-W26","ad",`SLSP`,`Ševcechová`,"bezi",`Bežná agenda.`,"Cromwell Post"),
+  E("2026-W26","ad",`Ostatní klienti`,`Bajúsová / Ševcechová / Uhláriková`,"bezi",`METRO: klient pripravuje podklady k mimoriadnej kampani — 3 000 zásielok D+4, realizácia polovica júla.
+Viagem SK: odoslaná objednávka, čakáme na potvrdenie, DTB a objemy.
+CGOS: CP na balenie a doručenie balíkov Nurofen, objem 1 283 ks — feedback k cenám zatiaľ nemáme.
+RED POST Nadácia Christiania: klient si vyžiadal stretnutie k označovaniu/príprave, dohodnutý online support so Stanom Balážom.
+KLARSTEIN: klient dodal chýbajúce podklady, pracujeme na výrobe 16 700 ks zahraničných zásielok — dodávame Spring mailu budúci týždeň.
+cargo-partner: cena CP na 3 800 ks listov je vysoká, odošlú listy elektronicky.
+Red Post – Fakturuj.si: zaslaná CP na 1–2 000 ks DM 1×/2 mesiace, zatiaľ bez feedbacku.
+CEWE: fakturácia 20 000 ks POS materiálov — 1 300 €. Klient uhradí s miernym omeškaním (migrácia systémov).`,"Cromwell Post"),
+  E("2026-W26","ad",`Pandan / Medikom`,`Popelková`,"bezi",`Príprava ďalšej distribúcie, návoz materiálov cca 11 t.`,"KOLOS"),
+  E("2026-W26","ad",`Asendia DE`,`Praženica`,"ponuka",`CP na AD — katalógy 5 000 ks.`,"KOLOS"),
+  E("2026-W26","ad",`CRW produkcia AD — Ivanka p. Dunaji`,`Praženica`,"bezi",`Analýza remittendy — po oprave adresných bodov úspora dočasiek cca 600 ks ročne.`,"KOLOS"),
+  E("2026-W26","ad",`AT POST / About You`,`Praženica`,"ponuka",`About You — riešenie bez DTB, via OCR. Objem 20–50 000 ks AD.`,"KOLOS"),
+  E("2026-W26","nad",`COOP JEDNOTA`,`Moravčík / Bucseková / Dávidová / Bílek`,"bezi",`Distribúcia celoslovenského letáku: 1 636 600 ks.
+Ponúknutý predĺžený distribučný blok 19.–22. 12. 2026. Klient sa doposiaľ nevyjadril.`,"Cromwell Post"),
+  E("2026-W26","nad",`BIEDRONKA`,`Moravčík`,"pozastavene",`Klient sa 22.6.2026 vyjadril, že o distribúciu záujem nemajú. Dôvod: vysoká cena, očakávali 20–29 €/1 000 ks.`,"Cromwell Post"),
+  E("2026-W26","nad",`TESCO`,`Dávidová`,"bezi",`Distribúcia: 1 252 000 ks.`,"Cromwell Post"),
+  E("2026-W26","nad",`JYSK`,`Bucseková`,"bezi",`V danom týždni žiadna distribúcia.`,"Cromwell Post"),
+  E("2026-W26","nad",`MOBELIX / XXXLUTZ`,`Bucseková`,"bezi",`Distribúcia XXXLutz: 495 000 ks. SK 2× nad garant.`,"Cromwell Post"),
+  E("2026-W26","nad",`PLANEO ELEKTRO`,`Bucseková`,"jednanie",`Klientovi pripravujeme návrhy alternatív, distribučných plánov a kalkulácie tlače. Plánované osobné stretnutie 9.7.`,"Cromwell Post"),
+  E("2026-W26","nad",`RED POST`,`Bucseková`,"bezi",`Distribúcia 10 materiálov, objem 1 953 000 ks:
+TETA 796 000, GS EUROTHERM 1 102 000, 101 DROGÉRIE 671 000, BBSK 203 000, TERNO 188 000, COOP JEDNOTA KA 137 000, COOP JEDNOTA NZ 132 000, KRAJ 92 000, DR. OPTIK 22 000, BENU LEKÁREŇ 13 000.`,"Cromwell Post"),
+  E("2026-W26","nad",`REGIONPRESS`,`Moravčík`,"pozastavene",`Distribúcia 39 mutácií novín: 1 375 960 ks + letáky (Záložne Breva 864 390, Lunter Detva 5 100, Lunter Žarnovica 2 200, Lunter Poltár 2 090).
+Pohľadávky k 12.6.: po splatnosti 335 393 €, v splatnosti 84 900 €, celkom 420 293 €.
+Spoločné kontroly zastavené 3. týždeň zo strany klienta. Dolaďujeme podmienky preverovania reklamácií.`,"Cromwell Post"),
+  E("2026-W26","nad",`Ostatní klienti`,`Moravčík / Stanček`,"bezi",`COOP JEDNOTA ŽILINA/RAJEC: 3 500 ks. COOP JEDNOTA NITRA: 103 200 ks. COOP JEDNOTA ČADCA: 81 000 ks.
+LETNÝ KUTIL-GAZDA: ND III. 40 000 ks + tlač Region Press 917 100 ks, fakturácia klientovi 29 256 € (4% marža).
+PLUS JEDEN DEŇ ČD: 500 000 ks.
+ZSE-TATRA BILLING: 6 700 ks.`,"Cromwell Post"),
+  E("2026-W26","nad",`BISTRO MARATHON`,`Bílek`,"potvrdene",`Klient odsúhlasil CP. 25.6. odovzdané letáky do tlače. Distribúcia 5.–7. 7. 2026.`,"Cromwell Post"),
+  E("2026-W26","nad",`MARIANA HUDÁKOVÁ — volebný materiál`,`Bílek`,"potvrdene",`CP na tlač + ND v Senci (1 000–1 300 € bez DPH). Klientka potvrdila spoluprácu, pracuje sa na verzii letáku.`,"Cromwell Post"),
+  E("2026-W26","nad",`MARTIN IGNER — volebný materiál`,`Bílek`,"ponuka",`CP na tlač + ND v rámci SR (100 000–120 000 € bez DPH, vrátane obálkovania).
+Klient sa zatiaľ nevyjadril — čakajú s koncovým klientom, budú nás včas kontaktovať.`,"Cromwell Post"),
+  E("2026-W26","nad",`EFFWAD — volebný materiál`,`Bílek`,"pozastavene",`CP na tlač + ND Bratislava (~14 000 € bez DPH).
+Klientka: cena drahá, nesúhlasia s doručovaním do spoločných schránok ani s optimalizáciou. Požadujú 100% schránkovanie.`,"Cromwell Post"),
+  E("2026-W26","nad",`VARÍNSKA TLAČIAREŇ — volebný materiál`,`Bílek`,"ponuka",`CP na ND 250 000 ks (~9 250 € bez DPH). Klient bol kontaktovaný — stále čaká na vyjadrenie od ich klienta.`,"Cromwell Post"),
+  E("2026-W26","nad",`Art of Slovakia — volebný materiál`,`Bílek`,"lead",`Zaslaný zoznam lokalít (BA kraj). Po výbere lokalít bude klientke nacenená tlač a distribúcia volebných letákov.`,"Cromwell Post"),
+  E("2026-W26","nad",`HL. Mesto BA — Brožúra`,`Bajúsová`,"ponuka",`Záujem o poloadresné doručovanie, kampaň v lete.
+Nová informácia: budú vypisovať VK v skrátenej lehote (obe zákazky presahujú 50 000 €). Budú nás informovať o vyhlásení VK.
+Záujem aj o tlač brožúr. S klientom aktívne komunikujeme.`,"Cromwell Post"),
+  E("2026-W26","nad",`DIAMONT FISH`,`Dávidová`,"potvrdene",`Klient akceptoval CP na ND. Pokrytie 36 500 ks, fakturácia 1 140 €, zaslaná zálohovka. Distribúcia 28.–30. 6. 2026.`,"Cromwell Post"),
+  E("2026-W26","nad",`Billa`,`Stanček`,"bezi",`HL. leták: 1 164 350 ks (25g). Záhorská Bystrica: 3 780 ks (10g). Trnava: 3 070 ks (10g).`,"Cromwell Post"),
+  E("2026-W26","nad",`Lidl`,`Stanček`,"bezi",`Leták FOOD: 565 550 ks (28g).`,"Cromwell Post"),
+  E("2026-W26","nad",`Petit Press`,`Stanček`,"bezi",`Brezňan: 17 300 ks (20g).`,"Cromwell Post"),
+  E("2026-W26","nad",`Dm drogerie markt`,`Stanček`,"bezi",`V danom týždni žiadna distribúcia materiálov.`,"Cromwell Post"),
+  E("2026-W26","nad",`Ostatní klienti — Stanček`,`Stanček`,"bezi",`MAKOS: 25 640 ks (14g).
+Breva zastavárny: distribúcia + tlač v ČR — distribúcia 209 110 ks, tlač 149 979 ks (2g).`,"Cromwell Post"),
+  E("2026-W26","nad",`PANDAN / PS`,`Praženica`,"ponuka",`CP pre lepenie nalepiek + vklad do noviny, následne ND v KE — 40 000 ks.`,"KOLOS"),
+  ];
+}
+
+function openSegSheet(){ $("#segScrim").classList.add("open"); }
+function closeSegSheet(){ $("#segScrim").classList.remove("open"); }
+
 function isMine(e){ const last=state.user.name.split(" ").pop().toLowerCase(); return (e.ownerKey||"")===state.user.key || (e.salesperson||"").toLowerCase().includes(last); }
 function isMyTask(t){ const last=state.user.name.split(" ").pop().toLowerCase(); return (t.assignee||"").toLowerCase().includes(last); }
 // Môže editovať záznam: admin/sef=všetko, líder=svojich obchodníkov v segmente, obchodník=len svoje
@@ -1245,6 +1928,47 @@ function notesBlock(e){
 /* ---------------------------------------------------------------- DASHBOARD */
 function viewDashboard(){
   const wrap=el("div");
+
+  // Jednorazový import banner (admin, iba ak W25 dáta chýbajú)
+  const hasW25=state.all.some(e=>e.weekId==="2026-W25"&&e.ownerUid==="bulk_import_25_26");
+  if(state.user.role==="admin"&&!hasW25){
+    const ab=el("div","ai-banner"); ab.style.marginBottom="16px";
+    ab.innerHTML=`<div class="ai-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      <div class="ai-body"><b>Import: všetky oddelenia — porady 19.6. a 26.6.2026</b>
+      <p>128 záznamov: Balíky (W26), Digitálne + Tlač + Poštové + Zelená pošta (W25). Jednorazová akcia.</p></div>`;
+    const btn=el("button","ai-btn","⬇ Importovať všetky oddelenia");
+    btn.onclick=async()=>{
+      btn.disabled=true; btn.textContent="⏳ Importujem…";
+      const entries=importAllDepts25_26Entries(); let done=0;
+      for(const entry of entries){
+        await backend.save(entry); done++;
+        if(done%5===0) btn.textContent=`⏳ ${done}/${entries.length}…`;
+      }
+      toast(`✓ Importovaných ${done} záznamov!`); ab.remove();
+    };
+    ab.appendChild(btn); wrap.appendChild(ab);
+  }
+
+  // Import W26 Tlač + Poštové (z porady 25.-26.6.2026)
+  const hasW26tp=state.all.some(e=>e.weekId==="2026-W26"&&e.ownerUid==="import_w26_tlac_postove");
+  if(state.user.role==="admin"&&!hasW26tp){
+    const ab2=el("div","ai-banner"); ab2.style.marginBottom="16px";
+    ab2.innerHTML=`<div class="ai-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      <div class="ai-body"><b>Import: Tlač + Poštové — porada 25.–26.6.2026 (W26)</b>
+      <p>55 záznamov: aktualizované dáta Tlač, Adresné a Neadresné pre Týždeň 26.</p></div>`;
+    const btn2=el("button","ai-btn","⬇ Importovať Tlač + Poštové W26");
+    btn2.onclick=async()=>{
+      btn2.disabled=true; btn2.textContent="⏳ Importujem…";
+      const entries2=importW26TlacPostoveEntries(); let done2=0;
+      for(const entry of entries2){
+        await backend.save(entry); done2++;
+        if(done2%5===0) btn2.textContent=`⏳ ${done2}/${entries2.length}…`;
+      }
+      toast(`✓ Importovaných ${done2} záznamov W26!`); ab2.remove();
+    };
+    ab2.appendChild(btn2); wrap.appendChild(ab2);
+  }
+
   const we=weekEntries();
   const clients=clientIndex();
   const xsAll=clients.filter(c=>c.crossSell);
@@ -1400,12 +2124,27 @@ function viewClientDetail(){
 /* ---------------------------------------------------------------- SEGMENT / LIST */
 function viewSegment(){
   const s=SEG[state.segFilter]||SEGMENTS[0];
-  // každé logo do vlastného rámčeka; KOLOS menší
   const logoHtml = s.logoKey2
     ? `<div class="seg-logo-box"><img src="${LOGOS[s.logoKey]}" alt="${s.short}"></div>
        <div class="seg-logo-box"><img src="${LOGOS[s.logoKey2]}" class="kolos-logo" alt="KOLOS"></div>`
     : `<div class="seg-logo-box"><img src="${LOGOS[s.logoKey]}" alt="${s.short}"></div>`;
-  return viewList(weekEntries().filter(e=>e.segment===s.id), s.name, "Záznamy za tento týždeň. Klikni na klienta pre históriu naprieč službami.", s, logoHtml);
+  const wrap=viewList(weekEntries().filter(e=>e.segment===s.id), s.name, "Záznamy za tento týždeň. Klikni na klienta pre históriu naprieč službami.", s, logoHtml);
+  // Jednorazový import pre Zelená pošta W26 (len admin, len raz)
+  const alreadyImported=state.all.some(e=>e.segment==="zelena"&&e.weekId==="2026-W26"&&e.ownerUid==="import_zp26");
+  if(s.id==="zelena" && state.user.role==="admin" && !alreadyImported){
+    const ab=el("div","ai-banner"); ab.style.marginBottom="16px";
+    ab.innerHTML=`<div class="ai-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      <div class="ai-body"><b>Import: porada Zelená pošta 26.6.2026</b><p>26 klientov pre Týždeň 26 z Word dokumentu — klikni na import.</p></div>`;
+    const btn=el("button","ai-btn","⬇ Importovať záznamy zo 26.6.");
+    btn.onclick=async()=>{
+      btn.disabled=true; btn.textContent="⏳ Importujem…";
+      const entries=zelenaPosta26Entries(); let done=0;
+      for(const entry of entries){ await backend.save(entry); done++; btn.textContent=`⏳ ${done}/${entries.length}…`; }
+      toast(`✓ Importovaných ${done} záznamov!`); ab.remove();
+    };
+    ab.appendChild(btn); wrap.insertBefore(ab,wrap.firstChild);
+  }
+  return wrap;
 }
 
 function viewList(list,title,sub,seg,logoHtml){
@@ -1527,7 +2266,7 @@ function entryCard(e,clients){
   card.innerHTML=`<div style="background:${s.color}"></div><div class="ebody">
     <div class="e-top"><div class="e-client"><span class="lk">${esc(e.client||"—")}</span>
       ${statusTag(e.status)}
-      ${e.firma?`<span class="firma-badge${isKolos?" kolos":""}"><img src="${firmaLogoSrc}" style="height:11px;width:auto;vertical-align:middle"> ${esc(e.firma)}</span>`:""}
+      ${e.firma?`<span class="firma-badge${isKolos?" kolos":""}"><img src="${firmaLogoSrc}" style="height:12px;width:auto;vertical-align:middle"></span>`:""}
       ${xsTags}
     </div><div class="e-actions"></div></div>
     <div class="e-events">${esc(e.events||"")}</div>
@@ -1667,7 +2406,8 @@ function openModal(entry,presetSeg){
   const segId2=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
   const seg2=SEG[segId2];
   $("#firmaField").style.display=(seg2&&seg2.firm)?"":"none";
-  const firmaVal=entry?.firma||"Cromwell Post";
+  // predvyplniť firmu — z existujúceho záznamu alebo z profilu prihláseného
+  const firmaVal=entry?.firma || state.user.firma || "Cromwell Post";
   $("#fFirma").querySelectorAll("input").forEach(i=>{ i.checked=(i.value===firmaVal); i.closest("label").classList.toggle("on",i.checked); });
   $("#scrim").classList.add("open"); setTimeout(()=>$("#fClient").focus(),60);
 }
