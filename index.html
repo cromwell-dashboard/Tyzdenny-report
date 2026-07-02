@@ -918,6 +918,7 @@ function weekRangeLabel(id){
 }
 function weekCmpDesc(a,b){ const A=parseWeekId(a),B=parseWeekId(b); return B.year-A.year || B.week-A.week; }
 const CURRENT_WEEK = weekId(new Date());
+const DEFAULT_WEEK = shiftWeek(CURRENT_WEEK, -1); // vždy predchádzajúci týždeň
 
 /* ============================================================================
    DEMO DÁTA — bez čísel, s cross-sell a históriou
@@ -1022,8 +1023,8 @@ function demoTasks(){
    STAV
    ============================================================================ */
 const state = {
-  view:"dashboard",
-  week:CURRENT_WEEK,
+  view:"segment",          // default: Balíky (prvý segment)
+  week:DEFAULT_WEEK,       // default: predchádzajúci týždeň
   user:null,
   all:[],
   tasks:[],
@@ -1033,8 +1034,8 @@ const state = {
   activeClient:null,
   search:"",
   taskFilter:"open",
-  highlightClient:null,   // kľúč klienta na zvýraznenie po cross-linku
-  suggestions:[],          // AI návrhy (dočasné, neuložené)
+  highlightClient:null,
+  suggestions:[],
   suggestionsLoading:false,
   demoRole:"boss",
 };
