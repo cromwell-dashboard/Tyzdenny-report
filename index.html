@@ -336,6 +336,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 /* karta návrhu */
 .entry.suggested{border:1.5px dashed #8fa4e8;background:linear-gradient(180deg,#f5f7ff 0%,#fff 60%)}
 .sug-badge{font-size:10.5px;font-weight:700;color:var(--brand);background:var(--brand-soft);border-radius:20px;padding:2px 9px;border:1px solid #c5cff5;letter-spacing:.02em}
+.sug-badge.copy{color:#7a5208;background:#FBF1DC;border-color:#f0e0bd}
 .sug-actions{display:flex;gap:8px;margin-top:11px;padding-top:10px;border-top:1px dashed #d4daf5}
 .sug-accept{padding:7px 14px;border-radius:8px;border:none;background:var(--green);color:#fff;font-weight:600;font-size:12.5px;cursor:pointer}
 .sug-accept:hover{filter:brightness(1.08)}
@@ -1890,7 +1891,29 @@ Odpovedz IBA validným JSON poľom:
   state.suggestionsLoading=false; render();
 }
 function dismissSuggestion(id){ state.suggestions=state.suggestions.filter(s=>s.id!==id); render(); }
-async function acceptSuggestion(sug){ const {_suggested,...entry}=sug; await backend.save(entry); state.suggestions=state.suggestions.filter(s=>s.id!==sug.id); toast("Záznam uložený"); }
+async function acceptSuggestion(sug){ const {_suggested,_source,...entry}=sug; await backend.save(entry); state.suggestions=state.suggestions.filter(s=>s.id!==sug.id); render(); toast("Záznam uložený"); }
+
+/* Kopírovanie záznamov z minulého týždňa */
+function copyFromPrevWeek(segId){
+  const prevWeek=shiftWeek(state.week,-1);
+  const prevEntries=state.all.filter(e=>e.segment===segId && e.weekId===prevWeek);
+  if(!prevEntries.length){ toast("Minulý týždeň nemá žiadne záznamy pre tento segment."); return; }
+  // Nepridávame to čo už máme (rovnaký klient+segment v tomto týždni)
+  const thisWeekClients=new Set(state.all.filter(e=>e.segment===segId&&e.weekId===state.week).map(e=>clientKey(e.client)));
+  const copies=prevEntries
+    .filter(e=>!thisWeekClients.has(clientKey(e.client)))
+    .map(e=>({
+      ...e,
+      id:"copy_"+Math.random().toString(36).slice(2,9),
+      weekId:state.week,
+      _suggested:true, _source:"copy",
+      comments:[]
+    }));
+  if(!copies.length){ toast("Všetci klienti z minulého týždňa sú už zadaní."); return; }
+  state.suggestions=[...state.suggestions, ...copies];
+  render();
+  toast(`📋 Skopírovaných ${copies.length} záznamov — skontroluj a ulož.`);
+}
 
 /* ---------------------------------------------------------------- POZNÁMKY (komentáre) */
 const openNotes=new Set();
@@ -2173,11 +2196,17 @@ function viewList(list,title,sub,seg,logoHtml){
     if(hasPrev){
       const ab=el("div","ai-banner");
       ab.innerHTML=`<div class="ai-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
-        <div class="ai-body"><b>Návrhy na tento týždeň</b><p>AI navrhne záznamy na základe histórie — skontroluješ, upravíš alebo zahodíš.</p></div>`;
-      const btn=el("button","ai-btn");
-      btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Generovať návrhy`;
-      btn.onclick=()=>generateSuggestions(seg.id);
-      ab.appendChild(btn);
+        <div class="ai-body"><b>Návrhy na tento týždeň</b><p>AI navrhne záznamy na základe histórie, alebo skopíruj záznamy z minulého týždňa.</p></div>`;
+      const btnAI=el("button","ai-btn");
+      btnAI.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Generovať návrhy AI`;
+      btnAI.onclick=()=>generateSuggestions(seg.id);
+      const btnCopy=el("button","ai-btn");
+      btnCopy.style.cssText="background:#fff;color:#7a5208;border:1px solid #f0e0bd;box-shadow:none";
+      btnCopy.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopírovať z min. týždňa`;
+      btnCopy.onclick=()=>copyFromPrevWeek(seg.id);
+      const btns=el("div"); btns.style.cssText="display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto";
+      btns.appendChild(btnAI); btns.appendChild(btnCopy);
+      ab.appendChild(btns);
       wrap.appendChild(ab);
     }
   }
@@ -2199,10 +2228,14 @@ function viewList(list,title,sub,seg,logoHtml){
     // AI návrhy — vždy na vrchu (aj pri vyhľadávaní)
     const visibleSug = q ? segSuggestions.filter(s=>(s.client||"").toLowerCase().includes(q)) : segSuggestions;
     visibleSug.forEach(sug=>{
+      const isCopy = sug._source==="copy";
       const sc=el("div","entry suggested"); sc.style.gridTemplateColumns="4px 1fr";
+      if(isCopy) sc.style.borderColor="#f0e0bd";
       const s2=SEG[sug.segment];
       sc.innerHTML=`<div style="background:${s2.color};opacity:.5"></div><div class="ebody">
-        <div class="e-top"><div class="e-client">${esc(sug.client||"—")} ${statusTag(sug.status)} <span class="sug-badge">✦ Návrh AI</span></div><div class="e-actions"></div></div>
+        <div class="e-top"><div class="e-client">${esc(sug.client||"—")} ${statusTag(sug.status)}
+          <span class="sug-badge${isCopy?" copy":""}">${isCopy?"📋 Kópia z min. týždňa":"✦ Návrh AI"}</span>
+        </div><div class="e-actions"></div></div>
         <div class="e-events">${esc(sug.events||"")}</div>
         <div class="e-foot"><span class="obch"><span class="av">${initials(sug.salesperson||"?")}</span>${esc(sug.salesperson||"—")}</span></div>
         <div class="sug-actions">
@@ -2229,11 +2262,16 @@ function viewList(list,title,sub,seg,logoHtml){
       if(hasPrev && !q){
         em.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
           <b>Za tento týždeň zatiaľ žiadne záznamy</b>
-          <p style="font-size:13px;margin:6px 0 14px;color:var(--muted)">Na základe histórie môžem navrhnúť záznamy pre tento týždeň.</p>`;
-        const ab=el("button","ai-btn");
-        ab.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Generovať návrhy AI`;
-        ab.onclick=()=>generateSuggestions(seg.id);
-        em.appendChild(ab);
+          <p style="font-size:13px;margin:6px 0 14px;color:var(--muted)">Vygeneruj AI návrhy alebo skopíruj záznamy z minulého týždňa.</p>`;
+        const btnRow=el("div"); btnRow.style.cssText="display:flex;gap:10px;flex-wrap:wrap;justify-content:center";
+        const abAI=el("button","ai-btn");
+        abAI.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Generovať návrhy AI`;
+        abAI.onclick=()=>generateSuggestions(seg.id);
+        const abCopy=el("button","ai-btn");
+        abCopy.style.cssText="background:#fff;color:#7a5208;border:1px solid #f0e0bd;box-shadow:none";
+        abCopy.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopírovať z min. týždňa`;
+        abCopy.onclick=()=>copyFromPrevWeek(seg.id);
+        btnRow.appendChild(abAI); btnRow.appendChild(abCopy); em.appendChild(btnRow);
       } else {
         em.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><b>${q?"Nič sa nenašlo":"Za tento týždeň zatiaľ žiadne záznamy"}</b>${q?"Skús iný výraz.":"Pridaj prvý záznam alebo prepni týždeň."}`;
         if(!q){ const a=el("button","btn solid","+ Pridať záznam"); a.onclick=()=>openModal(null,seg?seg.id:null); em.appendChild(a); }
@@ -2419,12 +2457,32 @@ async function saveFromModal(){
   const segId=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked).value;
   const seg3=SEG[segId];
   const firma = (seg3&&seg3.firm) ? ([...$("#fFirma").querySelectorAll("input")].find(i=>i.checked)?.value||"Cromwell Post") : null;
-  const entry={ ...(editing||{}),
+
+  const isSuggestion = editing?._suggested === true;
+  const suggestionId = editing?.id;  // uložíme pred async aby sme ho mali po dokončení
+  const wasEditing = !!editing && !isSuggestion;
+
+  // Odstraníme _suggested/_source pred uložením, ak je návrh → nové čisté ID
+  const {_suggested, _source, ...baseEntry} = editing ? {...editing} : {};
+  if(isSuggestion) delete baseEntry.id;
+
+  const entry={ ...baseEntry,
     segment:segId, weekId: editing?.weekId||state.week, client,
     events:$("#fEvents").value.trim(), salesperson:$("#fObch").value.trim()||state.user.name,
     status:$("#fStatus").value, firma,
-    ownerKey:editing?.ownerKey||state.user.key, ownerName:editing?.ownerName||state.user.name, ownerUid:editing?.ownerUid||state.user.uid||"demo" };
-  await backend.save(entry); closeModal(); toast(editing?"Záznam upravený":"Záznam pridaný");
+    ownerKey:editing?.ownerKey||state.user.key, ownerName:editing?.ownerName||state.user.name,
+    ownerUid:editing?.ownerUid||state.user.uid||"demo" };
+
+  await backend.save(entry);
+
+  // Odstrániť z návrhov + znovu vykresliť
+  if(isSuggestion && suggestionId){
+    state.suggestions = state.suggestions.filter(s=>s.id!==suggestionId);
+    render(); // toto je kľúčové — bez toho DOM ostáva starý
+  }
+
+  closeModal();
+  toast(isSuggestion?`✓ Záznam uložený`: wasEditing?"Záznam upravený":"Záznam pridaný");
 }
 async function deleteFromModal(){ if(!editing) return; if(!confirm("Naozaj zmazať tento záznam?")) return; await backend.remove(editing.id); closeModal(); toast("Záznam zmazaný"); }
 
