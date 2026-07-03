@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 /* ============================================================
    Cromwell Group — Týždenný report · design tokens
@@ -24,6 +25,9 @@
   --card:#FFFFFF;
   --green:#2E7D5B;
   --red:#B5443A;
+  --nb:#12915A;             /* New business — zelená */
+  --nb-soft:#EAF7F0;
+  --nb-border:#B7E6CC;
 
   /* farby služieb */
   --s-baliky:#C6810A;
@@ -153,6 +157,18 @@ input,select,textarea{font-family:inherit; font-size:14px}
 /* ============================================================ SERVICE DIGEST */
 .svc-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
 @media (max-width:820px){.svc-grid{grid-template-columns:1fr}}
+.svclist{display:flex; flex-direction:column; gap:10px}
+.svclist-row{display:flex; align-items:center; gap:14px; width:100%; text-align:left; padding:16px; border:1px solid var(--line); border-radius:var(--r); background:var(--card); box-shadow:var(--shadow-sm); cursor:pointer; font-family:inherit}
+.svclist-row:active{background:var(--line-2)}
+.svclist-dot{width:14px; height:14px; border-radius:50%; flex:0 0 auto}
+.svclist-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px}
+.svclist-name{font-size:15px; font-weight:600; color:var(--ink)}
+.svclist-meta{font-size:12px; color:var(--muted)}
+.svclist-ct{font-family:var(--mono); font-size:17px; font-weight:700; color:var(--ink-soft); flex:0 0 auto}
+.svclist-arrow{width:18px; height:18px; color:var(--muted); flex:0 0 auto}
+.svclist-row.nb-row{border-color:var(--nb-border); background:var(--nb-soft)}
+.svclist-row.nb-row .svclist-name{color:var(--nb)}
+.svclist-row.nb-row .svclist-ct{color:var(--nb)}
 .svc{background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow-sm); overflow:hidden; display:flex; flex-direction:column}
 .svc .svc-h{display:flex; align-items:center; gap:10px; padding:13px 16px; border-bottom:1px solid var(--line-2); cursor:pointer}
 .svc .svc-h:hover{background:#fafbfc}
@@ -339,6 +355,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .entry.suggested{border:1.5px dashed #8fa4e8;background:linear-gradient(180deg,#f5f7ff 0%,#fff 60%)}
 .sug-badge{font-size:10.5px;font-weight:700;color:var(--brand);background:var(--brand-soft);border-radius:20px;padding:2px 9px;border:1px solid #c5cff5;letter-spacing:.02em}
 .sug-badge.copy{color:#7a5208;background:#FBF1DC;border-color:#f0e0bd}
+.nb-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:#fff;background:var(--nb);border-radius:20px;padding:3px 10px 3px 8px;letter-spacing:.02em;white-space:nowrap;box-shadow:0 1px 3px rgba(18,145,90,.4)}
+.nb-badge svg{width:11px;height:11px;flex:0 0 auto}
+.entry.nb,.tl-card.nb{border-color:var(--nb-border);background:linear-gradient(180deg,var(--nb-soft) 0%,#fff 60%)}
 .sug-actions{display:flex;gap:8px;margin-top:11px;padding-top:10px;border-top:1px dashed #d4daf5}
 .sug-accept{padding:7px 14px;border-radius:8px;border:none;background:var(--green);color:#fff;font-weight:600;font-size:12.5px;cursor:pointer}
 .sug-accept:hover{filter:brightness(1.08)}
@@ -661,6 +680,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
       <hr>
       <div class="grp">Služby</div>
       <div id="segNav"></div>
+      <button class="navitem" data-view="newbusiness">
+        <span class="dot" style="background:var(--nb)"></span><span class="lbl">New business</span><span class="ct" data-cnt="newbusiness">0</span>
+      </button>
 
       <hr>
       <div class="rail-foot">
@@ -672,6 +694,11 @@ input,select,textarea{font-family:inherit; font-size:14px}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           Nová úloha
         </button>
+        <button class="btn-primary" id="importNbBtn" style="background:#fff;color:var(--nb);border:1px solid var(--nb-border);box-shadow:none;margin-top:8px;display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Import New Business (CSV)
+        </button>
+        <input type="file" id="nbFileInput" accept=".csv" style="display:none">
         <button class="navitem" data-view="help" style="margin-top:8px">
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17"/></svg></span>
           <span class="lbl">Nasadenie & návod</span>
@@ -1027,7 +1054,7 @@ function demoTasks(){
    STAV
    ============================================================================ */
 const state = {
-  view:"segment",          // default: Balíky (prvý segment)
+  view:"segment",          // default: Balíky (prvý segment) — na mobile sa nižšie prepíše na "services"
   week:DEFAULT_WEEK,       // default: predchádzajúci týždeň
   user:null,
   all:[],
@@ -1043,6 +1070,8 @@ const state = {
   suggestionsLoading:false,
   demoRole:"boss",
 };
+// Na mobile má zmysel začať zoznamom služieb, nie rovno konkrétnym segmentom (Balíky)
+if(window.matchMedia && window.matchMedia("(max-width:900px)").matches){ state.view="services"; }
 let backend=null;
 
 /* ---------- pomôcky ---------- */
@@ -1106,7 +1135,7 @@ function demoBackend(){
     start(){ sync(); },
     async save(entry){
       if(entry.id && all.some(e=>e.id===entry.id)) all=all.map(e=>e.id===entry.id?{...entry}:e);
-      else { entry.id=uid(); entry.comments=entry.comments||[]; all.push({...entry}); }
+      else { if(!entry.id) entry.id=uid(); entry.comments=entry.comments||[]; all.push({...entry}); }
       sync();
     },
     async remove(id){ all=all.filter(e=>e.id!==id); sync(); },
@@ -1319,6 +1348,7 @@ function buildStatic(){
   const mk=(view,seg,label,dot)=>{ const b=el("button",null,(dot?`<span style="width:8px;height:8px;border-radius:50%;background:${dot}"></span>`:"")+label); b.dataset.view=view; if(seg)b.dataset.seg=seg; return b; };
   mob.appendChild(mk("dashboard",null,"Prehľad")); mob.appendChild(mk("clients",null,"Klienti")); mob.appendChild(mk("tasks",null,"Úlohy")); mob.appendChild(mk("mine",null,"Moje"));
   SEGMENTS.forEach(s=>mob.appendChild(mk("segment",s.id,s.short,s.color)));
+  mob.appendChild(mk("newbusiness",null,"New business","#12915A"));
 
   document.querySelectorAll(".rail .navitem, .mobnav button").forEach(b=>{
     b.onclick=()=>{ state.view=b.dataset.view; if(b.dataset.seg)state.segFilter=b.dataset.seg; state.search=""; state.activeClient=null; render(); };
@@ -1345,6 +1375,8 @@ function buildStatic(){
   $("#thisWeek").onclick=$("#weekLabel").onclick=()=>{ state.week=CURRENT_WEEK; state.suggestions=[]; render(); };
   $("#addBtn").onclick=()=>openModal(null);
   $("#addTaskBtn").onclick=()=>openTaskModal(null);
+  $("#importNbBtn").onclick=()=>$("#nbFileInput").click();
+  $("#nbFileInput").onchange=(e)=>{ const f=e.target.files[0]; handleNbFile(f); e.target.value=""; };
   $("#modalClose").onclick=$("#cancelBtn").onclick=closeModal;
   $("#scrim").onclick=e=>{ if(e.target===$("#scrim")) closeModal(); };
   $("#saveBtn").onclick=saveFromModal; $("#deleteBtn").onclick=deleteFromModal;
@@ -1364,7 +1396,7 @@ function buildStatic(){
     b.onclick=()=>{ state.view=b.dataset.view; state.activeClient=null; state.search=""; render(); };
   });
   // Služby tab → segment sheet
-  $("#bnServices").onclick=()=>openSegSheet();
+  $("#bnServices").onclick=()=>{ state.view="services"; state.activeClient=null; state.search=""; render(); window.scrollTo(0,0); };
 
   // ── MOBILE: segment sheet ──
   const segSheetList=$("#segSheetList");
@@ -1385,16 +1417,18 @@ function render(){
   $("#uName").textContent=state.user.name;
   $("#uRole").textContent=state.user.role==="sef"?"Šéf":state.user.role==="admin"?"Admin":state.user.role==="lider"?"Líder":"Obchodník";
   $("#uAvatar").textContent=initials(state.user.name);
+  $("#importNbBtn").style.display=["admin","sef"].includes(state.user.role)?"":"none";
 
   const {week}=parseWeekId(state.week);
   const wl=$("#weekLabel"); wl.querySelector("b").textContent=`Týždeň ${week}`; wl.querySelector("small").textContent=weekRangeLabel(state.week);
   wl.classList.toggle("now",state.week===CURRENT_WEEK);
   // week nav je relevantný len pre prehľad / službu / moje
-  const weekRelevant=["dashboard","segment","mine"].includes(state.view);
+  const weekRelevant=["dashboard","segment","mine","services","newbusiness"].includes(state.view);
   $("#weeknav").classList.toggle("dim",!weekRelevant);
 
   const we=weekEntries();
   const counts={}; SEGMENTS.forEach(s=>counts[s.id]=0); we.forEach(e=>counts[e.segment]++);
+  counts.newbusiness = we.filter(e=>e.isNewBusiness).length;
   document.querySelectorAll("[data-cnt]").forEach(c=>c.textContent=counts[c.dataset.cnt]||0);
   $("#mineCount").textContent=we.filter(isMine).length;
   $("#clientCount").textContent=clientIndex().length;
@@ -1413,7 +1447,7 @@ function render(){
     b.classList.toggle("active", b.dataset.view===state.view && state.view!=="segment");
   });
   const bnSvc=$("#bnServices");
-  if(bnSvc) bnSvc.classList.toggle("active", state.view==="segment");
+  if(bnSvc) bnSvc.classList.toggle("active", state.view==="segment"||state.view==="services");
   // Badge na úlohách
   const overdueTasks=state.tasks.filter(t=>t.status==="open"&&dayDiff(t.due)<0&&(canManageTasks()||isMyTask(t)));
   const badge=$("#bnTaskBadge");
@@ -1430,6 +1464,8 @@ function render(){
   else if(state.view==="clients") c.appendChild(viewClients());
   else if(state.view==="tasks") c.appendChild(viewTasks());
   else if(state.view==="mine") c.appendChild(viewList(we.filter(isMine),"Moje záznamy","Záznamy pod tvojím účtom za tento týždeň.",null));
+  else if(state.view==="services") c.appendChild(viewServicesList());
+  else if(state.view==="newbusiness") c.appendChild(viewNewBusiness());
   else if(state.view==="segment") c.appendChild(viewSegment());
   else if(state.view==="help") c.appendChild(viewHelp());
 }
@@ -1898,6 +1934,91 @@ Odpovedz IBA validným JSON poľom:
 function dismissSuggestion(id){ state.suggestions=state.suggestions.filter(s=>s.id!==id); render(); }
 async function acceptSuggestion(sug){ const {_suggested,_source,...entry}=sug; await backend.save(entry); state.suggestions=state.suggestions.filter(s=>s.id!==sug.id); render(); toast("Záznam uložený"); }
 
+/* ---------------------------------------------------------------- NEW BUSINESS · CSV IMPORT */
+// Mapovanie textu zo stĺpca "Služba" (CRM export) na existujúce segmenty dashboardu.
+// Poradie je dôležité: "neadresné" musí byť skontrolované pred "adresné" (je jeho podreťazcom).
+function mapServiceToSegment(raw){
+  const s=(raw||"").toLowerCase();
+  if(s.includes("balík")) return "baliky";
+  if(s.includes("digital")) return "digital";
+  if(s.includes("neadresné")) return "nad";
+  if(s.includes("adresné")) return "ad";
+  if(s.includes("tlač")) return "tlac";
+  if(s.includes("zelená")) return "zelena";
+  return null;
+}
+// Podporuje formáty "2026-07-01" aj "1.7.2026"
+function parseNbDate(str){
+  const s=(str||"").trim();
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return new Date(Date.UTC(+m[1],+m[2]-1,+m[3]));
+  m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+  if(m) return new Date(Date.UTC(+m[3],+m[2]-1,+m[1]));
+  return null;
+}
+function slugName(name){ return (name||"?").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"."); }
+
+async function importNewBusinessRows(rows){
+  let added=0, updated=0, locked=0, skippedSeg=0, skippedDate=0;
+  const unknownSegs=new Set();
+  for(const row of rows){
+    const csvId=(row["ID"]||"").toString().trim();
+    // "Obchodník" môže obsahovať duplicitný text (napr. "Meno, Meno") — berieme prvú časť
+    const obch=((row["Obchodník"]||"").split(",")[0]||"").trim();
+    const klient=(row["Klient"]||"").trim();
+    const sluzbaRaw=(row["Služba"]||"").trim();
+    const datumRaw=(row["Čas aktivity"]||"").trim();
+    const popis=(row["Popis"]||"").trim();
+
+    const segId=mapServiceToSegment(sluzbaRaw);
+    if(!segId){ skippedSeg++; unknownSegs.add(sluzbaRaw||"(prázdne)"); continue; }
+    const d=parseNbDate(datumRaw);
+    if(!d){ skippedDate++; continue; }
+    const wId=weekId(d); // automaticky zaradí do správneho týždňa podľa dátumu aktivity
+
+    const entryId="nb_"+(csvId||slugName(klient)+"_"+wId);
+    const existing=state.all.find(e=>e.id===entryId);
+
+    // Ak niekto záznam reálne upravil cez formulár (nbLocked), ďalší import ho už neprepíše
+    if(existing?.nbLocked){ locked++; continue; }
+
+    const entry={
+      id:entryId, segment:segId, weekId:wId,
+      client:klient||"—", events:popis, salesperson:obch||"—",
+      status: existing?.status || "lead",
+      firma:null,
+      isNewBusiness:true, nbSourceId:csvId,
+      ownerKey: existing?.ownerKey || ("nb:"+slugName(obch)),
+      ownerName: existing?.ownerName || obch,
+      ownerUid: existing?.ownerUid || "import_new_business",
+      comments: existing?.comments || [],
+    };
+    await backend.save(entry);
+    existing ? updated++ : added++;
+  }
+  const parts=[`${added} pridaných`];
+  if(updated) parts.push(`${updated} aktualizovaných`);
+  if(locked) parts.push(`${locked} preskočených (ručne upravené)`);
+  if(skippedSeg) parts.push(`${skippedSeg} preskočených (neznáma služba${unknownSegs.size?": "+[...unknownSegs].join(", "):""})`);
+  if(skippedDate) parts.push(`${skippedDate} preskočených (chybný dátum)`);
+  toast(`Import New Business — ${parts.join(", ")}.`);
+  render();
+}
+
+function handleNbFile(file){
+  if(!file) return;
+  if(typeof Papa==="undefined"){ toast("Knižnica na čítanie CSV sa nenačítala. Skontroluj pripojenie."); return; }
+  Papa.parse(file, {
+    header:true, delimiter:";", skipEmptyLines:true,
+    encoding:"UTF-8",
+    complete: (res)=>{
+      if(!res.data || !res.data.length){ toast("V súbore sa nenašli žiadne riadky."); return; }
+      importNewBusinessRows(res.data);
+    },
+    error: (err)=>{ toast("Import zlyhal: "+err.message); }
+  });
+}
+
 /* Kopírovanie záznamov z minulého týždňa */
 function copyFromPrevWeek(segId){
   const isObch = state.user.role==="obchodnik";
@@ -2138,9 +2259,9 @@ function viewClientDetail(){
     c.entries.filter(e=>e.weekId===wk).sort((a,b)=>a.segment.localeCompare(b.segment)).forEach(e=>{
       const s=SEG[e.segment];
       const canEditCard=canEdit(e);
-      const card=el("div","tl-card"); card.style.gridTemplateColumns="4px 1fr";
-      card.innerHTML=`<div style="background:${s.color}"></div><div class="tc-body">
-        <div class="tc-top">${schip(e.segment, e.firma)} ${statusTag(e.status)}</div>
+      const card=el("div","tl-card"+(e.isNewBusiness?" nb":"")); card.style.gridTemplateColumns="4px 1fr";
+      card.innerHTML=`<div style="background:${e.isNewBusiness?'#12915A':s.color}"></div><div class="tc-body">
+        <div class="tc-top">${schip(e.segment, e.firma)} ${statusTag(e.status)}${e.isNewBusiness?` <span class="nb-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span>`:""}</div>
         <div class="tc-events">${esc(e.events||"")}</div>
         <div class="tc-foot"><span class="av">${initials(e.salesperson||"?")}</span>${esc(e.salesperson||"—")}${e.editedByName?`<span class="edited-by" style="width:auto;margin-left:8px">✎ upravil ${esc(e.editedByName)}</span>`:""}</div></div>`;
       if(canEditCard){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
@@ -2152,6 +2273,82 @@ function viewClientDetail(){
     wkBlock.appendChild(items); tl.appendChild(wkBlock);
   });
   wrap.appendChild(tl);
+  return wrap;
+}
+
+/* ---------------------------------------------------------------- NEW BUSINESS (agregovaný pohľad naprieč službami) */
+function viewNewBusiness(){
+  const wrap=el("div");
+  wrap.appendChild(el("div","page-h",`<div>
+    <div class="eyebrow">${esc(weekRangeLabel(state.week))}</div>
+    <h1>✦ New Business</h1>
+    <div class="sub">Všetky importované aktivity z CRM, naprieč všetkými službami.</div></div>`));
+
+  const clients=clientIndex();
+  const tb=el("div","toolbar");
+  const search=el("div","search",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
+  const si=el("input"); si.placeholder="Hľadať klienta alebo text…"; si.value=state.search;
+  si.oninput=()=>{ state.search=si.value; renderRows(); };
+  search.appendChild(si); tb.appendChild(search); wrap.appendChild(tb);
+
+  const listWrap=el("div","entry-list"); wrap.appendChild(listWrap);
+
+  function renderRows(){
+    const q=state.search.trim().toLowerCase();
+    let rows=weekEntries().filter(e=>e.isNewBusiness &&
+      (!q || (e.client||"").toLowerCase().includes(q) || (e.events||"").toLowerCase().includes(q) || (e.salesperson||"").toLowerCase().includes(q)));
+    listWrap.innerHTML="";
+    if(!rows.length){
+      const em=el("div","empty");
+      em.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        <b>${q?"Nič sa nenašlo":"Za tento týždeň zatiaľ žiadne New Business záznamy"}</b>${q?"Skús iný výraz.":"Naimportuj CSV export z CRM cez tlačidlo v bočnom paneli."}`;
+      listWrap.appendChild(em); return;
+    }
+    rows.sort((a,b)=>SEG[a.segment].short.localeCompare(SEG[b.segment].short) || (a.client||"").localeCompare(b.client||""));
+    rows.forEach(e=>listWrap.appendChild(entryCard(e,clients,{showSegChip:true})));
+  }
+  renderRows();
+  return wrap;
+}
+
+/* ---------------------------------------------------------------- SLUŽBY (zoznam) — mobilná úvodná obrazovka */
+function viewServicesList(){
+  const wrap=el("div");
+  wrap.appendChild(el("div","page-h",`<div>
+    <div class="eyebrow">${esc(weekRangeLabel(state.week))}</div>
+    <h1>Služby</h1>
+    <div class="sub">Vyber službu a pozri jej záznamy za tento týždeň.</div></div>`));
+
+  const we=weekEntries();
+  const list=el("div","svclist");
+
+  const nbTotal=we.filter(e=>e.isNewBusiness).length;
+  const nbRow=el("button","svclist-row nb-row");
+  nbRow.innerHTML=`<span class="svclist-dot" style="background:var(--nb)"></span>
+    <span class="svclist-body">
+      <span class="svclist-name">✦ New business</span>
+      <span class="svclist-meta">${nbTotal} ${plural(nbTotal,"záznam","záznamy","záznamov")} naprieč všetkými službami</span>
+    </span>
+    <span class="svclist-ct">${nbTotal}</span>
+    <svg class="svclist-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`;
+  nbRow.onclick=()=>{ state.view="newbusiness"; state.search=""; render(); window.scrollTo(0,0); };
+  list.appendChild(nbRow);
+
+  SEGMENTS.forEach(s=>{
+    const rows=we.filter(e=>e.segment===s.id);
+    const nbCount=rows.filter(e=>e.isNewBusiness).length;
+    const row=el("button","svclist-row");
+    row.innerHTML=`<span class="svclist-dot" style="background:${s.color}"></span>
+      <span class="svclist-body">
+        <span class="svclist-name">${esc(s.name)}</span>
+        <span class="svclist-meta">${rows.length} ${plural(rows.length,"záznam","záznamy","záznamov")}${nbCount?` · ${nbCount}× New business`:""}</span>
+      </span>
+      <span class="svclist-ct">${rows.length}</span>
+      <svg class="svclist-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`;
+    row.onclick=()=>{ state.view="segment"; state.segFilter=s.id; state.search=""; render(); window.scrollTo(0,0); };
+    list.appendChild(row);
+  });
+  wrap.appendChild(list);
   return wrap;
 }
 
@@ -2295,14 +2492,14 @@ function viewList(list,title,sub,seg,logoHtml){
   renderRows();
   return wrap;
 }
-function entryCard(e,clients){
+function entryCard(e,clients,opts={}){
   const s=SEG[e.segment]; const k=clientKey(e.client);
   const c=clients.find(x=>x.key===k);
   const otherSegs=c?c.segments.filter(x=>x!==e.segment):[];
   const isHighlighted = state.highlightClient && clientKey(e.client)===state.highlightClient;
   const isKolos = e.firma==="KOLOS";
   const firmaLogoSrc = e.firma ? (isKolos ? LOGOS.kolos_s : LOGOS.post) : null;
-  const card=el("div","entry"+(isHighlighted?" highlighted":"")); card.style.gridTemplateColumns="4px 1fr";
+  const card=el("div","entry"+(isHighlighted?" highlighted":"")+(e.isNewBusiness?" nb":"")); card.style.gridTemplateColumns="4px 1fr";
   const canEditE=canEdit(e);
   // cross-link tagy — každý segment ako klikateľné tlačidlo
   const xsTags=otherSegs.map(segId=>{
@@ -2312,9 +2509,11 @@ function entryCard(e,clients){
     btn.onclick=(ev)=>{ ev.stopPropagation(); goSegmentClient(segId, clientKey(e.client)); };
     return btn.outerHTML;
   }).join("");
-  card.innerHTML=`<div style="background:${s.color}"></div><div class="ebody">
+  card.innerHTML=`<div style="background:${e.isNewBusiness?'#12915A':s.color}"></div><div class="ebody">
     <div class="e-top"><div class="e-client"><span class="lk">${esc(e.client||"—")}</span>
       ${statusTag(e.status)}
+      ${e.isNewBusiness?`<span class="nb-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span>`:""}
+      ${opts.showSegChip?schip(e.segment):""}
       ${e.firma?`<span class="firma-badge${isKolos?" kolos":""}"><img src="${firmaLogoSrc}" style="height:12px;width:auto;vertical-align:middle"></span>`:""}
       ${xsTags}
     </div><div class="e-actions"></div></div>
@@ -2501,6 +2700,8 @@ async function saveFromModal(){
     status:$("#fStatus").value, firma,
     ownerKey:editing?.ownerKey||state.user.key, ownerName:editing?.ownerName||state.user.name,
     ownerUid:editing?.ownerUid||state.user.uid||"demo",
+    // ak niekto ručne upraví importovaný záznam New Business, ďalší CSV import ho už neprepíše
+    nbLocked: baseEntry.isNewBusiness ? true : baseEntry.nbLocked,
     editedByName, editedByAt };
 
   await backend.save(entry);
