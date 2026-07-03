@@ -210,6 +210,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .tag .d{width:6px;height:6px;border-radius:50%}
 .obch{font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; margin-left:auto}
 .obch .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;background:var(--ink-soft)}
+.edited-by{font-size:11px; color:var(--muted); font-style:italic; width:100%; text-align:right}
 .ghost{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;color:var(--muted)}
 .ghost:hover{background:#fafbfc;color:var(--ink)}
 .ghost svg{width:15px;height:15px}
@@ -330,6 +331,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .ai-btn:hover{background:var(--brand-dark)}
 .ai-btn:disabled{opacity:.5;cursor:not-allowed}
 .ai-btn svg{width:15px;height:15px}
+.ai-btnrow{display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto}
 .ai-loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;padding:8px 0}
 .ai-spinner{width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;flex:0 0 auto}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -474,6 +476,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
   .ai-banner .ai-body b{ font-size:13px }
   .ai-banner .ai-body p{ font-size:11.5px }
   .ai-btn{ width:100%; justify-content:center; padding:10px }
+  .ai-btnrow{ flex-direction:column; width:100%; gap:8px }
 
   /* ── Modal → bottom sheet ───────────────────────────── */
   .scrim{ align-items:flex-end; padding:0 }
@@ -1773,12 +1776,11 @@ function closeSegSheet(){ $("#segScrim").classList.remove("open"); }
 
 function isMine(e){ const last=state.user.name.split(" ").pop().toLowerCase(); return (e.ownerKey||"")===state.user.key || (e.salesperson||"").toLowerCase().includes(last); }
 function isMyTask(t){ const last=state.user.name.split(" ").pop().toLowerCase(); return (t.assignee||"").toLowerCase().includes(last); }
-// Môže editovať záznam: admin/sef=všetko, líder=svojich obchodníkov v segmente, obchodník=len svoje
+// Môže editovať záznam: admin/sef/lider=všetko, obchodník=len svoje
 function canEdit(e){
   const r=state.user.role;
-  if(r==="admin"||r==="sef") return true;
+  if(r==="admin"||r==="sef"||r==="lider") return true;
   if(isMine(e)) return true;
-  if(r==="lider" && (state.user.segments||[]).includes(e.segment)) return true;
   return false;
 }
 // Môže zadávať/upravovať úlohy: admin/sef/líder=áno, obchodník=len označiť hotovo na svojej
@@ -1805,8 +1807,9 @@ const STATUS_FLOW = {
 };
 
 function generateSuggestionsLocal(segId){
+  const isObch = state.user.role==="obchodnik";
   const prevEntries = state.all
-    .filter(e => e.segment===segId && e.weekId<state.week)
+    .filter(e => e.segment===segId && e.weekId<state.week && (!isObch || isMine(e)))
     .sort((a,b)=>weekCmpDesc(a.weekId,b.weekId));
 
   // najnovší záznam pre každého klienta
@@ -1826,7 +1829,7 @@ function generateSuggestionsLocal(segId){
     suggestions.push({
       segment: segId,
       client:  e.client,
-      salesperson: e.salesperson,
+      salesperson: isObch ? state.user.name : e.salesperson,
       status:  flow.next,
       events:  flow.hint + ctxNote,
       weekId:  state.week,
@@ -1841,6 +1844,7 @@ function generateSuggestionsLocal(segId){
 
 async function generateSuggestions(segId){
   state.suggestionsLoading=true; state.suggestions=[]; render();
+  const isObch = state.user.role==="obchodnik";
 
   // Demo režim → lokálny generátor
   if(backend.mode==="demo"){
@@ -1851,7 +1855,7 @@ async function generateSuggestions(segId){
 
   // Produkčný režim → Anthropic API (vyžaduje api_key v hlavičke — nastavíš cez Firebase Function alebo proxy)
   const prevEntries = state.all
-    .filter(e=>e.segment===segId && e.weekId<state.week)
+    .filter(e=>e.segment===segId && e.weekId<state.week && (!isObch || isMine(e)))
     .sort((a,b)=>weekCmpDesc(a.weekId,b.weekId)).slice(0,25);
 
   if(!prevEntries.length){ state.suggestionsLoading=false; render(); return; }
@@ -1882,6 +1886,7 @@ Odpovedz IBA validným JSON poľom:
     const text=(data.content||[]).map(b=>b.text||"").join("");
     const arr=JSON.parse(text.replace(/```json|```/g,"").trim());
     state.suggestions=arr.map(s=>({...s, segment:segId, weekId:state.week,
+      salesperson: isObch ? state.user.name : s.salesperson,
       _suggested:true, id:"sug_"+Math.random().toString(36).slice(2,9),
       ownerKey:state.user.key, ownerName:state.user.name, ownerUid:state.user.uid||"demo", comments:[]}));
   }catch(err){
@@ -1895,9 +1900,11 @@ async function acceptSuggestion(sug){ const {_suggested,_source,...entry}=sug; a
 
 /* Kopírovanie záznamov z minulého týždňa */
 function copyFromPrevWeek(segId){
+  const isObch = state.user.role==="obchodnik";
   const prevWeek=shiftWeek(state.week,-1);
-  const prevEntries=state.all.filter(e=>e.segment===segId && e.weekId===prevWeek);
-  if(!prevEntries.length){ toast("Minulý týždeň nemá žiadne záznamy pre tento segment."); return; }
+  let prevEntries=state.all.filter(e=>e.segment===segId && e.weekId===prevWeek);
+  if(isObch) prevEntries=prevEntries.filter(isMine);
+  if(!prevEntries.length){ toast(isObch?"Za minulý týždeň nemáš vo svojich záznamoch čo kopírovať.":"Minulý týždeň nemá žiadne záznamy pre tento segment."); return; }
   // Nepridávame to čo už máme (rovnaký klient+segment v tomto týždni)
   const thisWeekClients=new Set(state.all.filter(e=>e.segment===segId&&e.weekId===state.week).map(e=>clientKey(e.client)));
   const copies=prevEntries
@@ -1906,6 +1913,9 @@ function copyFromPrevWeek(segId){
       ...e,
       id:"copy_"+Math.random().toString(36).slice(2,9),
       weekId:state.week,
+      salesperson: isObch ? state.user.name : e.salesperson,
+      ownerKey: isObch ? state.user.key : e.ownerKey,
+      ownerName: isObch ? state.user.name : e.ownerName,
       _suggested:true, _source:"copy",
       comments:[]
     }));
@@ -2132,7 +2142,7 @@ function viewClientDetail(){
       card.innerHTML=`<div style="background:${s.color}"></div><div class="tc-body">
         <div class="tc-top">${schip(e.segment, e.firma)} ${statusTag(e.status)}</div>
         <div class="tc-events">${esc(e.events||"")}</div>
-        <div class="tc-foot"><span class="av">${initials(e.salesperson||"?")}</span>${esc(e.salesperson||"—")}</div></div>`;
+        <div class="tc-foot"><span class="av">${initials(e.salesperson||"?")}</span>${esc(e.salesperson||"—")}${e.editedByName?`<span class="edited-by" style="width:auto;margin-left:8px">✎ upravil ${esc(e.editedByName)}</span>`:""}</div></div>`;
       if(canEditCard){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
         ed.style.cssText="position:absolute;right:12px;top:12px"; ed.onclick=()=>openModal(e);
         const body=card.querySelector(".tc-body"); body.style.position="relative"; body.appendChild(ed); }
@@ -2192,7 +2202,7 @@ function viewList(list,title,sub,seg,logoHtml){
 
   // AI banner
   if(seg && !state.suggestionsLoading && segSuggestions.length===0){
-    const hasPrev = state.all.some(e=>e.segment===seg.id && e.weekId<state.week);
+    const hasPrev = state.all.some(e=>e.segment===seg.id && e.weekId<state.week && (state.user.role!=="obchodnik" || isMine(e)));
     if(hasPrev){
       const ab=el("div","ai-banner");
       ab.innerHTML=`<div class="ai-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
@@ -2204,7 +2214,7 @@ function viewList(list,title,sub,seg,logoHtml){
       btnCopy.style.cssText="background:#fff;color:#7a5208;border:1px solid #f0e0bd;box-shadow:none";
       btnCopy.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopírovať z min. týždňa`;
       btnCopy.onclick=()=>copyFromPrevWeek(seg.id);
-      const btns=el("div"); btns.style.cssText="display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto";
+      const btns=el("div","ai-btnrow");
       btns.appendChild(btnAI); btns.appendChild(btnCopy);
       ab.appendChild(btns);
       wrap.appendChild(ab);
@@ -2257,13 +2267,13 @@ function viewList(list,title,sub,seg,logoHtml){
 
     if(!rows.length && !visibleSug.length && !state.suggestionsLoading){
       // prázdny týždeň — skontroluj či sú záznamy z minulých týždňov
-      const hasPrev = seg && state.all.some(e=>e.segment===seg.id && e.weekId<state.week);
+      const hasPrev = seg && state.all.some(e=>e.segment===seg.id && e.weekId<state.week && (state.user.role!=="obchodnik" || isMine(e)));
       const em=el("div","empty");
       if(hasPrev && !q){
         em.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
           <b>Za tento týždeň zatiaľ žiadne záznamy</b>
           <p style="font-size:13px;margin:6px 0 14px;color:var(--muted)">Vygeneruj AI návrhy alebo skopíruj záznamy z minulého týždňa.</p>`;
-        const btnRow=el("div"); btnRow.style.cssText="display:flex;gap:10px;flex-wrap:wrap;justify-content:center";
+        const btnRow=el("div","ai-btnrow"); btnRow.style.justifyContent="center";
         const abAI=el("button","ai-btn");
         abAI.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Generovať návrhy AI`;
         abAI.onclick=()=>generateSuggestions(seg.id);
@@ -2309,7 +2319,9 @@ function entryCard(e,clients){
       ${xsTags}
     </div><div class="e-actions"></div></div>
     <div class="e-events">${esc(e.events||"")}</div>
-    <div class="e-foot"><span class="obch"><span class="av">${initials(e.salesperson||"?")}</span>${esc(e.salesperson||"—")}</span></div></div>`;
+    <div class="e-foot"><span class="obch"><span class="av">${initials(e.salesperson||"?")}</span>${esc(e.salesperson||"—")}</span>
+      ${e.editedByName?`<span class="edited-by">✎ upravil ${esc(e.editedByName)}</span>`:""}
+    </div></div>`;
   card.querySelector(".lk").onclick=()=>goClient(k);
   if(canEditE){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`); ed.title="Upraviť"; ed.onclick=()=>openModal(e); card.querySelector(".e-actions").appendChild(ed); }
   card.querySelector(".ebody").appendChild(notesBlock(e));
@@ -2432,6 +2444,7 @@ function viewHelp(){
    ============================================================================ */
 let editing=null;
 function openModal(entry,presetSeg){
+  if(entry && !canEdit(entry)){ toast("Nemáš oprávnenie upraviť tento záznam."); return; }
   editing=entry;
   $("#modalTitle").textContent=entry?"Upraviť záznam":"Nový záznam";
   $("#deleteBtn").style.display=entry?"":"none";
@@ -2439,7 +2452,11 @@ function openModal(entry,presetSeg){
   $("#fSegment").querySelectorAll("input").forEach(i=>{ i.checked=(i.value===segId); i.closest("label").classList.toggle("on",i.checked); });
   $("#fClient").value=entry?.client||"";
   $("#fEvents").value=entry?.events||"";
-  $("#fObch").value=entry?.salesperson||(entry?"":state.user.name);
+  const isObchRole=state.user.role==="obchodnik";
+  $("#fObch").value = isObchRole ? state.user.name : (entry?.salesperson||(entry?"":state.user.name));
+  $("#fObch").readOnly = isObchRole;
+  $("#fObch").style.background = isObchRole ? "var(--line-2)" : "";
+  $("#fObch").title = isObchRole ? "Záznam sa vždy ukladá pod tvojím menom" : "";
   $("#fStatus").value=entry?.status||"jednanie";
   // firma field
   const segId2=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
@@ -2454,6 +2471,10 @@ function closeModal(){ $("#scrim").classList.remove("open"); editing=null; }
 async function saveFromModal(){
   const client=$("#fClient").value.trim();
   if(!client){ $("#fClient").focus(); $("#fClient").style.borderColor="var(--red)"; return; }
+
+  // Poistka: obchodník nikdy nesmie uložiť zmenu do záznamu, ktorý nie je jeho
+  if(editing && !canEdit(editing)){ toast("Nemáš oprávnenie upraviť tento záznam."); closeModal(); return; }
+
   const segId=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked).value;
   const seg3=SEG[segId];
   const firma = (seg3&&seg3.firm) ? ([...$("#fFirma").querySelectorAll("input")].find(i=>i.checked)?.value||"Cromwell Post") : null;
@@ -2461,17 +2482,26 @@ async function saveFromModal(){
   const isSuggestion = editing?._suggested === true;
   const suggestionId = editing?.id;  // uložíme pred async aby sme ho mali po dokončení
   const wasEditing = !!editing && !isSuggestion;
+  const isObchRole = state.user.role==="obchodnik";
 
-  // Odstraníme _suggested/_source pred uložením, ak je návrh → nové čisté ID
+  // Odstráníme _suggested/_source pred uložením, ak je návrh → nové čisté ID
   const {_suggested, _source, ...baseEntry} = editing ? {...editing} : {};
   if(isSuggestion) delete baseEntry.id;
 
+  // Líder, ktorý zasahuje do záznamu obchodníka (nie svojho vlastného), sa dopíše do záznamu
+  let editedByName = baseEntry.editedByName, editedByAt = baseEntry.editedByAt;
+  if(wasEditing && state.user.role==="lider" && editing.ownerKey && editing.ownerKey!==state.user.key){
+    editedByName = state.user.name; editedByAt = Date.now();
+  }
+
   const entry={ ...baseEntry,
     segment:segId, weekId: editing?.weekId||state.week, client,
-    events:$("#fEvents").value.trim(), salesperson:$("#fObch").value.trim()||state.user.name,
+    events:$("#fEvents").value.trim(),
+    salesperson: isObchRole ? state.user.name : ($("#fObch").value.trim()||state.user.name),
     status:$("#fStatus").value, firma,
     ownerKey:editing?.ownerKey||state.user.key, ownerName:editing?.ownerName||state.user.name,
-    ownerUid:editing?.ownerUid||state.user.uid||"demo" };
+    ownerUid:editing?.ownerUid||state.user.uid||"demo",
+    editedByName, editedByAt };
 
   await backend.save(entry);
 
@@ -2484,7 +2514,7 @@ async function saveFromModal(){
   closeModal();
   toast(isSuggestion?`✓ Záznam uložený`: wasEditing?"Záznam upravený":"Záznam pridaný");
 }
-async function deleteFromModal(){ if(!editing) return; if(!confirm("Naozaj zmazať tento záznam?")) return; await backend.remove(editing.id); closeModal(); toast("Záznam zmazaný"); }
+async function deleteFromModal(){ if(!editing) return; if(!canEdit(editing)){ toast("Nemáš oprávnenie zmazať tento záznam."); closeModal(); return; } if(!confirm("Naozaj zmazať tento záznam?")) return; await backend.remove(editing.id); closeModal(); toast("Záznam zmazaný"); }
 
 /* ============================================================================
    TASK MODAL
