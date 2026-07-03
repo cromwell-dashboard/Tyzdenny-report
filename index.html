@@ -224,9 +224,11 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .entry .e-foot{display:flex; align-items:center; gap:12px; margin-top:11px; flex-wrap:wrap}
 .tag{font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px}
 .tag .d{width:6px;height:6px;border-radius:50%}
-.obch{font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; margin-left:auto}
+.obch{font-size:12px; color:var(--muted); display:flex; align-items:center; gap:8px; margin-left:auto}
 .obch .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;background:var(--ink-soft)}
+.obch-info{display:flex; flex-direction:column; gap:1px; line-height:1.3}
 .edited-by{font-size:11px; color:var(--muted); font-style:italic; width:100%; text-align:right}
+.upd-date{font-size:10.5px; color:var(--muted); opacity:.8}
 .ghost{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;color:var(--muted)}
 .ghost:hover{background:#fafbfc;color:var(--ink)}
 .ghost svg{width:15px;height:15px}
@@ -879,29 +881,53 @@ const LIDER_EMAILS = {     // email → segmenty ktoré líder riadi
 
 // Obchodníci — email → {firma, segments}
 const OBCHODNIK_EMAILS = {
-  "alexandra.uhlarikova@cromwell.sk":  { firma:"Cromwell Post", segments:["ad","nad"] },
-  "stancek@kolos.sk":                  { firma:"KOLOS",         segments:["nad"] },
-  "dagmar.sevcechova@cromwell.sk":     { firma:"Cromwell Post", segments:["ad"] },
-  "prazenica@kolos.sk":               { firma:"KOLOS",         segments:["nad","ad","baliky"] },
-  "krajciova@kolos.sk":               { firma:"KOLOS",         segments:["baliky"] },
-  "mariana.pahokiova@digitance.sk":    { firma:"Digitance",     segments:["digital","baliky"] },
-  "miloslav.donar@cromwell.sk":        { firma:"Cromwell Post", segments:["tlac"] },
-  "peter.moravcik@cromwell.sk":        { firma:"Cromwell Post", segments:["nad"] },
-  "peter.papaj@cromwell.sk":           { firma:"Cromwell Post", segments:["tlac"] },
-  "simona.bucsekova@cromwell.sk":      { firma:"Cromwell Post", segments:["nad"] },
-  "tadeas.bilek@cromwell.sk":          { firma:"Cromwell Post", segments:["ad","nad"] },
-  "veronika.bajusova@cromwell.sk":     { firma:"Cromwell Post", segments:["ad"] },
-  "zuzana.davidova@cromwell.sk":       { firma:"Cromwell Post", segments:["nad","zelena"] },
-  "zuzana.kovalcikova@zelenaposta.sk": { firma:"Zelená pošta",  segments:["zelena"] },
-  "zuzana.dvorakova@zelenaposta.sk":   { firma:"Zelená pošta",  segments:["zelena"] },
-  "henrieta.kriskova@zelenaposta.sk":  { firma:"Zelená pošta",  segments:["zelena"] },
+  "alexandra.uhlarikova@cromwell.sk":  { name:"Alexandra Uhláriková", firma:"Cromwell Post", segments:["ad","nad"] },
+  "stancek@kolos.sk":                  { name:"Dagmar Stanček",       firma:"KOLOS",         segments:["nad"] },
+  "dagmar.sevcechova@cromwell.sk":     { name:"Dagmar Ševcechová",    firma:"Cromwell Post", segments:["ad"] },
+  "prazenica@kolos.sk":               { name:"Juraj Praženica",      firma:"KOLOS",         segments:["nad","ad","baliky"] },
+  "krajciova@kolos.sk":               { name:"Kristína Krajčiová",   firma:"KOLOS",         segments:["baliky"] },
+  "mariana.pahokiova@digitance.sk":    { name:"Mariana Páhokiová",    firma:"Digitance",     segments:["digital","baliky"] },
+  "miloslav.donar@cromwell.sk":        { name:"Miloslav Donar",       firma:"Cromwell Post", segments:["tlac"] },
+  "peter.moravcik@cromwell.sk":        { name:"Peter Moravčík",       firma:"Cromwell Post", segments:["nad"] },
+  "peter.papaj@cromwell.sk":           { name:"Peter Papaj",          firma:"Cromwell Post", segments:["tlac"] },
+  "simona.bucsekova@cromwell.sk":      { name:"Simona Bucseková",     firma:"Cromwell Post", segments:["nad"] },
+  "tadeas.bilek@cromwell.sk":          { name:"Tadeáš Bílek",         firma:"Cromwell Post", segments:["ad","nad"] },
+  "veronika.bajusova@cromwell.sk":     { name:"Veronika Bajúsová",    firma:"Cromwell Post", segments:["ad"] },
+  "zuzana.davidova@cromwell.sk":       { name:"Zuzana Dávidová",      firma:"Cromwell Post", segments:["nad","zelena"] },
+  "zuzana.kovalcikova@zelenaposta.sk": { name:"Zuzana Kovalčíková",   firma:"Zelená pošta",  segments:["zelena"] },
+  "zuzana.dvorakova@zelenaposta.sk":   { name:"Zuzana Dvořáková",     firma:"Zelená pošta",  segments:["zelena"] },
+  "henrieta.kriskova@zelenaposta.sk":  { name:"Henrieta Krišková",    firma:"Zelená pošta",  segments:["zelena"] },
+  "katarina.chmelova@cromwell.sk":     { name:"Katarína Chmelová",    firma:"Cromwell Post", segments:["ad","nad"] },
   // Balíky — KOLOS
-  "felix.krause@kolos.sk":             { firma:"KOLOS",         segments:["baliky"] },
-  "pristic@kolos.sk":                  { firma:"KOLOS",         segments:["baliky"] },
+  "felix.krause@kolos.sk":             { name:"Felix Krause",         firma:"KOLOS",         segments:["baliky"] },
+  "pristic@kolos.sk":                  { name:"Peter Prištic",        firma:"KOLOS",         segments:["baliky"] },
+  "lorincz@kolos.sk":                  { name:"Richard Lorincz",      firma:"KOLOS",         segments:["baliky"] },
   // Zelená pošta
-  "roman.chalama@zelenaposta.sk":      { firma:"Zelená pošta",  segments:["zelena"] },
-  "miroslav.cvacho@zelenaposta.sk":    { firma:"Zelená pošta",  segments:["zelena"] },
+  "roman.chalama@zelenaposta.sk":      { name:"Roman Chalama",        firma:"Zelená pošta",  segments:["zelena"] },
+  "miroslav.cvacho@zelenaposta.sk":    { name:"Miroslav Cvacho",      firma:"Zelená pošta",  segments:["zelena"] },
+  // Digitance
+  "adrian.csuba@digitance.sk":         { name:"Adrian Csuba",         firma:"Digitance",     segments:["digital"] },
 };
+
+// Jednotné mapovanie email → skutočné meno (obchodníci + líder-only účty + šéf/admin).
+// Používa sa na zobrazenie mena namiesto akéhokoľvek staršieho/nesprávneho textu uloženého priamo v zázname.
+const NAME_BY_EMAIL = {
+  "peter.durana@cromwell.sk": "Peter Ďurana",
+  "miroslava.stalmaskova@cromwell.sk": "Miroslava Štalmašková",
+  "michal.svec@cromwell.sk": "Michal Švec",
+  ...Object.fromEntries(Object.entries(OBCHODNIK_EMAILS).filter(([,v])=>v.name).map(([email,v])=>[email,v.name])),
+};
+// Vráti kanonické meno podľa e-mailu priradeného k záznamu (ownerKey); ak nie je známy, použije uložený text.
+function resolveOwnerName(e){
+  const key=(e?.ownerKey||"").toLowerCase().trim();
+  if(key && NAME_BY_EMAIL[key]) return NAME_BY_EMAIL[key];
+  return e?.salesperson || "—";
+}
+function resolveEditedByName(e){
+  const key=(e?.editedByKey||"").toLowerCase().trim();
+  if(key && NAME_BY_EMAIL[key]) return NAME_BY_EMAIL[key];
+  return e?.editedByName || "";
+}
 const USE_FIREBASE = !Object.values(firebaseConfig).some(v => v === "VLOZ_SEM" || !v);
 
 /* ============================================================================
@@ -949,8 +975,18 @@ function weekRangeLabel(id){
   return `${mon.getUTCDate()}. ${mon.getUTCMonth()+1}. – ${full(sun)}`;
 }
 function weekCmpDesc(a,b){ const A=parseWeekId(a),B=parseWeekId(b); return B.year-A.year || B.week-A.week; }
+function fmtDateTime(ts){
+  if(!ts) return "";
+  const d=new Date(ts);
+  return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
 const CURRENT_WEEK = weekId(new Date());
-const DEFAULT_WEEK = shiftWeek(CURRENT_WEEK, -1); // vždy predchádzajúci týždeň
+// Obchodníci vypĺňajú záznamy v piatok (na aktuálny týždeň) a šéf ich od piatku číta.
+// Pondelok–štvrtok: defaultne zobrazíme posledný uzavretý (predchádzajúci) týždeň.
+// Piatok–nedeľa: defaultne zobrazíme aktuálny týždeň, lebo ten sa už práve napĺňa/číta.
+const _todayDow = new Date().getDay(); // 0=Ne, 1=Po ... 5=Pi, 6=So
+const _isFridayOrLater = (_todayDow===5 || _todayDow===6 || _todayDow===0);
+const DEFAULT_WEEK = _isFridayOrLater ? CURRENT_WEEK : shiftWeek(CURRENT_WEEK, -1);
 
 /* ============================================================================
    DEMO DÁTA — bez čísel, s cross-sell a históriou
@@ -1056,7 +1092,7 @@ function demoTasks(){
    ============================================================================ */
 const state = {
   view:"segment",          // default: Balíky (prvý segment) — na mobile sa nižšie prepíše na "services"
-  week:DEFAULT_WEEK,       // default: predchádzajúci týždeň
+  week:DEFAULT_WEEK,       // default: Po–Št predchádzajúci týždeň, Pi–Ne aktuálny týždeň
   user:null,
   all:[],
   tasks:[],
@@ -1070,6 +1106,7 @@ const state = {
   suggestions:[],
   suggestionsLoading:false,
   demoRole:"boss",
+  returnTo:null,           // presné miesto, kam sa vrátiť tlačidlom "Späť" z detailu klienta
 };
 // Na mobile má zmysel začať zoznamom služieb, nie rovno konkrétnym segmentom (Balíky)
 if(window.matchMedia && window.matchMedia("(max-width:900px)").matches){ state.view="services"; }
@@ -1135,6 +1172,7 @@ function demoBackend(){
     mode:"demo",
     start(){ sync(); },
     async save(entry){
+      entry={...entry, updatedAt:Date.now()};
       if(entry.id && all.some(e=>e.id===entry.id)) all=all.map(e=>e.id===entry.id?{...entry}:e);
       else { if(!entry.id) entry.id=uid(); entry.comments=entry.comments||[]; all.push({...entry}); }
       sync();
@@ -1172,8 +1210,9 @@ async function firebaseBackend(){
     const autoRole = isAdmin?"admin": isBoss?"sef": liderSegs?"lider":"obchodnik";
     const autoSegs = liderSegs || obchInfo?.segments || [];
     const autoFirma = obchInfo?.firma || null;
+    const autoName = obchInfo?.name || null;
     if(!data){
-      data={name:u.displayName||u.email.split("@")[0], email:u.email,
+      data={name:autoName||u.displayName||u.email.split("@")[0], email:u.email,
             role:autoRole, segments:autoSegs, firma:autoFirma};
       await setDoc(ref,data,{merge:true});
     } else {
@@ -1181,6 +1220,7 @@ async function firebaseBackend(){
       if(autoRole!=="obchodnik" && data.role!==autoRole) updates.role=autoRole;
       if(autoSegs.length && JSON.stringify(data.segments||[])!==JSON.stringify(autoSegs)) updates.segments=autoSegs;
       if(autoFirma && data.firma!==autoFirma) updates.firma=autoFirma;
+      if(autoName && data.name!==autoName) updates.name=autoName;
       if(Object.keys(updates).length) await setDoc(ref,updates,{merge:true});
       data={...data,...updates};
     }
@@ -1822,7 +1862,14 @@ function canEdit(e){
 }
 // Môže zadávať/upravovať úlohy: admin/sef/líder=áno, obchodník=len označiť hotovo na svojej
 function canManageTasks(){ return ["admin","sef","lider"].includes(state.user.role); }
-function goClient(key){ state.activeClient=key; state.highlightClient=null; render(); window.scrollTo(0,0); }
+function goClient(key){
+  state.returnTo = {
+    view: state.view, segFilter: state.segFilter, search: state.search,
+    clientFilter: state.clientFilter, clientSearch: state.clientSearch,
+    taskFilter: state.taskFilter, scrollY: window.scrollY,
+  };
+  state.activeClient=key; state.highlightClient=null; render(); window.scrollTo(0,0);
+}
 
 /* prejsť na segment + zvýrazniť klienta */
 function goSegmentClient(segId, cKey){
@@ -1988,7 +2035,7 @@ async function importNewBusinessRows(rows){
       client:klient||"—", events:popis, salesperson:obch||"—",
       status: existing?.status || "lead",
       firma:null,
-      isNewBusiness:true, nbSourceId:csvId,
+      isNewBusiness:true, nbSourceId:csvId, nbImportedAt:Date.now(),
       ownerKey: existing?.ownerKey || ("nb:"+slugName(obch)),
       ownerName: existing?.ownerName || obch,
       ownerUid: existing?.ownerUid || "import_new_business",
@@ -2220,7 +2267,7 @@ function viewClients(){
     if(!rows.length){ listWrap.appendChild(el("div","empty",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><b>Nič sa nenašlo</b>Skús iný výraz alebo filter.`)); return; }
     rows.forEach(c=>{
       const card=el("div","client");
-      const lastObch=c.entries.filter(e=>e.weekId===c.lastWeek).map(e=>e.salesperson).filter(Boolean);
+      const lastObch=c.entries.filter(e=>e.weekId===c.lastWeek).map(e=>resolveOwnerName(e)).filter(Boolean);
       card.innerHTML=`<div class="c-top"><div class="c-av">${initials(c.name)}</div>
         <div style="flex:1;min-width:0"><div class="c-name">${esc(c.name)} ${c.crossSell?`<span class="xs-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>cross-sell</span>`:""}</div>
         <div class="c-meta">${c.entries.length} ${plural(c.entries.length,"záznam","záznamy","záznamov")} · naposledy ${esc(weekRangeLabel(c.lastWeek))}${lastObch.length?` · ${esc([...new Set(lastObch)].join(", "))}`:""}</div></div></div>
@@ -2237,7 +2284,20 @@ function viewClientDetail(){
   const wrap=el("div");
   const c=clientIndex().find(x=>x.key===state.activeClient);
   const back=el("button","backlink",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Späť na klientov`);
-  back.onclick=()=>{ state.activeClient=null; if(state.view==="dashboard"||state.view==="segment") {} else state.view="clients"; render(); };
+  back.onclick=()=>{
+    state.activeClient=null;
+    const rt=state.returnTo;
+    if(rt){
+      state.view=rt.view; state.segFilter=rt.segFilter; state.search=rt.search;
+      state.clientFilter=rt.clientFilter; state.clientSearch=rt.clientSearch; state.taskFilter=rt.taskFilter;
+      state.returnTo=null;
+      render();
+      requestAnimationFrame(()=>window.scrollTo(0, rt.scrollY||0));
+    } else {
+      if(!(state.view==="dashboard"||state.view==="segment")) state.view="clients";
+      render();
+    }
+  };
   wrap.appendChild(back);
   if(!c){ wrap.appendChild(el("div","empty","<b>Klient sa nenašiel</b>")); return wrap; }
 
@@ -2264,7 +2324,7 @@ function viewClientDetail(){
       card.innerHTML=`<div style="background:${e.isNewBusiness?'#12915A':s.color}"></div><div class="tc-body">
         <div class="tc-top">${schip(e.segment, e.firma)} ${statusTag(e.status)}${e.isNewBusiness?` <span class="nb-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span> <span class="nb-source">Záznam importovaný z DMIS</span>`:""}</div>
         <div class="tc-events">${esc(e.events||"")}</div>
-        <div class="tc-foot"><span class="av">${initials(e.salesperson||"?")}</span>${esc(e.salesperson||"—")}${e.editedByName?`<span class="edited-by" style="width:auto;margin-left:8px">✎ upravil ${esc(e.editedByName)}</span>`:""}</div></div>`;
+        <div class="tc-foot"><span class="av">${initials(resolveOwnerName(e))}</span><span class="obch-info"><span>${esc(resolveOwnerName(e))}</span>${e.updatedAt?`<span class="upd-date">${e.isNewBusiness?"import":"úprava"} ${fmtDateTime(e.isNewBusiness?(e.nbImportedAt||e.updatedAt):e.updatedAt)}</span>`:""}</span>${e.editedByName?`<span class="edited-by" style="width:auto;margin-left:8px">✎ upravil ${esc(resolveEditedByName(e))}</span>`:""}</div></div>`;
       if(canEditCard){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
         ed.style.cssText="position:absolute;right:12px;top:12px"; ed.onclick=()=>openModal(e);
         const body=card.querySelector(".tc-body"); body.style.position="relative"; body.appendChild(ed); }
@@ -2445,7 +2505,7 @@ function viewList(list,title,sub,seg,logoHtml){
           <span class="sug-badge${isCopy?" copy":""}">${isCopy?"📋 Kópia z min. týždňa":"✦ Návrh AI"}</span>
         </div><div class="e-actions"></div></div>
         <div class="e-events">${esc(sug.events||"")}</div>
-        <div class="e-foot"><span class="obch"><span class="av">${initials(sug.salesperson||"?")}</span>${esc(sug.salesperson||"—")}</span></div>
+        <div class="e-foot"><span class="obch"><span class="av">${initials(resolveOwnerName(sug))}</span>${esc(resolveOwnerName(sug))}</span></div>
         <div class="sug-actions">
           <button class="sug-accept">✓ Prijať & uložiť</button>
           <button class="sug-edit">✎ Upraviť</button>
@@ -2519,8 +2579,8 @@ function entryCard(e,clients,opts={}){
       ${xsTags}
     </div><div class="e-actions"></div></div>
     <div class="e-events">${esc(e.events||"")}</div>
-    <div class="e-foot"><span class="obch"><span class="av">${initials(e.salesperson||"?")}</span>${esc(e.salesperson||"—")}</span>
-      ${e.editedByName?`<span class="edited-by">✎ upravil ${esc(e.editedByName)}</span>`:""}
+    <div class="e-foot"><span class="obch"><span class="av">${initials(resolveOwnerName(e))}</span><span class="obch-info"><span>${esc(resolveOwnerName(e))}</span>${e.updatedAt?`<span class="upd-date">${e.isNewBusiness?"import":"úprava"} ${fmtDateTime(e.isNewBusiness?(e.nbImportedAt||e.updatedAt):e.updatedAt)}</span>`:""}</span></span>
+      ${e.editedByName?`<span class="edited-by">✎ upravil ${esc(resolveEditedByName(e))}</span>`:""}
     </div></div>`;
   card.querySelector(".lk").onclick=()=>goClient(k);
   if(canEditE){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`); ed.title="Upraviť"; ed.onclick=()=>openModal(e); card.querySelector(".e-actions").appendChild(ed); }
@@ -2689,9 +2749,9 @@ async function saveFromModal(){
   if(isSuggestion) delete baseEntry.id;
 
   // Líder, ktorý zasahuje do záznamu obchodníka (nie svojho vlastného), sa dopíše do záznamu
-  let editedByName = baseEntry.editedByName, editedByAt = baseEntry.editedByAt;
+  let editedByName = baseEntry.editedByName, editedByAt = baseEntry.editedByAt, editedByKey = baseEntry.editedByKey;
   if(wasEditing && state.user.role==="lider" && editing.ownerKey && editing.ownerKey!==state.user.key){
-    editedByName = state.user.name; editedByAt = Date.now();
+    editedByName = state.user.name; editedByAt = Date.now(); editedByKey = state.user.key;
   }
 
   const entry={ ...baseEntry,
@@ -2703,7 +2763,7 @@ async function saveFromModal(){
     ownerUid:editing?.ownerUid||state.user.uid||"demo",
     // ak niekto ručne upraví importovaný záznam New Business, ďalší CSV import ho už neprepíše
     nbLocked: baseEntry.isNewBusiness ? true : baseEntry.nbLocked,
-    editedByName, editedByAt };
+    editedByName, editedByAt, editedByKey };
 
   await backend.save(entry);
 
