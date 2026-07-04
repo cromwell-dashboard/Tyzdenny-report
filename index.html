@@ -2226,7 +2226,7 @@ function viewDashboard(){
   if(!list.length) grid.appendChild(el("div","svc-empty","Zatiaľ žiadny klient nie je vedený vo viacerých službách."));
   list.sort((a,b)=>b.segments.length-a.segments.length || a.name.localeCompare(b.name)).forEach(c=>{
     const card=el("div","xs-card");
-    card.innerHTML=`<div class="xc-top"><div class="xc-av">${initials(c.name)}</div>
+    card.innerHTML=`<div class="xc-top">
       <div><div class="xc-name">${esc(c.name)}</div><div class="xc-meta">${c.segments.length} služby · ${c.weeks.length} ${plural(c.weeks.length,"týždeň","týždne","týždňov")} v reporte</div></div></div>
       <div class="xc-chips">${c.segments.map(s=>schip(s)).join("")}</div>`;
     card.onclick=()=>goClient(c.key); grid.appendChild(card);
@@ -2627,13 +2627,11 @@ function entryCard(e,clients,opts={}){
   const card=el("div","entry"+(isHighlighted?" highlighted":"")+(e.isNewBusiness?" nb":"")); card.style.gridTemplateColumns="4px 1fr";
   const canEditE=canEdit(e);
   // cross-link tagy — každý segment ako klikateľné tlačidlo
-  const xsTags=otherSegs.map(segId=>{
-    const btn=el("button","xs-link");
-    btn.innerHTML=`<span class="xs-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><path d="M7 17L17 7M7 7h10v10"/></svg>aj v: ${esc(SEG[segId].short)}</span>`;
-    btn.title=`Zobraziť ${e.client} v segmente ${SEG[segId].name}`;
-    btn.onclick=(ev)=>{ ev.stopPropagation(); goSegmentClient(segId, clientKey(e.client)); };
-    return btn.outerHTML;
-  }).join("");
+  const xsTags=otherSegs.map(segId=>
+    `<button type="button" class="xs-link" data-seg="${esc(segId)}" title="Zobraziť ${esc(e.client)} v segmente ${esc(SEG[segId].name)}">
+      <span class="xs-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><path d="M7 17L17 7M7 7h10v10"/></svg>aj v: ${esc(SEG[segId].short)}</span>
+    </button>`
+  ).join("");
   card.innerHTML=`<div style="background:${e.isNewBusiness?'#12915A':s.color}"></div><div class="ebody">
     <div class="e-top"><div class="e-client"><span class="lk">${esc(e.client||"—")}</span>
       ${statusTag(e.status)}
@@ -2647,6 +2645,10 @@ function entryCard(e,clients,opts={}){
       ${e.editedByName?`<span class="edited-by">✎ upravil ${esc(resolveEditedByName(e))}</span>`:""}
     </div></div>`;
   card.querySelector(".lk").onclick=()=>goClient(k);
+  card.querySelectorAll(".xs-link").forEach(btn=>{
+    const segId=btn.dataset.seg;
+    btn.onclick=(ev)=>{ ev.stopPropagation(); goSegmentClient(segId, k); };
+  });
   if(canEditE){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`); ed.title="Upraviť"; ed.onclick=()=>openModal(e); card.querySelector(".e-actions").appendChild(ed); }
   card.querySelector(".ebody").appendChild(notesBlock(e));
   return card;
