@@ -290,6 +290,12 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .modal-b{padding:20px 22px}
 .field{margin-bottom:15px}
 .field label{display:block; font-size:12.5px; font-weight:600; margin-bottom:6px; color:var(--ink-soft)}
+.field-label-row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
+.field-label-row label{margin-bottom:0}
+.ai-fix-btn{display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; border:1px solid var(--brand-soft); background:var(--brand-soft); color:var(--brand); font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:inherit}
+.ai-fix-btn:hover{background:#dfe3fb}
+.ai-fix-btn:disabled{opacity:.6; cursor:wait}
+.ai-fix-btn svg{width:12px; height:12px; flex:0 0 auto}
 .field input,.field select,.field textarea{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:var(--r-sm); background:#fff; color:var(--ink); outline:none}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-soft)}
 .field textarea{min-height:130px; resize:vertical; line-height:1.55}
@@ -750,7 +756,13 @@ input,select,textarea{font-family:inherit; font-size:14px}
         <div class="hint">Píš názov konzistentne — tak sa klient správne spáruje naprieč službami (cross-sell).</div>
       </div>
       <div class="field">
-        <label>Udalosti — čo sa za týždeň udialo</label>
+        <div class="field-label-row">
+          <label>Udalosti — čo sa za týždeň udialo</label>
+          <button type="button" class="ai-fix-btn" id="aiFixBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>
+            Upraviť s AI
+          </button>
+        </div>
         <textarea id="fEvents" placeholder="Stručný prehľad udalostí, stavu jednania, dohodnutých krokov…"></textarea>
         <div class="hint">Každú novú myšlienku daj na nový riadok — zobrazí sa pekne pod sebou.</div>
       </div>
@@ -954,7 +966,7 @@ const USE_FIREBASE = !Object.values(firebaseConfig).some(v => v === "VLOZ_SEM" |
 const SEGMENTS = [
   { id:"baliky",  name:"Balíky",                     short:"Balíky",       color:"#173F7E", logoKey:"kolos",              firm:null },
   { id:"digital", name:"Digitálne služby",           short:"Digitálne",    color:"#73DE9E", logoKey:"digital",            firm:null },
-  { id:"tlac",    name:"Tlač",                        short:"Tlač",         color:"#3E56CB", logoKey:"print",              firm:null },
+  { id:"tlac",    name:"Tlač",                        short:"Tlač",         color:"#3E56CB", logoKey:"print", logoKey2:"kolos_s", firm:["Cromwell Post","KOLOS"] },
   { id:"ad",      name:"Poštové služby — adresné",    short:"Adresné",      color:"#3E56CB", logoKey:"post", logoKey2:"kolos_s", firm:["Cromwell Post","KOLOS"] },
   { id:"nad",     name:"Poštové služby — neadresné",  short:"Neadresné",    color:"#3E56CB", logoKey:"post", logoKey2:"kolos_s", firm:["Cromwell Post","KOLOS"] },
   { id:"zelena",  name:"Zelená pošta",                short:"Zelená pošta", color:"#73A541", logoKey:"zelena",             firm:null },
@@ -1436,6 +1448,7 @@ function buildStatic(){
   $("#importNbBtn").onclick=()=>$("#nbFileInput").click();
   $("#nbFileInput").onchange=(e)=>{ const f=e.target.files[0]; handleNbFile(f); e.target.value=""; };
   $("#modalClose").onclick=$("#cancelBtn").onclick=closeModal;
+  $("#aiFixBtn").onclick=improveTextWithAI;
   $("#scrim").onclick=e=>{ if(e.target===$("#scrim")) closeModal(); };
   $("#saveBtn").onclick=saveFromModal; $("#deleteBtn").onclick=deleteFromModal;
 
@@ -2753,6 +2766,67 @@ function viewHelp(){
 /* ============================================================================
    MODAL
    ============================================================================ */
+/* ---------------------------------------------------------------- AI ÚPRAVA TEXTU (v modáli, pole Udalosti) */
+// Jednoduché lokálne vyčistenie textu — použije sa ako záloha, ak API nie je dostupné (napr. v demo režime).
+function improveTextLocal(text){
+  return text
+    .split("\n")
+    .map(line=>line.trim())
+    .filter(Boolean)
+    .map(line=>{
+      let l=line.replace(/\s+/g," ").replace(/\s+([.,;:!?])/g,"$1");
+      l=l.charAt(0).toUpperCase()+l.slice(1);
+      if(!/[.!?]$/.test(l)) l+=".";
+      return l;
+    })
+    .join("\n");
+}
+async function improveTextWithAI(){
+  const ta=$("#fEvents");
+  const original=ta.value.trim();
+  if(!original){ toast("Najprv napíš text, ktorý má AI upraviť."); return; }
+  const btn=$("#aiFixBtn");
+  const oldLabel=btn.innerHTML;
+  btn.disabled=true; btn.innerHTML=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>Upravujem…`;
+
+  // Demo režim → jednoduché lokálne vyčistenie textu (bez volania API)
+  if(backend.mode==="demo"){
+    await new Promise(r=>setTimeout(r,500));
+    ta.value=improveTextLocal(original);
+    btn.disabled=false; btn.innerHTML=oldLabel;
+    toast("✨ Text upravený");
+    return;
+  }
+
+  const prompt=`Priprav opravenú a preformulovanú verziu nasledujúceho textu zo záznamu obchodnej aktivity (slovenčina).
+Pravidlá: oprav gramatiku a preklepy, sprehľadni formulácie, zachovaj VŠETKY fakty, mená, čísla a termíny presne tak, ako sú. Nič si nevymýšľaj a nepridávaj. Zachovaj štruktúru po riadkoch (každá myšlienka na vlastnom riadku). Buď stručný, vecný, profesionálny tón.
+Odpovedz IBA upraveným textom, žiadny úvod ani komentár.
+
+Text:
+"""
+${original}
+"""`;
+
+  try{
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:800,
+        messages:[{role:"user",content:prompt}] })
+    });
+    const data=await resp.json();
+    if(data.error){ throw new Error(data.error.message); }
+    const improved=(data.content||[]).map(b=>b.text||"").join("").trim();
+    if(!improved) throw new Error("Prázdna odpoveď");
+    ta.value=improved;
+    toast("✨ Text upravený pomocou AI");
+  }catch(err){
+    console.warn("AI úprava textu zlyhala, používam lokálne vyčistenie:", err.message);
+    ta.value=improveTextLocal(original);
+    toast("✨ Text upravený (offline režim)");
+  }
+  btn.disabled=false; btn.innerHTML=oldLabel;
+}
+
 let editing=null;
 function openModal(entry,presetSeg){
   if(entry && !canEdit(entry)){ toast("Nemáš oprávnenie upraviť tento záznam."); return; }
@@ -2800,7 +2874,8 @@ async function saveFromModal(){
   if(isSuggestion) delete baseEntry.id;
 
   // Líder, ktorý zasahuje do záznamu obchodníka (nie svojho vlastného), sa dopíše do záznamu
-  let editedByName = baseEntry.editedByName, editedByAt = baseEntry.editedByAt, editedByKey = baseEntry.editedByKey;
+  // POZOR: Firestore SDK vyhodí chybu, ak pošleme pole s hodnotou undefined — preto vždy ?? null.
+  let editedByName = baseEntry.editedByName ?? null, editedByAt = baseEntry.editedByAt ?? null, editedByKey = baseEntry.editedByKey ?? null;
   if(wasEditing && state.user.role==="lider" && editing.ownerKey && editing.ownerKey!==state.user.key){
     editedByName = state.user.name; editedByAt = Date.now(); editedByKey = state.user.key;
   }
@@ -2813,7 +2888,7 @@ async function saveFromModal(){
     ownerKey:editing?.ownerKey||state.user.key, ownerName:editing?.ownerName||state.user.name,
     ownerUid:editing?.ownerUid||state.user.uid||"demo",
     // ak niekto ručne upraví importovaný záznam New Business, ďalší CSV import ho už neprepíše
-    nbLocked: baseEntry.isNewBusiness ? true : baseEntry.nbLocked,
+    nbLocked: baseEntry.isNewBusiness ? true : (baseEntry.nbLocked ?? false),
     editedByName, editedByAt, editedByKey };
 
   await backend.save(entry);
