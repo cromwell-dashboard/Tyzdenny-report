@@ -28,9 +28,6 @@
   --nb:#12915A;             /* New business — zelená */
   --nb-soft:#EAF7F0;
   --nb-border:#B7E6CC;
-  --interne:#B45309;        /* Interné — oranžová */
-  --interne-soft:#FFF7ED;
-  --interne-border:#FBD9A5;
 
   /* farby služieb */
   --s-baliky:#C6810A;
@@ -406,9 +403,13 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .nb-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:#fff;background:var(--nb);border-radius:20px;padding:3px 10px 3px 8px;letter-spacing:.02em;white-space:nowrap;box-shadow:0 1px 3px rgba(18,145,90,.4)}
 .nb-badge svg{width:11px;height:11px;flex:0 0 auto}
 .entry.nb,.tl-card.nb{border:1.5px solid var(--nb-border)}
-.entry.interne,.tl-card.interne{border:1.5px solid var(--interne-border)}
-.interne-badge{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:#fff; background:var(--interne); border-radius:20px; padding:3px 10px 3px 8px; letter-spacing:.02em; white-space:nowrap; box-shadow:0 1px 3px rgba(180,83,9,.35)}
-.interne-badge svg{width:11px; height:11px; flex:0 0 auto}
+.lk.special-client{display:inline-flex; align-items:center; gap:6px; font-weight:700}
+.lk.special-client .sc-icon{width:15px; height:15px; flex:0 0 auto}
+.reg-list{display:flex; flex-direction:column; gap:8px}
+.reg-row{display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--card)}
+.reg-row.reg-hidden{background:var(--line-2); opacity:.75}
+.reg-name{flex:1; font-size:13.5px; font-weight:500}
+.reg-tag{font-size:11px; color:var(--muted); background:var(--line-2); padding:2px 9px; border-radius:20px}
 .risk-badge{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:#fff; background:var(--red); border-radius:20px; padding:3px 10px 3px 8px; letter-spacing:.02em; white-space:nowrap; box-shadow:0 1px 3px rgba(181,68,58,.4)}
 .risk-badge svg{width:11px; height:11px; flex:0 0 auto}
 .approach-badge{display:inline-flex; align-items:center; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--brand-soft); color:var(--brand); white-space:nowrap}
@@ -756,6 +757,10 @@ input,select,textarea{font-family:inherit; font-size:14px}
           Import New Business (CSV)
         </button>
         <input type="file" id="nbFileInput" accept=".csv" style="display:none">
+        <button class="navitem" data-view="clientRegistry" id="clientRegistryBtn" style="margin-top:8px; display:none">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+          <span class="lbl">Číselník klientov</span>
+        </button>
         <button class="navitem" data-view="help" style="margin-top:8px">
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17"/></svg></span>
           <span class="lbl">Nasadenie & návod</span>
@@ -1185,6 +1190,7 @@ const state = {
   returnTo:null,           // presné miesto, kam sa vrátiť tlačidlom "Späť" z detailu klienta
   nbSegFilter:null,        // predvyplnený filter služby pri vstupe na stránku New Business
   sortBy:"client",         // "client" | "salesperson" — zoradenie zoznamu záznamov
+  hiddenClientNames:[],    // mená klientov skryté z návrhov (číselník)
 };
 let backend=null;
 
@@ -1194,7 +1200,25 @@ const el=(t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=
 const esc=s=>(s??"").toString().replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 const initials=n=>(n||"?").trim().split(/[\s/]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 const clientKey=n=>(n||"").trim().toLowerCase().replace(/\s+/g," ");
-const isInterne=e=>clientKey(e?.client)==="interné";
+// "Okná" — špeciálne pseudo-klienti pre iný typ záznamov než konkrétny klient.
+// Rovnaká farba a ikona platí naprieč všetkými službami, každé okno má svoju vlastnú farbu.
+// "keys" = aké názvy klienta (aj staršie/rôzne varianty) sa majú rozpoznať; "label" = ako sa to zobrazí.
+const SPECIAL_CLIENT_DEFS = [
+  { keys:["interné","interné / projekty"], label:"Interné / projekty", color:"#DB8A3E",
+    icon:`<path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M14 9h1M14 13h1"/>` },
+  { keys:["mestá a obce"], label:"Mestá a obce", color:"#0D9488",
+    icon:`<path d="M3 21h18M5 21V10l7-6 7 6v11M9 21v-6h6v6"/>` },
+  { keys:["platformy"], label:"Platformy", color:"#7C3AED",
+    icon:`<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>` },
+  { keys:["ad-hoc klienti"], label:"Ad-hoc klienti", color:"#DB2777",
+    icon:`<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>` },
+];
+const SPECIAL_CLIENTS = {};
+SPECIAL_CLIENT_DEFS.forEach(def=>def.keys.forEach(k=>SPECIAL_CLIENTS[k]=def));
+function specialClientInfo(e){ return SPECIAL_CLIENTS[clientKey(e?.client)] || null; }
+function specialClientLabel(e,info){
+  return `<span class="lk special-client" style="color:${info.color}"><svg class="sc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${info.icon}</svg>${esc(info.label)}</span>`;
+}
 // Kľúčové slová, ktoré pri uložení záznamu ponúknu pridanie odznaku "Problém / sťažnosť"
 // (nepridáva sa automaticky — obchodník musí potvrdiť, aby sa predišlo falošným poplachom
 // napr. pri bežnej zmienke o kontakte na reklamácie).
@@ -1256,7 +1280,8 @@ function clientIndex(){
 function demoBackend(){
   let all=demoSeed();
   let tasks=demoTasks();
-  const sync=()=>{ state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); render(); };
+  let hiddenClients=[];
+  const sync=()=>{ state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; render(); };
   return {
     mode:"demo",
     start(){ sync(); },
@@ -1268,6 +1293,8 @@ function demoBackend(){
     },
     async remove(id){ all=all.filter(e=>e.id!==id); sync(); },
     async improveText(text){ await new Promise(r=>setTimeout(r,400)); return {improved: improveTextLocal(text)}; },
+    async hideClientName(name){ if(!hiddenClients.includes(name)) hiddenClients.push(name); sync(); },
+    async unhideClientName(name){ hiddenClients=hiddenClients.filter(n=>n!==name); sync(); },
     async addComment(entryId,comment){
       all=all.map(e=>e.id===entryId?{...e, comments:[...(e.comments||[]), comment]}:e); sync();
     },
@@ -1287,7 +1314,7 @@ function demoBackend(){
 async function firebaseBackend(){
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
   const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
-  const { getFirestore, collection, query, onSnapshot, doc, setDoc, deleteDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+  const { getFirestore, collection, query, onSnapshot, doc, setDoc, deleteDoc, getDoc, arrayUnion, arrayRemove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
   const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
   const app=initializeApp(firebaseConfig); const auth=getAuth(app); const db=getFirestore(app);
   const fx=getFunctions(app,"europe-west1");
@@ -1332,12 +1359,15 @@ async function firebaseBackend(){
       if(unsub) unsub();
       const u1=onSnapshot(query(collection(db,"entries")), snap=>{ state.all=snap.docs.map(d=>({id:d.id,comments:[],...d.data()})); render(); });
       const u2=onSnapshot(query(collection(db,"tasks")), snap=>{ state.tasks=snap.docs.map(d=>({id:d.id,...d.data()})); render(); });
-      unsub=()=>{ u1(); u2(); };
+      const u3=onSnapshot(doc(db,"meta","hiddenClients"), snap=>{ state.hiddenClientNames=snap.exists()?(snap.data().names||[]):[]; render(); });
+      unsub=()=>{ u1(); u2(); u3(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
     async generateSuggestionsAI(payload){ const res=await generateSuggestionsCallable(payload); return res.data; },
     remove(id){ return deleteDoc(doc(db,"entries",id)); },
+    async hideClientName(name){ await setDoc(doc(db,"meta","hiddenClients"),{names:arrayUnion(name)},{merge:true}); },
+    async unhideClientName(name){ await setDoc(doc(db,"meta","hiddenClients"),{names:arrayRemove(name)},{merge:true}); },
     async addComment(entryId,comment){
       const ref=doc(db,"entries",entryId); const snap=await getDoc(ref);
       const cur=snap.exists()?(snap.data().comments||[]):[];
@@ -1564,6 +1594,7 @@ function render(){
   $("#uRole").textContent=state.user.role==="sef"?"Šéf":state.user.role==="admin"?"Admin":state.user.role==="lider"?"Líder":"Obchodník";
   $("#uAvatar").textContent=initials(state.user.name);
   $("#importNbBtn").style.display=["admin","sef"].includes(state.user.role)?"":"none";
+  $("#clientRegistryBtn").style.display=["admin","sef"].includes(state.user.role)?"":"none";
 
   const {week}=parseWeekId(state.week);
   const wl=$("#weekLabel"); wl.querySelector("b").textContent=`Týždeň ${week}`; wl.querySelector("small").textContent=weekRangeLabel(state.week);
@@ -1582,7 +1613,8 @@ function render(){
   $("#taskCount").textContent=myOpenTasks.length;
 
   // datalist klientov
-  const dl=$("#clientNames"); dl.innerHTML=[...new Set(state.all.map(e=>e.client))].sort().map(n=>`<option value="${esc(n)}">`).join("");
+  const dl=$("#clientNames"); const hiddenSet=new Set((state.hiddenClientNames||[]).map(clientKey));
+  dl.innerHTML=[...new Set(state.all.map(e=>e.client))].filter(n=>!hiddenSet.has(clientKey(n))).sort().map(n=>`<option value="${esc(n)}">`).join("");
 
   const setActive=(view,seg)=>view===state.view&&(view!=="segment"||seg===state.segFilter);
   document.querySelectorAll(".rail .navitem").forEach(b=>{ const v=b.dataset.view; b.classList.toggle("active", v==="segment"?(state.view==="segment"&&b.dataset.seg===state.segFilter):state.view===v); });
@@ -1613,6 +1645,7 @@ function render(){
   else if(state.view==="services") c.appendChild(viewServicesList());
   else if(state.view==="newbusiness") c.appendChild(viewNewBusiness());
   else if(state.view==="segment") c.appendChild(viewSegment());
+  else if(state.view==="clientRegistry") c.appendChild(viewClientRegistry());
   else if(state.view==="help") c.appendChild(viewHelp());
 }
 function importAllDepts25_26Entries(){
@@ -2308,7 +2341,8 @@ function viewDashboard(){
     rows.slice(0,6).forEach(e=>{
       const k=clientKey(e.client); const isXs=clients.find(c=>c.key===k)?.crossSell;
       const snip=(e.events||"").split("\n")[0];
-      const r=el("button","svc-row",`<div class="r-top"><span class="r-client">${esc(e.client)}</span>${isXs?`<span class="r-xs">cross-sell</span>`:""}</div><div class="r-snip">${esc(snip)}</div>`);
+      const specialR=specialClientInfo(e);
+      const r=el("button","svc-row",`<div class="r-top"><span class="r-client"${specialR?` style="color:${specialR.color}"`:""}>${esc(specialR?specialR.label:e.client)}</span>${isXs?`<span class="r-xs">cross-sell</span>`:""}</div><div class="r-snip">${esc(snip)}</div>`);
       r.onclick=()=>goClient(k); listEl.appendChild(r);
     });
     if(rows.length>6) listEl.appendChild(el("div","svc-empty",`+ ${rows.length-6} ďalších — otvor službu`));
@@ -2375,8 +2409,9 @@ function viewClients(){
     rows.forEach(c=>{
       const card=el("div","client");
       const lastObch=c.entries.filter(e=>e.weekId===c.lastWeek).map(e=>resolveOwnerName(e)).filter(Boolean);
-      card.innerHTML=`<div class="c-top"><div class="c-av">${initials(c.name)}</div>
-        <div style="flex:1;min-width:0"><div class="c-name">${esc(c.name)} ${c.crossSell?`<span class="xs-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>cross-sell</span>`:""}</div>
+      const specialC = SPECIAL_CLIENTS[c.key] || null;
+      card.innerHTML=`<div class="c-top"><div class="c-av" ${specialC?`style="background:${specialC.color}"`:""}>${specialC?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">${specialC.icon}</svg>`:initials(c.name)}</div>
+        <div style="flex:1;min-width:0"><div class="c-name" ${specialC?`style="color:${specialC.color}"`:""}>${esc(specialC?specialC.label:c.name)} ${c.crossSell?`<span class="xs-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>cross-sell</span>`:""}</div>
         <div class="c-meta">${c.entries.length} ${plural(c.entries.length,"záznam","záznamy","záznamov")} · naposledy ${esc(weekRangeLabel(c.lastWeek))}${lastObch.length?` · ${esc([...new Set(lastObch)].join(", "))}`:""}</div></div></div>
         <div class="c-chips">${c.segments.map(s=>schip(s)).join("")}</div>`;
       card.onclick=()=>goClient(c.key); listWrap.appendChild(card);
@@ -2409,8 +2444,9 @@ function viewClientDetail(){
   if(!c){ wrap.appendChild(el("div","empty","<b>Klient sa nenašiel</b>")); return wrap; }
 
   const head=el("div","cd-head");
-  head.innerHTML=`<div class="cd-id"><div class="cd-av">${initials(c.name)}</div>
-    <div><div class="cd-name">${esc(c.name)}</div>
+  const specialC = SPECIAL_CLIENTS[c.key] || null;
+  head.innerHTML=`<div class="cd-id"><div class="cd-av" ${specialC?`style="background:${specialC.color}"`:""}>${specialC?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">${specialC.icon}</svg>`:initials(c.name)}</div>
+    <div><div class="cd-name" ${specialC?`style="color:${specialC.color}"`:""}>${esc(specialC?specialC.label:c.name)}</div>
       <div class="cd-chips">${c.segments.map(s=>schip(s)).join("")}</div></div></div>
     <div class="cd-people">Obchodníci: ${esc(c.people.join(", ")||"—")} · ${c.entries.length} ${plural(c.entries.length,"záznam","záznamy","záznamov")} v ${c.weeks.length} ${plural(c.weeks.length,"týždni","týždňoch","týždňoch")}</div>
     ${c.crossSell?`<div class="cd-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>Cross-sell klient — pracuje naň ${c.segments.length} služieb. Dobrý kandidát na koordinovaný prístup.</div>`:""}`;
@@ -2427,10 +2463,12 @@ function viewClientDetail(){
     c.entries.filter(e=>e.weekId===wk).sort((a,b)=>a.segment.localeCompare(b.segment)).forEach(e=>{
       const s=SEG[e.segment];
       const canEditCard=canEdit(e);
-      const card=el("div","tl-card"+(e.isNewBusiness?" nb":"")+(isInterne(e)?" interne":"")); card.style.gridTemplateColumns="4px 1fr";
-      const stripColor2 = e.isNewBusiness ? "#12915A" : isInterne(e) ? "#B45309" : s.color;
+      const special = specialClientInfo(e);
+      const card=el("div","tl-card"+(e.isNewBusiness?" nb":"")); card.style.gridTemplateColumns="4px 1fr";
+      if(special && !e.isNewBusiness){ card.style.border=`1.5px solid ${hexA(special.color,.35)}`; }
+      const stripColor2 = e.isNewBusiness ? "#12915A" : special ? special.color : s.color;
       card.innerHTML=`<div style="background:${stripColor2}"></div><div class="tc-body">
-        <div class="tc-top">${schip(e.segment, e.firma)} ${(e.isNewBusiness && e.status==="lead") ? "" : statusTag(e.status)}${e.riskFlag?` <span class="risk-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Problém / sťažnosť</span>`:""}${e.isNewBusiness?` <span class="nb-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span>`:""}${e.isNewBusiness && (e.nbApproachInfo||e.nbApproach) ? ` <span class="approach-badge">${esc(cleanApproachText(e.nbApproachInfo||e.nbApproach))}</span>` : ""}${isInterne(e)?` <span class="interne-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M14 9h1M14 13h1"/></svg>Interné</span>`:""}${e.isNewBusiness?` <span class="nb-source-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Import DMIS</span>`:""}</div>
+        <div class="tc-top">${schip(e.segment, e.firma)} ${(e.isNewBusiness && e.status==="lead") ? "" : statusTag(e.status)}${e.riskFlag?` <span class="risk-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Problém / sťažnosť</span>`:""}${e.isNewBusiness?` <span class="nb-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span>`:""}${e.isNewBusiness && (e.nbApproachInfo||e.nbApproach) ? ` <span class="approach-badge">${esc(cleanApproachText(e.nbApproachInfo||e.nbApproach))}</span>` : ""}${e.isNewBusiness?` <span class="nb-source-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Import DMIS</span>`:""}</div>
         <div class="tc-events">${esc(e.events||"")}</div>
         <div class="tc-foot"><span class="av">${initials(resolveOwnerName(e))}</span><span class="obch-info"><span>${esc(resolveOwnerName(e))}</span>${e.updatedAt?`<span class="upd-date">${e.isNewBusiness?"import":"úprava"} ${fmtDateTime(e.isNewBusiness?(e.nbImportedAt||e.updatedAt):e.updatedAt)}</span>`:""}</span>${e.editedByName?`<span class="edited-by" style="width:auto;margin-left:8px">✎ upravil ${esc(resolveEditedByName(e))}</span>`:""}</div></div>`;
       if(canEditCard){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
@@ -2711,7 +2749,9 @@ function entryCard(e,clients,opts={}){
   const isHighlighted = state.highlightClient && clientKey(e.client)===state.highlightClient;
   const isKolos = e.firma==="KOLOS";
   const firmaLogoSrc = e.firma ? (isKolos ? LOGOS.kolos_s : LOGOS.post) : null;
-  const card=el("div","entry"+(isHighlighted?" highlighted":"")+(e.isNewBusiness?" nb":"")+(isInterne(e)?" interne":"")); card.style.gridTemplateColumns="4px 1fr";
+  const special = specialClientInfo(e);
+  const card=el("div","entry"+(isHighlighted?" highlighted":"")+(e.isNewBusiness?" nb":"")); card.style.gridTemplateColumns="4px 1fr";
+  if(special && !e.isNewBusiness){ card.style.border=`1.5px solid ${hexA(special.color,.35)}`; }
   const canEditE=canEdit(e);
   // cross-link tagy — každý segment ako klikateľné tlačidlo
   const xsTags=otherSegs.map(segId=>
@@ -2719,14 +2759,14 @@ function entryCard(e,clients,opts={}){
       <span class="xs-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><path d="M7 17L17 7M7 7h10v10"/></svg>aj v: ${esc(SEG[segId].short)}</span>
     </button>`
   ).join("");
-  const stripColor = e.isNewBusiness ? "#12915A" : isInterne(e) ? "#B45309" : s.color;
+  const stripColor = e.isNewBusiness ? "#12915A" : special ? special.color : s.color;
+  const clientLabel = special ? specialClientLabel(e,special) : `<span class="lk">${esc(e.client||"—")}</span>`;
   card.innerHTML=`<div style="background:${stripColor}"></div><div class="ebody">
-    <div class="e-top"><div class="e-client"><span class="lk">${esc(e.client||"—")}</span>
+    <div class="e-top"><div class="e-client">${clientLabel}
       ${(e.isNewBusiness && e.status==="lead") ? "" : statusTag(e.status)}
       ${e.riskFlag?`<span class="risk-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Problém / sťažnosť</span>`:""}
       ${e.isNewBusiness?`<span class="nb-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span>`:""}
       ${e.isNewBusiness && (e.nbApproachInfo||e.nbApproach) ? `<span class="approach-badge">${esc(cleanApproachText(e.nbApproachInfo||e.nbApproach))}</span>` : ""}
-      ${isInterne(e)?`<span class="interne-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M14 9h1M14 13h1"/></svg>Interné</span>`:""}
       ${opts.showSegChip?schip(e.segment):""}
       ${e.firma?`<span class="firma-badge${isKolos?" kolos":""}"><img src="${firmaLogoSrc}" style="height:12px;width:auto;vertical-align:middle"></span>`:""}
       ${xsTags}
@@ -2836,6 +2876,47 @@ function taskRow(t){
 
 
 /* ---------------------------------------------------------------- HELP */
+/* ---------------------------------------------------------------- ČÍSELNÍK KLIENTOV (admin/šéf — skrývanie mien z návrhov) */
+function viewClientRegistry(){
+  const wrap=el("div");
+  wrap.appendChild(el("div","page-h",`<div>
+    <div class="eyebrow">Nastavenia</div>
+    <h1>Číselník klientov</h1>
+    <div class="sub">Skry meno klienta, ktoré sa už nemá ponúkať obchodníkom pri písaní záznamu (napr. duplicity alebo preklepy). Historické záznamy zostanú nedotknuté, len sa dané meno prestane objavovať v nápovede.</div></div>`));
+
+  const tb=el("div","toolbar");
+  const search=el("div","search",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
+  const si=el("input"); si.placeholder="Hľadať klienta…";
+  si.oninput=()=>renderList();
+  search.appendChild(si); tb.appendChild(search); wrap.appendChild(tb);
+
+  const listWrap=el("div","reg-list"); wrap.appendChild(listWrap);
+
+  function renderList(){
+    const q=si.value.trim().toLowerCase();
+    const allNames=[...new Set(state.all.map(e=>e.client).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"sk"));
+    const hidden=new Set((state.hiddenClientNames||[]).map(clientKey));
+    const filtered=allNames.filter(n=>!q||n.toLowerCase().includes(q));
+    listWrap.innerHTML="";
+    if(!filtered.length){ listWrap.appendChild(el("div","empty","<b>Nič sa nenašlo</b>")); return; }
+    filtered.sort((a,b)=>(hidden.has(clientKey(a))?1:0)-(hidden.has(clientKey(b))?1:0));
+    filtered.forEach(name=>{
+      const isHidden=hidden.has(clientKey(name));
+      const row=el("div","reg-row"+(isHidden?" reg-hidden":""));
+      row.innerHTML=`<span class="reg-name">${esc(name)}</span>${isHidden?`<span class="reg-tag">skryté z návrhov</span>`:""}`;
+      const btn=el("button","btn"+(isHidden?" solid":""), isHidden?"↺ Obnoviť":"✕ Skryť");
+      btn.onclick=async()=>{
+        btn.disabled=true;
+        if(isHidden) await backend.unhideClientName(name); else await backend.hideClientName(name);
+      };
+      row.appendChild(btn);
+      listWrap.appendChild(row);
+    });
+  }
+  renderList();
+  return wrap;
+}
+
 function viewHelp(){
   const wrap=el("div");
   wrap.appendChild(el("div","page-h",`<div><div class="eyebrow">Príručka</div><h1>Nasadenie & návod</h1><div class="sub">Spustenie ostrej prevádzky cez Firebase a vloženie do Teams.</div></div>`));
