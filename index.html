@@ -410,8 +410,6 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .interne-badge{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:#fff; background:var(--interne); border-radius:20px; padding:3px 10px 3px 8px; letter-spacing:.02em; white-space:nowrap; box-shadow:0 1px 3px rgba(180,83,9,.35)}
 .interne-badge svg{width:11px; height:11px; flex:0 0 auto}
 .nb-source{font-size:11px; color:var(--muted); font-style:italic; white-space:nowrap}
-.nb-contact{margin-top:9px; padding:7px 11px; border-radius:8px; background:#FAFAFB; border:1px solid var(--line-2); font-size:12px; color:var(--ink-soft); line-height:1.4}
-.nb-contact b{color:var(--muted); font-weight:600; margin-right:4px}
 .sug-actions{display:flex;gap:8px;margin-top:11px;padding-top:10px;border-top:1px dashed #d4daf5}
 .sug-accept{padding:7px 14px;border-radius:8px;border:none;background:var(--green);color:#fff;font-weight:600;font-size:12.5px;cursor:pointer}
 .sug-accept:hover{filter:brightness(1.08)}
@@ -946,6 +944,7 @@ const LIDER_EMAILS = {     // email → segmenty ktoré líder riadi
 
 // Obchodníci — email → {firma, segments}
 const OBCHODNIK_EMAILS = {
+  "miroslava.stalmaskova@cromwell.sk": { name:"Miroslava Štalmašková", firma:"Cromwell Post", segments:[] },
   "alexandra.uhlarikova@cromwell.sk":  { name:"Alexandra Uhláriková", firma:"Cromwell Post", segments:["ad","nad"] },
   "stancek@kolos.sk":                  { name:"Dagmar Stanček",       firma:"KOLOS",         segments:["nad"] },
   "dagmar.sevcechova@cromwell.sk":     { name:"Dagmar Ševcechová",    firma:"Cromwell Post", segments:["ad"] },
@@ -1011,14 +1010,14 @@ const SEGMENTS = [
 const SEG = Object.fromEntries(SEGMENTS.map(s=>[s.id,s]));
 
 const STATUSES = [
-  { id:"lead",       label:"Lead / oslovený",      color:"#8b95a1" },
-  { id:"ponuka",     label:"Zaslaná ponuka",       color:"#C6810A" },
-  { id:"jednanie",   label:"Prebieha jednanie",    color:"#3E56CB" },
-  { id:"potvrdene",  label:"Potvrdená spolupráca", color:"#6D4FB3" },
-  { id:"nechce",     label:"Nechce",               color:"#9C4221" },
-  { id:"bezi",       label:"Realizuje sa",         color:"#2E7D5B" },
-  { id:"pozastavene",label:"Pauza",                color:"#B08D2B" },
-  { id:"zrusene",    label:"Zrušené",              color:"#B5443A" },
+  { id:"lead",       label:"Lead / oslovený",         color:"#8b95a1" },
+  { id:"ponuka",     label:"Zaslaná ponuka",          color:"#C6810A" },
+  { id:"jednanie",   label:"Prebieha jednanie",       color:"#3E56CB" },
+  { id:"potvrdene",  label:"Potvrdené",               color:"#6D4FB3" },
+  { id:"nechce",     label:"Odmietnutie",             color:"#C24444" },
+  { id:"bezi",       label:"Realizuje sa",            color:"#2E7D5B" },
+  { id:"pozastavene",label:"Pozastavené",             color:"#B08D2B" },
+  { id:"zrusene",    label:"Ukončenie spolupráce",    color:"#7A2E28" },
 ];
 const ST = Object.fromEntries(STATUSES.map(s=>[s.id,s]));
 
@@ -1188,6 +1187,12 @@ const esc=s=>(s??"").toString().replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">
 const initials=n=>(n||"?").trim().split(/[\s/]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 const clientKey=n=>(n||"").trim().toLowerCase().replace(/\s+/g," ");
 const isInterne=e=>clientKey(e?.client)==="interné";
+// Pre New Business záznamy pripojí "spôsob oslovenia" priamo do textu udalostí (rovnaká bublina, bez nálepky)
+function eventsDisplay(e){
+  const approach = e?.isNewBusiness ? (e.nbApproachInfo||e.nbApproach) : null;
+  const base=e?.events||"";
+  return approach ? (base ? base+"\n"+approach : approach) : base;
+}
 let toastT;
 function toast(msg){ const t=$("#toast"); t.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>${esc(msg)}`; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200); }
 function hexA(hex,a){ const h=hex.replace("#",""); if(h.length!==6) return hex; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `rgba(${r},${g},${b},${a})`; }
@@ -1248,6 +1253,7 @@ function demoBackend(){
       sync();
     },
     async remove(id){ all=all.filter(e=>e.id!==id); sync(); },
+    async improveText(text){ await new Promise(r=>setTimeout(r,400)); return {improved: improveTextLocal(text)}; },
     async addComment(entryId,comment){
       all=all.map(e=>e.id===entryId?{...e, comments:[...(e.comments||[]), comment]}:e); sync();
     },
@@ -1268,7 +1274,11 @@ async function firebaseBackend(){
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
   const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
   const { getFirestore, collection, query, onSnapshot, doc, setDoc, deleteDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+  const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
   const app=initializeApp(firebaseConfig); const auth=getAuth(app); const db=getFirestore(app);
+  const fx=getFunctions(app,"europe-west1");
+  const improveTextCallable=httpsCallable(fx,"improveText");
+  const generateSuggestionsCallable=httpsCallable(fx,"generateSuggestions");
   let unsub=null;
   async function resolveUser(u){
     const ref=doc(db,"users",u.uid); const snap=await getDoc(ref); let data=snap.exists()?snap.data():null;
@@ -1311,6 +1321,8 @@ async function firebaseBackend(){
       unsub=()=>{ u1(); u2(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
+    async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
+    async generateSuggestionsAI(payload){ const res=await generateSuggestionsCallable(payload); return res.data; },
     remove(id){ return deleteDoc(doc(db,"entries",id)); },
     async addComment(entryId,comment){
       const ref=doc(db,"entries",entryId); const snap=await getDoc(ref);
@@ -2018,7 +2030,7 @@ async function generateSuggestions(segId){
     state.suggestionsLoading=false; render(); return;
   }
 
-  // Produkčný režim → Anthropic API (vyžaduje api_key v hlavičke — nastavíš cez Firebase Function alebo proxy)
+  // Produkčný režim → bezpečná Cloud Function (drží API kľúč na serveri)
   const prevEntries = state.all
     .filter(e=>e.segment===segId && e.weekId<state.week && (!isObch || isMine(e)))
     .sort((a,b)=>weekCmpDesc(a.weekId,b.weekId)).slice(0,25);
@@ -2028,34 +2040,15 @@ async function generateSuggestions(segId){
   const s=SEG[segId];
   const wNum=parseWeekId(state.week).week;
   const entriesText=prevEntries.map(e=>`Týždeň ${parseWeekId(e.weekId).week} | ${e.client} | Stav: ${ST[e.status]?.label||e.status} | Obchodník: ${e.salesperson}\n${e.events||""}`).join("\n\n---\n\n");
-  const prompt=`Si obchodný asistent pre Cromwell Group (slovenská poštová, tlačová a digitálna spoločnosť).
-Segment: ${s.name}
-
-Záznamy z predchádzajúcich týždňov (najnovšie hore):
-${entriesText}
-
-Navrhni realistické záznamy pre Týždeň ${wNum}. Zachovaj mená klientov a obchodníkov PRESNE. Texty v slovenčine, 2–4 riadky.
-Zahrň len klientov kde má zmysel pokračovanie.
-
-Odpovedz IBA validným JSON poľom:
-[{"client":"...","salesperson":"...","status":"lead|ponuka|jednanie|potvrdene|nechce|bezi|pozastavene|zrusene","events":"..."}]`;
 
   try{
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:1500,
-        messages:[{role:"user",content:prompt}] })
-    });
-    const data=await resp.json();
-    if(data.error){ throw new Error(data.error.message); }
-    const text=(data.content||[]).map(b=>b.text||"").join("");
-    const arr=JSON.parse(text.replace(/```json|```/g,"").trim());
+    const {suggestions:arr}=await backend.generateSuggestionsAI({segmentName:s.name, weekNumber:wNum, entriesText});
     state.suggestions=arr.map(s=>({...s, segment:segId, weekId:state.week,
       salesperson: isObch ? state.user.name : s.salesperson,
       _suggested:true, id:"sug_"+Math.random().toString(36).slice(2,9),
       ownerKey:state.user.key, ownerName:state.user.name, ownerUid:state.user.uid||"demo", comments:[]}));
   }catch(err){
-    console.warn("API nedostupné, používam lokálny generátor:", err.message);
+    console.warn("AI návrhy zlyhali, používam lokálny generátor:", err.message);
     state.suggestions = generateSuggestionsLocal(segId);
   }
   state.suggestionsLoading=false; render();
@@ -2424,8 +2417,7 @@ function viewClientDetail(){
       const stripColor2 = e.isNewBusiness ? "#12915A" : isInterne(e) ? "#B45309" : s.color;
       card.innerHTML=`<div style="background:${stripColor2}"></div><div class="tc-body">
         <div class="tc-top">${schip(e.segment, e.firma)} ${statusTag(e.status)}${e.isNewBusiness?` <span class="nb-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span> <span class="nb-source">Záznam importovaný z DMIS</span>`:""}${isInterne(e)?` <span class="interne-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M14 9h1M14 13h1"/></svg>Interné</span>`:""}</div>
-        <div class="tc-events">${esc(e.events||"")}</div>
-        ${e.isNewBusiness && (e.nbApproachInfo||e.nbApproach) ? `<div class="nb-contact"><b>Spôsob oslovenia:</b> ${esc(e.nbApproachInfo||e.nbApproach)}</div>` : ""}
+        <div class="tc-events">${esc(eventsDisplay(e))}</div>
         <div class="tc-foot"><span class="av">${initials(resolveOwnerName(e))}</span><span class="obch-info"><span>${esc(resolveOwnerName(e))}</span>${e.updatedAt?`<span class="upd-date">${e.isNewBusiness?"import":"úprava"} ${fmtDateTime(e.isNewBusiness?(e.nbImportedAt||e.updatedAt):e.updatedAt)}</span>`:""}</span>${e.editedByName?`<span class="edited-by" style="width:auto;margin-left:8px">✎ upravil ${esc(resolveEditedByName(e))}</span>`:""}</div></div>`;
       if(canEditCard){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
         ed.style.cssText="position:absolute;right:12px;top:12px"; ed.onclick=()=>openModal(e);
@@ -2723,8 +2715,7 @@ function entryCard(e,clients,opts={}){
       ${e.firma?`<span class="firma-badge${isKolos?" kolos":""}"><img src="${firmaLogoSrc}" style="height:12px;width:auto;vertical-align:middle"></span>`:""}
       ${xsTags}
     </div><div class="e-actions"></div></div>
-    <div class="e-events">${esc(e.events||"")}</div>
-    ${e.isNewBusiness && (e.nbApproachInfo||e.nbApproach) ? `<div class="nb-contact"><b>Spôsob oslovenia:</b> ${esc(e.nbApproachInfo||e.nbApproach)}</div>` : ""}
+    <div class="e-events">${esc(eventsDisplay(e))}</div>
     <div class="e-foot"><span class="obch"><span class="av">${initials(resolveOwnerName(e))}</span><span class="obch-info"><span>${esc(resolveOwnerName(e))}</span>${e.updatedAt?`<span class="upd-date">${e.isNewBusiness?"import":"úprava"} ${fmtDateTime(e.isNewBusiness?(e.nbImportedAt||e.updatedAt):e.updatedAt)}</span>`:""}</span></span>
       ${e.editedByName?`<span class="edited-by">✎ upravil ${esc(resolveEditedByName(e))}</span>`:""}
     </div></div>`;
@@ -2875,40 +2866,15 @@ async function improveTextWithAI(){
   const oldLabel=btn.innerHTML;
   btn.disabled=true; btn.innerHTML=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>Upravujem…`;
 
-  // Demo režim → jednoduché lokálne vyčistenie textu (bez volania API)
-  if(backend.mode==="demo"){
-    await new Promise(r=>setTimeout(r,500));
-    ta.value=improveTextLocal(original);
-    btn.disabled=false; btn.innerHTML=oldLabel;
-    toast("✨ Text upravený");
-    return;
-  }
-
-  const prompt=`Priprav opravenú a preformulovanú verziu nasledujúceho textu zo záznamu obchodnej aktivity (slovenčina).
-Pravidlá: oprav gramatiku a preklepy, sprehľadni formulácie, zachovaj VŠETKY fakty, mená, čísla a termíny presne tak, ako sú. Nič si nevymýšľaj a nepridávaj. Zachovaj štruktúru po riadkoch (každá myšlienka na vlastnom riadku). Buď stručný, vecný, profesionálny tón.
-Odpovedz IBA upraveným textom, žiadny úvod ani komentár.
-
-Text:
-"""
-${original}
-"""`;
-
   try{
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:800,
-        messages:[{role:"user",content:prompt}] })
-    });
-    const data=await resp.json();
-    if(data.error){ throw new Error(data.error.message); }
-    const improved=(data.content||[]).map(b=>b.text||"").join("").trim();
+    const {improved}=await backend.improveText(original);
     if(!improved) throw new Error("Prázdna odpoveď");
     ta.value=improved;
-    toast("✨ Text upravený pomocou AI");
+    toast(backend.mode==="demo" ? "✨ Text upravený" : "✨ Text upravený pomocou AI");
   }catch(err){
     console.warn("AI úprava textu zlyhala, používam lokálne vyčistenie:", err.message);
     ta.value=improveTextLocal(original);
-    toast("✨ Text upravený (offline režim)");
+    toast("✨ Text upravený (offline režim — over, či je nasadená funkcia improveText)");
   }
   btn.disabled=false; btn.innerHTML=oldLabel;
 }
