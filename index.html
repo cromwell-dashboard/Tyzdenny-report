@@ -997,6 +997,9 @@ function resolveEditedByName(e){
 }
 // Zoznam reálnych mien obchodníkov pre rozbaľovací zoznam v zázname (admin/šéf/líder)
 const OBCH_NAME_LIST = [...new Set(Object.values(OBCHODNIK_EMAILS).map(v=>v.name).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"sk"));
+// Opačné mapovanie meno → email, aby sa záznam pri výbere obchodníka z rozbaľovacieho zoznamu
+// uložil pod JEHO účet, nie pod účet toho, kto záznam práve zapisuje (napr. líder).
+const NAME_TO_EMAIL = Object.fromEntries(Object.entries(OBCHODNIK_EMAILS).filter(([,v])=>v.name).map(([email,v])=>[v.name,email]));
 const USE_FIREBASE = !Object.values(firebaseConfig).some(v => v === "VLOZ_SEM" || !v);
 
 /* ============================================================================
@@ -2955,10 +2958,28 @@ async function saveFromModal(){
   const suggestionId = editing?.id;  // uložíme pred async aby sme ho mali po dokončení
   const wasEditing = !!editing && !isSuggestion;
   const isObchRole = state.user.role==="obchodnik";
+  const selectedName = isObchRole ? state.user.name : ($("#fObch").value.trim()||state.user.name);
 
   // Odstráníme _suggested/_source pred uložením, ak je návrh → nové čisté ID
   const {_suggested, _source, ...baseEntry} = editing ? {...editing} : {};
   if(isSuggestion) delete baseEntry.id;
+
+  // Komu záznam patrí: obchodník vždy sebe; admin/šéf/líder podľa toho, koho vybrali
+  // v rozbaľovacom zozname (nie podľa toho, kto záznam práve zapisuje!).
+  let newOwnerKey, newOwnerName, newOwnerUid;
+  if(isObchRole){
+    newOwnerKey=state.user.key; newOwnerName=state.user.name; newOwnerUid=state.user.uid||"demo";
+  } else {
+    const mappedEmail = NAME_TO_EMAIL[selectedName];
+    if(mappedEmail){
+      newOwnerKey=mappedEmail; newOwnerName=selectedName;
+      newOwnerUid = (editing?.ownerKey===mappedEmail) ? (editing.ownerUid||"demo") : "reassigned";
+    } else {
+      // neznáme meno (nemalo by nastať pri výbere zo zoznamu) — zachovaj pôvodné/aktuálne
+      newOwnerKey=editing?.ownerKey||state.user.key; newOwnerName=selectedName;
+      newOwnerUid=editing?.ownerUid||state.user.uid||"demo";
+    }
+  }
 
   // Líder, ktorý zasahuje do záznamu obchodníka (nie svojho vlastného), sa dopíše do záznamu
   // POZOR: Firestore SDK vyhodí chybu, ak pošleme pole s hodnotou undefined — preto vždy ?? null.
@@ -2970,10 +2991,9 @@ async function saveFromModal(){
   const entry={ ...baseEntry,
     segment:segId, weekId: editing?.weekId||state.week, client,
     events:$("#fEvents").value.trim(),
-    salesperson: isObchRole ? state.user.name : ($("#fObch").value.trim()||state.user.name),
+    salesperson: selectedName,
     status:$("#fStatus").value, firma,
-    ownerKey:editing?.ownerKey||state.user.key, ownerName:editing?.ownerName||state.user.name,
-    ownerUid:editing?.ownerUid||state.user.uid||"demo",
+    ownerKey:newOwnerKey, ownerName:newOwnerName, ownerUid:newOwnerUid,
     // ak niekto ručne upraví importovaný záznam New Business, ďalší CSV import ho už neprepíše
     nbLocked: baseEntry.isNewBusiness ? true : (baseEntry.nbLocked ?? false),
     editedByName, editedByAt, editedByKey };
