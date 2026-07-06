@@ -997,6 +997,11 @@ const OBCHODNIK_EMAILS = {
   // Digitance
   "adrian.csuba@digitance.sk":         { name:"Adrian Csuba",         firma:"Digitance",     segments:["digital"] },
 };
+// Presný zoznam e-mailov, ktoré majú povolené sa prihlásiť/zaregistrovať (Google aj heslom).
+// Ktokoľvek iný — hoci by mal platný Google účet — sa dnu nedostane.
+const KNOWN_EMAILS = new Set([
+  ...ADMIN_EMAILS, ...BOSS_EMAILS, ...Object.keys(LIDER_EMAILS), ...Object.keys(OBCHODNIK_EMAILS)
+].map(e=>e.toLowerCase()));
 
 // Jednotné mapovanie email → skutočné meno (obchodníci + líder-only účty + šéf/admin).
 // Používa sa na zobrazenie mena namiesto akéhokoľvek staršieho/nesprávneho textu uloženého priamo v zázname.
@@ -1337,8 +1342,13 @@ async function firebaseBackend(){
   const generateSuggestionsCallable=httpsCallable(fx,"generateSuggestions");
   let unsub=null;
   async function resolveUser(u){
-    const ref=doc(db,"users",u.uid); const snap=await getDoc(ref); let data=snap.exists()?snap.data():null;
     const email=(u.email||"").toLowerCase();
+    if(!KNOWN_EMAILS.has(email)){
+      await signOut(auth);
+      const err=$("#loginErr"); if(err) err.textContent="Tento e-mail nemá povolený prístup do appky. Ozvi sa adminovi, nech ťa pridá do zoznamu.";
+      return null;
+    }
+    const ref=doc(db,"users",u.uid); const snap=await getDoc(ref); let data=snap.exists()?snap.data():null;
     const isAdmin=ADMIN_EMAILS.includes(email);
     const isBoss=BOSS_EMAILS.includes(email);
     const liderSegs=LIDER_EMAILS[email]||null;
@@ -1368,7 +1378,10 @@ async function firebaseBackend(){
     onUser(cb){ onAuthStateChanged(auth, async u=>cb(u?await resolveUser(u):null)); },
     googleLogin(){ return signInWithPopup(auth,new GoogleAuthProvider()); },
     emailLogin(e,p){ return signInWithEmailAndPassword(auth,e,p); },
-    emailSignup(e,p){ return createUserWithEmailAndPassword(auth,e,p); },
+    emailSignup(e,p){
+      if(!KNOWN_EMAILS.has((e||"").toLowerCase())) return Promise.reject({code:"custom/not-whitelisted"});
+      return createUserWithEmailAndPassword(auth,e,p);
+    },
     logout(){ return signOut(auth); },
     start(){
       if(unsub) unsub();
@@ -1491,6 +1504,7 @@ function wireLogin(){
   $("#emailSignup").onclick=()=>backend.emailSignup($("#logEmail").value.trim(),$("#logPass").value).catch(e=>$("#loginErr").textContent=loginErr(e));
 }
 function loginErr(e){ const m=(e&&e.code)||"";
+  if(m==="custom/not-whitelisted") return "Tento e-mail nemá povolený prístup do appky. Ozvi sa adminovi, nech ťa pridá do zoznamu.";
   if(m.includes("invalid-credential")||m.includes("wrong-password")) return "Nesprávny e-mail alebo heslo.";
   if(m.includes("email-already-in-use")) return "Účet už existuje — prihlás sa.";
   if(m.includes("weak-password")) return "Heslo musí mať aspoň 6 znakov.";
