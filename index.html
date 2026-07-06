@@ -418,6 +418,13 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .reg-row.reg-hidden{background:var(--line-2); opacity:.75}
 .reg-name{flex:1; font-size:13.5px; font-weight:500}
 .reg-tag{font-size:11px; color:var(--muted); background:var(--line-2); padding:2px 9px; border-radius:20px}
+.reg-danger-box{background:#FDF3F2; border:1px solid #F3C9C4; border-radius:var(--r); padding:18px 20px; margin-bottom:24px}
+.reg-danger-h{font-weight:700; color:var(--red); font-size:14.5px; margin-bottom:5px}
+.reg-danger-sub{font-size:12.5px; color:var(--ink-soft); margin-bottom:14px; line-height:1.5}
+.reg-danger-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.reg-danger-row label{font-size:12.5px; font-weight:600; color:var(--ink-soft)}
+.reg-danger-row input{padding:8px 11px; border:1px solid var(--line); border-radius:var(--r-sm); font-family:var(--mono); width:140px}
+.wipe-warn{margin-top:12px; font-size:13px; color:var(--ink-soft); line-height:1.5}
 .risk-badge{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:#fff; background:var(--red); border-radius:20px; padding:3px 10px 3px 8px; letter-spacing:.02em; white-space:nowrap; box-shadow:0 1px 3px rgba(181,68,58,.4)}
 .risk-badge svg{width:11px; height:11px; flex:0 0 auto}
 .approach-badge{display:inline-flex; align-items:center; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--brand-soft); color:var(--brand); white-space:nowrap}
@@ -1400,22 +1407,12 @@ async function boot(){
     backend.onUser(u=>{
       if(u){
         state.user=u; showApp(); buildStatic(); backend.start(); render();
-        // Banner s tlačidlom importu (zobrazí sa len ak je DB prázdna)
+        // Banner s informáciou o pripojenom Firebase projekte
         setTimeout(async()=>{
-          const isEmpty = state.all.length===0;
           const b=$("#banner"); b.classList.remove("hidden");
-          if(isEmpty){
-            b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-              <span class="grow">Databáza je prázdna. Chceš importovať reálne dáta z porád?</span>
-              <button id="importBtn" class="ai-btn" style="white-space:nowrap">⬇ Importovať dáta z porád</button>
-              <button id="skipImport" style="background:none;border:none;color:inherit;cursor:pointer;padding:4px 8px;font-weight:600">Preskočiť</button>`;
-            $("#skipImport").onclick=()=>b.classList.add("hidden");
-            $("#importBtn").onclick=()=>importDemoData();
-          } else {
-            b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
-              <span class="grow">Ostrý režim — Firebase projekt <b>${esc(firebaseConfig.projectId)}</b>.</span>
-              <button onclick="document.getElementById('banner').classList.add('hidden')" style="background:none;border:none;color:inherit;cursor:pointer;padding:4px 8px;font-weight:600">✕</button>`;
-          }
+          b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+            <span class="grow">Ostrý režim — Firebase projekt <b>${esc(firebaseConfig.projectId)}</b>.</span>
+            <button onclick="document.getElementById('banner').classList.add('hidden')" style="background:none;border:none;color:inherit;cursor:pointer;padding:4px 8px;font-weight:600">✕</button>`;
         }, 1500);
       } else showLogin();
     });
@@ -2264,46 +2261,6 @@ function notesBlock(e){
 function viewDashboard(){
   const wrap=el("div");
 
-  // Jednorazový import banner (admin, iba ak W25 dáta chýbajú)
-  const hasW25=state.all.some(e=>e.weekId==="2026-W25"&&e.ownerUid==="bulk_import_25_26");
-  if(state.user.role==="admin"&&!hasW25){
-    const ab=el("div","ai-banner"); ab.style.marginBottom="16px";
-    ab.innerHTML=`<div class="ai-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
-      <div class="ai-body"><b>Import: všetky oddelenia — porady 19.6. a 26.6.2026</b>
-      <p>128 záznamov: Balíky (W26), Digitálne + Tlač + Poštové + Zelená pošta (W25). Jednorazová akcia.</p></div>`;
-    const btn=el("button","ai-btn","⬇ Importovať všetky oddelenia");
-    btn.onclick=async()=>{
-      btn.disabled=true; btn.textContent="⏳ Importujem…";
-      const entries=importAllDepts25_26Entries(); let done=0;
-      for(const entry of entries){
-        await backend.save(entry); done++;
-        if(done%5===0) btn.textContent=`⏳ ${done}/${entries.length}…`;
-      }
-      toast(`✓ Importovaných ${done} záznamov!`); ab.remove();
-    };
-    ab.appendChild(btn); wrap.appendChild(ab);
-  }
-
-  // Import W26 Tlač + Poštové (z porady 25.-26.6.2026)
-  const hasW26tp=state.all.some(e=>e.weekId==="2026-W26"&&e.ownerUid==="import_w26_tlac_postove");
-  if(state.user.role==="admin"&&!hasW26tp){
-    const ab2=el("div","ai-banner"); ab2.style.marginBottom="16px";
-    ab2.innerHTML=`<div class="ai-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
-      <div class="ai-body"><b>Import: Tlač + Poštové — porada 25.–26.6.2026 (W26)</b>
-      <p>55 záznamov: aktualizované dáta Tlač, Adresné a Neadresné pre Týždeň 26.</p></div>`;
-    const btn2=el("button","ai-btn","⬇ Importovať Tlač + Poštové W26");
-    btn2.onclick=async()=>{
-      btn2.disabled=true; btn2.textContent="⏳ Importujem…";
-      const entries2=importW26TlacPostoveEntries(); let done2=0;
-      for(const entry of entries2){
-        await backend.save(entry); done2++;
-        if(done2%5===0) btn2.textContent=`⏳ ${done2}/${entries2.length}…`;
-      }
-      toast(`✓ Importovaných ${done2} záznamov W26!`); ab2.remove();
-    };
-    ab2.appendChild(btn2); wrap.appendChild(ab2);
-  }
-
   const we=weekEntries();
   const clients=clientIndex();
   const xsAll=clients.filter(c=>c.crossSell);
@@ -2609,21 +2566,6 @@ function viewSegment(){
        <div class="seg-logo-box"><img src="${LOGOS[s.logoKey2]}" class="kolos-logo" alt="KOLOS"></div>`
     : `<div class="seg-logo-box"><img src="${LOGOS[s.logoKey]}" alt="${s.short}"></div>`;
   const wrap=viewList(weekEntries().filter(e=>e.segment===s.id), s.name, "Záznamy za tento týždeň. Klikni na klienta pre históriu naprieč službami.", s, logoHtml);
-  // Jednorazový import pre Zelená pošta W26 (len admin, len raz)
-  const alreadyImported=state.all.some(e=>e.segment==="zelena"&&e.weekId==="2026-W26"&&e.ownerUid==="import_zp26");
-  if(s.id==="zelena" && state.user.role==="admin" && !alreadyImported){
-    const ab=el("div","ai-banner"); ab.style.marginBottom="16px";
-    ab.innerHTML=`<div class="ai-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
-      <div class="ai-body"><b>Import: porada Zelená pošta 26.6.2026</b><p>26 klientov pre Týždeň 26 z Word dokumentu — klikni na import.</p></div>`;
-    const btn=el("button","ai-btn","⬇ Importovať záznamy zo 26.6.");
-    btn.onclick=async()=>{
-      btn.disabled=true; btn.textContent="⏳ Importujem…";
-      const entries=zelenaPosta26Entries(); let done=0;
-      for(const entry of entries){ await backend.save(entry); done++; btn.textContent=`⏳ ${done}/${entries.length}…`; }
-      toast(`✓ Importovaných ${done} záznamov!`); ab.remove();
-    };
-    ab.appendChild(btn); wrap.insertBefore(ab,wrap.firstChild);
-  }
   return wrap;
 }
 
@@ -2891,6 +2833,46 @@ function viewClientRegistry(){
     <div class="eyebrow">Nastavenia</div>
     <h1>Číselník klientov</h1>
     <div class="sub">Skry meno klienta, ktoré sa už nemá ponúkať obchodníkom pri písaní záznamu (napr. duplicity alebo preklepy). Historické záznamy zostanú nedotknuté, len sa dané meno prestane objavovať v nápovede.</div></div>`));
+
+  // ---- Hromadné vymazanie záznamov od zvoleného týždňa (admin) ----
+  if(state.user.role==="admin"){
+    const box=el("div","reg-danger-box");
+    box.innerHTML=`<div class="reg-danger-h">⚠ Hromadné vymazanie záznamov</div>
+      <div class="reg-danger-sub">Natrvalo vymaže všetky záznamy od zvoleného týždňa vyššie (vrátane). Nedá sa vrátiť späť. Použi len na vyčistenie omylom naimportovaných/testovacích dát.</div>
+      <div class="reg-danger-row">
+        <label>Vymazať od týždňa (vrátane):</label>
+        <input id="wipeWeekInput" placeholder="napr. 2026-W28" value="2026-W28">
+        <button id="wipeCheckBtn" class="btn">Skontrolovať</button>
+      </div>
+      <div id="wipeResult"></div>`;
+    wrap.appendChild(box);
+
+    setTimeout(()=>{
+      const input=box.querySelector("#wipeWeekInput");
+      const checkBtn=box.querySelector("#wipeCheckBtn");
+      const resultEl=box.querySelector("#wipeResult");
+      checkBtn.onclick=()=>{
+        const from=input.value.trim();
+        if(!/^\d{4}-W\d{2}$/.test(from)){ resultEl.innerHTML=`<div class="wipe-warn">Zadaj týždeň v tvare 2026-W28.</div>`; return; }
+        const matches=state.all.filter(e=>e.weekId>=from);
+        if(!matches.length){ resultEl.innerHTML=`<div class="wipe-warn">Žiadne záznamy od týždňa ${esc(from)} sa nenašli.</div>`; return; }
+        const byWeek={};
+        matches.forEach(e=>{ byWeek[e.weekId]=(byWeek[e.weekId]||0)+1; });
+        const weeksList=Object.keys(byWeek).sort().map(w=>`${esc(w)}: ${byWeek[w]}`).join(" · ");
+        resultEl.innerHTML=`<div class="wipe-warn"><b>Nájdených ${matches.length} ${plural(matches.length,"záznam","záznamy","záznamov")}</b> (${weeksList}).</div>
+          <button id="wipeConfirmBtn" class="btn" style="background:var(--red);color:#fff;border-color:var(--red);margin-top:8px">🗑 Natrvalo vymazať ${matches.length} ${plural(matches.length,"záznam","záznamy","záznamov")}</button>`;
+        box.querySelector("#wipeConfirmBtn").onclick=async()=>{
+          if(!confirm(`Naozaj natrvalo vymazať ${matches.length} záznamov od týždňa ${from}? Táto akcia sa nedá vrátiť späť.`)) return;
+          const btn=box.querySelector("#wipeConfirmBtn");
+          btn.disabled=true;
+          let done=0;
+          for(const e of matches){ await backend.remove(e.id); done++; btn.textContent=`⏳ Mažem… ${done}/${matches.length}`; }
+          toast(`✓ Vymazaných ${done} záznamov`);
+          resultEl.innerHTML=`<div class="wipe-warn">Hotovo — vymazaných ${done} záznamov.</div>`;
+        };
+      };
+    },0);
+  }
 
   const tb=el("div","toolbar");
   const search=el("div","search",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
