@@ -455,9 +455,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .wd-bar{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; margin-bottom:16px}
 .wd-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
 .wd-label{font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap}
-.wd-toggle{padding:9px 18px; border-radius:20px; border:2px solid var(--nb); background:#fff; color:var(--nb); font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .12s,color .12s}
-.wd-toggle:hover{background:var(--nb-soft)}
-.wd-toggle.on{background:var(--nb); border-color:var(--nb); color:#fff}
+.wd-toggle{padding:0 18px; height:38px; border-radius:10px; border:1px solid var(--nb); background:var(--nb); color:#fff; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:6px}
+.wd-toggle:hover{background:#0f7a4b; border-color:#0f7a4b}
+.wd-toggle.on{background:#0c6b41; border-color:#0c6b41}
 .wd-names{display:flex; flex-wrap:wrap; gap:6px; flex:1; min-width:120px}
 .wd-chip{display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:20px; background:var(--nb-soft); color:var(--nb); border:1px solid var(--nb-border)}
 .wd-chip svg{width:10px; height:10px; flex:0 0 auto}
@@ -468,7 +468,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .wd-notify-wrap input{flex:1; padding:8px 11px; border:1px solid var(--line); border-radius:var(--r-sm); font-size:12.5px}
 .wd-notify-wrap .btn{white-space:nowrap}
 .copy-prompt{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:10px 2px; margin-bottom:14px; font-size:13px; color:var(--muted)}
-.copy-prompt-btn{display:inline-flex; align-items:center; gap:7px; padding:0 16px; border-radius:10px; border:1px solid var(--brand-soft); background:var(--brand-soft); color:var(--brand); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit}
+.copy-prompt-btn{display:inline-flex; align-items:center; gap:7px; padding:0 16px; border-radius:10px; border:1.5px solid var(--brand); background:var(--brand-soft); color:var(--brand); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit}
 .copy-prompt-btn:hover{background:#dde1f8}
 .copy-prompt-btn svg{width:14px; height:14px; flex:0 0 auto}
 .warning-box{margin-top:10px; padding:11px 14px; border-radius:10px; background:#FDF3F2; border:1.5px solid #F3C9C4; display:flex; gap:9px; align-items:flex-start}
@@ -1482,7 +1482,9 @@ async function firebaseBackend(){
       const u1=onSnapshot(query(collection(db,"entries")), snap=>{ state.all=snap.docs.map(d=>({id:d.id,comments:[],...d.data()})); render(); });
       const u2=onSnapshot(query(collection(db,"tasks")), snap=>{ state.tasks=snap.docs.map(d=>({id:d.id,...d.data()})); render(); });
       const u3=onSnapshot(doc(db,"meta","hiddenClients"), snap=>{ state.hiddenClientNames=snap.exists()?(snap.data().names||[]):[]; render(); });
-      const u4=onSnapshot(query(collection(db,"weeklyDone")), snap=>{ state.weeklyDone=snap.docs.map(d=>({id:d.id,entries:[],...d.data()})); render(); });
+      const u4=onSnapshot(query(collection(db,"weeklyDone")),
+        snap=>{ state.weeklyDone=snap.docs.map(d=>({id:d.id,entries:[],...d.data()})); render(); },
+        err=>{ console.error("weeklyDone snapshot error:", err); toast("⚠ Chyba pri načítaní \"Hotovo\": "+(err.message||err.code||err)); });
       unsub=()=>{ u1(); u2(); u3(); u4(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
@@ -2708,12 +2710,22 @@ function weeklyDoneBar(seg){
   toggleBtn.type="button";
   toggleBtn.onclick=async()=>{
     toggleBtn.disabled=true;
+    // Okamžitá lokálna zmena (optimistic update) — tlačidlo zareaguje hneď,
+    // aj kým sa zápis do databázy ešte len posiela.
+    const id=`${state.week}__${group}`;
+    let doc0=state.weeklyDone.find(d=>d.id===id);
+    const wasIn = doc0?.entries?.some(e=>e.key===state.user.key);
+    if(!doc0){ doc0={id, weekId:state.week, group, entries:[]}; state.weeklyDone=[...state.weeklyDone, doc0]; }
+    doc0.entries = wasIn ? doc0.entries.filter(e=>e.key!==state.user.key) : [...doc0.entries, {key:state.user.key, name:state.user.name, at:Date.now()}];
+    render();
     try{
       await backend.toggleWeeklyDone(state.week, group, state.user.key, state.user.name);
     }catch(err){
-      console.warn("Hotovo sa nepodarilo uložiť:", err);
-      toast("⚠ Nepodarilo sa uložiť — skús to prosím znova.");
-      toggleBtn.disabled=false;
+      console.error("Hotovo sa nepodarilo uložiť:", err);
+      toast("⚠ Nepodarilo sa uložiť do databázy: "+(err.message||err.code||"neznáma chyba"));
+      // vráť lokálnu zmenu späť, keďže sa zápis nepodaril
+      doc0.entries = wasIn ? [...doc0.entries, {key:state.user.key, name:state.user.name, at:Date.now()}] : doc0.entries.filter(e=>e.key!==state.user.key);
+      render();
     }
   };
   row.appendChild(toggleBtn);
