@@ -447,6 +447,21 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .co-obch-tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
 .co-obch-tag{display:inline-flex; align-items:center; font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--line-2); color:var(--ink-soft)}
 .co-obch-note{font-size:11.5px; font-weight:500; color:var(--muted)}
+.wd-bar{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:16px 18px; margin-bottom:20px}
+.wd-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px}
+.wd-head b{font-size:14px}
+.wd-toggle{padding:8px 16px; border-radius:20px; border:1px solid var(--line); background:#fff; color:var(--ink-soft); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap}
+.wd-toggle:hover{background:#fafbfc}
+.wd-toggle.on{background:var(--nb); border-color:var(--nb); color:#fff}
+.wd-chips{display:flex; flex-wrap:wrap; gap:8px}
+.wd-chip{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; background:var(--nb-soft); color:var(--nb); border:1px solid var(--nb-border)}
+.wd-chip svg{width:12px; height:12px; flex:0 0 auto}
+.wd-empty{font-size:12.5px; color:var(--muted)}
+.wd-notify-btn{margin-top:14px; padding:8px 15px; border-radius:20px; border:1px solid var(--line); background:#fff; color:var(--ink-soft); font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit}
+.wd-notify-btn:hover{background:#fafbfc}
+.wd-notify-wrap{margin-top:12px; padding-top:14px; border-top:1px dashed var(--line)}
+.wd-notify-wrap label{display:block; font-size:12.5px; font-weight:600; margin-bottom:6px; color:var(--ink-soft)}
+.wd-notify-wrap input{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:var(--r-sm); font-size:13px}
 .warning-box{margin-top:10px; padding:11px 14px; border-radius:10px; background:#FDF3F2; border:1.5px solid #F3C9C4; display:flex; gap:9px; align-items:flex-start}
 .warning-box svg{width:17px; height:17px; flex:0 0 auto; color:var(--red); margin-top:1px}
 .warning-box-text{color:#8B2E2E; font-weight:700; font-size:13.5px; line-height:1.5; white-space:pre-wrap}
@@ -1087,6 +1102,11 @@ const SEGMENTS = [
 ];
 const SEG = Object.fromEntries(SEGMENTS.map(s=>[s.id,s]));
 
+// "Skupina hotovosti" pre týždenný checklist — Adresné a Neadresné sa počítajú spolu
+// (rovnakí obchodníci pracujú na oboch), ostatné služby majú vlastnú samostatnú skupinu.
+const COMPLETION_GROUP = { baliky:"baliky", digital:"digital", tlac:"tlac", ad:"postove", nad:"postove", zelena:"zelena" };
+const COMPLETION_GROUP_LABEL = { baliky:"Balíky", digital:"Digitálne služby", tlac:"Tlač", postove:"Poštové služby (adresné aj neadresné)", zelena:"Zelená pošta" };
+
 const STATUSES = [
   { id:"lead",       label:"Lead / oslovený",         color:"#8b95a1" },
   { id:"ponuka",     label:"Zaslaná ponuka",          color:"#C6810A" },
@@ -1256,6 +1276,7 @@ const state = {
   nbSegFilter:null,        // predvyplnený filter služby pri vstupe na stránku New Business
   sortBy:"client",         // "client" | "salesperson" — zoradenie zoznamu záznamov
   hiddenClientNames:[],    // mená klientov skryté z návrhov (číselník)
+  weeklyDone:[],           // [{id, weekId, group, entries:[{key,name,at}]}] — týždenný checklist "Hotovo"
   sugFilterName:"",        // filter návrhov/kópií podľa obchodníka
 };
 let backend=null;
@@ -1351,7 +1372,8 @@ function demoBackend(){
   let all=demoSeed();
   let tasks=demoTasks();
   let hiddenClients=[];
-  const sync=()=>{ state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; render(); };
+  let weeklyDone=[];
+  const sync=()=>{ state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; state.weeklyDone=weeklyDone.map(d=>({...d, entries:[...d.entries]})); render(); };
   return {
     mode:"demo",
     start(){ sync(); },
@@ -1365,6 +1387,15 @@ function demoBackend(){
     async improveText(text){ await new Promise(r=>setTimeout(r,400)); return {improved: improveTextLocal(text)}; },
     async hideClientName(name){ if(!hiddenClients.includes(name)) hiddenClients.push(name); sync(); },
     async unhideClientName(name){ hiddenClients=hiddenClients.filter(n=>n!==name); sync(); },
+    async toggleWeeklyDone(weekId,group,userKey,userName){
+      const id=`${weekId}__${group}`;
+      let doc=weeklyDone.find(d=>d.id===id);
+      if(!doc){ doc={id,weekId,group,entries:[]}; weeklyDone.push(doc); }
+      const idx=doc.entries.findIndex(e=>e.key===userKey);
+      if(idx>=0) doc.entries.splice(idx,1);
+      else doc.entries.push({key:userKey,name:userName,at:Date.now()});
+      sync();
+    },
     async addComment(entryId,comment){
       all=all.map(e=>e.id===entryId?{...e, comments:[...(e.comments||[]), comment]}:e); sync();
     },
@@ -1438,7 +1469,8 @@ async function firebaseBackend(){
       const u1=onSnapshot(query(collection(db,"entries")), snap=>{ state.all=snap.docs.map(d=>({id:d.id,comments:[],...d.data()})); render(); });
       const u2=onSnapshot(query(collection(db,"tasks")), snap=>{ state.tasks=snap.docs.map(d=>({id:d.id,...d.data()})); render(); });
       const u3=onSnapshot(doc(db,"meta","hiddenClients"), snap=>{ state.hiddenClientNames=snap.exists()?(snap.data().names||[]):[]; render(); });
-      unsub=()=>{ u1(); u2(); u3(); };
+      const u4=onSnapshot(query(collection(db,"weeklyDone")), snap=>{ state.weeklyDone=snap.docs.map(d=>({id:d.id,entries:[],...d.data()})); render(); });
+      unsub=()=>{ u1(); u2(); u3(); u4(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
@@ -1446,6 +1478,17 @@ async function firebaseBackend(){
     remove(id){ return deleteDoc(doc(db,"entries",id)); },
     async hideClientName(name){ await setDoc(doc(db,"meta","hiddenClients"),{names:arrayUnion(name)},{merge:true}); },
     async unhideClientName(name){ await setDoc(doc(db,"meta","hiddenClients"),{names:arrayRemove(name)},{merge:true}); },
+    async toggleWeeklyDone(weekId,group,userKey,userName){
+      const id=`${weekId}__${group}`;
+      const ref=doc(db,"weeklyDone",id);
+      const snap=await getDoc(ref);
+      const cur=snap.exists()?(snap.data().entries||[]):[];
+      const idx=cur.findIndex(e=>e.key===userKey);
+      let next;
+      if(idx>=0){ next=cur.filter(e=>e.key!==userKey); }
+      else { next=[...cur, {key:userKey,name:userName,at:Date.now()}]; }
+      await setDoc(ref,{weekId,group,entries:next},{merge:true});
+    },
     async addComment(entryId,comment){
       const ref=doc(db,"entries",entryId); const snap=await getDoc(ref);
       const cur=snap.exists()?(snap.data().comments||[]):[];
@@ -2637,6 +2680,56 @@ function viewServicesList(){
 }
 
 /* ---------------------------------------------------------------- SEGMENT / LIST */
+function weeklyDoneBar(seg){
+  const group=COMPLETION_GROUP[seg.id];
+  const groupLabel=COMPLETION_GROUP_LABEL[group];
+  const docEntry=state.weeklyDone.find(d=>d.weekId===state.week && d.group===group);
+  const entries=docEntry?.entries||[];
+  const isDone=entries.some(e=>e.key===state.user.key);
+
+  const bar=el("div","wd-bar");
+  const head=el("div","wd-head");
+  head.innerHTML=`<b>Hotovo za tento týždeň — ${esc(groupLabel)}</b>`;
+  const toggleBtn=el("button", "wd-toggle"+(isDone?" on":""), isDone?"✓ Hotovo (klikni pre zrušenie)":"Označiť ako hotovo");
+  toggleBtn.onclick=async()=>{
+    toggleBtn.disabled=true;
+    await backend.toggleWeeklyDone(state.week, group, state.user.key, state.user.name);
+  };
+  head.appendChild(toggleBtn);
+  bar.appendChild(head);
+
+  const chips=el("div","wd-chips");
+  if(entries.length){
+    entries.slice().sort((a,b)=>a.at-b.at).forEach(e=>{
+      chips.appendChild(el("span","wd-chip",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${esc(e.name)}`));
+    });
+  } else {
+    chips.appendChild(el("span","wd-empty","Zatiaľ nikto neoznačil hotovo."));
+  }
+  bar.appendChild(chips);
+
+  // Notifikácia šéfovi mailom
+  const notifyBtn=el("button","wd-notify-btn","📧 Odoslať notifikáciu šéfovi");
+  const notifyWrap=el("div","wd-notify-wrap"); notifyWrap.style.display="none";
+  const defaultTo=[...BOSS_EMAILS, ...ADMIN_EMAILS].join(", ");
+  notifyWrap.innerHTML=`<label>E-mailová adresa (alebo viac oddelených čiarkou)</label>
+    <input id="wdNotifyEmail" value="${esc(defaultTo)}" placeholder="napr. sef@cromwell.sk, miroslava.stalmaskova@cromwell.sk">`;
+  const sendBtn=el("button","btn solid","Odoslať e-mail");
+  sendBtn.style.marginTop="10px";
+  sendBtn.onclick=()=>{
+    const to=$("#wdNotifyEmail",notifyWrap).value.trim();
+    if(!to){ toast("Zadaj aspoň jednu e-mailovú adresu."); return; }
+    const namesText=entries.length?entries.map(e=>e.name).join(", "):"zatiaľ nikto";
+    const subject=`Report za tento týždeň — ${groupLabel} je hotový`;
+    const body=`Dobrý deň,\n\nReport za týždeň ${weekRangeLabel(state.week)} pre oddelenie "${groupLabel}" je hotový.\n\nHotovo označili: ${namesText}\n\nS pozdravom,\n${state.user.name}`;
+    window.location.href=`mailto:${encodeURIComponent(to).replace(/%2C%20|%2C/g,",")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+  notifyWrap.appendChild(sendBtn);
+  notifyBtn.onclick=()=>{ notifyWrap.style.display = notifyWrap.style.display==="none" ? "" : "none"; };
+  bar.appendChild(notifyBtn);
+  bar.appendChild(notifyWrap);
+  return bar;
+}
 function viewSegment(){
   const s=SEG[state.segFilter]||SEGMENTS[0];
   const logoHtml = s.logoKey2
@@ -2661,6 +2754,8 @@ function viewList(list,title,sub,seg,logoHtml){
   actionsBlock.appendChild(addBtn);
   pageH.appendChild(actionsBlock);
   wrap.appendChild(pageH);
+
+  if(seg) wrap.appendChild(weeklyDoneBar(seg));
 
   // Definície pred AI bannerom
   const clients=clientIndex();
