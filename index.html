@@ -773,6 +773,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
     <div class="user">
       <div class="meta"><b id="uName">–</b><span id="uRole">–</span></div>
       <div class="avatar" id="uAvatar">–</div>
+      <button class="iconbtn" id="logoutBtn" title="Odhlásiť sa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
     </div>
   </header>
 
@@ -1047,7 +1050,7 @@ const OBCHODNIK_EMAILS = {
   "mariana.pahokiova@digitance.sk":    { name:"Mariana Páhokiová",    firma:"Digitance",     segments:["digital","baliky"] },
   "miloslav.donar@cromwell.sk":        { name:"Miloslav Donar",       firma:"Cromwell Post", segments:["tlac"] },
   "peter.moravcik@cromwell.sk":        { name:"Peter Moravčík",       firma:"Cromwell Post", segments:["nad"] },
-  "peter.papaj@cromwell.sk":           { name:"Peter Papaj",          firma:"Cromwell Post", segments:["tlac"] },
+  "peter.papaj@cromwell.sk":           { name:"Peter Papaj",          firma:"Cromwell Post", segments:["baliky","digital","tlac","ad","nad","zelena"] },
   "simona.bucsekova@cromwell.sk":      { name:"Simona Bucseková",     firma:"Cromwell Post", segments:["nad"] },
   "tadeas.bilek@cromwell.sk":          { name:"Tadeáš Bílek",         firma:"Cromwell Post", segments:["ad","nad"] },
   "veronika.bajusova@cromwell.sk":     { name:"Veronika Bajúsová",    firma:"Cromwell Post", segments:["ad"] },
@@ -1419,6 +1422,7 @@ function demoBackend(){
     },
     async removeTask(id){ tasks=tasks.filter(t=>t.id!==id); sync(); },
     async toggleTask(id,status){ tasks=tasks.map(t=>t.id===id?{...t,status}:t); sync(); },
+    logout(){ location.reload(); return Promise.resolve(); },
   };
 }
 
@@ -1519,7 +1523,7 @@ async function firebaseBackend(){
    BOOT / AUTH
    ============================================================================ */
 function showApp(){ $("#loginView").classList.add("hidden"); $("#appView").classList.remove("hidden"); }
-function showLogin(){ $("#appView").classList.add("hidden"); $("#loginView").classList.remove("hidden"); }
+function showLogin(){ $("#appView").classList.add("hidden"); $("#loginView").classList.remove("hidden"); $("#logEmail").value=""; $("#logPass").value=""; }
 
 async function boot(){
   if(USE_FIREBASE){
@@ -1669,6 +1673,11 @@ function buildStatic(){
   $("#thisWeek").onclick=$("#weekLabel").onclick=()=>{ state.week=CURRENT_WEEK; state.suggestions=[]; render(); };
   $("#addBtn").onclick=()=>openModal(null);
   $("#addTaskBtn").onclick=()=>openTaskModal(null);
+  $("#logoutBtn").onclick=async()=>{
+    if(!confirm("Naozaj sa chceš odhlásiť?")) return;
+    try{ await backend.logout(); }
+    catch(err){ console.error("Odhlásenie zlyhalo:", err); toast("⚠ Odhlásenie zlyhalo, skús to znova."); }
+  };
   $("#importNbBtn").onclick=()=>$("#nbFileInput").click();
   $("#nbFileInput").onchange=(e)=>{ const f=e.target.files[0]; handleNbFile(f); e.target.value=""; };
   $("#modalClose").onclick=$("#cancelBtn").onclick=closeModal;
