@@ -226,6 +226,14 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .search svg{width:16px;height:16px;color:var(--muted);flex:0 0 auto}
 .search input{border:none; outline:none; width:100%; background:none}
 .sort-toggle{display:flex; align-items:center; gap:7px; flex:0 0 auto}
+.sort-toggle select{padding:6px 11px; border:1px solid var(--line); border-radius:20px; font-size:12.5px; background:#fff; color:var(--ink-soft)}
+.nb-preview-box{position:relative; background:var(--line-2); border:1px solid var(--line); border-radius:var(--r); padding:14px 40px 14px 16px; margin-bottom:16px}
+.nb-preview-head{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:13px; margin-bottom:6px}
+.nb-preview-head svg{width:16px; height:16px; flex:0 0 auto}
+.nb-preview-names{font-size:12.5px; color:var(--ink-soft); margin-bottom:8px}
+.nb-preview-note{font-size:12.5px; color:var(--muted); line-height:1.5}
+.nb-preview-close{position:absolute; top:12px; right:12px; background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:2px 6px}
+.nb-preview-close:hover{color:var(--ink)}
 .sort-label{font-size:12px; color:var(--muted); font-weight:600}
 .sort-btn{padding:6px 12px; border-radius:20px; border:1px solid var(--line); background:#fff; font-size:12.5px; color:var(--ink-soft); font-weight:500; cursor:pointer; font-family:inherit}
 .sort-btn:hover{background:#fafbfc}
@@ -1293,6 +1301,8 @@ const state = {
   sortBy:"client",         // "client" | "salesperson" — zoradenie zoznamu záznamov
   hiddenClientNames:[],    // mená klientov skryté z návrhov (číselník)
   weeklyDone:[],           // [{id, weekId, group, entries:[{key,name,at}]}] — týždenný checklist "Hotovo"
+  nbCopyPreview:null,      // {segId, entries} — sivý náhľad New Business záznamov, ktoré sa nedajú kopírovať
+  filterSalesperson:"",    // filter hlavného zoznamu záznamov podľa konkrétneho obchodníka
   sugFilterName:"",        // filter návrhov/kópií podľa obchodníka
 };
 let backend=null;
@@ -1668,9 +1678,9 @@ function buildStatic(){
   updateFirmaVis();
   $("#fStatus").innerHTML=STATUSES.map(s=>`<option value="${s.id}">${s.label}</option>`).join("");
 
-  $("#prevWeek").onclick=()=>{ state.week=shiftWeek(state.week,-1); state.suggestions=[]; render(); };
-  $("#nextWeek").onclick=()=>{ state.week=shiftWeek(state.week,1); state.suggestions=[]; render(); };
-  $("#thisWeek").onclick=$("#weekLabel").onclick=()=>{ state.week=CURRENT_WEEK; state.suggestions=[]; render(); };
+  $("#prevWeek").onclick=()=>{ state.week=shiftWeek(state.week,-1); state.suggestions=[]; state.nbCopyPreview=null; render(); };
+  $("#nextWeek").onclick=()=>{ state.week=shiftWeek(state.week,1); state.suggestions=[]; state.nbCopyPreview=null; render(); };
+  $("#thisWeek").onclick=$("#weekLabel").onclick=()=>{ state.week=CURRENT_WEEK; state.suggestions=[]; state.nbCopyPreview=null; render(); };
   $("#addBtn").onclick=()=>openModal(null);
   $("#addTaskBtn").onclick=()=>openTaskModal(null);
   $("#logoutBtn").onclick=async()=>{
@@ -2350,9 +2360,12 @@ function copyFromPrevWeek(segId){
   if(!prevEntries.length){ toast("Minulý týždeň nemá žiadne záznamy pre tento segment."); return; }
   // Nepridávame to čo už máme (rovnaký klient+segment v tomto týždni)
   const thisWeekClients=new Set(state.all.filter(e=>e.segment===segId&&e.weekId===state.week).map(e=>clientKey(e.client)));
-  const copies=prevEntries
-    .filter(e=>!thisWeekClients.has(clientKey(e.client)))
-    .map(e=>({
+  const notYetHere=prevEntries.filter(e=>!thisWeekClients.has(clientKey(e.client)));
+
+  // New Business záznamy sa NEKOPÍRUJÚ — tie sa aktualizujú výhradne cez DMIS import.
+  // Zobrazíme ich len ako sivý (needitovateľný) náhľad s vysvetlením.
+  const nbEntries=notYetHere.filter(e=>e.isNewBusiness);
+  const copies=notYetHere.filter(e=>!e.isNewBusiness).map(e=>({
       ...e,
       id:"copy_"+Math.random().toString(36).slice(2,9),
       weekId:state.week,
@@ -2362,10 +2375,17 @@ function copyFromPrevWeek(segId){
       _suggested:true, _source:"copy",
       comments:[]
     }));
-  if(!copies.length){ toast("Všetci klienti z minulého týždňa sú už zadaní."); return; }
-  state.suggestions=[...state.suggestions, ...copies];
+
+  state.nbCopyPreview = nbEntries.length ? {segId, entries:nbEntries} : null;
+
+  if(!copies.length && !nbEntries.length){ toast("Všetci klienti z minulého týždňa sú už zadaní."); return; }
+  if(copies.length){
+    state.suggestions=[...state.suggestions, ...copies];
+    toast(`📋 Skopírovaných ${copies.length} ${plural(copies.length,"záznam","záznamy","záznamov")} — skontroluj a ulož.`);
+  } else {
+    toast(nbEntries.length ? "Zvyšné záznamy z minulého týždňa sú New Business — pozri náhľad nižšie." : "Všetci klienti z minulého týždňa sú už zadaní.");
+  }
   render();
-  toast(`📋 Skopírovaných ${copies.length} záznamov — skontroluj a ulož.`);
 }
 
 /* ---------------------------------------------------------------- POZNÁMKY (komentáre) */
@@ -2821,6 +2841,20 @@ function viewList(list,title,sub,seg,logoHtml){
   sortWrap.appendChild(mkSortBtn("client","Klient"));
   sortWrap.appendChild(mkSortBtn("salesperson","Obchodník"));
   tb.appendChild(sortWrap);
+
+  // Filter hlavného zoznamu podľa konkrétneho obchodníka (nie len zoradenie)
+  const allNames=[...new Set(list.map(e=>resolveOwnerName(e)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"sk"));
+  if(allNames.length>1){
+    const filterWrap=el("div","sort-toggle");
+    filterWrap.appendChild(el("span","sort-label","Filter:"));
+    const fsel=el("select");
+    const allOpt=el("option","","Všetci obchodníci"); allOpt.value=""; fsel.appendChild(allOpt);
+    allNames.forEach(n=>{ const o=el("option","",n); o.value=n; fsel.appendChild(o); });
+    fsel.value=state.filterSalesperson||"";
+    fsel.onchange=()=>{ state.filterSalesperson=fsel.value; renderRows(); };
+    filterWrap.appendChild(fsel);
+    tb.appendChild(filterWrap);
+  } else { state.filterSalesperson=""; }
   wrap.appendChild(tb);
 
   // Filter návrhov/kópií podľa obchodníka + hromadné zrušenie všetkých návrhov naraz.
@@ -2847,6 +2881,23 @@ function viewList(list,title,sub,seg,logoHtml){
     wrap.appendChild(sfWrap);
   } else { state.sugFilterName=""; }
 
+  // Sivý (needitovateľný) náhľad New Business záznamov z minulého týždňa — tie sa nekopírujú,
+  // aktualizujú sa výhradne cez DMIS import.
+  if(seg && state.nbCopyPreview && state.nbCopyPreview.segId===seg.id){
+    const nbBox=el("div","nb-preview-box");
+    const names=state.nbCopyPreview.entries.map(e=>e.client).join(", ");
+    nbBox.innerHTML=`<div class="nb-preview-head">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <b>New Business záznamy sa takto nekopírujú (${state.nbCopyPreview.entries.length})</b>
+      </div>
+      <div class="nb-preview-names">${esc(names)}</div>
+      <div class="nb-preview-note">Ak potrebuješ tento záznam aktualizovať, urob to priamo v DMIS — do reportu sa dostane automaticky cez import aktivít z DMIS-u. Ak to stihneš najneskôr do <b>piatka do konca dňa</b>, záznam sa do tohto týždňového zápisu ešte zaradí.</div>`;
+    const closeBtn=el("button","nb-preview-close","✕"); closeBtn.type="button";
+    closeBtn.onclick=()=>{ state.nbCopyPreview=null; render(); };
+    nbBox.appendChild(closeBtn);
+    wrap.appendChild(nbBox);
+  }
+
   const listWrap=el("div","entry-list"); wrap.appendChild(listWrap);
 
   function renderRows(){
@@ -2854,6 +2905,7 @@ function viewList(list,title,sub,seg,logoHtml){
     setTimeout(()=>{ state.highlightClient=null; },1500);
     const q=state.search.trim().toLowerCase();
     let rows=list.filter(e=>!q||(e.client||"").toLowerCase().includes(q)||(e.events||"").toLowerCase().includes(q)||(e.salesperson||"").toLowerCase().includes(q)||resolveOwnerName(e).toLowerCase().includes(q));
+    if(state.filterSalesperson) rows=rows.filter(e=>resolveOwnerName(e)===state.filterSalesperson);
     listWrap.innerHTML="";
 
     // AI návrhy — vždy na vrchu (aj pri vyhľadávaní), voliteľne filtrované podľa obchodníka
