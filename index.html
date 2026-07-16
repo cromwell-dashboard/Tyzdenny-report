@@ -3337,18 +3337,21 @@ async function saveFromModal(){
   const {_suggested, _source, ...baseEntry} = editing ? {...editing} : {};
   if(isSuggestion) delete baseEntry.id;
 
-  // Komu záznam patrí: podľa toho, koho vybrali v rozbaľovacom zozname "Obchodník"
+  // Komu záznam patrí (meno/e-mail): podľa toho, koho vybrali v rozbaľovacom zozname "Obchodník"
   // (nie podľa toho, kto záznam práve zapisuje — každá rola teraz môže zapísať/skopírovať
   // záznam v mene ktoréhokoľvek kolegu).
-  let newOwnerKey, newOwnerName, newOwnerUid;
+  // POZOR — ownerUid MUSÍ byť vždy skutočné Firebase Auth UID toho, kto práve ukladá (request.auth.uid),
+  // pretože presne na to sa pozerajú Firestore Security Rules pri kontrole práva upraviť/zmazať záznam.
+  // Ak by sme sem dali čokoľvek iné (napr. reťazec "reassigned"), záznam by sa dal prvýkrát uložiť,
+  // ale nikto by ho už nikdy nemohol upraviť ani zmazať — presne toto bola predchádzajúca chyba.
+  let newOwnerKey, newOwnerName;
+  const newOwnerUid = state.user.uid || "demo";
   const mappedEmail = NAME_TO_EMAIL[selectedName];
   if(mappedEmail){
     newOwnerKey=mappedEmail; newOwnerName=selectedName;
-    newOwnerUid = (editing?.ownerKey===mappedEmail) ? (editing.ownerUid||"demo") : "reassigned";
   } else {
     // neznáme meno (nemalo by nastať pri výbere zo zoznamu) — zachovaj pôvodné/aktuálne
     newOwnerKey=editing?.ownerKey||state.user.key; newOwnerName=selectedName;
-    newOwnerUid=editing?.ownerUid||state.user.uid||"demo";
   }
 
   // Ktokoľvek, kto zasahuje do záznamu iného užívateľa (nie svojho vlastného), sa dopíše do záznamu
