@@ -271,6 +271,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .entry .e-client .lk{cursor:pointer}
 .entry .e-client .lk:hover{text-decoration:underline}
 .entry .e-actions{display:flex; gap:4px; flex:0 0 auto}
+.entry .e-actions .del-btn:hover{color:var(--red); background:#FDF3F2}
 .entry .e-events{color:var(--ink-soft); font-size:13px; margin-top:7px; white-space:pre-wrap; line-height:1.55}
 .entry .e-foot{display:flex; align-items:center; gap:12px; margin-top:11px; flex-wrap:wrap}
 .tag{font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px}
@@ -460,15 +461,20 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .co-obch-tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
 .co-obch-tag{display:inline-flex; align-items:center; font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--line-2); color:var(--ink-soft)}
 .co-obch-note{font-size:11.5px; font-weight:500; color:var(--muted)}
-.wd-bar{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; margin-bottom:16px}
+.wd-bar{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; margin-bottom:16px; position:sticky; top:62px; z-index:30; box-shadow:0 2px 6px rgba(22,26,36,.05)}
 .wd-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
-.wd-label{font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap}
 .wd-toggle{padding:0 18px; height:38px; border-radius:10px; border:1px solid var(--nb); background:var(--nb); color:#fff; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:6px}
 .wd-toggle:hover{background:#0f7a4b; border-color:#0f7a4b}
 .wd-toggle.on{background:#0c6b41; border-color:#0c6b41}
-.wd-names{display:flex; flex-wrap:wrap; gap:6px; flex:1; min-width:120px}
-.wd-chip{display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; color:var(--nb)}
-.wd-chip svg{color:var(--nb); width:12px; height:12px; flex:0 0 auto}
+.wd-names{display:flex; flex-wrap:wrap; gap:6px 14px; flex:1; min-width:120px}
+.wd-chip{display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:400}
+.wd-chip svg{width:12px; height:12px; flex:0 0 auto}
+.wd-chip.done{color:var(--nb)}
+.wd-chip.done svg{color:var(--nb)}
+.wd-chip.pending{color:#aeb4bd}
+.wd-chip.pending svg{color:#D64545}
+.wd-chip.clickable{cursor:pointer; border-radius:6px; padding:2px 5px; margin:-2px -5px}
+.wd-chip.clickable:hover{background:var(--line-2)}
 .wd-empty{font-size:12px; color:var(--muted)}
 .wd-notify-btn{padding:8px 13px; border-radius:20px; border:1px solid var(--line); background:#fff; color:var(--ink-soft); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap}
 .wd-notify-btn:hover{background:#fafbfc}
@@ -544,6 +550,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 
   /* ── Topbar ─────────────────────────────────────────── */
   .topbar{ height:54px; padding:0 12px; gap:8px }
+  .wd-bar{ top:54px }
   .brand img{ height:20px }
   .brand .divider,.brand .sub{ display:none }
   .user .meta{ display:none }
@@ -1130,6 +1137,38 @@ const COMPLETION_GROUP_LABEL = { baliky:"Balíky", digital:"Digitálne služby",
 function liderEmailsForSegment(segId){
   return Object.entries(LIDER_EMAILS).filter(([,segs])=>segs.includes(segId)).map(([email])=>email);
 }
+// Pevný zoznam obchodníkov, ktorí sa majú zobrazovať pri každom segmente ako "očakávaní"
+// (kým nekliknú Hotovo, sú siví s červeným krížikom). Zadané ručne podľa oddelení.
+const GROUP_EXPECTED_NAMES = {
+  baliky:  ["Peter Prištic","Felix Krause","Dominik Sedlář","Kristína Krajčiová"],
+  digital: ["Adrian Csuba","Mariana Páhokiová"],
+  tlac:    ["Miloslav Donar","Peter Papaj","Juraj Praženica"],
+  postove: ["Dagmar Ševcechová","Peter Moravčík","Zuzana Dávidová","Simona Bucseková","Dagmar Stanček","Tadeáš Bílek","Veronika Bajúsová","Alexandra Uhláriková","Juraj Praženica"],
+  zelena:  ["Zuzana Kovalčíková","Zuzana Dvořáková","Henrieta Krišková","Miroslav Cvacho"],
+};
+function assignedNamesForGroup(group){
+  return GROUP_EXPECTED_NAMES[group] || [];
+}
+// Admin/líder označí (alebo odznačí) konkrétneho obchodníka ako hotového za daný týždeň+skupinu.
+async function markWeeklyDoneFor(group, targetKey, targetName, currentlyDone){
+  const id=`${state.week}__${group}`;
+  let doc0=state.weeklyDone.find(d=>d.id===id);
+  if(!doc0){ doc0={id, weekId:state.week, group, entries:[]}; state.weeklyDone=[...state.weeklyDone, doc0]; }
+  // optimistic update
+  if(currentlyDone){ doc0.entries=doc0.entries.filter(e=>e.key!==targetKey); }
+  else { doc0.entries=[...doc0.entries, {key:targetKey, name:targetName, at:Date.now()}]; }
+  render();
+  try{
+    await backend.toggleWeeklyDone(state.week, group, targetKey, targetName);
+  }catch(err){
+    console.error("Zmena Hotovo zlyhala:", err);
+    toast("⚠ Nepodarilo sa uložiť: "+(err.message||err.code||"neznáma chyba"));
+    // revert
+    if(currentlyDone){ doc0.entries=[...doc0.entries, {key:targetKey, name:targetName, at:Date.now()}]; }
+    else { doc0.entries=doc0.entries.filter(e=>e.key!==targetKey); }
+    render();
+  }
+}
 
 const STATUSES = [
   { id:"lead",       label:"Lead / oslovený",         color:"#8b95a1" },
@@ -1171,12 +1210,12 @@ function fmtDateTime(ts){
   return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 }
 const CURRENT_WEEK = weekId(new Date());
-// Obchodníci vypĺňajú záznamy v piatok (na aktuálny týždeň) a šéf ich od piatku číta.
-// Pondelok–štvrtok: defaultne zobrazíme posledný uzavretý (predchádzajúci) týždeň.
-// Piatok–nedeľa: defaultne zobrazíme aktuálny týždeň, lebo ten sa už práve napĺňa/číta.
-const _todayDow = new Date().getDay(); // 0=Ne, 1=Po ... 5=Pi, 6=So
-const _isFridayOrLater = (_todayDow===5 || _todayDow===6 || _todayDow===0);
-const DEFAULT_WEEK = _isFridayOrLater ? CURRENT_WEEK : shiftWeek(CURRENT_WEEK, -1);
+// Obchodníci vypĺňajú záznamy ku koncu týždňa (na aktuálny týždeň) a šéf ich potom číta.
+// Pondelok–streda: defaultne zobrazíme posledný uzavretý (predchádzajúci) týždeň.
+// Štvrtok–nedeľa: defaultne zobrazíme aktuálny týždeň, lebo ten sa už práve napĺňa/číta.
+const _todayDow = new Date().getDay(); // 0=Ne, 1=Po ... 4=Št, 5=Pi, 6=So
+const _isThursdayOrLater = (_todayDow===4 || _todayDow===5 || _todayDow===6 || _todayDow===0);
+const DEFAULT_WEEK = _isThursdayOrLater ? CURRENT_WEEK : shiftWeek(CURRENT_WEEK, -1);
 
 /* ============================================================================
    DEMO DÁTA — bez čísel, s cross-sell a históriou
@@ -1317,7 +1356,9 @@ const clientKey=n=>(n||"").trim().toLowerCase().replace(/\s+/g," ");
 // Rovnaká farba a ikona platí naprieč všetkými službami, každé okno má svoju vlastnú farbu.
 // "keys" = aké názvy klienta (aj staršie/rôzne varianty) sa majú rozpoznať; "label" = ako sa to zobrazí.
 const SPECIAL_CLIENT_DEFS = [
-  { keys:["interné","interné / projekty"], label:"Interné / projekty", color:"#DB8A3E",
+  { keys:["interné / projekty it","interné / projekty it","interne / projekty it","interné projekty it","interné it","interne it"], label:"Interné / projekty IT", color:"#DB8A3E",
+    icon:`<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 8l2.5 2.5L7 13M12 13h4"/>` },
+  { keys:["interné","interné / projekty","interne / projekty","interné projekty"], label:"Interné / projekty", color:"#DB8A3E",
     icon:`<path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M14 9h1M14 13h1"/>` },
   { keys:["mestá a obce"], label:"Mestá a obce", color:"#0D9488",
     icon:`<path d="M3 21h18M5 21V10l7-6 7 6v11M9 21v-6h6v6"/>` },
@@ -2733,7 +2774,6 @@ function weeklyDoneBar(seg){
 
   const bar=el("div","wd-bar");
   const row=el("div","wd-row");
-  row.appendChild(el("span","wd-label",esc(groupLabel)));
 
   const toggleBtn=el("button", "wd-toggle"+(isDone?" on":""), isDone?"✓ Hotovo":"Označiť ako hotovo");
   toggleBtn.type="button";
@@ -2759,14 +2799,33 @@ function weeklyDoneBar(seg){
   };
   row.appendChild(toggleBtn);
 
+  // Zoznam obchodníkov: hotoví (zelene, podľa poradia kliknutia) najprv, potom tí,
+  // čo ešte neoznačili (jemne sivo, s červeným krížikom).
+  // Admin a líder môžu kliknutím na sivého obchodníka označiť ho ako hotového za neho.
+  const doneNames=new Set(entries.map(e=>e.name));
+  const assignedNames=assignedNamesForGroup(group);
+  const doneOrdered=entries.slice().sort((a,b)=>a.at-b.at);
+  const pendingOrdered=assignedNames.filter(n=>!doneNames.has(n)).sort((a,b)=>a.localeCompare(b,"sk"));
+  const canManage = state.user.role==="admin" || state.user.role==="lider" || state.user.role==="sef";
+
   const namesWrap=el("div","wd-names");
-  if(entries.length){
-    namesWrap.innerHTML=entries.slice().sort((a,b)=>a.at-b.at).map(e=>
-      `<span class="wd-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${esc(e.name)}</span>`
-    ).join("");
-  } else {
-    namesWrap.innerHTML=`<span class="wd-empty">Zatiaľ nikto neoznačil hotovo</span>`;
-  }
+  doneOrdered.forEach(e=>{
+    const chip=el("span","wd-chip done"+(canManage?" clickable":""),`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${esc(e.name)}`);
+    if(canManage){
+      chip.title="Klikni pre zrušenie označenia (späť na nesplnené)";
+      chip.onclick=()=>markWeeklyDoneFor(group, e.key||("named_"+clientKey(e.name)), e.name, true);
+    }
+    namesWrap.appendChild(chip);
+  });
+  pendingOrdered.forEach(n=>{
+    const chip=el("span","wd-chip pending"+(canManage?" clickable":""),`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>${esc(n)}`);
+    if(canManage){
+      chip.title="Klikni pre označenie ako hotovo za tohto obchodníka";
+      chip.onclick=()=>markWeeklyDoneFor(group, "named_"+clientKey(n), n, false);
+    }
+    namesWrap.appendChild(chip);
+  });
+  if(!doneOrdered.length && !pendingOrdered.length){ namesWrap.innerHTML=`<span class="wd-empty">Zatiaľ nikto neoznačil hotovo</span>`; }
   row.appendChild(namesWrap);
 
   const notifyBtn=el("button","wd-notify-btn","📧 Upozorniť šéfa"); notifyBtn.type="button";
@@ -3005,7 +3064,20 @@ function entryCard(e,clients,opts={}){
   card.querySelectorAll(".xs-link").forEach(btn=>{
     btn.onclick=(ev)=>{ ev.stopPropagation(); goClient(k); };
   });
-  if(canEditE){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`); ed.title="Upraviť"; ed.onclick=()=>openModal(e); card.querySelector(".e-actions").appendChild(ed); }
+  if(canEditE){
+    const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
+    ed.title="Upraviť"; ed.onclick=(ev)=>{ ev.stopPropagation(); openModal(e); };
+    card.querySelector(".e-actions").appendChild(ed);
+    const del=el("button","ghost del-btn",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`);
+    del.title="Zmazať záznam";
+    del.onclick=async(ev)=>{
+      ev.stopPropagation();
+      if(!confirm(`Naozaj zmazať záznam pre klienta "${e.client||"—"}"? Táto akcia sa nedá vrátiť späť.`)) return;
+      try{ await backend.remove(e.id); toast("Záznam zmazaný."); }
+      catch(err){ console.error("Mazanie zlyhalo:", err); toast("⚠ Zmazanie zlyhalo: "+(err.message||err.code||"neznáma chyba")); }
+    };
+    card.querySelector(".e-actions").appendChild(del);
+  }
   card.querySelector(".ebody").appendChild(notesBlock(e));
   return card;
 }
