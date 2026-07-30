@@ -281,6 +281,8 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .obch-info{display:flex; flex-direction:column; gap:1px; line-height:1.3}
 .edited-by{font-size:11px; color:var(--muted); font-style:italic; width:100%; text-align:right}
 .upd-date{font-size:10.5px; color:var(--muted); opacity:.8}
+/* Úprava vykonaná až po označení "Hotovo" — zvýraznené načerveno */
+.upd-date.late{color:var(--red); opacity:1; font-weight:700; cursor:help}
 .ghost{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;color:var(--muted)}
 .ghost:hover{background:#fafbfc;color:var(--ink)}
 .ghost svg{width:15px;height:15px}
@@ -485,6 +487,25 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .copy-prompt-btn{display:inline-flex; align-items:center; gap:7px; padding:0 16px; border-radius:10px; border:1.5px solid var(--brand); background:var(--brand-soft); color:var(--brand); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit}
 .copy-prompt-btn:hover{background:#dde1f8}
 .copy-prompt-btn svg{width:14px; height:14px; flex:0 0 auto}
+/* --- Spiace záznamy --- */
+.entry.sleeping{background:#FAFBFC; border:1px dashed var(--line)}
+.entry.sleeping .e-events{color:var(--muted)}
+.entry.sleeping .lk{color:var(--ink-soft)}
+.sleep-badge{display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700; color:#5C6472; background:#EDEFF3; border:1px solid #DCE0E6; border-radius:20px; padding:3px 10px 3px 8px; white-space:nowrap}
+.sleep-badge svg{width:11px; height:11px; flex:0 0 auto}
+.sleep-divider{display:flex; align-items:center; gap:10px; margin:22px 0 10px; font-size:12px; color:var(--muted)}
+.sleep-divider span{white-space:nowrap}
+.sleep-divider::after{content:""; flex:1; height:1px; background:var(--line)}
+.sleep-btn.on{color:#C6810A}
+.sleep-btn:hover{color:var(--brand); background:var(--brand-soft)}
+.sleep-stale{margin-top:10px; padding:11px 14px; border-radius:10px; background:#FFF8EC; border:1.5px solid #F3DFB8; display:flex; gap:9px; align-items:flex-start; font-size:12.5px; color:#7A5208; line-height:1.5}
+.sleep-stale svg{width:17px; height:17px; flex:0 0 auto; margin-top:1px}
+.sleep-stale b{color:#5E3F06}
+/* --- Okno pri zhode textu --- */
+.dup-hero{display:flex; align-items:baseline; gap:8px; padding:12px 16px; border-radius:12px; background:#FFF8EC; border:1px solid #F3DFB8; margin-bottom:14px}
+.dup-hero b{font-size:26px; color:#B4790A; font-family:var(--mono)}
+.dup-hero span{font-size:12.5px; color:#7A5208}
+.dup-txt{font-size:13px; color:var(--ink-soft); line-height:1.6; margin:0 0 10px}
 .warning-box{margin-top:10px; padding:11px 14px; border-radius:10px; background:#FDF3F2; border:1.5px solid #F3C9C4; display:flex; gap:9px; align-items:flex-start}
 .warning-box svg{width:17px; height:17px; flex:0 0 auto; color:var(--red); margin-top:1px}
 .warning-box-text{color:#8B2E2E; font-weight:700; font-size:13.5px; line-height:1.5; white-space:pre-wrap}
@@ -498,6 +519,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .sug-accept:hover{filter:brightness(1.08)}
 .sug-edit{padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:600;font-size:12.5px;cursor:pointer}
 .sug-edit:hover{background:#f5f6f9}
+.sug-sleep{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid #DCE0E6;background:#EDEFF3;color:#5C6472;font-weight:600;font-size:12.5px;cursor:pointer;font-family:inherit}
+.sug-sleep:hover{background:#E3E6EC;color:#3F4652}
+.sug-sleep svg{width:13px;height:13px;flex:0 0 auto}
 .sug-discard{padding:7px 14px;border-radius:8px;border:none;background:none;color:var(--muted);font-weight:500;font-size:12.5px;cursor:pointer}
 .sug-discard:hover{color:var(--red)}
 /* zvýraznenie po cross-linku */
@@ -1210,6 +1234,45 @@ function weekRangeLabel(id){
   return `${mon.getUTCDate()}. ${mon.getUTCMonth()+1}. – ${full(sun)}`;
 }
 function weekCmpDesc(a,b){ const A=parseWeekId(a),B=parseWeekId(b); return B.year-A.year || B.week-A.week; }
+// Počet týždňov medzi dvoma týždňami (kladné = "to" je neskôr ako "from")
+function weeksBetween(fromId,toId){
+  if(!fromId||!toId) return 0;
+  const a=parseWeekId(fromId), b=parseWeekId(toId);
+  const ma=mondayOf(a.year,a.week), mb=mondayOf(b.year,b.week);
+  return Math.round((mb-ma)/(7*24*3600*1000));
+}
+/* ---------------------------------------------------------------- POROVNANIE TEXTOV
+   Zisťuje, nakoľko sa text zhoduje s predchádzajúcim (na odhalenie "iba skopírované,
+   nič nové nedopísané"). Vracia číslo 0–1. */
+function normalizeForCompare(t){
+  return (t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/\s+/g," ").trim();
+}
+function levenshtein(a,b){
+  if(a===b) return 0;
+  if(!a.length) return b.length;
+  if(!b.length) return a.length;
+  let prev=new Array(b.length+1);
+  for(let j=0;j<=b.length;j++) prev[j]=j;
+  for(let i=1;i<=a.length;i++){
+    const cur=[i];
+    for(let j=1;j<=b.length;j++){
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+    prev=cur;
+  }
+  return prev[b.length];
+}
+function textSimilarity(t1,t2){
+  const a=normalizeForCompare(t1), b=normalizeForCompare(t2);
+  if(!a && !b) return 1;
+  if(!a || !b) return 0;
+  if(a===b) return 1;
+  // pri veľmi dlhých textoch porovnávame len začiatok, aby to bolo rýchle
+  const A=a.slice(0,1500), B=b.slice(0,1500);
+  const dist=levenshtein(A,B);
+  return 1 - dist/Math.max(A.length,B.length);
+}
 function fmtDateTime(ts){
   if(!ts) return "";
   const d=new Date(ts);
@@ -1380,8 +1443,78 @@ function warningBox(e){
   if(!e?.warning) return "";
   return `<div class="warning-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div class="warning-box-text">${esc(e.warning)}</div></div>`;
 }
+/* Zistí, či bol záznam upravený až PO tom, ako jeho obchodník označil daný týždeň
+   ako "Hotovo". Slúži na zvýraznenie dátumu úpravy načerveno.
+   Záznamy importované z DMIS (New Business) sa do tohto pravidla nepočítajú. */
+function editedAfterDone(e){
+  if(!e || e.isNewBusiness || !e.updatedAt) return null;
+  const group=COMPLETION_GROUP[e.segment];
+  if(!group) return null;
+  const wd=state.weeklyDone.find(d=>d.weekId===e.weekId && d.group===group);
+  if(!wd || !wd.entries || !wd.entries.length) return null;
+  const ownerName=resolveOwnerName(e);
+  // obchodník sa mohol označiť sám (key = jeho e-mail) alebo ho označil admin/líder (key = "named_…")
+  const hit=wd.entries.find(x=>(x.key && x.key===e.ownerKey) || x.name===ownerName);
+  if(!hit || !hit.at) return null;
+  return e.updatedAt > hit.at ? hit.at : null;
+}
 function specialClientLabel(e,info){
   return `<span class="lk special-client" style="color:${info.color}"><svg class="sc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${info.icon}</svg>${esc(info.label)}</span>`;
+}
+/* Nájde predchádzajúcu aktivitu toho istého klienta v tej istej službe (starší týždeň) */
+function previousActivityFor(client,segId,targetWeek,excludeId){
+  const k=clientKey(client);
+  return state.all
+    .filter(e=>e.segment===segId && clientKey(e.client)===k && e.weekId<targetWeek && e.id!==excludeId)
+    .sort((a,b)=>weekCmpDesc(a.weekId,b.weekId))[0] || null;
+}
+/* Okno pri >90 % zhode textu s predchádzajúcou aktivitou.
+   Vracia "ok" (uložiť tak ako je), "sleep" (uložiť a označiť ako spiaci) alebo "cancel". */
+function askDuplicateText(similarity, prevEntry){
+  return new Promise(resolve=>{
+    const pct=Math.round(similarity*100);
+    const scrim=el("div","scrim open");
+    scrim.style.zIndex="90";
+    scrim.innerHTML=`<div class="modal" style="max-width:480px">
+      <div class="modal-h"><h2>Text sa takmer nezmenil</h2></div>
+      <div class="modal-b">
+        <div class="dup-hero"><b>${pct} %</b><span>zhoda s predchádzajúcim zápisom</span></div>
+        <p class="dup-txt">Tento text je na <b>${pct} %</b> rovnaký ako aktivita z týždňa <b>${esc(weekRangeLabel(prevEntry.weekId))}</b>. Vyzerá to, že sa odvtedy nič nové nestalo.</p>
+        <p class="dup-txt">Ak s klientom teraz nie je pravidelná aktivita (napr. čakáte na jeho reakciu na cenovú ponuku), označ záznam ako <b>spiaci</b> — nebudeš ho musieť dopĺňať každý týždeň, presunie sa na spodok zoznamu a sám sa prenesie do ďalších týždňov.</p>
+      </div>
+      <div class="modal-f" style="justify-content:flex-end">
+        <button class="btn" data-act="cancel">Späť na úpravu</button>
+        <button class="btn" data-act="ok">Áno, je to v poriadku</button>
+        <button class="btn solid" data-act="sleep">Zaradiť do spiacich</button>
+      </div>
+    </div>`;
+    const done=v=>{ scrim.remove(); resolve(v); };
+    scrim.querySelectorAll("[data-act]").forEach(b=>{ b.onclick=()=>done(b.dataset.act); });
+    document.body.appendChild(scrim);
+  });
+}
+/* Uspanie / prebudenie záznamu.
+   Spiaci záznam sa nemusí každý týždeň dopĺňať — sám sa prenáša do ďalších týždňov
+   a zobrazuje sa vždy na spodku zoznamu. Prebudenie ho vráti do aktuálneho týždňa
+   medzi bežné aktivity a hneď otvorí okno na doplnenie textu. */
+async function toggleSleeping(e){
+  const wasSleeping=!!e.sleeping;
+  if(!wasSleeping && !confirm(`Označiť záznam "${e.client||"—"}" ako spiaci?\n\nNebudeš ho musieť každý týždeň dopĺňať — presunie sa na spodok zoznamu a bude sa tam zobrazovať, kým ho neprebudíš.`)) return;
+  try{
+    if(wasSleeping){
+      // prebudenie: vráť ho do aktuálneho týždňa ako bežnú aktivitu
+      await backend.save({...e, sleeping:false, sleepingSince:null, weekId:state.week});
+      toast("Záznam prebudený — doplň prosím aktuálny text.");
+      const fresh={...e, sleeping:false, sleepingSince:null, weekId:state.week};
+      setTimeout(()=>openModal(fresh),150);
+    } else {
+      await backend.save({...e, sleeping:true, sleepingSince:state.week});
+      toast("Záznam označený ako spiaci.");
+    }
+  }catch(err){
+    console.error("Zmena stavu spiaci zlyhala:", err);
+    toast("⚠ Nepodarilo sa uložiť: "+(err.message||err.code||"neznáma chyba"));
+  }
 }
 // Kľúčové slová, ktoré pri uložení záznamu ponúknu pridanie odznaku "Problém / sťažnosť"
 // (nepridáva sa automaticky — obchodník musí potvrdiť, aby sa predišlo falošným poplachom
@@ -1400,6 +1533,22 @@ function toast(msg){ const t=$("#toast"); t.innerHTML=`<svg viewBox="0 0 24 24" 
 function hexA(hex,a){ const h=hex.replace("#",""); if(h.length!==6) return hex; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `rgba(${r},${g},${b},${a})`; }
 function plural(n,one,few,many){ n=Math.abs(n); if(n===1)return one; if(n>=2&&n<=4)return few; return many; }
 const weekEntries=()=>state.all.filter(e=>e.weekId===state.week);
+/* Zoznam záznamov pre segment v aktuálnom týždni.
+   Obsahuje záznamy daného týždňa + "spiace" záznamy zo starších týždňov, ktoré sa
+   automaticky prenášajú ďalej (aby ich obchodník nemusel každý týždeň kopírovať).
+   Spiaci záznam sa prenesie len ak pre toho istého klienta neexistuje novší záznam. */
+function segmentWeekList(segId){
+  const current=state.all.filter(e=>e.segment===segId && e.weekId===state.week);
+  const currentKeys=new Set(current.map(e=>clientKey(e.client)));
+  const latestByClient=new Map();
+  state.all.filter(e=>e.segment===segId && e.weekId<state.week).forEach(e=>{
+    const k=clientKey(e.client); if(!k) return;
+    const prev=latestByClient.get(k);
+    if(!prev || weekCmpDesc(e.weekId,prev.weekId)<0) latestByClient.set(k,e);
+  });
+  const carried=[...latestByClient.values()].filter(e=>e.sleeping && !currentKeys.has(clientKey(e.client)));
+  return [...current, ...carried];
+}
 
 function schip(segId, firma){ 
   const s=SEG[segId];
@@ -1813,7 +1962,8 @@ function render(){
   $("#weeknav").classList.toggle("dim",!weekRelevant);
 
   const we=weekEntries();
-  const counts={}; SEGMENTS.forEach(s=>counts[s.id]=0); we.forEach(e=>counts[e.segment]++);
+  // počítadlá zahŕňajú aj spiace záznamy prenesené zo starších týždňov, aby súhlasili so zoznamom
+  const counts={}; SEGMENTS.forEach(s=>counts[s.id]=segmentWeekList(s.id).length);
   counts.newbusiness = we.filter(e=>e.isNewBusiness).length;
   document.querySelectorAll("[data-cnt]").forEach(c=>c.textContent=counts[c.dataset.cnt]||0);
   $("#mineCount").textContent=we.filter(isMine).length;
@@ -2310,7 +2460,14 @@ async function generateSuggestions(segId){
   state.suggestionsLoading=false; render();
 }
 function dismissSuggestion(id){ state.suggestions=state.suggestions.filter(s=>s.id!==id); render(); }
-async function acceptSuggestion(sug){ const {_suggested,_source,...entry}=sug; await backend.save(entry); state.suggestions=state.suggestions.filter(s=>s.id!==sug.id); render(); toast("Záznam uložený"); }
+async function acceptSuggestion(sug, asSleeping=false){
+  const {_suggested,_source,...entry}=sug;
+  if(asSleeping){ entry.sleeping=true; entry.sleepingSince=state.week; }
+  await backend.save(entry);
+  state.suggestions=state.suggestions.filter(s=>s.id!==sug.id);
+  render();
+  toast(asSleeping?"Záznam uložený ako spiaci — nemusíš ho dopĺňať každý týždeň.":"Záznam uložený");
+}
 
 /* ---------------------------------------------------------------- NEW BUSINESS · CSV IMPORT */
 // Mapovanie textu zo stĺpca "Služba" (CRM export) na existujúce segmenty dashboardu.
@@ -2403,8 +2560,9 @@ function handleNbFile(file){
 /* Kopírovanie záznamov z minulého týždňa */
 function copyFromPrevWeek(segId){
   const prevWeek=shiftWeek(state.week,-1);
-  let prevEntries=state.all.filter(e=>e.segment===segId && e.weekId===prevWeek);
-  if(!prevEntries.length){ toast("Minulý týždeň nemá žiadne záznamy pre tento segment."); return; }
+  // Spiace záznamy sa nekopírujú — do ďalších týždňov sa prenášajú automaticky
+  let prevEntries=state.all.filter(e=>e.segment===segId && e.weekId===prevWeek && !e.sleeping);
+  if(!prevEntries.length){ toast("Minulý týždeň nemá žiadne záznamy na kopírovanie pre tento segment."); return; }
   // Nepridávame to čo už máme (rovnaký klient+segment v tomto týždni)
   const thisWeekClients=new Set(state.all.filter(e=>e.segment===segId&&e.weekId===state.week).map(e=>clientKey(e.client)));
   const notYetHere=prevEntries.filter(e=>!thisWeekClients.has(clientKey(e.client)));
@@ -2644,10 +2802,14 @@ function viewClientDetail(){
       const card=el("div","tl-card"+(e.isNewBusiness?" nb":"")); card.style.gridTemplateColumns="4px 1fr";
       if(special && !e.isNewBusiness){ card.style.border=`1.5px solid ${hexA(special.color,.35)}`; }
       const stripColor2 = e.isNewBusiness ? "#12915A" : special ? special.color : s.color;
+      const lateAt2 = editedAfterDone(e);
+      const updDateHtml2 = e.updatedAt
+        ? `<span class="upd-date${lateAt2?" late":""}"${lateAt2?` title="Záznam bol upravený až po tom, ako bolo označené Hotovo (${esc(fmtDateTime(lateAt2))})"`:""}>${e.isNewBusiness?"import":"úprava"} ${fmtDateTime(e.isNewBusiness?(e.nbImportedAt||e.updatedAt):e.updatedAt)}</span>`
+        : "";
       card.innerHTML=`<div style="background:${stripColor2}"></div><div class="tc-body">
         <div class="tc-top">${schip(e.segment, e.firma)} ${(e.isNewBusiness && e.status==="lead") ? "" : statusTag(e.status)}${e.riskFlag?` <span class="risk-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Problém / sťažnosť</span>`:""}${e.isNewBusiness?` <span class="nb-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span>`:""}${e.isNewBusiness && (e.nbApproachInfo||e.nbApproach) ? ` <span class="approach-badge">${esc(cleanApproachText(e.nbApproachInfo||e.nbApproach))}</span>` : ""}${e.isNewBusiness?` <span class="nb-source-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Import DMIS</span>`:""}</div>
         <div class="tc-events">${esc(e.events||"")}</div>${warningBox(e)}
-        <div class="tc-foot"><span class="av">${initials(resolveOwnerName(e))}</span><span class="obch-info"><span>${esc(resolveOwnerName(e))}${e.coSalespeople&&e.coSalespeople.length?` <span class="co-obch-note">+ ${esc(e.coSalespeople.join(", "))}</span>`:""}</span>${e.updatedAt?`<span class="upd-date">${e.isNewBusiness?"import":"úprava"} ${fmtDateTime(e.isNewBusiness?(e.nbImportedAt||e.updatedAt):e.updatedAt)}</span>`:""}</span>${e.editedByName?`<span class="edited-by" style="width:auto;margin-left:8px">✎ upravil ${esc(resolveEditedByName(e))}</span>`:""}</div></div>`;
+        <div class="tc-foot"><span class="av">${initials(resolveOwnerName(e))}</span><span class="obch-info"><span>${esc(resolveOwnerName(e))}${e.coSalespeople&&e.coSalespeople.length?` <span class="co-obch-note">+ ${esc(e.coSalespeople.join(", "))}</span>`:""}</span>${updDateHtml2}</span>${e.editedByName?`<span class="edited-by" style="width:auto;margin-left:8px">✎ upravil ${esc(resolveEditedByName(e))}</span>`:""}</div></div>`;
       if(canEditCard){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
         ed.style.cssText="position:absolute;right:12px;top:12px"; ed.onclick=()=>openModal(e);
         const body=card.querySelector(".tc-body"); body.style.position="relative"; body.appendChild(ed); }
@@ -2863,7 +3025,7 @@ function viewSegment(){
     ? `<div class="seg-logo-box"><img src="${LOGOS[s.logoKey]}" alt="${s.short}"></div>
        <div class="seg-logo-box"><img src="${LOGOS[s.logoKey2]}" class="kolos-logo" alt="KOLOS"></div>`
     : `<div class="seg-logo-box"><img src="${LOGOS[s.logoKey]}" alt="${s.short}"></div>`;
-  const wrap=viewList(weekEntries().filter(e=>e.segment===s.id), s.name, "Záznamy za tento týždeň. Klikni na klienta pre históriu naprieč službami.", s, logoHtml);
+  const wrap=viewList(segmentWeekList(s.id), s.name, "Záznamy za tento týždeň. Klikni na klienta pre históriu naprieč službami.", s, logoHtml);
   return wrap;
 }
 
@@ -2988,11 +3150,13 @@ function viewList(list,title,sub,seg,logoHtml){
         <div class="e-events">${esc(sug.events||"")}</div>
         <div class="e-foot"><span class="obch"><span class="av">${initials(resolveOwnerName(sug))}</span>${esc(resolveOwnerName(sug))}</span></div>
         <div class="sug-actions">
-          <button class="sug-accept">✓ Prijať & uložiť</button>
+          <button class="sug-accept">✓ Prijať &amp; uložiť</button>
+          <button class="sug-sleep" title="Uloží záznam rovno ako spiaci — nebudeš ho musieť dopĺňať každý týždeň"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Uspať</button>
           <button class="sug-edit">✎ Upraviť</button>
           <button class="sug-discard">Zahodiť</button>
         </div></div>`;
       sc.querySelector(".sug-accept").onclick=()=>acceptSuggestion(sug);
+      sc.querySelector(".sug-sleep").onclick=()=>acceptSuggestion(sug,true);
       sc.querySelector(".sug-edit").onclick=()=>openModal(sug, sug.segment);
       sc.querySelector(".sug-discard").onclick=()=>dismissSuggestion(sug.id);
       listWrap.appendChild(sc);
@@ -3024,10 +3188,20 @@ function viewList(list,title,sub,seg,logoHtml){
       listWrap.appendChild(em); return;
     }
 
-    rows.sort(state.sortBy==="salesperson"
+    // Spiace záznamy idú vždy úplne na spodok, bez ohľadu na zvolené zoradenie
+    const inner = state.sortBy==="salesperson"
       ? (a,b)=>resolveOwnerName(a).localeCompare(resolveOwnerName(b)) || (a.client||"").localeCompare(b.client||"")
-      : (a,b)=>(a.client||"").localeCompare(b.client||""));
-    rows.forEach(e=>listWrap.appendChild(entryCard(e,clients)));
+      : (a,b)=>(a.client||"").localeCompare(b.client||"");
+    rows.sort((a,b)=> ((a.sleeping?1:0)-(b.sleeping?1:0)) || inner(a,b));
+    let sleepDividerDone=false;
+    rows.forEach(e=>{
+      if(e.sleeping && !sleepDividerDone){
+        sleepDividerDone=true;
+        const cnt=rows.filter(r=>r.sleeping).length;
+        listWrap.appendChild(el("div","sleep-divider",`<span>Spiace záznamy (${cnt}) — bez pravidelnej aktivity, nemusíš ich dopĺňať každý týždeň</span>`));
+      }
+      listWrap.appendChild(entryCard(e,clients));
+    });
   }
   renderRows();
   return wrap;
@@ -3040,19 +3214,33 @@ function entryCard(e,clients,opts={}){
   const isKolos = e.firma==="KOLOS";
   const firmaLogoSrc = e.firma ? (isKolos ? LOGOS.kolos_s : LOGOS.post) : null;
   const special = specialClientInfo(e);
-  const card=el("div","entry"+(isHighlighted?" highlighted":"")+(e.isNewBusiness?" nb":"")); card.style.gridTemplateColumns="4px 1fr";
-  if(special && !e.isNewBusiness){ card.style.border=`1.5px solid ${hexA(special.color,.35)}`; }
+  const card=el("div","entry"+(isHighlighted?" highlighted":"")+(e.isNewBusiness?" nb":"")+(e.sleeping?" sleeping":"")); card.style.gridTemplateColumns="4px 1fr";
+  if(special && !e.isNewBusiness && !e.sleeping){ card.style.border=`1.5px solid ${hexA(special.color,.35)}`; }
   const canEditE=canEdit(e);
+  // Spiaci záznam: koľko týždňov už "spí" a či je čas ho pripomenúť (4+ týždňov bez zmeny)
+  const sleepWeeks = e.sleeping ? weeksBetween(e.sleepingSince||e.weekId, state.week) : 0;
+  const sleepStale = e.sleeping && sleepWeeks>=4;
   // cross-link tagy — každý segment ako klikateľné tlačidlo
   const xsTags=otherSegs.map(segId=>
     `<button type="button" class="xs-link" data-seg="${esc(segId)}" title="Zobraziť ${esc(e.client)} v segmente ${esc(SEG[segId].name)}">
       <span class="xs-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><path d="M7 17L17 7M7 7h10v10"/></svg>aj v: ${esc(SEG[segId].short)}</span>
     </button>`
   ).join("");
-  const stripColor = e.isNewBusiness ? "#12915A" : special ? special.color : s.color;
+  const stripColor = e.sleeping ? "#9AA1AC" : e.isNewBusiness ? "#12915A" : special ? special.color : s.color;
   const clientLabel = special ? specialClientLabel(e,special) : `<span class="lk">${esc(e.client||"—")}</span>`;
+  const sleepBadge = e.sleeping
+    ? `<span class="sleep-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Spiaci${sleepWeeks>0?` · ${sleepWeeks} ${plural(sleepWeeks,"týždeň","týždne","týždňov")}`:""}</span>`
+    : "";
+  const sleepStaleBox = sleepStale
+    ? `<div class="sleep-stale"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div><b>Tento záznam spí už ${sleepWeeks} ${plural(sleepWeeks,"týždeň","týždne","týždňov")}.</b> Prosím aktualizuj text a vykonaj nejakú aktivitu (napr. kontaktuj klienta), alebo záznam vyraď, ak už nie je aktuálny.</div></div>`
+    : "";
+  const lateAt = editedAfterDone(e);
+  const updDateHtml = e.updatedAt
+    ? `<span class="upd-date${lateAt?" late":""}"${lateAt?` title="Záznam bol upravený až po tom, ako bolo označené Hotovo (${esc(fmtDateTime(lateAt))})"`:""}>${e.isNewBusiness?"import":"úprava"} ${fmtDateTime(e.isNewBusiness?(e.nbImportedAt||e.updatedAt):e.updatedAt)}</span>`
+    : "";
   card.innerHTML=`<div style="background:${stripColor}"></div><div class="ebody">
     <div class="e-top"><div class="e-client">${clientLabel}
+      ${sleepBadge}
       ${(e.isNewBusiness && e.status==="lead") ? "" : statusTag(e.status)}
       ${e.riskFlag?`<span class="risk-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Problém / sťažnosť</span>`:""}
       ${e.isNewBusiness?`<span class="nb-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span>`:""}
@@ -3062,8 +3250,8 @@ function entryCard(e,clients,opts={}){
       ${xsTags}
       ${e.isNewBusiness?`<span class="nb-source-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Import DMIS</span>`:""}
     </div><div class="e-actions"></div></div>
-    <div class="e-events">${esc(e.events||"")}</div>${warningBox(e)}
-    <div class="e-foot"><span class="obch"><span class="av">${initials(resolveOwnerName(e))}</span><span class="obch-info"><span>${esc(resolveOwnerName(e))}${e.coSalespeople&&e.coSalespeople.length?` <span class="co-obch-note">+ ${esc(e.coSalespeople.join(", "))}</span>`:""}</span>${e.updatedAt?`<span class="upd-date">${e.isNewBusiness?"import":"úprava"} ${fmtDateTime(e.isNewBusiness?(e.nbImportedAt||e.updatedAt):e.updatedAt)}</span>`:""}</span></span>
+    <div class="e-events">${esc(e.events||"")}</div>${warningBox(e)}${sleepStaleBox}
+    <div class="e-foot"><span class="obch"><span class="av">${initials(resolveOwnerName(e))}</span><span class="obch-info"><span>${esc(resolveOwnerName(e))}${e.coSalespeople&&e.coSalespeople.length?` <span class="co-obch-note">+ ${esc(e.coSalespeople.join(", "))}</span>`:""}</span>${updDateHtml}</span></span>
       ${e.editedByName?`<span class="edited-by">✎ upravil ${esc(resolveEditedByName(e))}</span>`:""}
     </div></div>`;
   card.querySelector(".lk").onclick=()=>goClient(k);
@@ -3071,6 +3259,13 @@ function entryCard(e,clients,opts={}){
     btn.onclick=(ev)=>{ ev.stopPropagation(); goClient(k); };
   });
   if(canEditE){
+    // Uspať / prebudiť záznam
+    const sl=el("button","ghost sleep-btn"+(e.sleeping?" on":""), e.sleeping
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`);
+    sl.title=e.sleeping?"Prebudiť záznam (vrátiť medzi aktívne)":"Označiť ako spiaci (nemusí sa dopĺňať každý týždeň)";
+    sl.onclick=(ev)=>{ ev.stopPropagation(); toggleSleeping(e); };
+    card.querySelector(".e-actions").appendChild(sl);
     const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
     ed.title="Upraviť"; ed.onclick=(ev)=>{ ev.stopPropagation(); openModal(e); };
     card.querySelector(".e-actions").appendChild(ed);
@@ -3450,8 +3645,23 @@ async function saveFromModal(){
     riskFlag = false; // kľúčové slová už v texte nie sú → odznak sa automaticky odoberie
   }
 
+  const targetWeek = editing?.weekId||state.week;
+
+  // Kontrola, či sa text reálne zmenil oproti predchádzajúcej aktivite toho istého klienta.
+  // Pri zhode nad 90 % dáme obchodníkovi na výber: uložiť tak ako je, alebo zaradiť do spiacich.
+  let forceSleeping=false;
+  const prevAct = previousActivityFor(client, segId, targetWeek, editing?.id);
+  if(prevAct && eventsText.trim() && !baseEntry.sleeping){
+    const sim=textSimilarity(eventsText, prevAct.events);
+    if(sim>0.9){
+      const choice=await askDuplicateText(sim, prevAct);
+      if(choice==="cancel") return;          // nechaj okno otvorené na úpravu
+      if(choice==="sleep") forceSleeping=true;
+    }
+  }
+
   const entry={ ...baseEntry,
-    segment:segId, weekId: editing?.weekId||state.week, client,
+    segment:segId, weekId: targetWeek, client,
     events:eventsText,
     salesperson: selectedName,
     status:$("#fStatus").value, firma,
@@ -3460,6 +3670,8 @@ async function saveFromModal(){
     nbLocked: baseEntry.isNewBusiness ? true : (baseEntry.nbLocked ?? false),
     riskFlag,
     warning: $("#fWarning").value.trim() || null,
+    sleeping: forceSleeping ? true : (baseEntry.sleeping ?? false),
+    sleepingSince: forceSleeping ? state.week : (baseEntry.sleepingSince ?? null),
     coSalespeople: [...$("#coObchPick").querySelectorAll("input:checked")].map(i=>i.value).filter(n=>n!==selectedName),
     editedByName, editedByAt, editedByKey };
 
@@ -3472,7 +3684,8 @@ async function saveFromModal(){
   }
 
   closeModal();
-  toast(isSuggestion?`✓ Záznam uložený`: wasEditing?"Záznam upravený":"Záznam pridaný");
+  if(forceSleeping) toast("Záznam uložený a zaradený medzi spiace.");
+  else toast(isSuggestion?`✓ Záznam uložený`: wasEditing?"Záznam upravený":"Záznam pridaný");
 }
 async function deleteFromModal(){ if(!editing) return; if(!canEdit(editing)){ toast("Nemáš oprávnenie zmazať tento záznam."); closeModal(); return; } if(!confirm("Naozaj zmazať tento záznam?")) return; await backend.remove(editing.id); closeModal(); toast("Záznam zmazaný"); }
 
