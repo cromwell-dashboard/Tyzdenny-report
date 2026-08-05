@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* ============================================================
    Cromwell Group — Týždenný report · design tokens
@@ -506,6 +507,94 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .dup-hero b{font-size:26px; color:#B4790A; font-family:var(--mono)}
 .dup-hero span{font-size:12.5px; color:#7A5208}
 .dup-txt{font-size:13px; color:var(--ink-soft); line-height:1.6; margin:0 0 10px}
+/* --- Porady --- */
+.meet-card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); margin-bottom:12px; overflow:hidden}
+.meet-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; flex-wrap:wrap}
+.meet-title b{font-size:14.5px}
+.meet-meta{font-size:12px; color:var(--muted); margin-top:3px}
+.meet-badges{display:flex; align-items:center; gap:8px}
+.meet-chip{font-size:11.5px; font-weight:600; padding:4px 11px; border-radius:20px; background:var(--brand-soft); color:var(--brand); white-space:nowrap}
+.meet-chip.muted{background:var(--line-2); color:var(--muted)}
+.meet-toggle{padding:6px 13px; border-radius:20px; border:1px solid var(--line); background:#fff; color:var(--ink-soft); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap}
+.meet-toggle:hover{background:#fafbfc}
+.meet-body{border-top:1px solid var(--line); padding:16px 18px; background:#FAFBFC}
+.meet-text{font-size:13px; color:var(--ink-soft); line-height:1.6; white-space:pre-wrap; max-height:420px; overflow:auto; background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px}
+.meet-tasks-title{font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:18px 0 8px}
+.meet-foot{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap}
+.meet-extract-title{font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:18px 0 10px}
+.meet-extract-list{display:flex; flex-direction:column; gap:10px}
+.meet-extract-empty{font-size:12.5px; color:var(--muted); padding:12px; background:var(--line-2); border-radius:10px}
+.meet-extract-row{display:flex; gap:10px; align-items:flex-start; padding:11px 13px; border:1px solid var(--line); border-radius:10px; background:#fff}
+.mx-check{padding-top:9px}
+.mx-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:8px}
+.mx-title{width:100%; padding:8px 11px; border:1px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit}
+.mx-meta{display:flex; gap:8px; flex-wrap:wrap}
+.mx-assignee,.mx-due{padding:7px 10px; border:1px solid var(--line); border-radius:8px; font-size:12.5px; font-family:inherit; background:#fff}
+.mx-assignee{flex:1; min-width:180px}
+.from-meet-chip{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:20px; background:var(--brand-soft); color:var(--brand); white-space:nowrap}
+.from-meet-chip svg{width:11px; height:11px; flex:0 0 auto}
+.unassigned-chip{font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:#FFF4E0; color:#9A6A08; border:1px solid #F0DDB4}
+.take-btn{padding:6px 14px; border-radius:8px; border:1px solid var(--brand); background:var(--brand-soft); color:var(--brand); font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap}
+.take-btn:hover{background:#dde1f8}
+/* --- Leady --- */
+.lead-cap{font-size:12px;font-weight:700;padding:0 14px;height:42px;display:inline-flex;align-items:center;border-radius:10px;background:var(--brand-soft);color:var(--brand);white-space:nowrap}
+.lead-cap.full{background:#FDF3F2;color:var(--red)}
+.lead-filters{display:flex;gap:14px;flex-wrap:wrap;margin:-8px 0 14px}
+.lead-count{font-size:12px;color:var(--muted);margin-bottom:10px}
+.lead-list{display:flex;flex-direction:column;gap:8px}
+.lead-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer}
+.lead-row:hover{border-color:#c5cff5;background:#FCFDFF}
+.lead-row.mine{border-color:#c5cff5;background:#FBFCFF}
+.lead-seg{width:26px;height:26px;border-radius:8px;color:#fff;font-weight:800;font-size:12.5px;display:grid;place-items:center;flex:0 0 auto}
+.lead-seg.lg{width:40px;height:40px;font-size:17px;border-radius:11px}
+.lead-main{flex:1;min-width:0}
+.lead-name{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lead-multi{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--line-2);color:var(--muted)}
+.lead-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:3px}
+.lead-svc{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;white-space:nowrap;letter-spacing:.01em}
+.lead-pill{padding:1px 8px;border-radius:20px;background:var(--line-2)}
+.lead-score{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--ink-soft);width:38px;text-align:right;flex:0 0 auto}
+.lead-right{display:flex;align-items:center;gap:10px;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end}
+.lead-status{font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid;white-space:nowrap}
+.lead-owner{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap}
+.lead-owner .av{width:20px;height:20px;font-size:9px}
+.lead-hero{display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.lead-hero-name{font-size:16px;font-weight:700}
+.lead-hero-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.lead-imp-sum{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--line-2);font-size:12.5px;color:var(--ink-soft);line-height:1.6}
+.lead-imp-sum:empty{display:none}
+.lead-imp-sum .ok{color:var(--nb);font-weight:700}
+.lead-imp-sum .mut{color:var(--muted)}
+.lead-hero-score{margin-left:auto;text-align:center}
+.lead-hero-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px}
+.lead-weblink{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 11px;border-radius:20px;background:var(--brand-soft);color:var(--brand);text-decoration:none}
+.lead-weblink:hover{background:#dde1f8}
+.lead-weblink svg{width:12px;height:12px;flex:0 0 auto}
+.lead-weblink-btn{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--muted);flex:0 0 auto;text-decoration:none}
+.lead-weblink-btn:hover{color:var(--brand);border-color:var(--brand);background:var(--brand-soft)}
+.lead-weblink-btn svg{width:14px;height:14px}
+.lead-hero-score b{display:block;font-family:var(--mono);font-size:22px;color:var(--brand)}
+.lead-hero-score span{font-size:10.5px;color:var(--muted)}
+.lead-next{background:#FFF8EC;border:1px solid #F3DFB8;border-radius:10px;padding:11px 14px;font-size:12.5px;color:#7A5208;line-height:1.5;margin-bottom:14px}
+.lead-next b{display:block;margin-bottom:3px;color:#5E3F06}
+.lead-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 18px}
+.lf{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lf span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.lf b{font-size:12.5px;font-weight:600;color:var(--ink-soft);word-break:break-word}
+.lf a{color:var(--brand)}
+.lead-sec-title{font-size:12.5px;font-weight:700;color:var(--ink-soft);margin:20px 0 9px}
+.lead-status-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.lead-st-btn{padding:6px 13px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.lead-st-btn:disabled{opacity:.5;cursor:not-allowed}
+.lead-hint{font-size:11.5px;color:var(--muted)}
+.lead-notes{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow:auto}
+.lead-note{background:#FAFBFC;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:12.5px;color:var(--ink-soft);line-height:1.5}
+.lead-note-h{display:flex;justify-content:space-between;gap:10px;margin-bottom:3px}
+.lead-note-h b{font-size:11.5px}
+.lead-note-h span{font-size:10.5px;color:var(--muted)}
+.lead-note-add{display:flex;gap:8px;margin-top:10px}
+.lead-note-add input{flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font-size:13px;font-family:inherit}
+@media (max-width:640px){ .lead-grid{grid-template-columns:1fr} .lead-score{display:none} }
 .warning-box{margin-top:10px; padding:11px 14px; border-radius:10px; background:#FDF3F2; border:1.5px solid #F3C9C4; display:flex; gap:9px; align-items:flex-start}
 .warning-box svg{width:17px; height:17px; flex:0 0 auto; color:var(--red); margin-top:1px}
 .warning-box-text{color:#8B2E2E; font-weight:700; font-size:13.5px; line-height:1.5; white-space:pre-wrap}
@@ -828,6 +917,10 @@ input,select,textarea{font-family:inherit; font-size:14px}
 
   <div class="shell">
     <aside class="rail">
+      <button class="navitem" data-view="meetings" id="meetingsBtn" style="display:none">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <span class="lbl">Zápisy z porád</span><span class="ct" data-cnt="meetings">0</span>
+      </button>
       <div class="grp">Prehľad</div>
       <button class="navitem" data-view="dashboard">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>
@@ -844,6 +937,10 @@ input,select,textarea{font-family:inherit; font-size:14px}
       <button class="navitem" data-view="tasks">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg></span>
         <span class="lbl">Úlohy & termíny</span><span class="ct" id="taskCount">0</span>
+      </button>
+      <button class="navitem" data-view="leads">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg></span>
+        <span class="lbl">Databázy</span><span class="ct" data-cnt="leads">0</span>
       </button>
 
       <hr>
@@ -1042,6 +1139,80 @@ input,select,textarea{font-family:inherit; font-size:14px}
   </div>
 </div>
 
+<div class="scrim" id="leadImportScrim">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:520px">
+    <div class="modal-h">
+      <h2>Import databázy</h2>
+      <button class="ghost" id="leadImpClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-b">
+      <div class="field">
+        <label>Názov databázy</label>
+        <input id="liName" placeholder="napr. Selekcia Obchodníci Bratislava">
+        <div class="hint">Pod týmto názvom sa bude dať databáza filtrovať.</div>
+      </div>
+      <div class="field">
+        <label>Pre ktorú službu sú tieto leady?</label>
+        <select id="liService"></select>
+        <div class="hint">Aktivita zapísaná z leadu pôjde do reportu pod túto službu.</div>
+      </div>
+      <div id="liSummary" class="lead-imp-sum"></div>
+    </div>
+    <div class="modal-f">
+      <span></span>
+      <div style="display:flex;gap:10px">
+        <button class="btn" id="leadImpCancel">Zrušiť</button>
+        <button class="btn solid" id="leadImpGo">Importovať</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="leadScrim">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:680px">
+    <div class="modal-h">
+      <h2 id="leadModalTitle">Lead</h2>
+      <button class="ghost" id="leadClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-b" id="leadModalBody"></div>
+    <div class="modal-f" id="leadModalFoot"></div>
+  </div>
+</div>
+<input type="file" id="leadFileInput" accept=".xlsx,.xls,.csv" style="display:none">
+
+<div class="scrim" id="meetScrim">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:660px">
+    <div class="modal-h">
+      <h2>Zápis z porady</h2>
+      <button class="ghost" id="meetClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-b">
+      <div class="row">
+        <div class="field"><label>Názov porady</label><input id="mTitle" placeholder="napr. Týždenná porada obchodu"></div>
+        <div class="field"><label>Dátum</label><input id="mDate" type="date"></div>
+      </div>
+      <div class="field"><label>Účastníci (nepovinné)</label><input id="mAttendees" placeholder="napr. Ďurana, Chmelová, Moravčík"></div>
+      <div class="field">
+        <label>Zápis z porady</label>
+        <textarea id="mSummary" placeholder="Sem vlož text zápisu z e-mailu od Fathomu (Ctrl+V)…" style="min-height:200px"></textarea>
+        <div class="hint">Appka si sama nájde sekciu s úlohami (Action Items / Úlohy / Ďalšie kroky) a ponúkne ich nižšie.</div>
+      </div>
+      <button type="button" class="btn" id="mExtractBtn" style="width:100%">🔍 Nájsť úlohy v zápise</button>
+      <div id="mTasksWrap" style="display:none">
+        <div class="meet-extract-title">Nájdené úlohy — odškrtni tie, ktoré nechceš vytvoriť</div>
+        <div id="mTasksList" class="meet-extract-list"></div>
+      </div>
+    </div>
+    <div class="modal-f">
+      <span></span>
+      <div style="display:flex;gap:10px">
+        <button class="btn" id="meetCancel">Zrušiť</button>
+        <button class="btn solid" id="meetSave">Uložiť zápis</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 /* ============================================================================
    LOGO (vložené ako data URI — súbor ostáva samostatný)
@@ -1200,6 +1371,26 @@ async function markWeeklyDoneFor(group, targetKey, targetName, currentlyDone){
   }
 }
 
+/* ---------------------------------------------------------------- LEADY
+   Databáza firiem (import z XLS). Jednotka = firma, zlúčená podľa IČO.
+   IČO je zatiaľ len na pozadí — môže byť nepresné, neskôr sa overí cez Finstat. */
+const LEAD_CAP = 15;   // koľko leadov môže mať jeden obchodník naraz prevzatých
+const LEAD_SEGMENTS = {
+  A:{label:"A — Rýchle výhry",   color:"#12915A", short:"A"},
+  B:{label:"B — Key account",    color:"#3E56CB", short:"B"},
+  C:{label:"C — Objem",          color:"#C6810A", short:"C"},
+  D:{label:"D — Nurture",        color:"#7C3AED", short:"D"},
+  E:{label:"E — Nezaraďovať",    color:"#9AA1AC", short:"E"},
+};
+const LEAD_SEG_ORDER = {A:0,B:1,C:2,D:3,E:4};
+const LEAD_STATUSES = {
+  new:        {label:"Voľný",         color:"#8b95a1"},
+  taken:      {label:"Prevzatý",      color:"#3E56CB"},
+  contacted:  {label:"Kontaktovaný",  color:"#C6810A"},
+  negotiating:{label:"Rokovanie",     color:"#6D4FB3"},
+  won:        {label:"Získaný",       color:"#12915A"},
+  lost:       {label:"Odmietnutý",    color:"#C24444"},
+};
 const STATUSES = [
   { id:"lead",       label:"Lead / oslovený",         color:"#8b95a1" },
   { id:"ponuka",     label:"Zaslaná ponuka",          color:"#C6810A" },
@@ -1410,6 +1601,12 @@ const state = {
   hiddenClientNames:[],    // mená klientov skryté z návrhov (číselník)
   weeklyDone:[],           // [{id, weekId, group, entries:[{key,name,at}]}] — týždenný checklist "Hotovo"
   nbCopyPreview:null,      // {segId, entries} — sivý náhľad New Business záznamov, ktoré sa nedajú kopírovať
+  meetings:[],             // zápisy z porád (Fathom)
+  leads:[],                // databáza leadov (firmy z XLS)
+  leadFilter:{seg:"", status:"", owner:"free", q:"", service:"", db:""},
+  leadLimit:60,            // koľko sa vykreslí naraz (výkon pri stovkách firiem)
+  openLead:null,           // id otvoreného leadu v detaile
+  expandedMeeting:null,    // id rozbaleného zápisu
   filterSalesperson:"",    // filter hlavného zoznamu záznamov podľa konkrétneho obchodníka
   sugFilterName:"",        // filter návrhov/kópií podľa obchodníka
 };
@@ -1457,6 +1654,514 @@ function editedAfterDone(e){
   const hit=wd.entries.find(x=>(x.key && x.key===e.ownerKey) || x.name===ownerName);
   if(!hit || !hit.at) return null;
   return e.updatedAt > hit.at ? hit.at : null;
+}
+/* ---------------------------------------------------------------- ZÁPISY Z PORÁD (FATHOM)
+   Zo skopírovaného textu zápisu vytiahne úlohy. Fathom (aj iné nástroje) zvyknú mať
+   sekciu "Action Items" / "Úlohy" / "Ďalšie kroky" s odrážkami. Ak sa taká sekcia nenájde,
+   ponúkneme všetky odrážky a používateľ si vyberie. */
+const AI_SECTION_RE = /^\s*[#*\->\s]*(action\s*items?|next\s*steps?|follow[\s-]?ups?|to[\s-]?dos?|úlohy|ulohy|ďalšie\s*kroky|dalsie\s*kroky|nasledujúce\s*kroky|akčné\s*body|akcne\s*body)\s*:?\s*$/i;
+const BULLET_RE = /^\s*(?:[-–—•*·▪]|\d+[.)])\s+(.*)$/;
+function extractMeetingTasks(text){
+  const lines=(text||"").split(/\r?\n/);
+  const found=[];
+  let inSection=false, sawSection=false;
+  for(let i=0;i<lines.length;i++){
+    const raw=lines[i];
+    const line=raw.trim();
+    if(AI_SECTION_RE.test(line)){ inSection=true; sawSection=true; continue; }
+    if(!inSection) continue;
+    if(!line) continue;                       // prázdny riadok sekciu neukončuje
+    const m=raw.match(BULLET_RE);
+    if(m){ const t=m[1].trim(); if(t) found.push(t); }
+    else break;                               // prvý neodrážkový riadok = koniec sekcie
+  }
+  // Fallback — žiadna sekcia úloh, ponúkni všetky odrážky
+  if(!sawSection || !found.length){
+    lines.forEach(raw=>{
+      const m=raw.match(BULLET_RE);
+      if(m){ const t=m[1].trim(); if(t && t.length>6) found.push(t); }
+    });
+  }
+  // odstráň duplicity a orež
+  const seen=new Set();
+  return found.filter(t=>{ const k=t.toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; })
+              .map(t=>({ text:t.replace(/\s+/g," ").trim(), assignee:guessAssignee(t) }));
+}
+/* Skúsi z textu úlohy uhádnuť zodpovedného — hľadá celé meno alebo priezvisko zo zoznamu obchodníkov */
+function guessAssignee(text){
+  const t=normalizeForCompare(text);
+  for(const name of OBCH_NAME_LIST){
+    if(t.includes(normalizeForCompare(name))) return name;
+  }
+  for(const name of OBCH_NAME_LIST){
+    const surname=name.split(" ").pop();
+    if(surname && surname.length>3 && new RegExp("\\b"+normalizeForCompare(surname)).test(t)) return name;
+  }
+  return "";
+}
+/* ---------------------------------------------------------------- LEADY — SPRACOVANIE IMPORTU
+   Jednotka je FIRMA. Riadky s rovnakým IČO sa zlúčia do jednej firmy:
+   berie sa najlepší segment (A > B > … > E), najvyššie skóre a súčet objemov,
+   e-shopy sa zbierajú do zoznamu. IČO je zatiaľ len na pozadí (môže byť nepresné). */
+const LEAD_COLS = {
+  segment:["segment"], shop:["názov e-shopu","nazov e-shopu","e-shop","eshop"],
+  company:["firma (finstat)","firma","spoločnosť"], ico:["ičo","ico"],
+  url:["url webu","url","web"], functional:["funkčný?","funkcny?","funkčný","funkcny"],
+  platform:["platforma"], integration:["integrácia do kolos ship","integracia do kolos ship","integrácia"],
+  connection:["stav napojenia"], wave:["vlna / kampaň","vlna / kampan","vlna"],
+  parcelsEst:["odhad balíkov/mes (report)","odhad balikov/mes (report)","odhad balíkov/mes"],
+  parcelsCons:["konzerv. balíky/mes","konzerv. baliky/mes"],
+  score:["skóre","skore"], scoreValue:["skóre hodnota","skore hodnota"],
+  scoreSpeed:["skóre rýchlosť","skore rychlost"], scoreFit:["skóre fit","skore fit"],
+  crossBorder:["cezhranične","cezhranicne"], carriers:["súčasní prepravcovia","sucasni prepravcovia"],
+  carrierCount:["počet prepravcov","pocet prepravcov"], employees:["zamestnanci"],
+  revenue:["obrat (eur)","obrat"], avgOrder:["priem. cena obj. (€)","priem. cena obj."],
+  nextStep:["ďalší krok","dalsi krok"],
+};
+function leadColIndex(headerRow){
+  const norm=h=>normalizeForCompare(String(h??""));
+  const idx={};
+  headerRow.forEach((h,i)=>{
+    const n=norm(h); if(!n) return;
+    for(const key in LEAD_COLS){
+      if(idx[key]!==undefined) continue;
+      if(LEAD_COLS[key].some(c=>n===normalizeForCompare(c))) idx[key]=i;
+    }
+  });
+  return idx;
+}
+const leadNum=v=>{ const n=parseFloat(String(v??"").replace(/[^\d.,-]/g,"").replace(",",".")); return isNaN(n)?0:n; };
+const leadStr=v=>String(v??"").trim();
+/* Z tabuľky (pole polí) vyrobí zoznam firiem */
+function buildLeadsFromRows(rows, dbName, service){
+  // nájdi riadok hlavičky — ten, kde je "IČO" aj "Segment"
+  let hIdx=-1, idx=null;
+  for(let i=0;i<Math.min(rows.length,10);i++){
+    const cand=leadColIndex(rows[i]||[]);
+    if(cand.ico!==undefined && cand.company!==undefined){ hIdx=i; idx=cand; break; }
+  }
+  if(hIdx<0) return {leads:[], error:"V súbore sa nenašla hlavička so stĺpcami IČO a Firma."};
+
+  const groups=new Map();
+  for(let i=hIdx+1;i<rows.length;i++){
+    const r=rows[i]||[];
+    const ico=leadStr(r[idx.ico]).replace(/\s/g,"");
+    const company=leadStr(r[idx.company]);
+    const shop=idx.shop!==undefined?leadStr(r[idx.shop]):"";
+    if(!company && !shop) continue;
+    if(normalizeForCompare(company)==="firma (finstat)") continue;   // zvyšná hlavička
+    const seg=leadStr(r[idx.segment]).toUpperCase();
+    if(!/^[A-E]$/.test(seg)) continue;                                // preskoč nedátové riadky
+    const key=ico||("noico_"+normalizeForCompare(company||shop));
+    if(!groups.has(key)) groups.set(key,[]);
+    groups.get(key).push({r,seg});
+  }
+
+  const leads=[];
+  groups.forEach((g,key)=>{
+    g.sort((a,b)=>(LEAD_SEG_ORDER[a.seg]??9)-(LEAD_SEG_ORDER[b.seg]??9)
+      || leadNum(b.r[idx.score])-leadNum(a.r[idx.score]));
+    const best=g[0].r;
+    const pick=(k)=>idx[k]!==undefined?leadStr(best[idx[k]]):"";
+    const uniq=(k)=>[...new Set(g.map(x=>idx[k]!==undefined?leadStr(x.r[idx[k]]):"").filter(Boolean))];
+    const maxOf=(k)=>Math.max(...g.map(x=>idx[k]!==undefined?leadNum(x.r[idx[k]]):0));
+    const sumOf=(k)=>g.reduce((a,x)=>a+(idx[k]!==undefined?leadNum(x.r[idx[k]]):0),0);
+    leads.push({
+      // ID obsahuje aj službu — tá istá firma môže byť leadom pre Balíky aj napr. Digital
+      id:"lead_"+service+"_"+key.replace(/[^a-zA-Z0-9_]/g,"_").slice(0,70),
+      ico:key.startsWith("noico_")?"":key,
+      company:pick("company")||uniq("shop")[0]||"—",
+      shops:uniq("shop"), urls:uniq("url"),
+      segment:g[0].seg,
+      platform:uniq("platform").join(", "), integration:uniq("integration").join(", "),
+      connection:pick("connection"), wave:pick("wave"), functional:pick("functional"),
+      parcelsEst:sumOf("parcelsEst"), parcelsCons:sumOf("parcelsCons"),
+      score:maxOf("score"), scoreValue:maxOf("scoreValue"),
+      scoreSpeed:maxOf("scoreSpeed"), scoreFit:maxOf("scoreFit"),
+      crossBorder:uniq("crossBorder").join(", "), carriers:uniq("carriers").join(", "),
+      carrierCount:maxOf("carrierCount"), employees:maxOf("employees"),
+      revenue:maxOf("revenue"), avgOrder:maxOf("avgOrder"),
+      nextStep:pick("nextStep"),
+      shopCount:g.length,
+      status:"new", ownerKey:null, ownerName:null, takenAt:null, lastTouchAt:null,
+      notes:[], service, dbName:dbName||null, importedAt:Date.now(),
+    });
+  });
+  return {leads, error:null};
+}
+/* Načíta .xlsx alebo .csv a vráti riadky ako pole polí */
+async function readLeadFile(file){
+  const name=(file.name||"").toLowerCase();
+  if(name.endsWith(".csv")){
+    const text=await file.text();
+    const res=Papa.parse(text,{delimiter:"", skipEmptyLines:true});
+    return res.data;
+  }
+  if(typeof XLSX==="undefined") throw new Error("Knižnica na čítanie XLSX sa nenačítala. Skús súbor uložiť ako CSV.");
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:"array"});
+  // preferuj hárok, ktorý má v názve "master", inak prvý
+  const sheetName=wb.SheetNames.find(n=>/master/i.test(n))||wb.SheetNames[0];
+  return XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:""});
+}
+/* Služba, pod ktorú lead patrí. Leady naimportované pred zavedením databáz
+   službu nemajú — tie boli všetky Balíky, preto ten fallback. */
+/* Na svetlom podklade (napr. Digitálne služby) musí byť text tmavý, inak nie je čitateľný */
+function contrastText(hex){
+  const h=String(hex||"").replace("#","");
+  if(h.length!==6) return "#fff";
+  const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+  return (0.299*r+0.587*g+0.114*b)/255 > 0.62 ? "#1A2230" : "#fff";
+}
+const leadService=l=>l.service||"baliky";
+const leadDbName=l=>l.dbName||l.importBatch||"—";
+/* Koľko leadov má daný používateľ práve prevzatých (nezapočítava uzavreté) */
+function myTakenLeadsCount(){
+  return state.leads.filter(l=>l.ownerKey===state.user.key && !["won","lost"].includes(l.status)).length;
+}
+async function claimLead(l){
+  if(l.ownerKey && l.ownerKey!==state.user.key){ toast("Tento záznam už má prevzatý "+(l.ownerName||"iný kolega")+"."); return; }
+  if(myTakenLeadsCount()>=LEAD_CAP){
+    toast(`Máš prevzatých ${LEAD_CAP} firiem — to je maximum. Najprv niektorý uzavri alebo uvoľni.`);
+    return;
+  }
+  try{
+    await backend.saveLead({...l, status:l.status==="new"?"taken":l.status,
+      ownerKey:state.user.key, ownerName:state.user.name, takenAt:Date.now(), lastTouchAt:Date.now()});
+    toast("Prevzaté — nájdeš to pod filtrom „Moje“.");
+  }catch(err){ console.error(err); toast("⚠ Nepodarilo sa prevziať: "+(err.message||err.code||"chyba")); }
+}
+async function releaseLead(l){
+  if(!confirm(`Uvoľniť "${l.company}" späť do banky?\n\nPoznámky zostanú zachované.`)) return;
+  try{
+    await backend.saveLead({...l, status:"new", ownerKey:null, ownerName:null, takenAt:null});
+    toast("Uvoľnené späť do banky.");
+  }catch(err){ console.error(err); toast("⚠ Nepodarilo sa uvoľniť."); }
+}
+async function setLeadStatus(l,status){
+  try{ await backend.saveLead({...l, status, lastTouchAt:Date.now()}); }
+  catch(err){ console.error(err); toast("⚠ Nepodarilo sa uložiť stav."); }
+}
+async function addLeadNote(l,text){
+  if(!text.trim()) return;
+  const notes=[...(l.notes||[]), {at:Date.now(), byKey:state.user.key, byName:state.user.name, text:text.trim()}];
+  try{ await backend.saveLead({...l, notes, lastTouchAt:Date.now()}); }
+  catch(err){ console.error(err); toast("⚠ Poznámku sa nepodarilo uložiť."); }
+}
+/* ---------------------------------------------------------------- LEADY — STRÁNKA */
+/* ---------------------------------------------------------------- LEAD — DETAIL */
+function renderLeadModal(){
+  const l=state.leads.find(x=>x.id===state.openLead);
+  if(!l){ $("#leadScrim").classList.remove("open"); return; }
+  const seg=LEAD_SEGMENTS[l.segment]||LEAD_SEGMENTS.E;
+  const isMine=l.ownerKey===state.user.key;
+  const isFree=!l.ownerKey;
+  $("#leadModalTitle").textContent=l.company;
+
+  const fld=(label,val,extra="")=>val?`<div class="lf"><span>${esc(label)}</span><b${extra}>${esc(String(val))}</b></div>`:"";
+  const links=leadWebLinks(l);
+  const urls=links.map(x=>`<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.label)}</a>`).join(" · ");
+
+  $("#leadModalBody").innerHTML=`
+    <div class="lead-hero">
+      <span class="lead-seg lg" style="background:${seg.color}">${seg.short}</span>
+      <div>
+        <div class="lead-hero-name">${esc(l.company)}</div>
+        <div class="lead-hero-sub">${esc(seg.label)}${l.ico?` · IČO ${esc(l.ico)}`:""}</div>
+        <div class="lead-hero-sub">${(()=>{const sv=SEG[leadService(l)]; return sv?`<span class="lead-svc" style="background:${sv.color};color:${contrastText(sv.color)}">${esc(sv.name)}</span> `:"";})()}${esc(leadDbName(l))}</div>
+        ${links.length?`<div class="lead-hero-links">${links.map(x=>`<a class="lead-weblink" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>${esc(x.label)}</a>`).join("")}</div>`:""}
+      </div>
+      <div class="lead-hero-score"><b>${l.score||"—"}</b><span>skóre</span></div>
+    </div>
+    ${l.nextStep?`<div class="lead-next"><b>Odporúčaný ďalší krok</b>${esc(l.nextStep)}</div>`:""}
+    <div class="lead-grid">
+      ${fld("E-shopy",(l.shops||[]).join(" · "))}
+      ${urls?`<div class="lf"><span>Web</span><b>${urls}</b></div>`:""}
+      ${fld("Platforma",l.platform)}
+      ${fld("Integrácia",l.integration)}
+      ${fld("Stav napojenia",l.connection)}
+      ${fld("Vlna / kampaň",l.wave)}
+      ${fld("Funkčný web",l.functional)}
+      ${l.parcelsCons?fld("Balíky/mes (konzerv.)",fmtNum(l.parcelsCons)):""}
+      ${l.parcelsEst?fld("Balíky/mes (odhad)",fmtNum(l.parcelsEst)):""}
+      ${l.revenue?fld("Obrat",fmtNum(l.revenue)+" €"):""}
+      ${l.employees?fld("Zamestnanci",fmtNum(l.employees)):""}
+      ${l.avgOrder?fld("Priem. objednávka",fmtNum(l.avgOrder)+" €"):""}
+      ${fld("Súčasní prepravcovia",l.carriers)}
+      ${l.carrierCount?fld("Počet prepravcov",l.carrierCount):""}
+      ${fld("Cezhranične",l.crossBorder)}
+      ${l.scoreValue||l.scoreSpeed||l.scoreFit?fld("Skóre (hodnota/rýchlosť/fit)",`${l.scoreValue} / ${l.scoreSpeed} / ${l.scoreFit}`):""}
+    </div>
+    <div class="lead-sec-title">Stav</div>
+    <div class="lead-status-row" id="leadStatusRow"></div>
+    <div class="lead-sec-title">Poznámky</div>
+    <div id="leadNotes" class="lead-notes"></div>
+    <div class="lead-note-add">
+      <input id="leadNoteInput" placeholder="${isMine||isFree?"Napíš poznámku k tejto firme…":"Prevzaté — "+esc(l.ownerName||"kolega")}" ${isMine||isFree?"":"disabled"}>
+      <button class="btn" id="leadNoteBtn" ${isMine||isFree?"":"disabled"}>Pridať</button>
+    </div>`;
+
+  // stavy
+  const sr=$("#leadStatusRow");
+  Object.entries(LEAD_STATUSES).forEach(([k,v])=>{
+    if(k==="new") return;
+    const b=el("button","lead-st-btn"+(l.status===k?" on":""),v.label);
+    if(l.status===k) b.style.cssText=`background:${v.color};border-color:${v.color};color:#fff`;
+    b.disabled=!isMine;
+    b.onclick=()=>setLeadStatus(l,k);
+    sr.appendChild(b);
+  });
+  if(!isMine) sr.appendChild(el("span","lead-hint","Stav môže meniť len ten, kto to má prevzaté."));
+
+  // poznámky
+  const nb=$("#leadNotes");
+  const notes=(l.notes||[]).slice().sort((a,b)=>b.at-a.at);
+  if(!notes.length) nb.innerHTML=`<div class="lead-hint">Zatiaľ žiadne poznámky.</div>`;
+  else nb.innerHTML=notes.map(n=>`<div class="lead-note"><div class="lead-note-h"><b>${esc(n.byName||"—")}</b><span>${esc(fmtDateTime(n.at))}</span></div><div>${esc(n.text)}</div></div>`).join("");
+  const addNote=async()=>{
+    const inp=$("#leadNoteInput"); const t=inp.value;
+    if(!t.trim()) return;
+    inp.value=""; await addLeadNote(l,t); renderLeadModal();
+  };
+  $("#leadNoteBtn").onclick=addNote;
+  $("#leadNoteInput").onkeydown=e=>{ if(e.key==="Enter") addNote(); };
+
+  // pätička
+  const ft=$("#leadModalFoot"); ft.innerHTML="";
+  const left=el("div"); const right=el("div"); right.style.cssText="display:flex;gap:10px;flex-wrap:wrap";
+  if(isMine){
+    const rel=el("button","btn","Uvoľniť späť"); rel.onclick=()=>releaseLead(l).then(renderLeadModal); left.appendChild(rel);
+    const act=el("button","btn solid","✎ Zapísať aktivitu do reportu");
+    act.onclick=()=>{
+      $("#leadScrim").classList.remove("open");
+      // Aktivita z leadu patrí do AKTUÁLNEHO týždňa. Dashboard v pondelok–stredu
+      // defaultne ukazuje minulý (uzavretý) týždeň, preto sa najprv prepneme.
+      const switched = state.week!==CURRENT_WEEK;
+      if(switched){ state.week=CURRENT_WEEK; state.suggestions=[]; state.nbCopyPreview=null; }
+      openModal(null, leadService(l));
+      setTimeout(()=>{
+        $("#fClient").value=l.company;
+        $("#fEvents").value=`Z databázy „${leadDbName(l)}“ — `;
+        $("#fEvents").focus();
+        if(typeof updateLastWeekHint==="function") updateLastWeekHint();
+        if(switched) toast(`Prepnuté na aktuálny týždeň (${weekRangeLabel(CURRENT_WEEK)}).`);
+      },80);
+      setLeadStatus(l, l.status==="taken"?"contacted":l.status);
+    };
+    right.appendChild(act);
+  } else if(isFree){
+    const cl=el("button","btn solid","+ Prevziať");
+    cl.onclick=()=>claimLead(l).then(renderLeadModal);
+    right.appendChild(cl);
+  } else {
+    left.appendChild(el("span","lead-hint",`Prevzal ${esc(l.ownerName||"kolega")}`));
+    if(["admin","sef"].includes(state.user.role)){
+      const rel=el("button","btn","Uvoľniť (admin)"); rel.onclick=()=>releaseLead(l).then(renderLeadModal); right.appendChild(rel);
+    }
+  }
+  ft.appendChild(left); ft.appendChild(right);
+  $("#leadScrim").classList.add("open");
+}
+/* Import databázy leadov (.xlsx / .csv) — najprv sa spýtame na službu a názov databázy */
+let pendingLeadRows=null;
+async function handleLeadFile(file){
+  if(!file) return;
+  toast("Načítavam súbor…");
+  try{
+    pendingLeadRows=await readLeadFile(file);
+    const sel=$("#liService"); sel.innerHTML="";
+    SEGMENTS.forEach(sg=>{ const o=el("option","",sg.name); o.value=sg.id; sel.appendChild(o); });
+    sel.value="baliky";
+    $("#liName").value=file.name.replace(/\.(xlsx|xls|csv)$/i,"").replace(/[_-]+/g," ").trim().slice(0,60);
+    $("#liSummary").innerHTML="";
+    $("#leadImportScrim").classList.add("open");
+    setTimeout(()=>$("#liName").focus(),60);
+  }catch(err){
+    console.error("Načítanie súboru zlyhalo:", err);
+    toast("⚠ Súbor sa nepodarilo načítať: "+(err.message||"neznáma chyba"));
+  }
+}
+async function runLeadImport(){
+  if(!pendingLeadRows){ toast("Najprv vyber súbor."); return; }
+  const dbName=$("#liName").value.trim()||"Bez názvu";
+  const service=$("#liService").value;
+  const btn=$("#leadImpGo");
+  const {leads,error}=buildLeadsFromRows(pendingLeadRows, dbName, service);
+  if(error){ toast("⚠ "+error); return; }
+  if(!leads.length){ toast("⚠ V súbore sa nenašli žiadne firmy."); return; }
+
+  // Duplicita = rovnaké IČO v rovnakej službe (aj keď je z inej databázy).
+  // Tá istá firma v inej službe je legitímny nový lead.
+  const existingKeys=new Set(state.leads.map(x=>leadService(x)+"|"+(x.ico||normalizeForCompare(x.company))));
+  const fresh=leads.filter(l=>!existingKeys.has(service+"|"+(l.ico||normalizeForCompare(l.company))));
+  const dupes=leads.length-fresh.length;
+  const work=leads.filter(l=>l.segment!=="E").length;
+
+  $("#liSummary").innerHTML=`<b>${leads.length} ${plural(leads.length,"firma","firmy","firiem")}</b> v súbore
+    · ${work} pracovných, ${leads.length-work} v segmente E<br>
+    <span class="ok">Nových: ${fresh.length}</span>${dupes?` · <span class="mut">už v databáze: ${dupes} (preskočia sa, poznámky ostanú)</span>`:""}`;
+  if(!fresh.length){ toast("Všetky firmy zo súboru už v tejto službe sú."); return; }
+  if(!confirm(`Importovať ${fresh.length} nových firiem do služby „${SEG[service].name}“ ako databázu „${dbName}“?`)) return;
+
+  btn.disabled=true; btn.textContent="Importujem…";
+  try{
+    await backend.saveLeadsBulk(fresh,(done,total)=>{ btn.textContent=`Importujem… ${done}/${total}`; });
+    $("#leadImportScrim").classList.remove("open");
+    pendingLeadRows=null;
+    state.view="leads"; state.leadFilter.db=dbName; state.leadFilter.service=service; render();
+    toast(`✓ Importovaných ${fresh.length} firiem do služby ${SEG[service].short}`);
+  }catch(err){
+    console.error("Import leadov zlyhal:", err);
+    toast("⚠ Import zlyhal: "+(err.message||"neznáma chyba"));
+  }finally{ btn.disabled=false; btn.textContent="Importovať"; }
+}
+function viewLeads(){
+  const wrap=el("div");
+  const mine=myTakenLeadsCount();
+  wrap.appendChild(el("div","page-h",`<div>
+    <div class="eyebrow">Leady</div>
+    <h1>Databázy</h1>
+    <div class="sub">Prevezmi si firmu, pracuj s ňou a zapíš aktivitu do týždenného reportu. Naraz môžeš mať prevzatých najviac ${LEAD_CAP} firiem.</div></div><div></div>`));
+  const actions=el("div","seg-actions");
+  const capChip=el("span","lead-cap"+(mine>=LEAD_CAP?" full":""),`Prevzaté: ${mine}/${LEAD_CAP}`);
+  actions.appendChild(capChip);
+  if(["admin","sef"].includes(state.user.role)){
+    const imp=el("button","btn","⬆ Importovať databázu");
+    imp.onclick=()=>$("#leadFileInput").click();
+    actions.appendChild(imp);
+  }
+  wrap.querySelector(".page-h").lastElementChild.appendChild(actions);
+
+  if(!state.leads.length){
+    wrap.appendChild(el("div","empty",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg><b>Zatiaľ žiadna databáza</b>${["admin","sef"].includes(state.user.role)?"Nahraj databázu tlačidlom „Importovať databázu“ (.xlsx alebo .csv).":"Databázu nahrá admin."}`));
+    return wrap;
+  }
+
+  // --- filtre ---
+  const f=state.leadFilter;
+  const tb=el("div","toolbar");
+  const search=el("div","search",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
+  const si=el("input"); si.placeholder="Hľadať firmu, e-shop, IČO…"; si.value=f.q;
+  si.oninput=()=>{ f.q=si.value; state.leadLimit=60; paint(); };
+  search.appendChild(si); tb.appendChild(search);
+  wrap.appendChild(tb);
+
+  const rowFilters=el("div","lead-filters");
+  const mkSel=(label,key,opts)=>{
+    const w=el("div","sort-toggle"); w.appendChild(el("span","sort-label",label));
+    const sel=el("select");
+    opts.forEach(([v,t])=>{ const o=el("option","",t); o.value=v; sel.appendChild(o); });
+    sel.value=f[key]||"";
+    sel.onchange=()=>{ f[key]=sel.value; state.leadLimit=60; paint(); };
+    w.appendChild(sel); return w;
+  };
+  rowFilters.appendChild(mkSel("Služba:","service",[["","Všetky služby"],...SEGMENTS.map(sg=>[sg.id,sg.name])]));
+  const dbs=[...new Set(state.leads.map(leadDbName))].filter(d=>d!=="—").sort((a,b)=>a.localeCompare(b,"sk"));
+  if(dbs.length>1){
+    rowFilters.appendChild(mkSel("Databáza:","db",[["","Všetky databázy"],...dbs.map(d=>[d,d])]));
+  }
+  rowFilters.appendChild(mkSel("Vlastník:","owner",[["free","Voľné"],["mine","Moje"],["taken","Obsadené"],["","Všetky"]]));
+  rowFilters.appendChild(mkSel("Priorita:","seg",[["","Všetky (okrem E)"],["A","A — rýchle výhry"],["B","B — key account"],["C","C — objem"],["D","D — nurture"],["E","E — nezaraďovať"]]));
+  rowFilters.appendChild(mkSel("Stav:","status",[["","Všetky"],...Object.entries(LEAD_STATUSES).map(([k,v])=>[k,v.label])]));
+  wrap.appendChild(rowFilters);
+
+  const info=el("div","lead-count"); wrap.appendChild(info);
+  const listWrap=el("div","lead-list"); wrap.appendChild(listWrap);
+  const moreWrap=el("div"); moreWrap.style.textAlign="center"; wrap.appendChild(moreWrap);
+
+  function paint(){
+    const q=(f.q||"").trim().toLowerCase();
+    let rows=state.leads.filter(l=>{
+      if(f.service && leadService(l)!==f.service) return false;
+      if(f.db && leadDbName(l)!==f.db) return false;
+      if(f.seg){ if(l.segment!==f.seg) return false; }
+      else if(l.segment==="E") return false;              // E je defaultne skryté
+      if(f.status && l.status!==f.status) return false;
+      if(f.owner==="free" && l.ownerKey) return false;
+      if(f.owner==="mine" && l.ownerKey!==state.user.key) return false;
+      if(f.owner==="taken" && !l.ownerKey) return false;
+      if(q){
+        const hay=[l.company,l.ico,(l.shops||[]).join(" "),(l.urls||[]).join(" ")].join(" ").toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    rows.sort((a,b)=>(LEAD_SEG_ORDER[a.segment]??9)-(LEAD_SEG_ORDER[b.segment]??9) || b.score-a.score);
+    info.textContent=`${rows.length} ${plural(rows.length,"firma","firmy","firiem")}`;
+    listWrap.innerHTML=""; moreWrap.innerHTML="";
+    if(!rows.length){ listWrap.appendChild(el("div","empty","<b>Nič nevyhovuje filtru</b>Skús zmeniť filter alebo hľadaný výraz.")); return; }
+    rows.slice(0,state.leadLimit).forEach(l=>listWrap.appendChild(leadRow(l)));
+    if(rows.length>state.leadLimit){
+      const more=el("button","btn",`Zobraziť ďalších ${Math.min(60,rows.length-state.leadLimit)} z ${rows.length-state.leadLimit}`);
+      more.onclick=()=>{ state.leadLimit+=60; paint(); };
+      moreWrap.appendChild(more);
+    }
+  }
+  paint();
+  return wrap;
+}
+function leadRow(l){
+  const seg=LEAD_SEGMENTS[l.segment]||LEAD_SEGMENTS.E;
+  const st=LEAD_STATUSES[l.status]||LEAD_STATUSES.new;
+  const isMine=l.ownerKey===state.user.key;
+  const row=el("div","lead-row"+(isMine?" mine":""));
+  row.innerHTML=`<div class="lead-seg" style="background:${seg.color}" title="${esc(seg.label)}">${seg.short}</div>
+    <div class="lead-main">
+      <div class="lead-name">${esc(l.company)}${l.shopCount>1?`<span class="lead-multi" title="${esc((l.shops||[]).join(" · "))}">${l.shopCount} e-shopy</span>`:""}</div>
+      <div class="lead-meta">
+        ${(l.shops||[]).length?`<span>${esc(l.shops[0])}</span>`:""}
+        ${l.platform?`<span class="lead-pill">${esc(l.platform)}</span>`:""}
+        ${(()=>{const sv=SEG[leadService(l)]; return sv?`<span class="lead-svc" style="background:${sv.color};color:${contrastText(sv.color)}">${esc(sv.short)}</span>`:"";})()}
+        ${l.parcelsCons?`<span>${fmtNum(l.parcelsCons)} bal/mes</span>`:""}
+        ${l.revenue?`<span>obrat ${fmtNum(l.revenue)} €</span>`:""}
+      </div>
+    </div>
+    <div class="lead-score" title="Skóre atraktivity">${l.score||"—"}</div>
+    <div class="lead-right">
+      <span class="lead-status" style="color:${st.color};border-color:${st.color}33;background:${st.color}14">${esc(st.label)}</span>
+      ${l.ownerName?`<span class="lead-owner"><span class="av">${initials(l.ownerName)}</span>${esc(l.ownerName)}</span>`:""}
+    </div>`;
+  const links=leadWebLinks(l);
+  if(links.length){
+    const a=el("a","lead-weblink-btn");
+    a.href=links[0].url; a.target="_blank"; a.rel="noopener noreferrer";
+    a.title="Otvoriť web "+links[0].label+(links.length>1?" (+ ďalšie v detaile)":"");
+    a.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+    a.onclick=(ev)=>ev.stopPropagation();   // klik na odkaz neotvorí detail leadu
+    row.querySelector(".lead-right").appendChild(a);
+  }
+  row.onclick=()=>{ state.openLead=l.id; renderLeadModal(); };
+  return row;
+}
+const fmtNum=n=>Number(n||0).toLocaleString("sk-SK");
+/* Z hodnôt v stĺpci "URL webu" vytiahne použiteľné odkazy.
+   Dáta sú rôznorodé: "https://x.sk/", "Attractiv.sk (https://attractiv.sk/)",
+   "www.a.sk (SK) + www.a.cz (CZ)" aj "n.a." — preto hľadáme domény a chýbajúci
+   protokol doplníme. */
+function leadWebLinks(l){
+  const out=[], seen=new Set();
+  const push=(raw)=>{
+    let u=String(raw).trim().replace(/[),.;]+$/,"");
+    if(!u) return;
+    if(!/^https?:\/\//i.test(u)) u="https://"+u.replace(/^\/+/,"");
+    let host;
+    try{ host=new URL(u).hostname.replace(/^www\./i,""); }catch{ return; }
+    if(!host || host.split(".").length<2) return;
+    const tld=host.split(".").pop();
+    if(!/^[a-z]{2,8}$/i.test(tld)) return;               // odfiltruje "n.a." a podobné
+    const key=host.toLowerCase();
+    if(seen.has(key)) return;
+    seen.add(key); out.push({url:u, label:host});
+  };
+  (l.urls||[]).forEach(v=>{
+    const s=String(v||"");
+    if(/^n\.?\s*a\.?$/i.test(s.trim())) return;
+    const explicit=s.match(/https?:\/\/[^\s,)]+/gi);
+    if(explicit){ explicit.forEach(push); return; }
+    const domains=s.match(/(?:www\.)?[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)+/gi);
+    if(domains) domains.forEach(push);
+  });
+  return out;
 }
 function specialClientLabel(e,info){
   return `<span class="lk special-client" style="color:${info.color}"><svg class="sc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${info.icon}</svg>${esc(info.label)}</span>`;
@@ -1595,7 +2300,9 @@ function demoBackend(){
   let tasks=demoTasks();
   let hiddenClients=[];
   let weeklyDone=[];
-  const sync=()=>{ state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; state.weeklyDone=weeklyDone.map(d=>({...d, entries:[...d.entries]})); render(); };
+  let meetings=[];
+  let leads=[];
+  const sync=()=>{ state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; state.weeklyDone=weeklyDone.map(d=>({...d, entries:[...d.entries]})); state.meetings=meetings.map(m=>({...m})); state.leads=leads.map(l=>({...l})); render(); };
   return {
     mode:"demo",
     start(){ sync(); },
@@ -1628,6 +2335,23 @@ function demoBackend(){
     },
     async removeTask(id){ tasks=tasks.filter(t=>t.id!==id); sync(); },
     async toggleTask(id,status){ tasks=tasks.map(t=>t.id===id?{...t,status}:t); sync(); },
+    async saveMeeting(m){
+      if(m.id && meetings.some(x=>x.id===m.id)) meetings=meetings.map(x=>x.id===m.id?{...m}:x);
+      else { if(!m.id) m.id="m"+Math.random().toString(36).slice(2,9); meetings.push({...m}); }
+      sync(); return m.id;
+    },
+    async removeMeeting(id){ meetings=meetings.filter(m=>m.id!==id); sync(); },
+    async saveLead(l){
+      if(l.id && leads.some(x=>x.id===l.id)) leads=leads.map(x=>x.id===l.id?{...l}:x);
+      else { if(!l.id) l.id="l"+Math.random().toString(36).slice(2,9); leads.push({...l}); }
+      sync(); return l.id;
+    },
+    async saveLeadsBulk(list,onProgress){
+      list.forEach(l=>{ const i=leads.findIndex(x=>x.id===l.id);
+        if(i>=0) leads[i]={...leads[i],...l}; else leads.push({...l}); });
+      if(onProgress) onProgress(list.length,list.length);
+      sync();
+    },
     logout(){ location.reload(); return Promise.resolve(); },
   };
 }
@@ -1638,7 +2362,7 @@ function demoBackend(){
 async function firebaseBackend(){
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
   const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
-  const { getFirestore, collection, query, onSnapshot, doc, setDoc, deleteDoc, getDoc, arrayUnion, arrayRemove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+  const { getFirestore, collection, query, onSnapshot, doc, setDoc, deleteDoc, getDoc, arrayUnion, arrayRemove, writeBatch } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
   const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
   const app=initializeApp(firebaseConfig); const auth=getAuth(app); const db=getFirestore(app);
   const fx=getFunctions(app,"europe-west1");
@@ -1695,7 +2419,13 @@ async function firebaseBackend(){
       const u4=onSnapshot(query(collection(db,"weeklyDone")),
         snap=>{ state.weeklyDone=snap.docs.map(d=>({id:d.id,entries:[],...d.data()})); render(); },
         err=>{ console.error("weeklyDone snapshot error:", err); toast("⚠ Chyba pri načítaní \"Hotovo\": "+(err.message||err.code||err)); });
-      unsub=()=>{ u1(); u2(); u3(); u4(); };
+      const u5=onSnapshot(query(collection(db,"meetings")),
+        snap=>{ state.meetings=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
+        err=>{ console.error("meetings snapshot error:", err); });
+      const u6=onSnapshot(query(collection(db,"leads")),
+        snap=>{ state.leads=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
+        err=>{ console.error("leads snapshot error:", err); });
+      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u6(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
@@ -1722,6 +2452,27 @@ async function firebaseBackend(){
     async saveTask(task){ const id=task.id||doc(collection(db,"tasks")).id; await setDoc(doc(db,"tasks",id),{...task,id},{merge:true}); },
     removeTask(id){ return deleteDoc(doc(db,"tasks",id)); },
     async toggleTask(id,status){ await setDoc(doc(db,"tasks",id),{status},{merge:true}); },
+    async saveMeeting(m){
+      const id=m.id||doc(collection(db,"meetings")).id;
+      await setDoc(doc(db,"meetings",id),{...m,id},{merge:true});
+      return id;
+    },
+    async removeMeeting(id){ return deleteDoc(doc(db,"meetings",id)); },
+    async saveLead(l){
+      const id=l.id||doc(collection(db,"leads")).id;
+      await setDoc(doc(db,"leads",id),{...l,id},{merge:true});
+      return id;
+    },
+    async saveLeadsBulk(list,onProgress){
+      // Firestore povoľuje max 500 zápisov v jednej dávke
+      const CH=400;
+      for(let i=0;i<list.length;i+=CH){
+        const b=writeBatch(db);
+        list.slice(i,i+CH).forEach(l=>b.set(doc(db,"leads",l.id),l,{merge:true}));
+        await b.commit();
+        if(onProgress) onProgress(Math.min(i+CH,list.length), list.length);
+      }
+    },
   };
 }
 
@@ -1879,6 +2630,14 @@ function buildStatic(){
   $("#thisWeek").onclick=$("#weekLabel").onclick=()=>{ state.week=CURRENT_WEEK; state.suggestions=[]; state.nbCopyPreview=null; render(); };
   $("#addBtn").onclick=()=>openModal(null);
   $("#addTaskBtn").onclick=()=>openTaskModal(null);
+  $("#meetClose").onclick=$("#meetCancel").onclick=closeMeetingModal;
+  $("#leadClose").onclick=()=>{ state.openLead=null; $("#leadScrim").classList.remove("open"); };
+  $("#leadScrim").onclick=e=>{ if(e.target===$("#leadScrim")){ state.openLead=null; $("#leadScrim").classList.remove("open"); } };
+  $("#leadFileInput").onchange=(e)=>{ const f=e.target.files[0]; handleLeadFile(f); e.target.value=""; };
+  $("#leadImpClose").onclick=$("#leadImpCancel").onclick=()=>{ $("#leadImportScrim").classList.remove("open"); pendingLeadRows=null; };
+  $("#leadImpGo").onclick=runLeadImport;
+  $("#mExtractBtn").onclick=renderExtractedTasks;
+  $("#meetSave").onclick=saveMeetingFromModal;
   $("#logoutBtn").onclick=async()=>{
     if(!confirm("Naozaj sa chceš odhlásiť?")) return;
     try{ await backend.logout(); }
@@ -1953,6 +2712,7 @@ function render(){
   $("#uAvatar").textContent=initials(state.user.name);
   $("#importNbBtn").style.display=["admin","sef"].includes(state.user.role)?"":"none";
   $("#clientRegistryBtn").style.display=["admin","sef"].includes(state.user.role)?"":"none";
+  $("#meetingsBtn").style.display=["admin","sef","lider"].includes(state.user.role)?"":"none";
 
   const {week}=parseWeekId(state.week);
   const wl=$("#weekLabel"); wl.querySelector("b").textContent=`Týždeň ${week}`; wl.querySelector("small").textContent=weekRangeLabel(state.week);
@@ -1965,6 +2725,8 @@ function render(){
   // počítadlá zahŕňajú aj spiace záznamy prenesené zo starších týždňov, aby súhlasili so zoznamom
   const counts={}; SEGMENTS.forEach(s=>counts[s.id]=segmentWeekList(s.id).length);
   counts.newbusiness = we.filter(e=>e.isNewBusiness).length;
+  counts.meetings = state.meetings.length;
+  counts.leads = state.leads.filter(l=>l.segment!=="E").length;
   document.querySelectorAll("[data-cnt]").forEach(c=>c.textContent=counts[c.dataset.cnt]||0);
   $("#mineCount").textContent=we.filter(isMine).length;
   $("#clientCount").textContent=clientIndex().length;
@@ -2004,6 +2766,8 @@ function render(){
   else if(state.view==="services") c.appendChild(viewServicesList());
   else if(state.view==="newbusiness") c.appendChild(viewNewBusiness());
   else if(state.view==="segment") c.appendChild(viewSegment());
+  else if(state.view==="leads") c.appendChild(viewLeads());
+  else if(state.view==="meetings") c.appendChild(viewMeetings());
   else if(state.view==="clientRegistry") c.appendChild(viewClientRegistry());
   else if(state.view==="help") c.appendChild(viewHelp());
 }
@@ -3312,7 +4076,8 @@ function viewTasks(){
   wrap.appendChild(chips);
 
   let rows=state.tasks.slice();
-  if(state.user.role!=="boss") rows=rows.filter(t=>isMyTask(t)||t.createdBy===state.user.name);
+  // nepriradené úlohy vidí každý — inak by si ich nemal kto prevziať
+  if(state.user.role!=="boss") rows=rows.filter(t=>isMyTask(t)||t.createdBy===state.user.name||!t.assignee);
   if(state.taskFilter==="open") rows=rows.filter(t=>t.status==="open");
   else if(state.taskFilter==="done") rows=rows.filter(t=>t.status==="done");
   else if(state.taskFilter==="mine") rows=rows.filter(t=>isMyTask(t));
@@ -3358,22 +4123,181 @@ function taskRow(t){
       ${dl?`<span class="t-due${dl.cls?" overdue":""}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>${esc(dl.text)}</span>`:""}
       ${seg?schip(seg.id):""}
       ${t.client?`<span class="schip" style="background:#f1f2f6;color:var(--ink-soft)">${esc(t.client)}</span>`:""}
-      <span class="obch" style="margin-left:0"><span class="av">${initials(t.assignee||"?")}</span>${esc(t.assignee||"—")}</span>
+      ${t.fromMeeting?`<span class="from-meet-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Z porady</span>`:""}
+      ${t.assignee
+        ? `<span class="obch" style="margin-left:0"><span class="av">${initials(t.assignee)}</span>${esc(t.assignee)}</span>`
+        : `<span class="unassigned-chip">nepriradené</span>`}
     </div>
     ${t.note?`<div class="t-note">${esc(t.note)}</div>`:""}`;
   if(t.client){ const ck=clientKey(t.client); body.querySelector(".t-meta").style.cursor="pointer"; }
   row.appendChild(body);
-  if(canEdit){
-    const ac=el("div","t-actions");
-    const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
-    ed.onclick=()=>openTaskModal(t); ac.appendChild(ed); row.appendChild(ac);
+  const ac=el("div","t-actions");
+  // Nepriradenú úlohu si môže ktokoľvek prevziať jedným klikom
+  if(!t.assignee && t.status!=="done"){
+    const take=el("button","take-btn","Prevziať");
+    take.title="Priradiť túto úlohu sebe";
+    take.onclick=async()=>{
+      take.disabled=true;
+      try{ await backend.saveTask({...t, assignee:state.user.name}); toast("Úloha priradená tebe."); }
+      catch(err){ console.error(err); toast("⚠ Nepodarilo sa priradiť: "+(err.message||err.code||"chyba")); take.disabled=false; }
+    };
+    ac.appendChild(take);
   }
+  if(canEdit || !t.assignee){
+    const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
+    ed.onclick=()=>openTaskModal(t); ac.appendChild(ed);
+  }
+  if(ac.children.length) row.appendChild(ac);
   return row;
 }
 
 
 /* ---------------------------------------------------------------- HELP */
 /* ---------------------------------------------------------------- ČÍSELNÍK KLIENTOV (admin/šéf — skrývanie mien z návrhov) */
+/* ---------------------------------------------------------------- PORADY */
+/* ---------------------------------------------------------------- PORADA — MODAL */
+function openMeetingModal(){
+  $("#mTitle").value="";
+  $("#mDate").value=new Date().toISOString().slice(0,10);
+  $("#mAttendees").value="";
+  $("#mSummary").value="";
+  $("#mTasksWrap").style.display="none";
+  $("#mTasksList").innerHTML="";
+  $("#meetScrim").classList.add("open");
+  setTimeout(()=>$("#mSummary").focus(),60);
+}
+function closeMeetingModal(){ $("#meetScrim").classList.remove("open"); }
+function renderExtractedTasks(){
+  const found=extractMeetingTasks($("#mSummary").value);
+  const listEl=$("#mTasksList"); listEl.innerHTML="";
+  if(!found.length){
+    $("#mTasksWrap").style.display="";
+    listEl.innerHTML=`<div class="meet-extract-empty">V zápise sa nenašli žiadne úlohy. Môžeš ich pridať ručne po uložení zápisu.</div>`;
+    return;
+  }
+  const defaultDue=(()=>{ const d=new Date(); d.setDate(d.getDate()+7); return d.toISOString().slice(0,10); })();
+  found.forEach((t,i)=>{
+    const row=el("div","meet-extract-row");
+    const opts=OBCH_NAME_LIST.map(n=>`<option value="${esc(n)}"${n===t.assignee?" selected":""}>${esc(n)}</option>`).join("");
+    row.innerHTML=`<label class="mx-check"><input type="checkbox" checked data-i="${i}"></label>
+      <div class="mx-body">
+        <input class="mx-title" value="${esc(t.text)}">
+        <div class="mx-meta">
+          <select class="mx-assignee"><option value="">— nepriradené (prevezme si sám) —</option>${opts}</select>
+          <input class="mx-due" type="date" value="${defaultDue}">
+        </div>
+      </div>`;
+    listEl.appendChild(row);
+  });
+  $("#mTasksWrap").style.display="";
+}
+async function saveMeetingFromModal(){
+  const title=$("#mTitle").value.trim()||"Porada";
+  const date=$("#mDate").value||new Date().toISOString().slice(0,10);
+  const summary=$("#mSummary").value.trim();
+  if(!summary){ toast("Vlož prosím text zápisu."); $("#mSummary").focus(); return; }
+  const btn=$("#meetSave"); btn.disabled=true; btn.textContent="Ukladám…";
+  try{
+    const meeting={
+      title, date, weekId:weekId(new Date(date+"T12:00:00Z")),
+      attendees:$("#mAttendees").value.trim()||null,
+      summary,
+      source:"fathom_paste",
+      createdAt:Date.now(), createdBy:state.user.key||null, createdByName:state.user.name||null,
+    };
+    const meetingId=await backend.saveMeeting(meeting);
+    // vytvor zaškrtnuté úlohy
+    const rows=[...$("#mTasksList").querySelectorAll(".meet-extract-row")];
+    let made=0;
+    for(const r of rows){
+      if(!r.querySelector("input[type=checkbox]").checked) continue;
+      const t=r.querySelector(".mx-title").value.trim();
+      if(!t) continue;
+      await backend.saveTask({
+        title:t,
+        assignee:r.querySelector(".mx-assignee").value||"",
+        due:r.querySelector(".mx-due").value||"",
+        client:"", segment:"", note:"", status:"open",
+        fromMeeting:meetingId||null, fromMeetingTitle:title,
+        createdBy:state.user.name, createdAt:Date.now(),
+      });
+      made++;
+    }
+    closeMeetingModal();
+    state.view="meetings"; state.expandedMeeting=meetingId||null;
+    render();
+    toast(made?`Zápis uložený · vytvorených ${made} ${plural(made,"úloha","úlohy","úloh")}`:"Zápis uložený");
+  }catch(err){
+    console.error("Uloženie zápisu zlyhalo:", err);
+    toast("⚠ Uloženie zlyhalo: "+(err.message||err.code||"neznáma chyba"));
+  }finally{
+    btn.disabled=false; btn.textContent="Uložiť zápis";
+  }
+}
+function viewMeetings(){
+  const wrap=el("div");
+  wrap.appendChild(el("div","page-h",`<div>
+    <div class="eyebrow">Interné</div>
+    <h1>Zápisy z porád</h1>
+    <div class="sub">Vlož zápis z porady (napr. e-mail od Fathomu) — appka z neho vytiahne úlohy a priradíš ich kolegom. Viditeľné len pre vedenie.</div></div><div></div>`));
+  const addBtn=el("button","btn solid","+ Pridať zápis z porady");
+  addBtn.onclick=()=>openMeetingModal();
+  wrap.querySelector(".page-h").lastElementChild.appendChild(addBtn);
+
+  const list=state.meetings.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  if(!list.length){
+    wrap.appendChild(el("div","empty",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><b>Zatiaľ žiadne zápisy</b>Skopíruj zápis z e-mailu od Fathomu a vlož ho sem.`));
+    return wrap;
+  }
+
+  list.forEach(m=>{
+    const linked=state.tasks.filter(t=>t.fromMeeting===m.id);
+    const openCnt=linked.filter(t=>t.status==="open").length;
+    const isOpen=state.expandedMeeting===m.id;
+    const card=el("div","meet-card");
+    card.innerHTML=`<div class="meet-head">
+        <div class="meet-title">
+          <b>${esc(m.title||"Porada")}</b>
+          <div class="meet-meta">${esc(fmtMeetDate(m.date))}${m.attendees?` · ${esc(m.attendees)}`:""}${m.createdByName?` · vložil ${esc(m.createdByName)}`:""}</div>
+        </div>
+        <div class="meet-badges">
+          ${linked.length?`<span class="meet-chip">${linked.length} ${plural(linked.length,"úloha","úlohy","úloh")}${openCnt?` · ${openCnt} otvorených`:""}</span>`:`<span class="meet-chip muted">bez úloh</span>`}
+          <button class="meet-toggle">${isOpen?"Skryť zápis":"Zobraziť zápis"}</button>
+        </div>
+      </div>`;
+    card.querySelector(".meet-toggle").onclick=()=>{ state.expandedMeeting=isOpen?null:m.id; render(); };
+    if(isOpen){
+      const body=el("div","meet-body");
+      body.innerHTML=`<div class="meet-text">${esc(m.summary||"")}</div>`;
+      if(linked.length){
+        body.appendChild(el("div","meet-tasks-title",`Úlohy z tejto porady`));
+        const tl=el("div"); linked.forEach(t=>tl.appendChild(taskRow(t))); body.appendChild(tl);
+      }
+      const foot=el("div","meet-foot");
+      const addT=el("button","btn","+ Pridať úlohu k porade");
+      addT.onclick=()=>openTaskModal({fromMeeting:m.id, fromMeetingTitle:m.title||"Porada", note:""});
+      foot.appendChild(addT);
+      if(["admin","sef"].includes(state.user.role)){
+        const del=el("button","btn","🗑 Zmazať zápis");
+        del.style.cssText="color:var(--red);border-color:#f3c9c4";
+        del.onclick=async()=>{
+          if(!confirm(`Zmazať zápis "${m.title||"Porada"}"?\n\nÚlohy, ktoré z neho vznikli, zostanú zachované.`)) return;
+          await backend.removeMeeting(m.id); toast("Zápis zmazaný.");
+        };
+        foot.appendChild(del);
+      }
+      body.appendChild(foot);
+      card.appendChild(body);
+    }
+    wrap.appendChild(card);
+  });
+  return wrap;
+}
+function fmtMeetDate(d){
+  if(!d) return "";
+  const p=d.split("-"); if(p.length!==3) return d;
+  return `${+p[2]}. ${+p[1]}. ${p[0]}`;
+}
 function viewClientRegistry(){
   const wrap=el("div");
   wrap.appendChild(el("div","page-h",`<div>
@@ -3695,8 +4619,9 @@ async function deleteFromModal(){ if(!editing) return; if(!canEdit(editing)){ to
 let editingTask=null;
 function openTaskModal(task){
   editingTask=task;
-  $("#taskModalTitle").textContent=task?"Upraviť úlohu":"Nová úloha";
-  $("#taskDeleteBtn").style.display=task?"":"none";
+  const isExisting=!!task?.id;
+  $("#taskModalTitle").textContent=isExisting?"Upraviť úlohu":"Nová úloha";
+  $("#taskDeleteBtn").style.display=isExisting?"":"none";
   $("#tTitle").value=task?.title||"";
   $("#tAssignee").value=task?.assignee||"";
   $("#tDue").value=task?.due||new Date(Date.now()+86400e3).toISOString().slice(0,10);
@@ -3710,7 +4635,7 @@ async function saveTaskFromModal(){
   const title=$("#tTitle").value.trim();
   if(!title){ $("#tTitle").focus(); $("#tTitle").style.borderColor="var(--red)"; return; }
   const assignee=$("#tAssignee").value.trim();
-  if(!assignee){ $("#tAssignee").focus(); $("#tAssignee").style.borderColor="var(--red)"; return; }
+  // prázdny zodpovedný je povolený — úlohu si potom niekto prevezme tlačidlom "Prevziať"
   const task={ ...(editingTask||{}),
     title, assignee, due:$("#tDue").value||new Date().toISOString().slice(0,10),
     client:$("#tClient").value.trim(), segment:$("#tSegment").value, note:$("#tNote").value.trim(),
