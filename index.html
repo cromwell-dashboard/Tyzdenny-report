@@ -551,7 +551,6 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .lead-name{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .lead-multi{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--line-2);color:var(--muted)}
 .lead-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:3px}
-.lead-svc{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;white-space:nowrap;letter-spacing:.01em}
 .lead-pill{padding:1px 8px;border-radius:20px;background:var(--line-2)}
 .lead-score{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--ink-soft);width:38px;text-align:right;flex:0 0 auto}
 .lead-right{display:flex;align-items:center;gap:10px;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end}
@@ -940,7 +939,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
       </button>
       <button class="navitem" data-view="leads">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg></span>
-        <span class="lbl">Databázy</span><span class="ct" data-cnt="leads">0</span>
+        <span class="lbl">Leady</span><span class="ct" data-cnt="leads">0</span>
       </button>
 
       <hr>
@@ -1142,7 +1141,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 <div class="scrim" id="leadImportScrim">
   <div class="modal" role="dialog" aria-modal="true" style="max-width:520px">
     <div class="modal-h">
-      <h2>Import databázy</h2>
+      <h2>Import databázy leadov</h2>
       <button class="ghost" id="leadImpClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-b">
@@ -1806,13 +1805,6 @@ async function readLeadFile(file){
 }
 /* Služba, pod ktorú lead patrí. Leady naimportované pred zavedením databáz
    službu nemajú — tie boli všetky Balíky, preto ten fallback. */
-/* Na svetlom podklade (napr. Digitálne služby) musí byť text tmavý, inak nie je čitateľný */
-function contrastText(hex){
-  const h=String(hex||"").replace("#","");
-  if(h.length!==6) return "#fff";
-  const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
-  return (0.299*r+0.587*g+0.114*b)/255 > 0.62 ? "#1A2230" : "#fff";
-}
 const leadService=l=>l.service||"baliky";
 const leadDbName=l=>l.dbName||l.importBatch||"—";
 /* Koľko leadov má daný používateľ práve prevzatých (nezapočítava uzavreté) */
@@ -1820,22 +1812,22 @@ function myTakenLeadsCount(){
   return state.leads.filter(l=>l.ownerKey===state.user.key && !["won","lost"].includes(l.status)).length;
 }
 async function claimLead(l){
-  if(l.ownerKey && l.ownerKey!==state.user.key){ toast("Tento záznam už má prevzatý "+(l.ownerName||"iný kolega")+"."); return; }
+  if(l.ownerKey && l.ownerKey!==state.user.key){ toast("Tento lead už má prevzatý "+(l.ownerName||"iný kolega")+"."); return; }
   if(myTakenLeadsCount()>=LEAD_CAP){
-    toast(`Máš prevzatých ${LEAD_CAP} firiem — to je maximum. Najprv niektorý uzavri alebo uvoľni.`);
+    toast(`Máš prevzatých ${LEAD_CAP} leadov — to je maximum. Najprv niektorý uzavri alebo uvoľni.`);
     return;
   }
   try{
     await backend.saveLead({...l, status:l.status==="new"?"taken":l.status,
       ownerKey:state.user.key, ownerName:state.user.name, takenAt:Date.now(), lastTouchAt:Date.now()});
-    toast("Prevzaté — nájdeš to pod filtrom „Moje“.");
+    toast("Lead prevzatý — nájdeš ho pod filtrom „Moje“.");
   }catch(err){ console.error(err); toast("⚠ Nepodarilo sa prevziať: "+(err.message||err.code||"chyba")); }
 }
 async function releaseLead(l){
-  if(!confirm(`Uvoľniť "${l.company}" späť do banky?\n\nPoznámky zostanú zachované.`)) return;
+  if(!confirm(`Uvoľniť lead "${l.company}" späť do banky?\n\nPoznámky zostanú zachované.`)) return;
   try{
     await backend.saveLead({...l, status:"new", ownerKey:null, ownerName:null, takenAt:null});
-    toast("Uvoľnené späť do banky.");
+    toast("Lead uvoľnený.");
   }catch(err){ console.error(err); toast("⚠ Nepodarilo sa uvoľniť."); }
 }
 async function setLeadStatus(l,status){
@@ -1868,7 +1860,7 @@ function renderLeadModal(){
       <div>
         <div class="lead-hero-name">${esc(l.company)}</div>
         <div class="lead-hero-sub">${esc(seg.label)}${l.ico?` · IČO ${esc(l.ico)}`:""}</div>
-        <div class="lead-hero-sub">${(()=>{const sv=SEG[leadService(l)]; return sv?`<span class="lead-svc" style="background:${sv.color};color:${contrastText(sv.color)}">${esc(sv.name)}</span> `:"";})()}${esc(leadDbName(l))}</div>
+        <div class="lead-hero-sub"><b>${esc(SEG[leadService(l)]?SEG[leadService(l)].name:leadService(l))}</b> · ${esc(leadDbName(l))}</div>
         ${links.length?`<div class="lead-hero-links">${links.map(x=>`<a class="lead-weblink" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>${esc(x.label)}</a>`).join("")}</div>`:""}
       </div>
       <div class="lead-hero-score"><b>${l.score||"—"}</b><span>skóre</span></div>
@@ -1897,7 +1889,7 @@ function renderLeadModal(){
     <div class="lead-sec-title">Poznámky</div>
     <div id="leadNotes" class="lead-notes"></div>
     <div class="lead-note-add">
-      <input id="leadNoteInput" placeholder="${isMine||isFree?"Napíš poznámku k tejto firme…":"Prevzaté — "+esc(l.ownerName||"kolega")}" ${isMine||isFree?"":"disabled"}>
+      <input id="leadNoteInput" placeholder="${isMine||isFree?"Napíš poznámku k tomuto leadu…":"Lead má prevzatý "+esc(l.ownerName||"kolega")}" ${isMine||isFree?"":"disabled"}>
       <button class="btn" id="leadNoteBtn" ${isMine||isFree?"":"disabled"}>Pridať</button>
     </div>`;
 
@@ -1911,7 +1903,7 @@ function renderLeadModal(){
     b.onclick=()=>setLeadStatus(l,k);
     sr.appendChild(b);
   });
-  if(!isMine) sr.appendChild(el("span","lead-hint","Stav môže meniť len ten, kto to má prevzaté."));
+  if(!isMine) sr.appendChild(el("span","lead-hint","Stav môže meniť len ten, kto má lead prevzatý."));
 
   // poznámky
   const nb=$("#leadNotes");
@@ -1934,23 +1926,18 @@ function renderLeadModal(){
     const act=el("button","btn solid","✎ Zapísať aktivitu do reportu");
     act.onclick=()=>{
       $("#leadScrim").classList.remove("open");
-      // Aktivita z leadu patrí do AKTUÁLNEHO týždňa. Dashboard v pondelok–stredu
-      // defaultne ukazuje minulý (uzavretý) týždeň, preto sa najprv prepneme.
-      const switched = state.week!==CURRENT_WEEK;
-      if(switched){ state.week=CURRENT_WEEK; state.suggestions=[]; state.nbCopyPreview=null; }
       openModal(null, leadService(l));
       setTimeout(()=>{
         $("#fClient").value=l.company;
-        $("#fEvents").value=`Z databázy „${leadDbName(l)}“ — `;
+        $("#fEvents").value=`Lead z databázy „${leadDbName(l)}“ — `;
         $("#fEvents").focus();
         if(typeof updateLastWeekHint==="function") updateLastWeekHint();
-        if(switched) toast(`Prepnuté na aktuálny týždeň (${weekRangeLabel(CURRENT_WEEK)}).`);
       },80);
       setLeadStatus(l, l.status==="taken"?"contacted":l.status);
     };
     right.appendChild(act);
   } else if(isFree){
-    const cl=el("button","btn solid","+ Prevziať");
+    const cl=el("button","btn solid","+ Prevziať lead");
     cl.onclick=()=>claimLead(l).then(renderLeadModal);
     right.appendChild(cl);
   } else {
@@ -2019,9 +2006,9 @@ function viewLeads(){
   const wrap=el("div");
   const mine=myTakenLeadsCount();
   wrap.appendChild(el("div","page-h",`<div>
-    <div class="eyebrow">Leady</div>
-    <h1>Databázy</h1>
-    <div class="sub">Prevezmi si firmu, pracuj s ňou a zapíš aktivitu do týždenného reportu. Naraz môžeš mať prevzatých najviac ${LEAD_CAP} firiem.</div></div><div></div>`));
+    <div class="eyebrow">Databáza firiem</div>
+    <h1>Leady</h1>
+    <div class="sub">Prevezmi si firmu, pracuj s ňou a zapíš aktivitu do týždenného reportu. Naraz môžeš mať prevzatých najviac ${LEAD_CAP} leadov.</div></div><div></div>`));
   const actions=el("div","seg-actions");
   const capChip=el("span","lead-cap"+(mine>=LEAD_CAP?" full":""),`Prevzaté: ${mine}/${LEAD_CAP}`);
   actions.appendChild(capChip);
@@ -2033,7 +2020,7 @@ function viewLeads(){
   wrap.querySelector(".page-h").lastElementChild.appendChild(actions);
 
   if(!state.leads.length){
-    wrap.appendChild(el("div","empty",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg><b>Zatiaľ žiadna databáza</b>${["admin","sef"].includes(state.user.role)?"Nahraj databázu tlačidlom „Importovať databázu“ (.xlsx alebo .csv).":"Databázu nahrá admin."}`));
+    wrap.appendChild(el("div","empty",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg><b>Zatiaľ žiadne leady</b>${["admin","sef"].includes(state.user.role)?"Nahraj databázu tlačidlom „Importovať databázu“ (.xlsx alebo .csv).":"Databázu nahrá admin."}`));
     return wrap;
   }
 
@@ -2055,13 +2042,16 @@ function viewLeads(){
     sel.onchange=()=>{ f[key]=sel.value; state.leadLimit=60; paint(); };
     w.appendChild(sel); return w;
   };
-  rowFilters.appendChild(mkSel("Služba:","service",[["","Všetky služby"],...SEGMENTS.map(sg=>[sg.id,sg.name])]));
+  const services=[...new Set(state.leads.map(leadService))];
+  if(services.length>1){
+    rowFilters.appendChild(mkSel("Služba:","service",[["","Všetky služby"],...services.map(sv=>[sv,SEG[sv]?SEG[sv].name:sv])]));
+  }
   const dbs=[...new Set(state.leads.map(leadDbName))].filter(d=>d!=="—").sort((a,b)=>a.localeCompare(b,"sk"));
   if(dbs.length>1){
     rowFilters.appendChild(mkSel("Databáza:","db",[["","Všetky databázy"],...dbs.map(d=>[d,d])]));
   }
   rowFilters.appendChild(mkSel("Vlastník:","owner",[["free","Voľné"],["mine","Moje"],["taken","Obsadené"],["","Všetky"]]));
-  rowFilters.appendChild(mkSel("Priorita:","seg",[["","Všetky (okrem E)"],["A","A — rýchle výhry"],["B","B — key account"],["C","C — objem"],["D","D — nurture"],["E","E — nezaraďovať"]]));
+  rowFilters.appendChild(mkSel("Segment:","seg",[["","Všetky (okrem E)"],["A","A — rýchle výhry"],["B","B — key account"],["C","C — objem"],["D","D — nurture"],["E","E — nezaraďovať"]]));
   rowFilters.appendChild(mkSel("Stav:","status",[["","Všetky"],...Object.entries(LEAD_STATUSES).map(([k,v])=>[k,v.label])]));
   wrap.appendChild(rowFilters);
 
@@ -2111,7 +2101,7 @@ function leadRow(l){
       <div class="lead-meta">
         ${(l.shops||[]).length?`<span>${esc(l.shops[0])}</span>`:""}
         ${l.platform?`<span class="lead-pill">${esc(l.platform)}</span>`:""}
-        ${(()=>{const sv=SEG[leadService(l)]; return sv?`<span class="lead-svc" style="background:${sv.color};color:${contrastText(sv.color)}">${esc(sv.short)}</span>`:"";})()}
+        <span class="lead-pill">${esc(SEG[leadService(l)]?SEG[leadService(l)].short:leadService(l))}</span>
         ${l.parcelsCons?`<span>${fmtNum(l.parcelsCons)} bal/mes</span>`:""}
         ${l.revenue?`<span>obrat ${fmtNum(l.revenue)} €</span>`:""}
       </div>
