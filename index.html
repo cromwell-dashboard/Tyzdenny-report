@@ -885,9 +885,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
   .weeknav .wk small{ font-size:10px }
   .iconbtn{ width:30px; height:30px; border-radius:8px }
   .today-link{ font-size:11px; padding:3px 4px }
-  .weekbar{ gap:6px; flex:1; min-width:0 }
-  .scope-switch{ padding:2px; gap:2px }
-  .scope-switch button{ padding:5px 9px; font-size:11px }
+  /* šípky týždňov musia zostať veľké a modré aj po pravidle vyššie */
+  .weeknav .iconbtn{ width:40px; height:40px; border-radius:10px; border-color:#c9d2f4; background:var(--brand-soft); color:var(--brand) }
+  .weeknav .iconbtn svg{ width:18px; height:18px }
 
   /* ── Shell ──────────────────────────────────────────── */
   .shell{ flex-direction:column; min-height:0 }
@@ -901,7 +901,12 @@ input,select,textarea{font-family:inherit; font-size:14px}
   .page-h{ flex-direction:column; align-items:flex-start; gap:10px; margin-bottom:14px }
   .page-h h1{ font-size:21px }
   .page-h .sub{ font-size:12px }
-  .seg-actions{ gap:8px; flex-wrap:wrap }
+  .seg-actions{ gap:8px; flex-wrap:wrap; width:100% }
+  /* Na mobile netreba tlačidlo "+ Pridať záznam" — je tam plávajúce modré plus */
+  .page-h .seg-actions>.btn.solid{ display:none }
+  /* Logo služby a "Kopírovať záznamy" sa zmestia vedľa seba */
+  .seg-actions .seg-logo-box{ flex:0 0 auto }
+  .seg-actions .copy-prompt-btn{ flex:1 1 auto; justify-content:center; min-width:0 }
   .seg-logo-box{ padding:7px 12px }
   .seg-logo-box img{ height:18px }
   .seg-logo-box img.kolos-logo{ height:13px }
@@ -3378,7 +3383,8 @@ function buildStatic(){
   $("#taskSaveBtn").onclick=saveTaskFromModal; $("#taskDeleteBtn").onclick=deleteTaskFromModal;
 
   // ── MOBILE: FAB ──
-  $("#mobFab").onclick=()=>openModal(null);
+  // Na mobile nahrádza tlačidlo "+ Pridať záznam" — ak sme v službe, predvolí ju
+  $("#mobFab").onclick=()=>openModal(null, state.view==="segment" ? state.segFilter : null);
 
   // ── MOBILE: bottom nav ──
   $("#bottomNav").querySelectorAll(".bn-item[data-view]").forEach(b=>{
