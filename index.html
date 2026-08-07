@@ -119,11 +119,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
   .weeknav .wk{min-width:150px}
   .brand .sub{display:none}
 }
-.mobnav{display:none}
 @media (max-width:900px){
-  .mobnav{display:flex; gap:7px; overflow-x:auto; padding:12px 14px 2px; -webkit-overflow-scrolling:touch}
-  .mobnav button{flex:0 0 auto; padding:7px 13px; border-radius:20px; border:1px solid var(--line); background:#fff; font-size:13px; font-weight:500; color:var(--ink-soft); display:flex; gap:7px; align-items:center}
-  .mobnav button.active{background:var(--ink); color:#fff; border-color:var(--ink)}
 }
 
 /* ============================================================ HEADINGS */
@@ -615,6 +611,8 @@ input,select,textarea{font-family:inherit; font-size:14px}
   .lead-contact{padding:10px 30px 10px 11px}
   .lc-lines{gap:5px 10px}
   .lead-cap{width:100%; justify-content:center}
+  .page-h .seg-actions{width:100%}
+  .page-h .seg-actions .btn{width:100%; justify-content:center}
   /* Pätička detailu — tlačidlá na celú šírku, nech sa dajú pohodlne trafiť */
   #leadModalFoot{flex-direction:column; align-items:stretch; gap:8px}
   #leadModalFoot>div{width:100%}
@@ -860,7 +858,10 @@ input,select,textarea{font-family:inherit; font-size:14px}
   font-size:10px; font-weight:600; padding:6px 4px; cursor:pointer; min-height:44px;
   position:relative;
 }
-.bottom-nav .bn-item svg{ width:22px; height:22px; stroke-width:1.8 }
+.bottom-nav .bn-item{ min-width:0 }
+.bottom-nav .bn-item span{ max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.bottom-nav .bn-item svg{ width:21px; height:21px; stroke-width:1.8; flex:0 0 auto }
+@media (max-width:380px){ .bottom-nav .bn-item{ font-size:9px; padding:6px 2px } .bottom-nav .bn-item svg{ width:19px; height:19px } }
 .bottom-nav .bn-item.active{ color:var(--brand) }
 .bottom-nav .bn-item.active svg{ stroke-width:2.3 }
 .bn-badge{
@@ -971,7 +972,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
     </div>
   </header>
 
-  <div class="mobnav" id="mobnav"></div>
+  <!-- horný pruh nahradila spodná lišta (bottom-nav), aby sa položky neduplikovali -->
 
   <div class="shell">
     <aside class="rail">
@@ -1125,6 +1126,10 @@ input,select,textarea{font-family:inherit; font-size:14px}
   <button class="bn-item" data-view="dashboard">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
     <span>Prehľad</span>
+  </button>
+  <button class="bn-item" data-view="leads">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+    <span>Databázy</span>
   </button>
   <button class="bn-item" data-view="clients">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -2223,7 +2228,7 @@ function viewLeads(){
   const actions=el("div","seg-actions");
   const capChip=el("span","lead-cap"+(mine>=LEAD_CAP?" full":""),`Prevzaté: ${mine}/${LEAD_CAP}`);
   actions.appendChild(capChip);
-  if(["admin","sef"].includes(state.user.role)){
+  if(state.user.role==="admin"){
     const imp=el("button","btn","⬆ Importovať databázu");
     imp.onclick=()=>$("#leadFileInput").click();
     actions.appendChild(imp);
@@ -2231,7 +2236,7 @@ function viewLeads(){
   wrap.querySelector(".page-h").lastElementChild.appendChild(actions);
 
   if(!state.leads.length){
-    wrap.appendChild(el("div","empty",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg><b>Zatiaľ žiadna databáza</b>${["admin","sef"].includes(state.user.role)?"Nahraj databázu tlačidlom „Importovať databázu“ (.xlsx alebo .csv).":"Databázu nahrá admin."}`));
+    wrap.appendChild(el("div","empty",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg><b>Zatiaľ žiadna databáza</b>${state.user.role==="admin"?"Nahraj databázu tlačidlom „Importovať databázu“ (.xlsx alebo .csv).":"Databázu nahrá admin."}`));
     return wrap;
   }
 
@@ -2797,13 +2802,7 @@ function buildStatic(){
     segNav.appendChild(b);
   });
 
-  const mob=$("#mobnav"); mob.innerHTML="";
-  const mk=(view,seg,label,dot)=>{ const b=el("button",null,(dot?`<span style="width:8px;height:8px;border-radius:50%;background:${dot}"></span>`:"")+label); b.dataset.view=view; if(seg)b.dataset.seg=seg; return b; };
-  mob.appendChild(mk("leads",null,"Databázy")); mob.appendChild(mk("clients",null,"Klienti")); mob.appendChild(mk("tasks",null,"Úlohy")); mob.appendChild(mk("mine",null,"Moje"));
-  SEGMENTS.forEach(s=>mob.appendChild(mk("segment",s.id,s.short,s.color)));
-  mob.appendChild(mk("newbusiness",null,"New business","#12915A"));
-
-  document.querySelectorAll(".rail .navitem, .mobnav button").forEach(b=>{
+  document.querySelectorAll(".rail .navitem").forEach(b=>{
     b.onclick=()=>{ state.view=b.dataset.view; if(b.dataset.seg)state.segFilter=b.dataset.seg; state.search=""; state.activeClient=null; render(); };
   });
 
@@ -2901,6 +2900,12 @@ function buildStatic(){
     row.onclick=()=>{ closeSegSheet(); state.view="segment"; state.segFilter=s.id; state.activeClient=null; render(); };
     segSheetList.appendChild(row);
   });
+  {
+    const nb=el("button","seg-sheet-row");
+    nb.innerHTML=`<span class="ss-dot" style="background:var(--nb)"></span><span class="ss-name">New business</span><span class="ss-ct" data-ssct="newbusiness">0</span>`;
+    nb.onclick=()=>{ closeSegSheet(); state.view="newbusiness"; state.activeClient=null; render(); };
+    segSheetList.appendChild(nb);
+  }
   $("#segSheetClose").onclick=closeSegSheet;
   $("#segScrim").onclick=e=>{ if(e.target===$("#segScrim")) closeSegSheet(); };
 }
@@ -2941,7 +2946,6 @@ function render(){
 
   const setActive=(view,seg)=>view===state.view&&(view!=="segment"||seg===state.segFilter);
   document.querySelectorAll(".rail .navitem").forEach(b=>{ const v=b.dataset.view; b.classList.toggle("active", v==="segment"?(state.view==="segment"&&b.dataset.seg===state.segFilter):state.view===v); });
-  document.querySelectorAll(".mobnav button").forEach(b=>{ const v=b.dataset.view; b.classList.toggle("active", v==="segment"?(state.view==="segment"&&b.dataset.seg===state.segFilter):state.view===v); });
 
   // Bottom nav aktívne stavy
   document.querySelectorAll(".bottom-nav .bn-item[data-view]").forEach(b=>{
