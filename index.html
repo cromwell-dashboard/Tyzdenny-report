@@ -117,7 +117,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 @media (max-width:900px){
   .rail{display:none}
   .main{padding:18px 14px 50px}
-  .weeknav .wk{min-width:150px}
+  .weeknav .wk{min-width:0}
   .brand .sub{display:none}
 }
 @media (max-width:900px){
@@ -490,8 +490,6 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .sp-sort{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:14px 0 10px}
 .sp-filter{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-left:auto}
 .sp-filter select{padding:6px 11px;border:1px solid var(--line);border-radius:20px;font-size:12.5px;background:#fff;color:var(--ink-soft);max-width:220px}
-.sp-item.empty .sp-tr{cursor:default;opacity:.5}
-.sp-item.empty .sp-tr:hover{background:none}
 .sp-table{display:flex;flex-direction:column}
 .sp-th,.sp-tr{display:grid;grid-template-columns:minmax(150px,2.2fr) repeat(5,minmax(56px,.75fr)) 76px;align-items:center;gap:10px}
 .sp-th{padding:0 6px 8px;border-bottom:1px solid var(--line)}
@@ -517,11 +515,16 @@ input,select,textarea{font-family:inherit; font-size:14px}
   .sp-seg{font-size:10px;padding:2px 7px}
   .sp-sort{gap:6px;margin:12px 0 8px}
   .sp-th{display:none}
-  .sp-tr{grid-template-columns:1fr 1fr 1fr;gap:8px 12px;padding:12px 8px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
-  .sp-c-name{grid-column:1/-1}
-  .sp-c-num{text-align:left;font-size:13px}
-  .sp-c-num::before{content:attr(data-l);display:block;font-family:"Inter";font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:1px}
-  .sp-c-act{grid-column:1/-1;text-align:left;margin-top:2px}
+  /* Mriežka s piatimi popiskami je na mobile neprehľadná — nahradí ju jeden súhrnný riadok */
+  .sp-c-num{display:none}
+  .sp-inline{display:block;font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+  .sp-inline b{font-family:var(--mono);font-size:13.5px;color:var(--ink)}
+  .i-nb{color:#E07B18;font-weight:600}
+  .i-won{color:var(--nb);font-weight:600}
+    .sp-tr{grid-template-columns:1fr auto;gap:3px 10px;padding:11px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;align-items:center}
+  .sp-c-name{grid-column:1;grid-row:1}
+  .sp-inline{grid-column:1;grid-row:2}
+  .sp-c-act{grid-column:2;grid-row:1/3;text-align:right}
 }
 .scope-switch{display:flex;gap:3px;padding:3px;background:var(--brand-soft);border:1px solid #d3daf6;border-radius:10px;flex:0 0 auto}
 .scope-switch button{padding:6px 15px;border-radius:8px;border:none;background:none;color:var(--brand);font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
@@ -837,7 +840,18 @@ input,select,textarea{font-family:inherit; font-size:14px}
 @media (max-width: 768px){
 
   /* ── Topbar ─────────────────────────────────────────── */
-  .topbar{ height:54px; padding:0 12px; gap:8px }
+  /* Na úzkej obrazovke sa toho do jedného riadku nezmestí — výber týždňa
+     a prepínač dostanú vlastný riadok pod logom a profilom. */
+  .topbar{ height:auto; min-height:54px; padding:8px 12px; gap:8px; flex-wrap:wrap; align-items:center }
+  .brand{ flex:1 1 auto; min-width:0 }
+  .user{ flex:0 0 auto; margin-left:auto }
+  .weekbar{ order:3; width:100%; margin:0; gap:8px; justify-content:space-between; padding-top:2px }
+  .weeknav{ flex:1 1 auto; min-width:0; gap:2px }
+  .weeknav .wk{ min-width:0; flex:1 1 auto; padding:5px 8px }
+  .weeknav .wk b{ font-size:12.5px; white-space:nowrap }
+  .weeknav .wk span{ font-size:10px; white-space:nowrap }
+  .today-link{ display:none }   /* na týždeň sa dá kliknúť priamo */
+  .scope-switch{ flex:0 0 auto }
   .wd-bar{ position:static; padding:10px 12px }
   /* Hotovo lišta na mobile: tlačidlo hore na plnú šírku, mená vedľa seba (zabalené) pod ním */
   .wd-row{ gap:8px }
@@ -1893,7 +1907,6 @@ const state = {
   listScope:"week",        // "week" | "all" — rozsah zoznamu záznamov
   spSort:"name",           // zoradenie prehľadu obchodníkov
   spFilter:"",             // filter prehľadu na konkrétneho obchodníka
-  spHideEmpty:false,       // skryť obchodníkov bez záznamu
   spOpen:null,             // rozbalený obchodník
   nbSegFilter:null,        // predvyplnený filter služby pri vstupe na stránku New Business
   sortBy:"client",         // "client" | "salesperson" — zoradenie zoznamu záznamov
@@ -4133,17 +4146,21 @@ function salespeopleStats(entries){
   return [...map.values()].map(r=>({...r, segs:[...r.segs], clientCount:r.clients.size}));
 }
 function viewSalespeople(entries, scopeLabel){
-  let rows=salespeopleStats(entries);
+  const allRows=salespeopleStats(entries);
+  const registered=allRows.length;
+  // obchodníkov bez jedinej aktivity vôbec nezobrazujeme
+  let rows=allRows.filter(r=>r.total>0);
+  const totalActs=rows.reduce((a,r)=>a+r.total,0);
   const panel=el("div","sp-panel");
   panel.innerHTML=`<div class="sp-head">
       <div>
         <b>Obchodníci</b>
-        <div class="sp-sub">${scopeLabel} · <b>${rows.filter(r=>r.total>0).length}</b> z ${rows.length} ${plural(rows.length,"obchodníka","obchodníkov","obchodníkov")} má záznam</div>
+        <div class="sp-sub">${scopeLabel} · <b>${totalActs}</b> ${plural(totalActs,"aktivita","aktivity","aktivít")} · <b>${rows.length}</b> z ${registered} ${plural(registered,"obchodníka","obchodníkov","obchodníkov")}</div>
       </div>
     </div>`;
 
   if(!rows.length){
-    panel.appendChild(el("div","svc-empty","Za zvolené obdobie zatiaľ nikto nemá záznam."));
+    panel.appendChild(el("div","svc-empty","Za zvolené obdobie zatiaľ nikto nemá aktivitu."));
     return panel;
   }
 
@@ -4155,25 +4172,21 @@ function viewSalespeople(entries, scopeLabel){
     b.onclick=()=>{ state.spSort=id; render(); };
     sortWrap.appendChild(b);
   });
-  // filter na konkrétneho obchodníka + možnosť skryť tých bez záznamu
+  // filter na konkrétneho obchodníka
   const fWrap=el("div","sp-filter");
   fWrap.appendChild(el("span","sort-label","Obchodník:"));
   const fsel=el("select");
   const allOpt=el("option","","Všetci"); allOpt.value=""; fsel.appendChild(allOpt);
-  rows.slice().sort((a,b)=>a.name.localeCompare(b.name,"sk")).forEach(r=>{
-    const o=el("option","",`${r.name}${r.total?` (${r.total})`:" — bez záznamu"}`); o.value=r.name; fsel.appendChild(o);
+  allRows.filter(r=>r.total>0).slice().sort((a,b)=>a.name.localeCompare(b.name,"sk")).forEach(r=>{
+    const o=el("option","",`${r.name} (${r.total})`); o.value=r.name; fsel.appendChild(o);
   });
   fsel.value=state.spFilter||"";
   fsel.onchange=()=>{ state.spFilter=fsel.value; state.spOpen=null; render(); };
   fWrap.appendChild(fsel);
-  const hideEmpty=el("button","sort-btn"+(state.spHideEmpty?" on":""),"Skryť bez záznamu");
-  hideEmpty.onclick=()=>{ state.spHideEmpty=!state.spHideEmpty; render(); };
-  fWrap.appendChild(hideEmpty);
   sortWrap.appendChild(fWrap);
   panel.appendChild(sortWrap);
 
   if(state.spFilter) rows=rows.filter(r=>r.name===state.spFilter);
-  if(state.spHideEmpty) rows=rows.filter(r=>r.total>0);
   if(!rows.length){
     panel.appendChild(el("div","svc-empty","Filtru nevyhovuje žiadny obchodník."));
     return panel;
@@ -4197,7 +4210,7 @@ function viewSalespeople(entries, scopeLabel){
 
   rows.forEach(r=>{
     const open=state.spOpen===r.name;
-    const holder=el("div","sp-item"+(open?" open":"")+(r.total?"":" empty"));
+    const holder=el("div","sp-item"+(open?" open":""));
     const row=el("div","sp-tr");
     row.innerHTML=`
       <span class="sp-c-name">
@@ -4211,8 +4224,8 @@ function viewSalespeople(entries, scopeLabel){
       <span class="sp-c-num" data-l="Customer care">${r.cc||"—"}</span>
       <span class="sp-c-num won" data-l="Potvrdené">${r.won||"—"}</span>
       <span class="sp-c-num" data-l="Klienti">${r.clientCount}</span>
-      <span class="sp-c-act">${r.total?`<span class="sp-chev">${open?"Skryť":"Zobraziť"}</span>`:""}</span>`;
-    if(r.total) row.onclick=()=>{ state.spOpen=open?null:r.name; render(); };
+      <span class="sp-c-act"><span class="sp-chev">${open?"Skryť":"Zobraziť"}</span></span>`;
+    row.onclick=()=>{ state.spOpen=open?null:r.name; render(); };
     holder.appendChild(row);
     if(open){
       const body=el("div","sp-body");
