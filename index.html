@@ -680,6 +680,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .lead-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:3px}
 .lead-svc{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;white-space:nowrap;letter-spacing:.01em}
 .lead-pill{padding:1px 8px;border-radius:20px;background:var(--line-2)}
+.lead-db{display:inline-flex;align-items:center;gap:4px;padding:1px 9px;border-radius:20px;background:#EEF1FD;color:var(--brand);font-weight:600;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lead-db svg{width:10px;height:10px;flex:0 0 auto}
+.lead-vol{font-weight:700;color:var(--ink-soft)}
 .lead-score{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--ink-soft);width:38px;text-align:right;flex:0 0 auto}
 .lead-right{display:flex;align-items:center;gap:10px;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end}
 .lead-status{font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid;white-space:nowrap}
@@ -704,6 +707,8 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .lead-hero-score span{font-size:10.5px;color:var(--muted)}
 .lead-next{background:#FFF8EC;border:1px solid #F3DFB8;border-radius:10px;padding:11px 14px;font-size:12.5px;color:#7A5208;line-height:1.5;margin-bottom:14px}
 .lead-next b{display:block;margin-bottom:3px;color:#5E3F06}
+.lead-note-imp{background:#F7F9FF;border:1px solid #DDE3F5;border-radius:10px;padding:11px 14px;font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px}
+.lead-note-imp b{display:block;margin-bottom:3px;color:var(--brand)}
 .lead-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 18px}
 .lf{display:flex;flex-direction:column;gap:2px;min-width:0}
 .lf span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
@@ -2053,6 +2058,12 @@ const LEAD_COLS = {
   cMobile:["mobil"], cEmail:["e-mail","email"],
   cPerson:["kontaktná osoba","kontaktna osoba"], cRole:["funkcia","pozícia","pozicia"],
   cCallStatus:["stav z call centra"],
+  nace:["odbor podnikania","hlavní nace obor podnikaní","nace","odvetvie"],
+  district:["okres"], legalForm:["právna forma","pravna forma","právní forma"],
+  revenueCat:["obratová kategória","obratova kategoria","obratová kategorie"],
+  letters:["počet listov","pocet listov","listy/mes"],
+  offerEmail:["e-mail na ponuku","email na zaslanie ponuky","e-mail na zaslanie ponuky"],
+  note:["poznámka","poznamka"],
 };
 function leadColIndex(headerRow){
   const norm=h=>normalizeForCompare(String(h??""));
@@ -2118,6 +2129,9 @@ function buildLeadsFromRows(rows, dbName, service){
       carrierCount:maxOf("carrierCount"), employees:maxOf("employees"),
       revenue:maxOf("revenue"), avgOrder:maxOf("avgOrder"),
       nextStep:pick("nextStep"),
+      nace:pick("nace"), district:pick("district"), legalForm:pick("legalForm"),
+      revenueCat:pick("revenueCat"), letters:maxOf("letters"),
+      offerEmail:uniq("offerEmail").join(", "), note:uniq("note").join(" · "),
       contacts:buildImportedContacts(g,idx),
       shopCount:g.length,
       status:"new", ownerKey:null, ownerName:null, takenAt:null, lastTouchAt:null,
@@ -2274,16 +2288,24 @@ function renderLeadModal(){
       <div class="lead-hero-score"><b>${l.score||"—"}</b><span>skóre</span></div>
     </div>
     ${l.nextStep?`<div class="lead-next"><b>Odporúčaný ďalší krok</b>${esc(l.nextStep)}</div>`:""}
+    ${l.note?`<div class="lead-note-imp"><b>Poznámka z telefonátu</b>${esc(l.note)}</div>`:""}
     <div class="lead-grid">
       ${fld("E-shopy",(l.shops||[]).join(" · "))}
       ${urls?`<div class="lf"><span>Web</span><b>${urls}</b></div>`:""}
+      ${fld("Odbor podnikania",l.nace)}
+      ${fld("Okres",l.district)}
+      ${fld("Právna forma",l.legalForm)}
+      ${fld("Obratová kategória",l.revenueCat)}
+      ${l.letters?fld("Listov/mes (z prieskumu)",fmtNum(l.letters)):""}
+      ${fld("E-mail na ponuku",l.offerEmail)}
       ${fld("Platforma",l.platform)}
       ${fld("Integrácia",l.integration)}
       ${fld("Stav napojenia",l.connection)}
       ${fld("Vlna / kampaň",l.wave)}
       ${fld("Funkčný web",l.functional)}
       ${l.parcelsCons?fld("Balíky/mes (konzerv.)",fmtNum(l.parcelsCons)):""}
-      ${l.parcelsEst?fld("Balíky/mes (odhad)",fmtNum(l.parcelsEst)):""}
+      ${!l.parcelsCons&&l.parcelsEst?fld("Balíkov/mes (z prieskumu)",fmtNum(l.parcelsEst)):""}
+      ${l.parcelsCons&&l.parcelsEst?fld("Balíky/mes (odhad)",fmtNum(l.parcelsEst)):""}
       ${l.revenue?fld("Obrat",fmtNum(l.revenue)+" €"):""}
       ${l.employees?fld("Zamestnanci",fmtNum(l.employees)):""}
       ${l.avgOrder?fld("Priem. objednávka",fmtNum(l.avgOrder)+" €"):""}
@@ -2592,8 +2614,19 @@ function leadRow(l){
         ${(l.shops||[]).length?`<span>${esc(l.shops[0])}</span>`:""}
         ${l.platform?`<span class="lead-pill">${esc(l.platform)}</span>`:""}
         ${(()=>{const sv=SEG[leadService(l)]; return sv?`<span class="lead-svc" style="background:${sv.color};color:${contrastText(sv.color)}">${esc(sv.short)}</span>`:"";})()}
-        ${l.parcelsCons?`<span>${fmtNum(l.parcelsCons)} bal/mes</span>`:""}
+        ${leadDbName(l)!=="—"?`<span class="lead-db" title="Databáza: ${esc(leadDbName(l))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>${esc(leadDbName(l))}</span>`:""}
+        ${(()=>{
+          // hlavný údaj podľa služby, druhý ako doplnok (potenciál na cross-sell)
+          const par=l.parcelsCons||l.parcelsEst||0, let_=l.letters||0;
+          const isLetters=leadService(l)==="zelena";
+          const main=isLetters?let_:par, other=isLetters?par:let_;
+          const mLbl=isLetters?"listov/mes":"balíkov/mes", oLbl=isLetters?"balíkov/mes":"listov/mes";
+          return (main?`<span class="lead-vol">${fmtNum(main)} ${mLbl}</span>`:"")
+               + (other?`<span>+ ${fmtNum(other)} ${oLbl}</span>`:"");
+        })()}
+        ${l.district?`<span>${esc(l.district)}</span>`:""}
         ${l.revenue?`<span>obrat ${fmtNum(l.revenue)} €</span>`:""}
+        ${!l.revenue&&l.revenueCat?`<span>${esc(l.revenueCat)}</span>`:""}
       </div>
     </div>
     <div class="lead-score" title="Skóre atraktivity">${l.score||"—"}</div>
