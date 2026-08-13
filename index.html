@@ -1986,6 +1986,7 @@ const state = {
   meetings:[],             // zápisy z porád (Fathom)
   approachInfos:[],        // číselník textov "Oslovenie — info"
   dmisOwners:[],           // register vlastníkov z DMIS (IČO/klient → obchodníci)
+  leadsLoading:false,      // databázy firiem sa načítavajú až na požiadanie
   leads:[],                // databáza leadov (firmy z XLS)
   leadFilter:{seg:"", status:"", owner:"free", q:"", service:"", db:""},
   leadLimit:60,            // koľko sa vykreslí naraz (výkon pri stovkách firiem)
@@ -2165,6 +2166,7 @@ const LEAD_COLS = {
   letters:["počet listov","pocet listov","listy/mes"],
   offerEmail:["e-mail na ponuku","email na zaslanie ponuky","e-mail na zaslanie ponuky"],
   note:["poznámka","poznamka"],
+  taxShare:["podiel z 2 % daní","podiel z 2% dani","suma z 2%","suma z 2 %"],
 };
 function leadColIndex(headerRow){
   const norm=h=>normalizeForCompare(String(h??""));
@@ -2231,7 +2233,7 @@ function buildLeadsFromRows(rows, dbName, service){
       revenue:maxOf("revenue"), avgOrder:maxOf("avgOrder"),
       nextStep:pick("nextStep"),
       nace:pick("nace"), district:pick("district"), legalForm:pick("legalForm"),
-      revenueCat:pick("revenueCat"), letters:maxOf("letters"),
+      revenueCat:pick("revenueCat"), letters:maxOf("letters"), taxShare:maxOf("taxShare"),
       offerEmail:uniq("offerEmail").join(", "), note:uniq("note").join(" · "),
       contacts:buildImportedContacts(g,idx),
       shopCount:g.length,
@@ -2402,6 +2404,7 @@ function renderLeadModal(){
       ${fld("Právna forma",l.legalForm)}
       ${fld("Obratová kategória",l.revenueCat)}
       ${l.letters?fld("Listov/mes (z prieskumu)",fmtNum(l.letters)):""}
+      ${l.taxShare?fld("Podiel z 2 % daní (2021)",fmtNum(l.taxShare)+" €"):""}
       ${fld("E-mail na ponuku",l.offerEmail)}
       ${fld("Platforma",l.platform)}
       ${fld("Integrácia",l.integration)}
@@ -2616,6 +2619,7 @@ async function runLeadImport(){
   }finally{ btn.disabled=false; btn.textContent="Importovať"; }
 }
 function viewLeads(){
+  backend.ensureLeads();
   const wrap=el("div");
   const mine=myTakenLeadsCount();
   wrap.appendChild(el("div","page-h",`<div>
@@ -2639,6 +2643,10 @@ function viewLeads(){
   }
   wrap.querySelector(".page-h").lastElementChild.appendChild(actions);
 
+  if(state.leadsLoading && !state.leads.length){
+    wrap.appendChild(el("div","empty","<b>Načítavam databázy…</b>Chvíľu to potrvá, firiem býva niekoľko tisíc."));
+    return wrap;
+  }
   if(!state.leads.length){
     wrap.appendChild(el("div","empty",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg><b>Zatiaľ žiadna databáza</b>${state.user.role==="admin"?"Nahraj databázu tlačidlom „Importovať databázu“ (.xlsx alebo .csv).":"Databázu nahrá admin."}`));
     return wrap;
@@ -2782,6 +2790,7 @@ function leadRow(l){
         ${l.district?`<span>${esc(l.district)}</span>`:""}
         ${l.revenue?`<span>obrat ${fmtNum(l.revenue)} €</span>`:""}
         ${!l.revenue&&l.revenueCat?`<span>${esc(l.revenueCat)}</span>`:""}
+        ${l.taxShare?`<span class="lead-vol">${fmtNum(l.taxShare)} € z 2 %</span>`:""}
       </div>
     </div>
     <div class="lead-score" title="Skóre atraktivity">${l.score||"—"}</div>
@@ -2843,6 +2852,7 @@ function leadWebLinks(l){
 /* Vyhľadá firmu podľa IČO v už naimportovaných databázach.
    (Napojenie na Finstat sa doplní neskôr — vyžaduje serverovú časť, viď poznámka nižšie.) */
 function lookupCompanyByIco(ico){
+  backend.ensureLeads();
   const clean=String(ico||"").replace(/\D/g,"");
   if(!clean) return null;
   return state.leads.find(l=>String(l.ico||"").replace(/\D/g,"")===clean) || null;
@@ -2987,6 +2997,7 @@ function viewMine(we){
   const wrap=viewList(we.filter(isMine),"Moje záznamy",
     all?"Posledná aktivita pri každom klientovi pod tvojím účtom.":"Záznamy pod tvojím účtom za tento týždeň.",null);
 
+  backend.ensureLeads();
   const taken=state.leads.filter(l=>l.ownerKey===state.user.key && !["won","lost"].includes(l.status));
   if(!taken.length) return wrap;
 
@@ -3162,7 +3173,17 @@ function statusTag(id){ const st=ST[id]||STATUSES[0]; return `<span class="tag" 
 /* ============================================================================
    KLIENTI — agregácia
    ============================================================================ */
+/* clientIndex() prechádza všetky záznamy a volá sa 8× pri každom prekreslení.
+   Výsledok si zapamätáme, kým sa dáta nezmenia — pri tisíckach záznamov je to
+   rozdiel medzi 8 prechodmi a jedným. */
+let _ciCache=null, _ciKey="";
 function clientIndex(){
+  const key=state.all.length+"|"+(state.all.length?(state.all[state.all.length-1].updatedAt||0):0)+"|"+state.hiddenClientNames.length;
+  if(_ciCache && _ciKey===key) return _ciCache;
+  _ciKey=key; _ciCache=clientIndexCompute();
+  return _ciCache;
+}
+function clientIndexCompute(){
   const map=new Map();
   state.all.forEach(e=>{
     const k=clientKey(e.client); if(!k) return;
@@ -3191,7 +3212,7 @@ function demoBackend(){
   let leads=[];
   let approachInfos=[];
   let dmisOwners=[];
-  const sync=()=>{ state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; state.weeklyDone=weeklyDone.map(d=>({...d, entries:[...d.entries]})); state.meetings=meetings.map(m=>({...m})); state.leads=leads.map(l=>({...l})); state.approachInfos=[...approachInfos]; state.dmisOwners=dmisOwners.map(e=>({...e})); render(); };
+  const sync=()=>{ _ciCache=null; state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; state.weeklyDone=weeklyDone.map(d=>({...d, entries:[...d.entries]})); state.meetings=meetings.map(m=>({...m})); state.leads=leads.map(l=>({...l})); state.approachInfos=[...approachInfos]; state.dmisOwners=dmisOwners.map(e=>({...e})); render(); };
   return {
     mode:"demo",
     start(){ sync(); },
@@ -3230,6 +3251,7 @@ function demoBackend(){
       sync(); return m.id;
     },
     async removeMeeting(id){ meetings=meetings.filter(m=>m.id!==id); sync(); },
+    ensureLeads(){},
     async finstatLookup(){ throw new Error("V demo režime Finstat nie je dostupný."); },
     async addApproachInfo(t){ if(!approachInfos.includes(t)) approachInfos.push(t); sync(); },
     async saveDmisOwners(list){ dmisOwners=mergeDmisOwners(dmisOwners,list); sync(); return dmisOwners.length; },
@@ -3262,7 +3284,7 @@ async function firebaseBackend(){
   const improveTextCallable=httpsCallable(fx,"improveText");
   const generateSuggestionsCallable=httpsCallable(fx,"generateSuggestions");
   const finstatCallable=httpsCallable(fx,"finstatLookup");
-  let unsub=null;
+  let unsub=null, leadsUnsub=null;
   async function resolveUser(u){
     const email=(u.email||"").toLowerCase();
     if(!KNOWN_EMAILS.has(email)){
@@ -3307,7 +3329,7 @@ async function firebaseBackend(){
     logout(){ return signOut(auth); },
     start(){
       if(unsub) unsub();
-      const u1=onSnapshot(query(collection(db,"entries")), snap=>{ state.all=snap.docs.map(d=>({id:d.id,comments:[],...d.data()})); render(); });
+      const u1=onSnapshot(query(collection(db,"entries")), snap=>{ state.all=snap.docs.map(d=>({id:d.id,comments:[],...d.data()})); _ciCache=null; render(); });
       const u2=onSnapshot(query(collection(db,"tasks")), snap=>{ state.tasks=snap.docs.map(d=>({id:d.id,...d.data()})); render(); });
       const u3=onSnapshot(doc(db,"meta","hiddenClients"), snap=>{ state.hiddenClientNames=snap.exists()?(snap.data().names||[]):[]; render(); });
       const u7=onSnapshot(doc(db,"meta","approachInfo"), snap=>{ state.approachInfos=snap.exists()?(snap.data().values||[]):[]; render(); });
@@ -3318,10 +3340,9 @@ async function firebaseBackend(){
       const u5=onSnapshot(query(collection(db,"meetings")),
         snap=>{ state.meetings=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
         err=>{ console.error("meetings snapshot error:", err); });
-      const u6=onSnapshot(query(collection(db,"leads")),
-        snap=>{ state.leads=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
-        err=>{ console.error("leads snapshot error:", err); });
-      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u6(); u7(); u8(); };
+      // Databázy firiem sa NENAČÍTAVAJÚ pri štarte — býva ich tisíce a väčšina
+      // používateľov ich vôbec neotvorí. Načítajú sa až pri prvom použití.
+      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); if(leadsUnsub) leadsUnsub(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
@@ -3354,6 +3375,13 @@ async function firebaseBackend(){
       return id;
     },
     async removeMeeting(id){ return deleteDoc(doc(db,"meetings",id)); },
+    ensureLeads(){
+      if(leadsUnsub) return;                    // už načítané alebo sa načítava
+      state.leadsLoading=true;
+      leadsUnsub=onSnapshot(query(collection(db,"leads")),
+        snap=>{ state.leads=snap.docs.map(d=>({id:d.id,...d.data()})); state.leadsLoading=false; render(); },
+        err=>{ console.error("leads snapshot error:", err); state.leadsLoading=false; render(); });
+    },
     async finstatLookup(ico){ const r=await finstatCallable({ico}); return r.data; },
     async addApproachInfo(t){ await setDoc(doc(db,"meta","approachInfo"),{values:arrayUnion(t)},{merge:true}); },
     async saveDmisOwners(list){
@@ -3621,7 +3649,15 @@ function buildStatic(){
 /* ============================================================================
    RENDER
    ============================================================================ */
+/* Odbery z databázy prichádzajú po sebe a každý chcel prekresliť appku zvlášť —
+   pri štarte to bolo až 7 prekreslení. Zlúčime ich do jedného. */
+let _renderPending=false;
 function render(){
+  if(_renderPending) return;
+  _renderPending=true;
+  requestAnimationFrame(()=>{ _renderPending=false; renderNow(); });
+}
+function renderNow(){
   $("#uName").textContent=state.user.name;
   $("#uRole").textContent=state.user.role==="sef"?"Šéf":state.user.role==="admin"?"Admin":state.user.role==="lider"?"Líder":"Obchodník";
   $("#uAvatar").textContent=initials(state.user.name);
@@ -3649,7 +3685,7 @@ function render(){
   const counts={}; SEGMENTS.forEach(s=>counts[s.id]=segmentWeekList(s.id).length);
   counts.newbusiness = we.filter(e=>e.isNewBusiness).length;
   counts.meetings = state.meetings.length;
-  counts.leads = state.leads.filter(l=>l.segment!=="E").length;
+  counts.leads = state.leads.length ? state.leads.filter(l=>l.segment!=="E").length : "";
   document.querySelectorAll("[data-cnt]").forEach(c=>c.textContent=counts[c.dataset.cnt]||0);
   $("#mineCount").textContent=we.filter(isMine).length;
   $("#clientCount").textContent=clientIndex().length;
