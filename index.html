@@ -733,6 +733,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .lead-score{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--ink-soft);width:38px;text-align:right;flex:0 0 auto}
 .lead-right{display:flex;align-items:center;gap:10px;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end}
 .lead-status{font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid;white-space:nowrap}
+.lead-status.dmis{color:#7A5208;border-color:#F0DDB4;background:#FFF6EC;max-width:240px;overflow:hidden;text-overflow:ellipsis}
 .lead-owner{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap}
 .lead-owner .av{width:20px;height:20px;font-size:9px}
 .lead-hero{display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:14px}
@@ -2768,7 +2769,6 @@ function leadRow(l){
         ${(l.shops||[]).length?`<span>${esc(l.shops[0])}</span>`:""}
         ${l.platform?`<span class="lead-pill">${esc(l.platform)}</span>`:""}
         ${(()=>{const sv=SEG[leadService(l)]; return sv?`<span class="lead-svc" style="background:${sv.color};color:${contrastText(sv.color)}">${esc(sv.short)}</span>`:"";})()}
-        ${dmisOwnerBadge(l.ico, l.company)}
         ${leadDbName(l)!=="—"?`<span class="lead-db" title="Databáza: ${esc(leadDbName(l))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>${esc(leadDbName(l))}</span>`:""}
         ${(()=>{
           // hlavný údaj podľa služby, druhý ako doplnok (potenciál na cross-sell)
@@ -2786,7 +2786,16 @@ function leadRow(l){
     </div>
     <div class="lead-score" title="Skóre atraktivity">${l.score||"—"}</div>
     <div class="lead-right">
-      <span class="lead-status" style="color:${st.color};border-color:${st.color}33;background:${st.color}14">${esc(st.label)}</span>
+      ${(()=>{
+        const own=dmisOwnersFor(l.ico,l.company);
+        // Ak firmu nikto neprevzal v appke, ale v DMIS na nej niekto robí,
+        // je zavádzajúce písať "Voľný" — ukážeme radšej vlastníka z DMIS.
+        if(own.length && l.status==="new"){
+          return `<span class="lead-status dmis" title="Podľa DMIS s firmou pracuje: ${esc(own.join(", "))}">Vlastník DMIS · ${esc(own.join(", "))}</span>`;
+        }
+        return `<span class="lead-status" style="color:${st.color};border-color:${st.color}33;background:${st.color}14">${esc(st.label)}</span>`
+             + (own.length?`<span class="lead-status dmis" title="Podľa DMIS: ${esc(own.join(", "))}">DMIS · ${esc(own.join(", "))}</span>`:"");
+      })()}
       ${l.ownerName?`<span class="lead-owner"><span class="av">${initials(l.ownerName)}</span>${esc(l.ownerName)}</span>`:""}
     </div>`;
   const links=leadWebLinks(l);
