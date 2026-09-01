@@ -6231,12 +6231,28 @@ function openModal(entry,presetSeg){
   // Ak sa upravuje existujúci záznam, jeho pôvodná služba ostáva vždy viditeľná.
   const userSegs=(state.user.segments&&state.user.segments.length)?state.user.segments:null;
   const allowedSet=userSegs?new Set(userSegs):null;
-  // Služba zvolená zvonku (napr. zápis z databázy) musí byť vždy dostupná,
-  // aj keď ju obchodník nemá pridelenú — inak by sa Zelená pošta prepísala na Balíky.
-  $("#fSegment").querySelectorAll("input").forEach(i=>{
-    const allowed=!allowedSet||allowedSet.has(i.value)||i.value===entry?.segment||i.value===presetSeg;
-    i.closest("label").style.display=allowed?"":"none";
-  });
+  /* Ktoré služby sú v ponuke:
+     — pri New business VŠETKY, lebo akvizícia sa robí naprieč skupinou
+       (obchodník zo Zelenej pošty môže priniesť príležitosť na Balíky),
+     — pri Customer care len tie, ktoré má obchodník pridelené,
+     — služba zvolená zvonku (zápis z databázy) alebo už uložená v zázname je dostupná vždy. */
+  function applySegVisibility(nb){
+    $("#fSegment").querySelectorAll("input").forEach(i=>{
+      const allowed = nb || !allowedSet || allowedSet.has(i.value)
+                      || i.value===entry?.segment || i.value===presetSeg;
+      i.closest("label").style.display=allowed?"":"none";
+    });
+    // ak sa po prepnutí späť na Customer care stala zvolená služba nedostupnou, vrátime prvú povolenú
+    if(!nb && allowedSet){
+      const cur=$("#fSegment").querySelector("input:checked")?.value;
+      if(cur && !allowedSet.has(cur) && cur!==entry?.segment && cur!==presetSeg){
+        const fb=userSegs[0];
+        $("#fSegment").querySelectorAll("input").forEach(i=>{
+          i.checked=(i.value===fb); i.closest("label").classList.toggle("on", i.checked);
+        });
+      }
+    }
+  }
   let segId=entry?.segment||presetSeg||(state.view==="segment"?state.segFilter:SEGMENTS[0].id);
   if(allowedSet && !allowedSet.has(segId) && segId!==entry?.segment && segId!==presetSeg) segId=userSegs[0];
   $("#fSegment").querySelectorAll("input").forEach(i=>{ i.checked=(i.value===segId); i.closest("label").classList.toggle("on",i.checked); });
@@ -6289,6 +6305,7 @@ function openModal(entry,presetSeg){
     $("#fIcoField").style.display = "";   // IČO je povinné pri každom zázname
     $("#fContactsField").style.display = (canPickKind && nb) ? "" : "none";
     $("#fApproachSection").style.display = (canPickKind && nb) ? "" : "none";
+    applySegVisibility(canPickKind && nb);
     $("#fKind").querySelectorAll("label").forEach(l=>l.classList.toggle("on", l.querySelector("input").checked));
   };
   $("#fKind").querySelectorAll("input").forEach(i=>{ i.onchange=syncKindUI; });
