@@ -6244,7 +6244,10 @@ function openModal(entry,presetSeg){
   // Prepínač vidí admin (testovacia prevádzka) a tiež každý, kto zapisuje aktivitu
   // k firme prevzatej z databázy — tam je New business predvolený, ale dá sa prepnúť.
   const fromLead = !!pendingLeadOrigin;
-  const canPickKind = NB_ENTRY_EMAILS.has((state.user.key||"").toLowerCase()) || fromLead;
+  // Testovacia prevádzka je otvorená pre všetkých — prepínač Customer care / New business
+  // vidí každý. Ak by bolo treba vrátiť to späť len na vybraných ľudí, stačí sem dať:
+  //   NB_ENTRY_EMAILS.has((state.user.key||"").toLowerCase()) || fromLead
+  const canPickKind = true;
   $("#fKindField").style.display = canPickKind ? "" : "none";
   const isNB = fromLead ? true : !!entry?.isNewBusiness;
   $("#fKind").querySelectorAll("input").forEach(i=>{ i.checked = (i.value===(isNB?"nb":"cc")); });
