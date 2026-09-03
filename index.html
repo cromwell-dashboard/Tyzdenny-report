@@ -6296,6 +6296,7 @@ function openModal(entry,presetSeg){
   // pri známych firmách nemusí hľadať a zadáva ho len pri naozaj nových.
   $("#fIco").value = entry?.leadIco || entry?.ico || "";
   // Ak klient IČO už má, pole sa nezobrazí vôbec — zadáva sa len raz, pri prvom zázname.
+  let knownIco="";
   const syncIcoField=()=>{
     const nm=$("#fClient").value;
     const known=knownIcoFor(nm);
@@ -6314,7 +6315,6 @@ function openModal(entry,presetSeg){
   syncIcoField();
   $("#fClient").oninput=syncIcoField;
   $("#fClient").onchange=syncIcoField;
-  let knownIco="";
   pendingFinstat = entry?.companyInfo || null;
   // úloha s termínom — vždy prázdna, pridáva sa k práve ukladanému záznamu
   $("#taskInputWrap").style.display="none";
