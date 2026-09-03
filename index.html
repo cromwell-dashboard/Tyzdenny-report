@@ -503,6 +503,10 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .kindpick label.on{border-color:#E07B18;background:#FFF6EC;color:#B45F0C}
 .kindpick label:first-child.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
 .kindpick input{display:none}
+.ico-known{display:flex;align-items:center;gap:7px;margin:-8px 0 15px;padding:8px 12px;border-radius:9px;
+  background:#EAF7F0;border:1px solid #B7E6CC;color:#0F6B43;font-size:12.5px}
+.ico-known svg{width:14px;height:14px;flex:0 0 auto}
+.ico-known b{font-family:var(--mono)}
 .req{font-size:10px;font-weight:700;color:var(--red);background:#FDF3F2;border-radius:20px;padding:1px 7px;margin-left:6px;letter-spacing:.02em}
 .ico-row{display:flex;gap:8px;align-items:stretch}
 .ico-row .btn{height:42px;white-space:nowrap;padding:0 16px}
@@ -1415,6 +1419,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
         <div class="lw-hint-text" id="lwHintText"></div>
         <button type="button" class="lw-hint-btn" id="lwHintCopy">⧉ Skopírovať text do záznamu</button>
       </div>
+      <div class="ico-known" id="fIcoKnown" style="display:none"></div>
       <div class="field" id="fIcoField" style="display:none">
         <label>IČO firmy <span class="req">povinné</span></label>
         <div class="ico-row">
@@ -3067,6 +3072,15 @@ function leadWebLinks(l){
 }
 /* Vyhľadá firmu podľa IČO v už naimportovaných databázach.
    (Napojenie na Finstat sa doplní neskôr — vyžaduje serverovú časť, viď poznámka nižšie.) */
+/* IČO, ktoré už o klientovi vieme — zo záznamov alebo z databáz firiem.
+   Ak ho poznáme, obchodník ho nemusí zadávať znova a pole sa vôbec nezobrazí. */
+function knownIcoFor(name){
+  const k=clientKey(name); if(!k) return "";
+  const e=state.all.find(x=>clientKey(x.client)===k && (x.leadIco||x.ico));
+  if(e) return String(e.leadIco||e.ico).replace(/\D/g,"");
+  const l=state.leads.find(x=>clientKey(x.company)===k && x.ico);
+  return l?String(l.ico).replace(/\D/g,""):"";
+}
 function lookupCompanyByIco(ico){
   backend.ensureLeads();
   const clean=String(ico||"").replace(/\D/g,"");
@@ -3978,7 +3992,17 @@ function renderNow(){
 
   // datalist klientov
   const dl=$("#clientNames"); const hiddenSet=new Set((state.hiddenClientNames||[]).map(clientKey));
-  dl.innerHTML=[...new Set(state.all.map(e=>e.client))].filter(n=>!hiddenSet.has(clientKey(n))).sort().map(n=>`<option value="${esc(n)}">`).join("");
+  // Ponuka klientov — pri tých, ktorých už poznáme, ukážeme aj IČO,
+  // aby obchodník vybral existujúcu firmu a nezakladal ju druhýkrát pod iným názvom.
+  {
+    const seen=new Map();
+    state.all.forEach(e=>{ const k=clientKey(e.client); if(!k||hiddenSet.has(k)) return;
+      if(!seen.has(k)||(!seen.get(k).ico&&(e.leadIco||e.ico))) seen.set(k,{name:e.client,ico:e.leadIco||e.ico||""}); });
+    state.leads.forEach(l=>{ const k=clientKey(l.company); if(!k||hiddenSet.has(k)||seen.has(k)) return;
+      seen.set(k,{name:l.company,ico:l.ico||""}); });
+    dl.innerHTML=[...seen.values()].sort((a,b)=>a.name.localeCompare(b.name,"sk"))
+      .map(c=>`<option value="${esc(c.name)}">${c.ico?`IČO ${esc(c.ico)}`:"bez IČO"}</option>`).join("");
+  }
 
   const setActive=(view,seg)=>view===state.view&&(view!=="segment"||seg===state.segFilter);
   document.querySelectorAll(".rail .navitem").forEach(b=>{ const v=b.dataset.view; b.classList.toggle("active", v==="segment"?(state.view==="segment"&&b.dataset.seg===state.segFilter):state.view===v); });
@@ -6271,16 +6295,26 @@ function openModal(entry,presetSeg){
   // IČO sa predvyplní z toho, čo o klientovi už vieme — obchodník ho tak
   // pri známych firmách nemusí hľadať a zadáva ho len pri naozaj nových.
   $("#fIco").value = entry?.leadIco || entry?.ico || "";
-  const prefillIco=(name)=>{
-    if($("#fIco").value.trim()) return;
-    const k=clientKey(name); if(!k) return;
-    const known=state.all.find(x=>clientKey(x.client)===k && (x.leadIco||x.ico));
-    if(known){ $("#fIco").value=String(known.leadIco||known.ico); return; }
-    const lead=state.leads.find(l=>clientKey(l.company)===k && l.ico);
-    if(lead) $("#fIco").value=String(lead.ico);
+  // Ak klient IČO už má, pole sa nezobrazí vôbec — zadáva sa len raz, pri prvom zázname.
+  const syncIcoField=()=>{
+    const nm=$("#fClient").value;
+    const known=knownIcoFor(nm);
+    knownIco=known;
+    if(known){
+      $("#fIcoField").style.display="none";
+      $("#fIco").value=known;
+      $("#fIcoKnown").style.display="";
+      $("#fIcoKnown").innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>IČO <b>${esc(known)}</b> — klienta už poznáme`;
+    } else {
+      $("#fIcoField").style.display = nm.trim() ? "" : "none";
+      $("#fIcoKnown").style.display="none";
+      if(!entry) $("#fIco").value="";
+    }
   };
-  prefillIco($("#fClient").value||entry?.client);
-  $("#fClient").oninput=()=>prefillIco($("#fClient").value);
+  syncIcoField();
+  $("#fClient").oninput=syncIcoField;
+  $("#fClient").onchange=syncIcoField;
+  let knownIco="";
   pendingFinstat = entry?.companyInfo || null;
   // úloha s termínom — vždy prázdna, pridáva sa k práve ukladanému záznamu
   $("#taskInputWrap").style.display="none";
@@ -6372,12 +6406,13 @@ function closeModal(){ $("#scrim").classList.remove("open"); editing=null; pendi
 async function saveFromModal(){
   const client=$("#fClient").value.trim();
   if(!client){ $("#fClient").focus(); $("#fClient").style.borderColor="var(--red)"; return; }
-  // IČO je povinné — bez neho sa klient nedá spoľahlivo spárovať s Finstatom ani DMIS-om
-  const icoVal=$("#fIco").value.replace(/\D/g,"");
+  // IČO sa zadáva raz na klienta. Ak ho už poznáme, prevezmeme ho a nepýtame znova.
+  const alreadyKnown=knownIcoFor(client);
+  const icoVal=alreadyKnown || $("#fIco").value.replace(/\D/g,"");
   if(!icoVal){
     $("#fIcoField").style.display="";
     $("#fIco").focus(); $("#fIco").style.borderColor="var(--red)";
-    $("#fIcoHint").innerHTML=`<span class="ico-none">IČO je povinné.</span> Nájdeš ho na webe firmy, vo faktúre alebo na finstat.sk.`;
+    $("#fIcoHint").innerHTML=`<span class="ico-none">Tohto klienta ešte nepoznáme — zadaj IČO.</span> Nájdeš ho na webe firmy, vo faktúre alebo na finstat.sk.`;
     return;
   }
   $("#fIco").style.borderColor="";
