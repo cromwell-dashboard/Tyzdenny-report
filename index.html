@@ -606,6 +606,40 @@ input,select,textarea{font-family:inherit; font-size:14px}
 /* --- Pripomienka úloh na Prehľade --- */
 .urgent-dot{position:absolute;top:6px;right:8px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--red);color:#fff;font-size:9.5px;font-weight:700;display:grid;place-items:center;line-height:1}
 .navitem{position:relative}
+/* --- Kalkulačky: výraznejšie tlačidlo v menu --- */
+.navitem-calc{background:linear-gradient(135deg,#FF9A3C 0%,#E07B18 100%);color:#fff;border:none;margin:4px 0 2px;
+  box-shadow:0 2px 8px rgba(224,123,24,.32)}
+.navitem-calc:hover{background:linear-gradient(135deg,#FFA855 0%,#EE8720 100%)}
+.navitem-calc .ic{color:#fff}
+.navitem-calc .lbl{font-weight:700}
+.navitem-calc .ct{background:rgba(255,255,255,.24);color:#fff}
+.navitem-calc.active{background:linear-gradient(135deg,#E07B18 0%,#C46A10 100%);color:#fff}
+/* --- Stránka Kalkulačky --- */
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.calc-card{position:relative;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:14px;box-shadow:var(--shadow-sm)}
+.calc-card:hover{border-color:#F0C48A}
+.calc-ic{width:40px;height:40px;border-radius:11px;flex:0 0 auto;display:grid;place-items:center;
+  background:linear-gradient(135deg,#FF9A3C 0%,#E07B18 100%);color:#fff}
+.calc-ic svg{width:20px;height:20px}
+.calc-main{flex:1;min-width:0}
+.calc-name{font-size:14px;font-weight:600}
+.calc-note{font-size:11.5px;color:var(--muted);margin-top:2px}
+.calc-url{font-size:10.5px;color:#C08A3C;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.calc-open{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;background:#FFF4E6;
+  border:1px solid #F0C48A;color:#B45F0C;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex:0 0 auto}
+.calc-open:hover{background:#E07B18;border-color:#E07B18;color:#fff}
+.calc-open svg{width:11px;height:11px}
+.calc-acts{position:absolute;top:7px;right:7px;display:flex;gap:3px;opacity:0;transition:opacity .12s}
+.calc-card:hover .calc-acts{opacity:1}
+.calc-acts .ghost{width:24px;height:24px;border-radius:6px}
+.calc-acts .ghost svg{width:12px;height:12px}
+@media (max-width:640px){
+  .calc-grid{grid-template-columns:1fr}
+  .calc-card{flex-wrap:wrap}
+  .calc-open{width:100%;justify-content:center}
+  .calc-acts{opacity:1;position:static;margin-left:auto}
+}
 .rem-box{background:#FFF8EC;border:1.5px solid #F0DDB4;border-radius:var(--r);padding:14px 16px;margin-bottom:18px}
 .rem-box.overdue{background:#FDF3F2;border-color:#F3C9C4}
 .rem-head{display:flex;align-items:center;gap:9px;margin-bottom:11px;color:#7A5208}
@@ -1346,6 +1380,11 @@ input,select,textarea{font-family:inherit; font-size:14px}
         <span class="lbl">Databázy</span><span class="ct" data-cnt="leads">0</span>
       </button>
 
+      <button class="navitem navitem-calc" data-view="calculators">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="8" y1="18" x2="12" y2="18"/></svg></span>
+        <span class="lbl">Kalkulačky</span><span class="ct" data-cnt="calculators">0</span>
+      </button>
+
       <hr>
       <div class="grp">Služby</div>
       <div id="segNav"></div>
@@ -1767,6 +1806,7 @@ const OBCHODNIK_EMAILS = {
   "veronika.bajusova@cromwell.sk":     { name:"Veronika Bajúsová",    firma:"Cromwell Post", segments:["ad"] },
   "zuzana.davidova@cromwell.sk":       { name:"Zuzana Dávidová",      firma:"Cromwell Post", segments:["nad","zelena"] },
   "ladislav.krammer@cromwell.sk":      { name:"Ladislav Krammer",    firma:"Cromwell Post", segments:[] },
+  "linda.husarovicova@cromwell.sk":    { name:"Linda Husárovičová",  firma:"Cromwell Post", segments:[] },
   "zuzana.kovalcikova@zelenaposta.sk": { name:"Zuzana Kovalčíková",   firma:"Zelená pošta",  segments:["zelena"] },
   "zuzana.dvorakova@zelenaposta.sk":   { name:"Zuzana Dvořáková",     firma:"Zelená pošta",  segments:["zelena"] },
   "henrieta.kriskova@zelenaposta.sk":  { name:"Henrieta Krišková",    firma:"Zelená pošta",  segments:["zelena"] },
@@ -2143,6 +2183,7 @@ const state = {
   meetings:[],             // zápisy z porád (Fathom)
   approachInfos:[],        // číselník textov "Oslovenie — info"
   dmisOwners:[],           // register vlastníkov z DMIS (IČO/klient → obchodníci)
+  calculators:[],          // odkazy na kalkulačky (spravuje admin)
   leadsLoading:false,      // databázy firiem sa načítavajú až na požiadanie
   leads:[],                // databáza leadov (firmy z XLS)
   leadFilter:{seg:"", status:"", owner:"free", q:"", service:"", db:""},
@@ -3464,7 +3505,8 @@ function demoBackend(){
   let leads=[];
   let approachInfos=[];
   let dmisOwners=[];
-  const sync=()=>{ _ciCache=null; state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; state.weeklyDone=weeklyDone.map(d=>({...d, entries:[...d.entries]})); state.meetings=meetings.map(m=>({...m})); state.leads=leads.map(l=>({...l})); state.approachInfos=[...approachInfos]; state.dmisOwners=dmisOwners.map(e=>({...e})); render(); };
+  let calculators=[];
+  const sync=()=>{ _ciCache=null; state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; state.weeklyDone=weeklyDone.map(d=>({...d, entries:[...d.entries]})); state.meetings=meetings.map(m=>({...m})); state.leads=leads.map(l=>({...l})); state.approachInfos=[...approachInfos]; state.dmisOwners=dmisOwners.map(e=>({...e})); state.calculators=calculators.map(c=>({...c})); render(); };
   return {
     mode:"demo",
     start(){ sync(); },
@@ -3507,6 +3549,7 @@ function demoBackend(){
     async finstatLookup(){ throw new Error("V demo režime Finstat nie je dostupný."); },
     async addApproachInfo(t){ if(!approachInfos.includes(t)) approachInfos.push(t); sync(); },
     async saveDmisOwners(list){ dmisOwners=mergeDmisOwners(dmisOwners,list); sync(); return dmisOwners.length; },
+    async saveCalculators(list){ calculators=list.map(c=>({...c})); sync(); },
     async releaseDmisOwner(ico,client,owner){
       dmisOwners=dmisOwners.map(e=>{
         const match = ico ? e.ico===icoKey(ico) : clientKey(e.name)===clientKey(client);
@@ -3595,6 +3638,7 @@ async function firebaseBackend(){
       const u3=onSnapshot(doc(db,"meta","hiddenClients"), snap=>{ state.hiddenClientNames=snap.exists()?(snap.data().names||[]):[]; render(); });
       const u7=onSnapshot(doc(db,"meta","approachInfo"), snap=>{ state.approachInfos=snap.exists()?(snap.data().values||[]):[]; render(); });
       const u8=onSnapshot(doc(db,"meta","dmisOwners"), snap=>{ state.dmisOwners=snap.exists()?(snap.data().entries||[]):[]; render(); });
+      const u9=onSnapshot(doc(db,"meta","calculators"), snap=>{ state.calculators=snap.exists()?(snap.data().items||[]):[]; render(); });
       const u4=onSnapshot(query(collection(db,"weeklyDone")),
         snap=>{ state.weeklyDone=snap.docs.map(d=>({id:d.id,entries:[],...d.data()})); render(); },
         err=>{ console.error("weeklyDone snapshot error:", err); toast("⚠ Chyba pri načítaní \"Hotovo\": "+(err.message||err.code||err)); });
@@ -3603,7 +3647,7 @@ async function firebaseBackend(){
         err=>{ console.error("meetings snapshot error:", err); });
       // Databázy firiem sa NENAČÍTAVAJÚ pri štarte — býva ich tisíce a väčšina
       // používateľov ich vôbec neotvorí. Načítajú sa až pri prvom použití.
-      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); if(leadsUnsub) leadsUnsub(); };
+      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); if(leadsUnsub) leadsUnsub(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
@@ -3649,6 +3693,9 @@ async function firebaseBackend(){
       const merged=mergeDmisOwners(state.dmisOwners,list);
       await setDoc(doc(db,"meta","dmisOwners"),{entries:merged,updatedAt:Date.now()},{merge:true});
       return merged.length;
+    },
+    async saveCalculators(list){
+      await setDoc(doc(db,"meta","calculators"),{items:list,updatedAt:Date.now()},{merge:true});
     },
     async releaseDmisOwner(ico,client,owner){
       const next=(state.dmisOwners||[]).map(e=>{
@@ -3925,6 +3972,12 @@ function buildStatic(){
     segSheetList.appendChild(row);
   });
   {
+    const cal=el("button","seg-sheet-row");
+    cal.innerHTML=`<span class="ss-dot" style="background:#E07B18"></span><span class="ss-name">Kalkulačky</span><span class="ss-ct" data-ssct="calculators">0</span>`;
+    cal.onclick=()=>{ closeSegSheet(); state.view="calculators"; state.activeClient=null; render(); };
+    segSheetList.appendChild(cal);
+  }
+  {
     const nb=el("button","seg-sheet-row");
     nb.innerHTML=`${nbIcon(17)}<span class="ss-name">New business</span><span class="ss-ct" data-ssct="newbusiness">0</span>`;
     nb.onclick=()=>{ closeSegSheet(); state.view="newbusiness"; state.activeClient=null; render(); };
@@ -3974,6 +4027,7 @@ function renderNow(){
   counts.newbusiness = we.filter(e=>e.isNewBusiness).length;
   counts.meetings = state.meetings.length;
   counts.leads = state.leads.length ? state.leads.filter(l=>l.segment!=="E").length : "";
+  counts.calculators = state.calculators.length;
   document.querySelectorAll("[data-cnt]").forEach(c=>c.textContent=counts[c.dataset.cnt]||0);
   $("#mineCount").textContent=we.filter(isMine).length;
   $("#clientCount").textContent=clientIndex().length;
@@ -4033,6 +4087,7 @@ function renderNow(){
   else if(state.view==="services") c.appendChild(viewServicesList());
   else if(state.view==="newbusiness") c.appendChild(viewNewBusiness());
   else if(state.view==="segment") c.appendChild(viewSegment());
+  else if(state.view==="calculators") c.appendChild(viewCalculators());
   else if(state.view==="leads") c.appendChild(viewLeads());
   else if(state.view==="meetings") c.appendChild(viewMeetings());
   else if(state.view==="clientRegistry") c.appendChild(viewClientRegistry());
@@ -5029,6 +5084,94 @@ function viewDashboard(){
 }
 
 /* ---------------------------------------------------------------- CLIENTS */
+/* ---------------------------------------------------------------- KALKULAČKY
+   Odkazy na externé nástroje. Spravuje ich admin, ostatní ich len otvárajú. */
+function viewCalculators(){
+  const wrap=el("div");
+  const isAdmin=state.user.role==="admin";
+  const items=state.calculators||[];
+  wrap.appendChild(el("div","page-h",`<div>
+    <div class="eyebrow">Nástroje</div>
+    <h1>Kalkulačky</h1>
+    <div class="sub">Rýchly prístup k cenníkom a kalkulačkám.${isAdmin?" Odkazy pridávaš a upravuješ ty.":""}</div></div><div></div>`));
+  if(isAdmin){
+    const add=el("button","btn solid","+ Pridať odkaz");
+    add.onclick=()=>openCalcModal(null);
+    wrap.querySelector(".page-h").lastElementChild.appendChild(add);
+  }
+
+  if(!items.length){
+    wrap.appendChild(el("div","empty",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/></svg><b>Zatiaľ žiadne kalkulačky</b>${isAdmin?"Pridaj prvý odkaz tlačidlom vyššie.":"Odkazy sem doplní admin."}`));
+    return wrap;
+  }
+
+  const grid=el("div","calc-grid");
+  items.forEach((c,i)=>{
+    const card=el("div","calc-card");
+    card.innerHTML=`<div class="calc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="16" y1="14" x2="16" y2="18"/></svg></div>
+      <div class="calc-main">
+        <div class="calc-name">${esc(c.name||"Bez názvu")}</div>
+        ${c.note?`<div class="calc-note">${esc(c.note)}</div>`:""}
+        <div class="calc-url">${esc(String(c.url||"").replace(/^https?:\/\//,"").slice(0,52))}</div>
+      </div>`;
+    const open=el("a","calc-open"); open.href=c.url||"#"; open.target="_blank"; open.rel="noopener noreferrer";
+    open.innerHTML=`Otvoriť <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>`;
+    card.appendChild(open);
+    if(isAdmin){
+      const acts=el("div","calc-acts");
+      const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
+      ed.title="Upraviť"; ed.onclick=()=>openCalcModal(i);
+      const del=el("button","ghost del-btn",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>`);
+      del.title="Odstrániť";
+      del.onclick=async()=>{
+        if(!confirm(`Odstrániť odkaz „${c.name}“?`)) return;
+        try{ await backend.saveCalculators(items.filter((_,j)=>j!==i)); toast("Odkaz odstránený."); }
+        catch(err){ console.error(err); toast("⚠ Nepodarilo sa odstrániť."); }
+      };
+      acts.appendChild(ed); acts.appendChild(del); card.appendChild(acts);
+    }
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid);
+  return wrap;
+}
+function openCalcModal(idx){
+  const items=state.calculators||[];
+  const cur = idx!==null && idx!==undefined ? items[idx] : null;
+  const scrim=el("div","scrim open"); scrim.style.zIndex="90";
+  scrim.innerHTML=`<div class="modal" style="max-width:460px">
+    <div class="modal-h"><h2>${cur?"Upraviť odkaz":"Nový odkaz"}</h2></div>
+    <div class="modal-b">
+      <div class="field"><label>Názov <span class="req">povinné</span></label>
+        <input id="calcName" placeholder="napr. Kalkulačka Balíky KOLOS" value="${esc(cur?.name||"")}"></div>
+      <div class="field"><label>Odkaz (URL) <span class="req">povinné</span></label>
+        <input id="calcUrl" placeholder="https://…" value="${esc(cur?.url||"")}"></div>
+      <div class="field"><label>Krátky popis (nepovinné)</label>
+        <input id="calcNote" placeholder="napr. pre cenové ponuky nad 500 balíkov" value="${esc(cur?.note||"")}"></div>
+    </div>
+    <div class="modal-f" style="justify-content:flex-end">
+      <button class="btn" data-act="cancel">Zrušiť</button>
+      <button class="btn solid" data-act="save">Uložiť</button>
+    </div>
+  </div>`;
+  const close=()=>scrim.remove();
+  scrim.querySelector('[data-act="cancel"]').onclick=close;
+  scrim.onclick=e=>{ if(e.target===scrim) close(); };
+  scrim.querySelector('[data-act="save"]').onclick=async()=>{
+    const name=scrim.querySelector("#calcName").value.trim();
+    let url=scrim.querySelector("#calcUrl").value.trim();
+    const note=scrim.querySelector("#calcNote").value.trim();
+    if(!name){ scrim.querySelector("#calcName").focus(); toast("Zadaj názov."); return; }
+    if(!url){ scrim.querySelector("#calcUrl").focus(); toast("Zadaj odkaz."); return; }
+    if(!/^https?:\/\//i.test(url)) url="https://"+url;
+    const next=[...items];
+    if(cur) next[idx]={...cur,name,url,note}; else next.push({name,url,note});
+    try{ await backend.saveCalculators(next); close(); toast(cur?"Odkaz upravený.":"Odkaz pridaný."); }
+    catch(err){ console.error(err); toast("⚠ Nepodarilo sa uložiť."); }
+  };
+  document.body.appendChild(scrim);
+  setTimeout(()=>scrim.querySelector("#calcName").focus(),40);
+}
 function viewClients(){
   const wrap=el("div");
   const f=state.clientFilter;
