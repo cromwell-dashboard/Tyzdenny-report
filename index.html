@@ -514,6 +514,20 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .ico-row .btn{white-space:nowrap}
 .ico-ok{color:var(--nb);font-weight:700}
 .ico-none{color:#B45F0C;font-weight:600}
+/* --- Živý tok aktivít na Prehľade --- */
+.feed-title{font-size:15px;font-weight:700;margin:26px 0 12px}
+.feed-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.feed-search{flex:1;min-width:200px;margin:0}
+.feed-count{font-size:12px;color:var(--muted);margin-bottom:11px}
+.feed-list{display:flex;flex-direction:column;gap:9px}
+@media (max-width:768px){
+  .feed-panel{padding:14px 13px}
+  .feed-bar{gap:9px}
+  .feed-bar .lf-seg{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}
+  .feed-bar .lf-seg button{padding:7px 4px;text-align:center}
+  .feed-bar .lf-sel{width:100%}
+  .feed-bar .lf-sel select{flex:1;max-width:none}
+}
 /* --- Prehľad po obchodníkoch --- */
 .sp-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm);padding:18px 20px;margin-bottom:18px}
 .sp-head b{font-size:15px}
@@ -619,6 +633,18 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .calc-card{position:relative;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
   border-radius:14px;padding:14px;box-shadow:var(--shadow-sm)}
 .calc-card:hover{border-color:#F0C48A}
+.calc-logo{width:64px;height:40px;flex:0 0 auto;display:grid;place-items:center;background:#fff;
+  border:1px solid var(--line);border-radius:10px;padding:5px}
+.calc-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.calc-brand{font-size:10.5px;font-weight:700;color:#B45F0C;margin-top:1px}
+.calc-brands{display:flex;flex-wrap:wrap;gap:7px}
+.calc-brands .cb{display:grid;place-items:center;min-width:74px;height:42px;padding:5px 9px;border:1.5px solid var(--line);
+  border-radius:10px;background:#fff;cursor:pointer}
+.calc-brands .cb:hover{border-color:#F0C48A}
+.calc-brands .cb.on{border-color:#E07B18;background:#FFF4E6;box-shadow:0 0 0 2px rgba(224,123,24,.12)}
+.calc-brands .cb img{max-width:100%;max-height:26px;object-fit:contain}
+.calc-brands .cb span{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+.calc-brands input{display:none}
 .calc-ic{width:40px;height:40px;border-radius:11px;flex:0 0 auto;display:grid;place-items:center;
   background:linear-gradient(135deg,#FF9A3C 0%,#E07B18 100%);color:#fff}
 .calc-ic svg{width:20px;height:20px}
@@ -2150,7 +2176,7 @@ function demoTasks(){
    STAV
    ============================================================================ */
 const state = {
-  view:"services",         // default: prehľad služieb (nič nezvýhodňuje jednu službu pred inou)
+  view:"services",         // default: Služby — zoznam aktivít naprieč všetkými službami
   week:DEFAULT_WEEK,       // default: Po–Št predchádzajúci týždeň, Pi–Ne aktuálny týždeň
   user:null,
   all:[],
@@ -2169,6 +2195,10 @@ const state = {
   spSort:"name",           // zoradenie prehľadu obchodníkov
   spFilter:"",             // filter prehľadu na konkrétneho obchodníka
   spOpen:null,             // rozbalený obchodník
+  feedSort:"new",          // "new" | "client" | "owner" — zoradenie toku aktivít
+  feedOwner:"",            // filter toku na obchodníka
+  feedLimit:20,            // koľko aktivít sa vykreslí naraz
+  feedQ:"",                // hľadanie v toku aktivít
   clientFilter:{q:"",ico:"",type:"",seg:"",owner:"",dmis:"",approach:"",info:"",db:""},
   openColFilter:null,      // ktorý stĺpec má rozbalený filter
   icoFixLimit:25,          // koľko klientov bez IČO sa zobrazí naraz
@@ -4012,7 +4042,7 @@ function renderNow(){
   // week nav je relevantný len pre prehľad / službu / moje
   // Prepínač rozsahu v hornej lište — má zmysel len pri konkrétnej službe
   const sw=$("#scopeSwitch");
-  const scopeViews=["dashboard","segment","newbusiness","mine"];
+  const scopeViews=["services","segment","newbusiness","mine"];
   sw.style.display = scopeViews.includes(state.view) ? "" : "none";
   sw.querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.scope===state.listScope));
 
@@ -4997,6 +5027,70 @@ function taskReminder(){
   box.appendChild(go);
   return box;
 }
+/* ---------------------------------------------------------------- ŽIVÝ TOK AKTIVÍT
+   Všetky aktivity naprieč službami, najnovšie hore. Ukazuje, ako práca pribúda. */
+function activityFeed(entries){
+  const panel=el("div");
+  const names=[...new Set(entries.map(e=>resolveOwnerName(e)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"sk"));
+
+  const bar=el("div","lf-box feed-bar");
+  const sortWrap=el("div","lf-seg");
+  [["new","Najnovšie"],["client","Podľa klienta"],["owner","Podľa obchodníka"]].forEach(([id,label])=>{
+    const b=el("button",null,label); b.type="button";
+    b.className=(state.feedSort===id?"on":"");
+    b.onclick=()=>{ state.feedSort=id; state.feedLimit=20; render(); };
+    sortWrap.appendChild(b);
+  });
+  bar.appendChild(el("span","lf-lbl","Zoradiť"));
+  bar.appendChild(sortWrap);
+  const srch=el("div","search feed-search",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
+  const si=el("input"); si.placeholder="Hľadať klienta alebo text…"; si.value=state.feedQ||"";
+  si.oninput=()=>{ state.feedQ=si.value; state.feedLimit=20; render(); };
+  srch.appendChild(si); bar.appendChild(srch);
+
+  if(names.length>1){
+    const w=el("div","lf-sel");
+    w.appendChild(el("span","lf-lbl","Obchodník"));
+    const sel=el("select");
+    const o0=el("option","",`Všetci (${entries.length})`); o0.value=""; sel.appendChild(o0);
+    names.forEach(n=>{ const cnt=entries.filter(e=>resolveOwnerName(e)===n).length;
+      const o=el("option","",`${n} (${cnt})`); o.value=n; sel.appendChild(o); });
+    sel.value=state.feedOwner||"";
+    sel.onchange=()=>{ state.feedOwner=sel.value; state.feedLimit=20; render(); };
+    w.appendChild(sel); bar.appendChild(w);
+  } else if(state.feedOwner) state.feedOwner="";
+  panel.appendChild(bar);
+
+  let rows=entries.slice();
+  if(state.feedOwner) rows=rows.filter(e=>resolveOwnerName(e)===state.feedOwner);
+  const q=(state.feedQ||"").trim().toLowerCase();
+  if(q) rows=rows.filter(e=>(e.client||"").toLowerCase().includes(q)||(e.events||"").toLowerCase().includes(q)||resolveOwnerName(e).toLowerCase().includes(q));
+  const ts=e=>e.updatedAt||e.nbImportedAt||0;
+  if(state.feedSort==="client")      rows.sort((a,b)=>(a.client||"").localeCompare(b.client||"","sk")||ts(b)-ts(a));
+  else if(state.feedSort==="owner")  rows.sort((a,b)=>resolveOwnerName(a).localeCompare(resolveOwnerName(b),"sk")||ts(b)-ts(a));
+  else                               rows.sort((a,b)=>ts(b)-ts(a));   // najnovšie hore
+
+  const cnt=el("div","feed-count",`${rows.length} ${plural(rows.length,"aktivita","aktivity","aktivít")}`);
+  panel.appendChild(cnt);
+
+  if(!rows.length){
+    panel.appendChild(el("div","svc-empty","Za zvolené obdobie tu zatiaľ nie sú žiadne aktivity."));
+    return panel;
+  }
+
+  const list=el("div","feed-list");
+  const clients=clientIndex();
+  const limit=state.feedLimit||20;
+  rows.slice(0,limit).forEach(e=>list.appendChild(entryCard(e,clients,{showSegChip:true})));
+  panel.appendChild(list);
+  if(rows.length>limit){
+    const more=el("button","btn",`Zobraziť ďalších ${Math.min(20,rows.length-limit)} z ${rows.length-limit}`);
+    more.style.cssText="display:block;margin:12px auto 0";
+    more.onclick=()=>{ state.feedLimit=limit+20; render(); };
+    panel.appendChild(more);
+  }
+  return panel;
+}
 function viewDashboard(){
   const wrap=el("div");
 
@@ -5084,6 +5178,14 @@ function viewDashboard(){
 }
 
 /* ---------------------------------------------------------------- CLIENTS */
+/* Firmy skupiny — pre priradenie loga ku kalkulačke */
+const CALC_BRANDS = [
+  { key:"post",    name:"Cromwell Post",   logo:"post"    },
+  { key:"kolos",   name:"KOLOS",           logo:"kolos"   },
+  { key:"zelena",  name:"Zelená pošta",    logo:"zelena"  },
+  { key:"digital", name:"Digitance",       logo:"digital" },
+  { key:"print",   name:"Cromwell Print",  logo:"print"   },
+];
 /* ---------------------------------------------------------------- KALKULAČKY
    Odkazy na externé nástroje. Spravuje ich admin, ostatní ich len otvárajú. */
 function viewCalculators(){
@@ -5108,9 +5210,13 @@ function viewCalculators(){
   const grid=el("div","calc-grid");
   items.forEach((c,i)=>{
     const card=el("div","calc-card");
-    card.innerHTML=`<div class="calc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="16" y1="14" x2="16" y2="18"/></svg></div>
+    const brand=CALC_BRANDS.find(b=>b.key===c.brand);
+    card.innerHTML=`${brand&&LOGOS[brand.logo]
+      ? `<div class="calc-logo"><img src="${LOGOS[brand.logo]}" alt="${esc(brand.name)}"></div>`
+      : `<div class="calc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="16" y1="14" x2="16" y2="18"/></svg></div>`}
       <div class="calc-main">
         <div class="calc-name">${esc(c.name||"Bez názvu")}</div>
+        ${brand?`<div class="calc-brand">${esc(brand.name)}</div>`:""}
         ${c.note?`<div class="calc-note">${esc(c.note)}</div>`:""}
         <div class="calc-url">${esc(String(c.url||"").replace(/^https?:\/\//,"").slice(0,52))}</div>
       </div>`;
@@ -5146,6 +5252,11 @@ function openCalcModal(idx){
         <input id="calcName" placeholder="napr. Kalkulačka Balíky KOLOS" value="${esc(cur?.name||"")}"></div>
       <div class="field"><label>Odkaz (URL) <span class="req">povinné</span></label>
         <input id="calcUrl" placeholder="https://…" value="${esc(cur?.url||"")}"></div>
+      <div class="field"><label>Firma (nepovinné)</label>
+        <div class="calc-brands" id="calcBrands">
+          <label class="cb${!cur?.brand?" on":""}"><input type="radio" name="calcbrand" value=""><span>Bez loga</span></label>
+          ${CALC_BRANDS.map(b=>`<label class="cb${cur?.brand===b.key?" on":""}"><input type="radio" name="calcbrand" value="${b.key}">${LOGOS[b.logo]?`<img src="${LOGOS[b.logo]}" alt="${esc(b.name)}">`:`<span>${esc(b.name)}</span>`}</label>`).join("")}
+        </div></div>
       <div class="field"><label>Krátky popis (nepovinné)</label>
         <input id="calcNote" placeholder="napr. pre cenové ponuky nad 500 balíkov" value="${esc(cur?.note||"")}"></div>
     </div>
@@ -5164,11 +5275,16 @@ function openCalcModal(idx){
     if(!name){ scrim.querySelector("#calcName").focus(); toast("Zadaj názov."); return; }
     if(!url){ scrim.querySelector("#calcUrl").focus(); toast("Zadaj odkaz."); return; }
     if(!/^https?:\/\//i.test(url)) url="https://"+url;
+    const brand=scrim.querySelector('input[name="calcbrand"]:checked')?.value||"";
     const next=[...items];
-    if(cur) next[idx]={...cur,name,url,note}; else next.push({name,url,note});
+    if(cur) next[idx]={...cur,name,url,note,brand}; else next.push({name,url,note,brand});
     try{ await backend.saveCalculators(next); close(); toast(cur?"Odkaz upravený.":"Odkaz pridaný."); }
     catch(err){ console.error(err); toast("⚠ Nepodarilo sa uložiť."); }
   };
+  scrim.querySelectorAll('#calcBrands input').forEach(i=>{
+    i.checked = (i.value===(cur?.brand||""));
+    i.onchange=()=>scrim.querySelectorAll("#calcBrands .cb").forEach(l=>l.classList.toggle("on", l.querySelector("input").checked));
+  });
   document.body.appendChild(scrim);
   setTimeout(()=>scrim.querySelector("#calcName").focus(),40);
 }
@@ -5481,52 +5597,18 @@ function viewNewBusiness(){
 function viewServicesList(){
   const wrap=el("div");
   wrap.appendChild(el("div","page-h",`<div>
-    <div class="eyebrow">${esc(weekRangeLabel(state.week))}</div>
+    <div class="eyebrow">${state.listScope==="all"?"Všetky týždne":esc(weekRangeLabel(state.week))}</div>
     <h1>Služby</h1>
-    <div class="sub">Vyber službu a pozri jej záznamy za tento týždeň.</div></div>`));
+    <div class="sub">Všetky aktivity naprieč službami, najnovšie hore. Konkrétnu službu si vyberieš v menu vľavo.</div></div>`));
 
   const we=weekEntries();
-  const list=el("div","svclist");
 
-  const nbTotal=we.filter(e=>e.isNewBusiness).length;
-  const nbCard=el("div","svclist-row nb-row nb-card");
-  const nbHead=el("button","nb-card-head");
-  nbHead.innerHTML=`${nbIcon(15)}
-    <span class="svclist-body">
-      <span class="svclist-name">✦ New business</span>
-      <span class="svclist-meta">${nbTotal} ${plural(nbTotal,"záznam","záznamy","záznamov")} naprieč všetkými službami</span>
-    </span>
-    <span class="svclist-ct">${nbTotal}</span>
-    <svg class="svclist-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`;
-  nbHead.onclick=()=>{ state.nbSegFilter=null; state.view="newbusiness"; state.search=""; render(); window.scrollTo(0,0); };
-  nbCard.appendChild(nbHead);
+  // ŽIVÝ TOK AKTIVÍT — najnovšie hore, naprieč všetkými službami
+  {
+    const src = state.listScope==="all" ? state.all : we;
+    wrap.appendChild(activityFeed(src));
+  }
 
-  const nbBreakdown=el("div","nb-breakdown");
-  SEGMENTS.forEach(s=>{
-    const cnt=we.filter(e=>e.segment===s.id && e.isNewBusiness).length;
-    const chip=el("button","nb-mini-chip");
-    chip.innerHTML=`${segIcon(s.id,13)}${esc(s.short)} <b>${cnt}</b>`;
-    chip.onclick=(ev)=>{ ev.stopPropagation(); state.nbSegFilter=s.id; state.view="newbusiness"; state.search=""; render(); window.scrollTo(0,0); };
-    nbBreakdown.appendChild(chip);
-  });
-  nbCard.appendChild(nbBreakdown);
-  list.appendChild(nbCard);
-
-  SEGMENTS.forEach(s=>{
-    const rows=we.filter(e=>e.segment===s.id);
-    const nbCount=rows.filter(e=>e.isNewBusiness).length;
-    const row=el("button","svclist-row");
-    row.innerHTML=`${segIcon(s.id,15)}
-      <span class="svclist-body">
-        <span class="svclist-name">${esc(s.name)}</span>
-        <span class="svclist-meta">${rows.length} ${plural(rows.length,"záznam","záznamy","záznamov")}${nbCount?` · ${nbCount}× New business`:""}</span>
-      </span>
-      <span class="svclist-ct">${rows.length}</span>
-      <svg class="svclist-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`;
-    row.onclick=()=>{ state.view="segment"; state.segFilter=s.id; state.search=""; render(); window.scrollTo(0,0); };
-    list.appendChild(row);
-  });
-  wrap.appendChild(list);
   return wrap;
 }
 
