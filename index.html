@@ -543,10 +543,6 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .kindpick label.on{border-color:#E07B18;background:#FFF6EC;color:#B45F0C}
 .kindpick label:first-child.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
 .kindpick input{display:none}
-.ico-known{display:flex;align-items:center;gap:7px;margin:-8px 0 15px;padding:8px 12px;border-radius:9px;
-  background:#EAF7F0;border:1px solid #B7E6CC;color:#0F6B43;font-size:12.5px}
-.ico-known svg{width:14px;height:14px;flex:0 0 auto}
-.ico-known b{font-family:var(--mono)}
 .req{font-size:9px;font-weight:700;color:var(--red);background:#FDF3F2;border-radius:20px;padding:1px 6px;margin-left:5px;letter-spacing:.02em;vertical-align:1px}
 .ico-row{display:flex;gap:8px;align-items:stretch}
 .ico-row .btn{height:42px;white-space:nowrap;padding:0 16px}
@@ -758,6 +754,18 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .quick-due{margin-right:6px;padding:3px 10px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
 .quick-due:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
 /* --- Pripomienka úloh na Prehľade --- */
+.ok-badge{display:inline-flex;align-items:center;gap:3px;font-size:8.5px;font-weight:800;letter-spacing:.05em;
+  text-transform:uppercase;color:#fff;background:var(--red);border-radius:20px;padding:2px 7px;margin-left:6px;line-height:1}
+.ok-badge svg{width:8px;height:8px;flex:0 0 auto}
+.ico-ok{color:var(--nb);font-weight:600}
+/* Okno novej úlohy — dátum má pevnú šírku, meno dostane zvyšok */
+.qt-row{grid-template-columns:150px minmax(0,1fr)}
+.qt-row>.field>.hint{display:none}
+.qt-quick{margin-top:9px;height:auto;white-space:normal}
+@media(max-width:520px){ .qt-row{grid-template-columns:1fr} }
+.addr-line{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted)}
+.addr-line svg{width:12px;height:12px;flex:0 0 auto}
+#fIcoLookup{white-space:nowrap}
 .new-badge{display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
   color:#fff;background:var(--nb);border-radius:20px;padding:2px 6px;margin-left:6px;vertical-align:1px;line-height:1}
 .navitem .new-slot{margin-left:auto;display:inline-flex}
@@ -944,9 +952,22 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .cl-table{border:1px solid var(--line);border-radius:12px;background:#fff}
 .cl-item:first-of-type{border-radius:0}
 .cl-list{border-radius:0 0 12px 12px;overflow:hidden}
+/* Šírky stĺpcov podľa skutočného obsahu: IČO je vždy 8 číslic, typ a služby sú
+   krátke odznaky, dlhý text dostane zvyšok. Hlavička aj riadky zdieľajú tú istú
+   definíciu, takže zostanú zarovnané. */
 .cl-head,.cl-row{display:grid;
-  grid-template-columns:minmax(160px,1.9fr) 80px minmax(96px,.8fr) minmax(84px,.7fr) minmax(112px,1.05fr) minmax(112px,1.05fr) minmax(100px,.95fr) minmax(100px,.95fr) minmax(100px,.95fr) 26px;
-  align-items:center;gap:9px}
+  grid-template-columns:
+    minmax(150px,1.6fr)   /* Klient */
+    72px                  /* IČO */
+    104px                 /* Typ */
+    var(--cl-svc,84px)    /* Služba — ikonky */
+    minmax(96px,1fr)      /* Obchodník */
+    minmax(96px,1fr)      /* Vlastník DMIS */
+    minmax(88px,.9fr)     /* Spôsob oslovenia */
+    minmax(88px,.9fr)     /* Oslovenie info */
+    minmax(88px,.9fr)     /* Databáza */
+    22px;                 /* šípka */
+  align-items:center;gap:8px}
 .cl-clear{border:none;background:none;color:var(--brand);cursor:pointer;font-size:12px;font-weight:700;padding:2px}
 .cl-clear:hover{color:var(--red)}
 .cl-head{position:sticky;top:62px;z-index:20;background:var(--brand);color:#fff;padding:0 13px;border-radius:12px 12px 0 0}
@@ -991,7 +1012,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .cl-contacts{display:flex;flex-direction:column;gap:5px}
 .cl-hist{display:flex;flex-direction:column;gap:8px}
 @media (max-width:1100px){
-  .cl-head,.cl-row{grid-template-columns:minmax(150px,1.9fr) 74px minmax(90px,.8fr) minmax(80px,.7fr) minmax(100px,1fr) minmax(100px,1fr) minmax(92px,.9fr) 24px}
+  .cl-head,.cl-row{grid-template-columns:minmax(140px,1.6fr) 68px 98px 78px minmax(90px,1fr) minmax(90px,1fr) minmax(84px,.9fr) 22px}
   .cl-head>*:nth-child(8),.cl-head>*:nth-child(9),
   .cl-row>span:nth-child(8),.cl-row>span:nth-child(9){display:none}
 }
@@ -1619,11 +1640,20 @@ input,select,textarea{font-family:inherit; font-size:14px}
 
       <div class="msec">
         <div class="msec-h">Firma</div>
+      <div class="field" id="fIcoField">
+        <label>IČO <span class="req">povinné</span></label>
+        <div class="ico-row">
+          <input id="fIco" inputmode="numeric" autocomplete="off">
+          <button type="button" class="btn" id="fIcoLookup">Načítať<span class="new-slot" data-new="finstat"></span></button>
+        </div>
+        <div class="hint" id="fIcoHint">Načíta názov a adresu firmy.</div>
+      </div>
       <div class="field">
         <label>Klient</label>
         <input id="fClient" list="clientNames" placeholder="napr. Tesco, Generali, Červený nos…">
         <datalist id="clientNames"></datalist>
-        <div class="hint">Píš názov konzistentne — tak sa klient správne spáruje naprieč službami (cross-sell).</div>
+        <div class="addr-line" id="fAddrLine" style="display:none"></div>
+        <div class="hint">Píš názov konzistentne — tak sa klient správne spáruje naprieč službami.</div>
       </div>
       <div class="lw-hint" id="lwHint" style="display:none">
         <div class="lw-hint-head">
@@ -1632,15 +1662,6 @@ input,select,textarea{font-family:inherit; font-size:14px}
         </div>
         <div class="lw-hint-text" id="lwHintText"></div>
         <button type="button" class="lw-hint-btn" id="lwHintCopy">⧉ Skopírovať text do záznamu</button>
-      </div>
-      <div class="ico-known" id="fIcoKnown" style="display:none"></div>
-      <div class="field" id="fIcoField" style="display:none">
-        <label>IČO firmy <span class="req">povinné</span></label>
-        <div class="ico-row">
-          <input id="fIco" placeholder="napr. 44160224" inputmode="numeric" autocomplete="off">
-          <button type="button" class="btn" id="fIcoLookup">Načítať</button>
-        </div>
-        <div class="hint" id="fIcoHint">Ak firmu máme v databázach, doplní sa názov automaticky.</div>
       </div>
       <div class="field" id="fContactsField" style="display:none">
         <div class="lead-contacts-box">
@@ -1703,12 +1724,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
             <div class="hint">Kedy sa ozveš znova.</div>
           </div>
         </div>
-        <div class="row">
-          <div class="field"><label>Ulica</label>
-            <input id="fStreet" placeholder="Romanova 1678/33"></div>
-          <div class="field"><label>Mesto + PSČ</label>
-            <input id="fCity" placeholder="Bratislava 85102"></div>
-        </div>
+
       </div>
       <div class="msec" id="fApproachSection" style="display:none">
         <div class="msec-h">Spôsob oslovenia</div>
@@ -3378,6 +3394,11 @@ function wireIcoLookup(){
         pendingFinstat={ ico:r.ico, name:r.name,
           address:[r.street,[r.zipCode,r.city].filter(Boolean).join(" ")].filter(Boolean).join(", "),
           dic:r.dic||null, icDph:r.icDph||null, legalForm:r.legalForm||null };
+        if(pendingFinstat?.address){
+          const p=String(pendingFinstat.address).split(",");
+          addrStreet=p[0].trim(); addrCity=p.slice(1).join(",").trim();
+          showAddr();
+        }
         const own=dmisOwnersFor(r.ico, r.name);
         const bits=[pendingFinstat.address, r.icDph?`IČ DPH ${r.icDph}`:"", own.length?`v DMIS: ${own.join(", ")}`:"voľná firma"].filter(Boolean).join(" · ");
         hint.innerHTML=`<span class="ico-ok">✓ ${esc(r.name)}</span>${bits?` — ${esc(bits)}`:""}`
@@ -3475,12 +3496,16 @@ const NEW_UNTIL = {
   calculators: "2026-09-10",   // sekcia Kalkulačky
   dashboard:   "2026-09-10",   // vyhodnotenie New business na Prehľade
   reminders:   "2026-09-10",   // pripomienky zabudnutých príležitostí
+  finstat:     "2026-09-09",   // načítanie firmy z Finstatu — 5 dní
 };
 const isNewFeature = key => {
   const d=NEW_UNTIL[key];
   return !!d && Date.now() <= Date.parse(d+"T23:59:59");
 };
 const newDot = key => isNewFeature(key) ? `<span class="new-badge">nové</span>` : "";
+/* Odznak s fajkou — pri veciach, ktoré práve začali fungovať */
+const okDot = key => isNewFeature(key)
+  ? `<span class="ok-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Už funkčné</span>` : "";
 
 const ACTIVITY_TYPES = ["Telefonát","E-mail","Osobné stretnutie","Online stretnutie",
   "Zaslanie cenovej ponuky","Obhliadka / analýza","Podpis zmluvy","Follow-up","Iné"];
@@ -4226,7 +4251,8 @@ function buildStatic(){
     b.onclick=()=>{ state.view=b.dataset.view; state.activeClient=null; state.search=""; render(); };
   });
   // Služby tab → segment sheet
-  $("#bnServices").onclick=()=>{ state.view="services"; state.activeClient=null; state.search=""; render(); window.scrollTo(0,0); };
+  // Tlačidlo Služby na mobile otvára ponuku so zoznamom služieb — nemení zobrazenie
+  $("#bnServices").onclick=()=>openSegSheet();
 
   // ── MOBILE: segment sheet ──
   const segSheetList=$("#segSheetList");
@@ -4300,7 +4326,9 @@ function renderNow(){
   counts.leads = state.leads.length ? state.leads.filter(l=>l.segment!=="E").length : "";
   counts.calculators = state.calculators.length;
   counts.services = (state.listScope==="all" ? state.all : weekEntries()).length;
-  document.querySelectorAll("[data-new]").forEach(n=>{ n.innerHTML = newDot(n.dataset.new); });
+  document.querySelectorAll("[data-new]").forEach(n=>{
+    n.innerHTML = n.dataset.new==="finstat" ? okDot("finstat") : newDot(n.dataset.new);
+  });
   document.querySelectorAll("[data-cnt]").forEach(c=>c.textContent=counts[c.dataset.cnt]||0);
   $("#mineCount").textContent=we.filter(isMine).length;
   $("#clientCount").textContent=clientIndex().length;
@@ -4966,7 +4994,7 @@ function openCopyWeekPicker(segId){
   if(!weeks.some(x=>x.cnt)){ toast("Za posledných 5 týždňov tu nie sú žiadne záznamy na kopírovanie."); return; }
 
   const scrim=el("div","scrim open"); scrim.style.zIndex="90";
-  scrim.innerHTML=`<div class="modal" style="max-width:440px">
+  scrim.innerHTML=`<div class="modal qt-modal" style="max-width:400px">
     <div class="modal-h"><h2>Kopírovať záznamy</h2></div>
     <div class="modal-b">
       <p class="dup-txt">Z ktorého týždňa chceš skopírovať záznamy do <b>${esc(weekRangeLabel(state.week))}</b>?</p>
@@ -5777,14 +5805,13 @@ function openQuickTask(e){
     <div class="modal-b">
       <div class="field"><label>Čo treba urobiť <span class="req">povinné</span></label>
         <input id="qtTitle" placeholder="napr. Zavolať a dohodnúť stretnutie"></div>
-      <div class="row">
+      <div class="row qt-row">
         <div class="field"><label>Termín</label>
-          <input id="qtDue" type="date" value="${d.toISOString().slice(0,10)}">
-          <div class="hint" id="qtQuick"></div></div>
+          <input id="qtDue" type="date" value="${d.toISOString().slice(0,10)}"></div>
         <div class="field"><label>Zodpovedný</label>
-          <select id="qtWho"></select>
-          <div class="hint">Pripomenie sa, kým ju nesplní.</div></div>
+          <select id="qtWho"></select></div>
       </div>
+      <div class="hint qt-quick" id="qtQuick"></div>
     </div>
     <div class="modal-f" style="justify-content:flex-end">
       <button class="btn" data-act="cancel">Zrušiť</button>
@@ -6632,9 +6659,12 @@ function viewTasks(){
   else if(state.taskFilter==="mine") rows=rows.filter(t=>isMyTask(t));
 
   const open=rows.filter(t=>t.status==="open");
-  const overdue=open.filter(t=>dayDiff(t.due)<0).sort((a,b)=>a.due.localeCompare(b.due));
-  const soon=open.filter(t=>dayDiff(t.due)>=0&&dayDiff(t.due)<=6).sort((a,b)=>a.due.localeCompare(b.due));
-  const later=open.filter(t=>dayDiff(t.due)>6).sort((a,b)=>a.due.localeCompare(b.due));
+  // Úloha bez termínu nesmie prepadnúť medzi kategóriami — zaradíme ju k neskorším.
+  const dd=t=>{ const n=dayDiff(t.due); return Number.isFinite(n)?n:9999; };
+  const srt=(a,b)=>dd(a)-dd(b);
+  const overdue=open.filter(t=>dd(t)<0).sort(srt);
+  const soon=open.filter(t=>dd(t)>=0&&dd(t)<=6).sort(srt);
+  const later=open.filter(t=>dd(t)>6).sort(srt);
   const done=rows.filter(t=>t.status==="done").sort((a,b)=>b.createdAt-a.createdAt);
 
   const cols=el("div","task-cols");
@@ -7154,19 +7184,23 @@ function openModal(entry,presetSeg){
   $("#fIco").value = entry?.leadIco || entry?.ico || "";
   // Ak klient IČO už má, pole sa nezobrazí vôbec — zadáva sa len raz, pri prvom zázname.
   let knownIco="";
+  // Adresu neupravujeme — len ju ukážeme, ako ju vráti Finstat
+  let addrStreet="", addrCity="";
+  const showAddr=()=>{
+    const box=$("#fAddrLine");
+    const full=[addrStreet,addrCity].filter(Boolean).join(", ");
+    box.style.display = full ? "" : "none";
+    if(full) box.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(full)}`;
+  };
   const syncIcoField=()=>{
     const nm=$("#fClient").value;
     const known=knownIcoFor(nm);
     knownIco=known;
     if(known){
-      $("#fIcoField").style.display="none";
       $("#fIco").value=known;
-      $("#fIcoKnown").style.display="";
-      $("#fIcoKnown").innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>IČO <b>${esc(known)}</b> — klienta už poznáme`;
+      $("#fIcoHint").innerHTML=`<span class="ico-ok">✓ Klienta už poznáme.</span>`;
     } else {
-      $("#fIcoField").style.display = nm.trim() ? "" : "none";
-      $("#fIcoKnown").style.display="none";
-      if(!entry) $("#fIco").value="";
+      $("#fIcoHint").innerHTML="Načíta názov a adresu firmy.";
     }
   };
   syncIcoField();
@@ -7195,8 +7229,9 @@ function openModal(entry,presetSeg){
     $("#fCountry").value=entry?.dmisCountry||"SK";
     $("#fRevenue").value=entry?.dmisRevenue??"";
     $("#fFollowUp").value=entry?.dmisFollowUp||"";
-    $("#fStreet").value=entry?.dmisStreet||(entry?.companyInfo?.address?.split(",")[0]||"");
-    $("#fCity").value=entry?.dmisCity||(entry?.companyInfo?.address?.split(",").slice(1).join(",").trim()||"");
+    addrStreet = entry?.dmisStreet || (entry?.companyInfo?.address?.split(",")[0] || "");
+    addrCity   = entry?.dmisCity   || (entry?.companyInfo?.address?.split(",").slice(1).join(",").trim() || "");
+    showAddr();
   }
   fillApproachInfoList();
   $("#fApproachInfo").value = entry?.nbApproachInfo || "";
@@ -7387,8 +7422,8 @@ async function saveFromModal(){
     dmisRevenue: $("#fRevenue").value!=="" ? Number($("#fRevenue").value) : (baseEntry.dmisRevenue ?? null),
     dmisActType: $("#fActType").value || (baseEntry.dmisActType ?? null),
     dmisFollowUp: $("#fFollowUp").value || (baseEntry.dmisFollowUp ?? null),
-    dmisStreet: $("#fStreet").value.trim() || (baseEntry.dmisStreet ?? null),
-    dmisCity: $("#fCity").value.trim() || (baseEntry.dmisCity ?? null),
+    dmisStreet: addrStreet || (baseEntry.dmisStreet ?? null),
+    dmisCity: addrCity || (baseEntry.dmisCity ?? null),
     lossReason: ["nechce","zrusene"].includes($("#fStatus").value) ? ($("#fLossReason").value||null) : null,
     nbApproach: $("#fApproach").value || (baseEntry.nbApproach ?? null),
     nbApproachInfo: $("#fApproachInfo").value.trim() || (baseEntry.nbApproachInfo ?? null),
