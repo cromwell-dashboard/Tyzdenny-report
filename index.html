@@ -297,6 +297,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .entry .e-client .lk:hover{text-decoration:underline}
 .entry .e-actions{display:flex; gap:3px; flex:0 0 auto; align-self:flex-start}
 .entry .e-actions .del-btn:hover{color:var(--red); background:#FDF3F2}
+/* pridanie úlohy — modré, nech je hneď nájditeľné */
+.entry .e-actions .task-btn{color:var(--brand); border-color:#c9d2f4; background:var(--brand-soft)}
+.entry .e-actions .task-btn:hover{background:var(--brand); border-color:var(--brand); color:#fff}
 .entry .e-events{color:var(--ink-soft); font-size:13px; margin-top:7px; white-space:pre-wrap; line-height:1.55}
 .entry .e-foot{display:flex; align-items:center; gap:12px; margin-top:11px; flex-wrap:wrap}
 .tag{font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px}
@@ -4227,6 +4230,12 @@ function buildStatic(){
 
   // ── MOBILE: segment sheet ──
   const segSheetList=$("#segSheetList");
+  {
+    const all=el("button","seg-sheet-row");
+    all.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;flex:0 0 auto"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="ss-name">Všetky aktivity</span><span class="ss-ct" data-ssct="services">0</span>`;
+    all.onclick=()=>{ closeSegSheet(); state.view="services"; state.activeClient=null; state.search=""; render(); window.scrollTo(0,0); };
+    segSheetList.appendChild(all);
+  }
   SEGMENTS.forEach(s=>{
     const row=el("button","seg-sheet-row");
     row.innerHTML=`${segIcon(s.id,17)}<span class="ss-name">${s.name}</span><span class="ss-ct" data-ssct="${s.id}">0</span>`;
@@ -5759,6 +5768,59 @@ function viewCalculators(){
   wrap.appendChild(grid);
   return wrap;
 }
+/* Rýchle pridanie úlohy priamo z karty záznamu — bez otvárania celej aktivity */
+function openQuickTask(e){
+  const d=new Date(); d.setDate(d.getDate()+7);
+  const scrim=el("div","scrim open"); scrim.style.zIndex="90";
+  scrim.innerHTML=`<div class="modal" style="max-width:440px">
+    <div class="modal-h"><h2>Nová úloha</h2><div class="sub">${esc(e.client||"—")}${SEG[e.segment]?` · ${esc(SEG[e.segment].short)}`:""}</div></div>
+    <div class="modal-b">
+      <div class="field"><label>Čo treba urobiť <span class="req">povinné</span></label>
+        <input id="qtTitle" placeholder="napr. Zavolať a dohodnúť stretnutie"></div>
+      <div class="row">
+        <div class="field"><label>Termín</label>
+          <input id="qtDue" type="date" value="${d.toISOString().slice(0,10)}">
+          <div class="hint" id="qtQuick"></div></div>
+        <div class="field"><label>Zodpovedný</label>
+          <select id="qtWho"></select>
+          <div class="hint">Pripomenie sa, kým ju nesplní.</div></div>
+      </div>
+    </div>
+    <div class="modal-f" style="justify-content:flex-end">
+      <button class="btn" data-act="cancel">Zrušiť</button>
+      <button class="btn solid" data-act="save">Pridať úlohu</button>
+    </div>
+  </div>`;
+  const close=()=>scrim.remove();
+  scrim.querySelector('[data-act="cancel"]').onclick=close;
+  scrim.onclick=ev=>{ if(ev.target===scrim) close(); };
+  const who=scrim.querySelector("#qtWho");
+  OBCH_NAME_LIST.forEach(n=>{ const o=el("option","",n); o.value=n; who.appendChild(o); });
+  who.value=resolveOwnerName(e)||state.user.name;
+  const q=scrim.querySelector("#qtQuick");
+  [["zajtra",1],["o týždeň",7],["o 2 týždne",14],["o mesiac",30]].forEach(([lbl,dd])=>{
+    const b=el("button","quick-due",lbl); b.type="button";
+    b.onclick=()=>{ const x=new Date(); x.setDate(x.getDate()+dd); scrim.querySelector("#qtDue").value=x.toISOString().slice(0,10); };
+    q.appendChild(b);
+  });
+  scrim.querySelector('[data-act="save"]').onclick=async()=>{
+    const title=scrim.querySelector("#qtTitle").value.trim();
+    if(!title){ scrim.querySelector("#qtTitle").focus(); toast("Napíš, čo treba urobiť."); return; }
+    try{
+      await backend.saveTask({
+        title, assignee:who.value, due:scrim.querySelector("#qtDue").value||"",
+        client:e.client||"", segment:e.segment||"", note:"", status:"open",
+        createdBy:state.user.name, createdAt:Date.now(),
+      });
+      close(); toast("Úloha pridaná.");
+    }catch(err){
+      console.error("Úlohu sa nepodarilo uložiť:", err);
+      toast("⚠ Úlohu sa nepodarilo uložiť — pravdepodobne chýba oprávnenie vo Firebase.");
+    }
+  };
+  document.body.appendChild(scrim);
+  setTimeout(()=>scrim.querySelector("#qtTitle").focus(),40);
+}
 function openCalcModal(idx){
   const items=state.calculators||[];
   const cur = idx!==null && idx!==undefined ? items[idx] : null;
@@ -6513,6 +6575,10 @@ function entryCard(e,clients,opts={}){
     sl.title=e.sleeping?"Prebudiť záznam (vrátiť medzi aktívne)":"Označiť ako spiaci (nemusí sa dopĺňať každý týždeň)";
     sl.onclick=(ev)=>{ ev.stopPropagation(); toggleSleeping(e); };
     card.querySelector(".e-actions").appendChild(sl);
+    const tk=el("button","ghost task-btn",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>`);
+    tk.title="Pridať úlohu s termínom";
+    tk.onclick=(ev)=>{ ev.stopPropagation(); openQuickTask(e); };
+    card.querySelector(".e-actions").appendChild(tk);
     const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
     ed.title="Upraviť"; ed.onclick=(ev)=>{ ev.stopPropagation(); openModal(e); };
     card.querySelector(".e-actions").appendChild(ed);
