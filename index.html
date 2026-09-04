@@ -3371,11 +3371,20 @@ function knownIcoFor(name){
   const l=state.leads.find(x=>clientKey(x.company)===k && x.ico);
   return l?String(l.ico).replace(/\D/g,""):"";
 }
-function lookupCompanyByIco(ico){
-  backend.ensureLeads();
-  const clean=String(ico||"").replace(/\D/g,"");
+/* Hľadanie firmy v naimportovaných databázach.
+   Databázy sa načítavajú až na požiadanie, preto na ne chvíľu počkáme —
+   inak by sa firma "nenašla" len preto, že zoznam ešte nedorazil. */
+async function lookupCompanyByIco(ico){
+  const clean=icoKey(ico);
   if(!clean) return null;
-  return state.leads.find(l=>String(l.ico||"").replace(/\D/g,"")===clean) || null;
+  const find=()=>state.leads.find(l=>icoKey(l.ico)===clean)||null;
+  backend.ensureLeads();
+  let hit=find();
+  for(let i=0;i<20 && !hit && state.leadsLoading;i++){
+    await new Promise(r=>setTimeout(r,120));
+    hit=find();
+  }
+  return hit;
 }
 function wireIcoLookup(){
   const run=async()=>{
@@ -3385,7 +3394,7 @@ function wireIcoLookup(){
     if(!ico){ hint.textContent="Zadaj IČO firmy."; return; }
 
     // 1) Skús Finstat (beží cez Cloud Function, kľúče zostávajú na serveri)
-    btn.disabled=true; const orig=btn.textContent; btn.textContent="Hľadám…";
+    btn.disabled=true; const orig=btn.innerHTML; btn.textContent="Hľadám…";
     hint.textContent="Overujem IČO vo Finstate…";
     try{
       const r=await backend.finstatLookup(ico);
@@ -3411,11 +3420,11 @@ function wireIcoLookup(){
       // Funkcia ešte nie je nasadená alebo Finstat zlyhal — pokračujeme lokálne
       console.warn("Finstat nedostupný, hľadám v databázach:", err?.message||err);
     }finally{
-      btn.disabled=false; btn.textContent=orig;
+      btn.disabled=false; btn.innerHTML=orig;
     }
 
     // 2) Záloha — vyhľadanie v už naimportovaných databázach
-    const hit=lookupCompanyByIco(ico);
+    const hit=await lookupCompanyByIco(ico);
     if(hit){
       $("#fClient").value=hit.company;
       pendingFinstat={ ico:String(hit.ico||ico), name:hit.company, address:null, dic:null, icDph:null, legalForm:null };
@@ -3424,7 +3433,7 @@ function wireIcoLookup(){
       if(typeof updateLastWeekHint==="function") updateLastWeekHint();
     } else {
       pendingFinstat=null;
-      hint.innerHTML=`<span class="ico-none">Firma sa nenašla.</span> Názov klienta vyplň ručne — IČO sa aj tak uloží.`;
+      hint.innerHTML=`<span class="ico-none">Firma sa nenašla vo Finstate ani v databázach.</span> Skontroluj IČO alebo názov vyplň ručne — IČO sa uloží tak či tak.`;
     }
   };
   $("#fIcoLookup").onclick=run;
