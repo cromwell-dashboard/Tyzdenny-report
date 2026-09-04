@@ -292,7 +292,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .entry{background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow-sm); display:grid; grid-template-columns:4px 1fr; overflow:hidden}
 .entry .ebody{padding:14px 16px}
 .entry .e-top{display:flex; align-items:flex-start; justify-content:space-between; gap:12px}
-.entry .e-client{font-weight:600; font-size:15px; display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+.entry .e-client{font-weight:600; font-size:15px; display:flex; align-items:center; gap:6px; flex-wrap:wrap}
 .entry .e-client .lk{cursor:pointer}
 .entry .e-client .lk:hover{text-decoration:underline}
 .entry .e-actions{display:flex; gap:3px; flex:0 0 auto; align-self:flex-start}
@@ -521,7 +521,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .reg-cb-n{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-left:2px}
 .reg-cb-x{border:none;background:none;color:var(--muted);cursor:pointer;font-size:11px;padding:1px 4px;border-radius:50%}
 .reg-cb-x:hover{color:var(--red);background:#FDF3F2}
-.e-ctx{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.e-ctx{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
 .e-ctx .notes-toggle{margin:0}
 .ctx-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:20px;padding:3px 10px;white-space:nowrap;font-family:inherit;max-width:260px;overflow:hidden;text-overflow:ellipsis}
 .ctx-chip svg{width:11px;height:11px;flex:0 0 auto}
@@ -689,6 +689,17 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .sp-count{display:none}
 .sp-body{padding:12px 6px 16px;display:flex;flex-direction:column;gap:9px;border-bottom:1px solid var(--line-2)}
 @media (max-width:820px){
+  /* Odznaky nech sú radšej menšie, ale vedľa seba — nie pod sebou */
+  .entry .e-client{gap:5px; font-size:14px}
+  .schip,.src-badge,.nb-badge,.week-chip,.risk-badge,.sleep-badge,.approach-badge,
+  .nb-source-badge,.ctx-chip,.lead-db,.dmis-badge{font-size:9.5px; padding:2px 7px; gap:3px; max-width:150px}
+  .schip svg,.src-badge svg,.ctx-chip svg,.nb-badge svg{width:9px;height:9px}
+  .e-ctx{gap:4px}
+  .ctx-chip.dmis .dm-lbl{font-size:9px}
+  .ctx-chip.dmis .dm-ini{min-width:17px;height:15px;font-size:9px;padding:0 4px}
+  .entry .e-actions{gap:2px}
+  .entry .e-actions .ghost{width:24px;height:24px}
+  .entry .e-actions .ghost svg{width:12px;height:12px}
   .sp-panel{padding:14px 13px}
   .sp-filter{margin-left:0;width:100%}
   .sp-filter select{flex:1;max-width:none}
@@ -908,12 +919,16 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .co-obch-tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
 .co-obch-tag{display:inline-flex; align-items:center; font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--line-2); color:var(--ink-soft)}
 .co-obch-note{font-size:11.5px; font-weight:500; color:var(--muted)}
+.wd-toggle{width:42px;height:42px;flex:0 0 auto;align-self:center;border-radius:50%;
+  border:2px solid #9fd9bd; background:#fff; color:var(--nb);
+  display:grid; place-items:center; cursor:pointer; padding:0}
+.wd-toggle svg{width:24px;height:24px}
+.wd-toggle:hover{border-color:var(--nb); background:#EAF7F0}
+.wd-toggle.on{background:linear-gradient(135deg,#17A968 0%,#0F7C4C 100%); border:none; color:#fff;
+  box-shadow:0 3px 12px rgba(15,124,76,.34)}
 .wd-bar{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; margin-bottom:16px; position:sticky; top:62px; z-index:30; box-shadow:0 2px 6px rgba(22,26,36,.05)}
-.wd-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
-.wd-toggle{padding:0 18px; height:38px; border-radius:10px; border:1px solid var(--nb); background:var(--nb); color:#fff; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:6px}
-.wd-toggle:hover{background:#0f7a4b; border-color:#0f7a4b}
-.wd-toggle.on{background:#0c6b41; border-color:#0c6b41}
-.wd-names{display:flex; flex-wrap:wrap; gap:6px 14px; flex:1; min-width:120px}
+.wd-row{display:flex; align-items:center; gap:12px; flex-wrap:nowrap}
+.wd-names{display:flex; flex-wrap:wrap; align-content:center; gap:6px 14px; flex:1 1 auto; min-width:0}
 .wd-chip{display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:400}
 .wd-chip svg{width:12px; height:12px; flex:0 0 auto}
 .wd-chip.done{color:var(--nb)}
@@ -925,9 +940,6 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .wd-empty{font-size:12px; color:var(--muted)}
 .wd-notify-btn{padding:8px 13px; border-radius:20px; border:1px solid var(--line); background:#fff; color:var(--ink-soft); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap}
 .wd-notify-btn:hover{background:#fafbfc}
-.wd-notify-wrap{display:flex; gap:8px; margin-top:10px}
-.wd-notify-wrap input{flex:1; padding:8px 11px; border:1px solid var(--line); border-radius:var(--r-sm); font-size:12.5px}
-.wd-notify-wrap .btn{white-space:nowrap}
 .copy-prompt{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:10px 2px; margin-bottom:14px; font-size:13px; color:var(--muted)}
 .copy-prompt-btn{display:inline-flex; align-items:center; gap:7px; padding:0 16px; border-radius:10px; border:1.5px solid var(--brand); background:var(--brand-soft); color:var(--brand); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit}
 .copy-prompt-btn:hover{background:#dde1f8}
@@ -1081,6 +1093,15 @@ input,select,textarea{font-family:inherit; font-size:14px}
   .cl-row>span:nth-child(8),.cl-row>span:nth-child(9){display:block}
   .cl-body{padding:12px 11px 14px}
 }
+.lf-top{display:flex; align-items:center; gap:8px}
+.lf-toggle{display:none; align-items:center; gap:6px; height:42px; padding:0 15px; border-radius:24px;
+  border:1px solid var(--line); background:#fff; color:var(--ink-soft); font-family:inherit;
+  font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; flex:0 0 auto}
+.lf-toggle svg{width:14px;height:14px}
+.lf-toggle b{background:var(--brand); color:#fff; font-family:var(--mono); font-size:10.5px;
+  min-width:16px; height:16px; border-radius:9px; display:grid; place-items:center; padding:0 4px}
+.lf-toggle.on{border-color:var(--brand); color:var(--brand); background:var(--brand-soft)}
+.lf-body{display:block}
 .lf-box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:16px}
 .lf-search{margin:0}
 .lf-box .chiprow{margin-bottom:0}
@@ -1107,11 +1128,28 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .lf-clear{margin-left:auto;padding:6px 13px;border-radius:20px;border:1px solid #f3c9c4;background:#FDF3F2;color:var(--red);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap}
 .lf-clear:hover{background:#FBE6E4}
 @media (max-width:768px){
-  .lf-box{padding:11px 11px}
+  /* Na mobile je vidieť len hľadanie a tlačidlo Filtre; zvyšok sa rozbalí */
+  .lf-box{padding:10px}
+  .lf-toggle{display:inline-flex; height:40px; padding:0 13px}
+  .lf-search{height:40px}
+  .lf-body{display:none}
+  .lf-body.open{display:block; margin-top:10px; padding-top:10px; border-top:1px solid var(--line-2)}
+  .lf-svc{gap:5px}
+  .lf-svc-btn{padding:6px 10px;font-size:11.5px;gap:5px}
+  .lf-svc-btn b{font-size:11.5px}
+  .lf-row{gap:8px;margin-top:9px;padding-top:9px}
+  .lf-row>.lf-lbl{display:none}
+  .lf-seg{width:100%;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:2px}
+  .lf-seg button{padding:7px 2px;font-size:11px;text-align:center}
+  .lf-sel{flex:1 1 calc(50% - 4px);min-width:0}
+  .lf-sel select{flex:1;max-width:none;font-size:12px;padding:6px 9px}
+  .lf-prio{flex:1 1 100%;justify-content:space-between;gap:4px}
+  .lf-prio-btn{flex:1;width:auto;height:32px}
+  .lf-clear{flex:1 1 100%;margin-left:0;text-align:center}
   .lf-svc{gap:6px}
   .lf-svc-btn{padding:6px 11px;font-size:12px}
   .lf-row{gap:10px;margin-top:10px;padding-top:10px}
-  .lf-seg{width:100%;display:grid;grid-template-columns:repeat(4,1fr)}
+  .lf-seg{width:100%;display:grid;grid-auto-flow:column;grid-auto-columns:1fr}
   .lf-seg button{padding:7px 4px;text-align:center}
   .lf-prio{width:100%;justify-content:space-between}
   .lf-sel{width:100%}
@@ -1328,9 +1366,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
   .wd-bar{ position:static; padding:10px 12px }
   /* Hotovo lišta na mobile: tlačidlo hore na plnú šírku, mená vedľa seba (zabalené) pod ním */
   .wd-row{ gap:8px }
-  .wd-toggle{ order:1; width:100%; }
-  .wd-notify-btn{ order:2 }
-  .wd-names{ order:3; width:100%; flex-basis:100%; gap:6px 12px; row-gap:6px }
+  .wd-names{ gap:5px 10px }
   .wd-chip{ font-size:12px }
   /* Na mobile stačí logo a názov, oddelenie sa skryje */
   #topLogo{ height:21px }
@@ -2468,6 +2504,7 @@ const state = {
   staleOpen:false,         // rozbalený zoznam zabudnutých príležitostí
   clientFilter:{q:"",ico:"",type:"",seg:"",owner:"",dmis:"",approach:"",info:"",db:""},
   openColFilter:null,      // ktorý stĺpec má rozbalený filter
+  leadFiltersOpen:false,   // rozbalené filtre v Databázach (mobil)
   icoFixLimit:25,          // koľko klientov bez IČO sa zobrazí naraz
   clientLimit:60,          // koľko klientov sa vykreslí naraz
   openClientRow:null,      // rozbalený klient v zozname
@@ -3217,10 +3254,20 @@ function viewLeads(){
   const f=state.leadFilter;
   // --- Filtre: služby ako farebné dlaždice s počtami, ostatné kompaktne pod nimi ---
   const fbox=el("div","lf-box");
+  const top=el("div","lf-top");
   const search=el("div","search lf-search",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
   const si=el("input"); si.placeholder="Hľadať firmu, e-shop, IČO…"; si.value=f.q;
   si.oninput=()=>{ f.q=si.value; state.leadLimit=60; paint(); };
-  search.appendChild(si); fbox.appendChild(search);
+  search.appendChild(si); top.appendChild(search);
+  // Na mobile sa zvyšok filtrov skryje pod tlačidlo — inak zaberá pol obrazovky
+  const nActive=[f.service,f.db,f.status,f.seg].filter(Boolean).length + (f.owner!=="free"?1:0);
+  const tgl=el("button","lf-toggle"+(state.leadFiltersOpen?" on":""),
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>Filtre${nActive?`<b>${nActive}</b>`:""}`);
+  tgl.type="button";
+  tgl.onclick=()=>{ state.leadFiltersOpen=!state.leadFiltersOpen; render(); };
+  top.appendChild(tgl);
+  fbox.appendChild(top);
+  const fbody=el("div","lf-body"+(state.leadFiltersOpen?" open":""));
 
   // 1) Služby — hlavný filter, vždy viditeľný
   const svcRow=el("div","lf-svc"); svcRow.style.marginTop="11px";
@@ -3239,7 +3286,7 @@ function viewLeads(){
     const cnt=countFor(l=>leadService(l)===sg.id && l.segment!=="E");
     svcRow.appendChild(mkSvc(sg.id, sg.short, segIcon(sg.id,14), cnt, f.service===sg.id));
   });
-  fbox.appendChild(svcRow);
+  fbody.appendChild(svcRow);
 
   // 2) Vlastník — segmentovaný prepínač
   const row2=el("div","lf-row");
@@ -3265,7 +3312,7 @@ function viewLeads(){
     prioWrap.appendChild(b);
   });
   row2.appendChild(prioWrap);
-  fbox.appendChild(row2);
+  fbody.appendChild(row2);
 
   // 4) Databáza a stav — kompaktné výbery, len keď je z čoho vyberať
   const row3=el("div","lf-row");
@@ -3288,7 +3335,8 @@ function viewLeads(){
     clr.onclick=()=>{ state.leadFilter={seg:"",status:"",owner:"free",q:"",service:"",db:""}; state.leadLimit=60; render(); };
     row3.appendChild(clr);
   }
-  fbox.appendChild(row3);
+  fbody.appendChild(row3);
+  fbox.appendChild(fbody);
   wrap.appendChild(fbox);
 
   const info=el("div","lead-count"); wrap.appendChild(info);
@@ -6420,7 +6468,9 @@ function weeklyDoneBar(seg){
   const bar=el("div","wd-bar");
   const row=el("div","wd-row");
 
-  const toggleBtn=el("button", "wd-toggle"+(isDone?" on":""), isDone?"✓ Hotovo":"Označiť ako hotovo");
+  const toggleBtn=el("button", "wd-toggle"+(isDone?" on":""),
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`);
+  toggleBtn.title = isDone ? "Zrušiť moje označenie" : "Označiť, že mám hotovo";
   toggleBtn.type="button";
   toggleBtn.onclick=async()=>{
     toggleBtn.disabled=true;
@@ -6442,7 +6492,6 @@ function weeklyDoneBar(seg){
       render();
     }
   };
-  row.appendChild(toggleBtn);
 
   // Zoznam obchodníkov: hotoví (zelene, podľa poradia kliknutia) najprv, potom tí,
   // čo ešte neoznačili (jemne sivo, s červeným krížikom).
@@ -6472,28 +6521,9 @@ function weeklyDoneBar(seg){
   });
   if(!doneOrdered.length && !pendingOrdered.length){ namesWrap.innerHTML=`<span class="wd-empty">Zatiaľ nikto neoznačil hotovo</span>`; }
   row.appendChild(namesWrap);
+  row.appendChild(toggleBtn);   // moje označenie vpravo, oddelene od mien
 
-  const notifyBtn=el("button","wd-notify-btn","📧 Upozorniť šéfa"); notifyBtn.type="button";
-  row.appendChild(notifyBtn);
   bar.appendChild(row);
-
-  // Notifikácia šéfovi mailom (skryté, kompaktné, rozbalí sa len na požiadanie)
-  const notifyWrap=el("div","wd-notify-wrap"); notifyWrap.style.display="none";
-  const liderEmails=liderEmailsForSegment(seg.id);
-  const defaultTo=(liderEmails.length?liderEmails:[...BOSS_EMAILS, ...ADMIN_EMAILS]).join(", ");
-  notifyWrap.innerHTML=`<input id="wdNotifyEmail" value="${esc(defaultTo)}" placeholder="e-mail šéfa, oddelené čiarkou">`;
-  const sendBtn=el("button","btn solid","Odoslať"); sendBtn.type="button";
-  sendBtn.onclick=()=>{
-    const to=$("#wdNotifyEmail",notifyWrap).value.trim();
-    if(!to){ toast("Zadaj aspoň jednu e-mailovú adresu."); return; }
-    const namesText=entries.length?entries.map(e=>e.name).join(", "):"zatiaľ nikto";
-    const subject=`Report za tento týždeň — ${groupLabel} je hotový`;
-    const body=`Dobrý deň,\n\nReport za týždeň ${weekRangeLabel(state.week)} pre oddelenie "${groupLabel}" je hotový.\n\nHotovo označili: ${namesText}\n\nS pozdravom,\n${state.user.name}`;
-    window.location.href=`mailto:${encodeURIComponent(to).replace(/%2C%20|%2C/g,",")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  };
-  notifyWrap.appendChild(sendBtn);
-  notifyBtn.onclick=()=>{ notifyWrap.style.display = notifyWrap.style.display==="none" ? "" : "none"; };
-  bar.appendChild(notifyWrap);
   return bar;
 }
 function viewSegment(){
