@@ -4387,14 +4387,13 @@ function buildStatic(){
 
   // task modal
   const tSeg=$("#tSegment");
-  SEGMENTS.forEach(s=>tSeg.appendChild(el("option",null,s.short)).value=s.id);
+  if(tSeg) SEGMENTS.forEach(s=>tSeg.appendChild(el("option",null,s.short)).value=s.id);
   $("#taskModalClose").onclick=$("#taskCancelBtn").onclick=closeTaskModal;
   $("#taskScrim").onclick=e=>{ if(e.target===$("#taskScrim")) closeTaskModal(); };
   $("#taskSaveBtn").onclick=saveTaskFromModal; $("#taskDeleteBtn").onclick=deleteTaskFromModal;
 
   // ── MOBILE: FAB ──
   // Na mobile nahrádza tlačidlo "+ Pridať záznam" — ak sme v službe, predvolí ju
-  $("#mobFab").onclick=()=>openModal(null, state.view==="segment" ? state.segFilter : null);
 
   // ── MOBILE: bottom nav ──
   $("#bottomNav").querySelectorAll(".bn-item[data-view]").forEach(b=>{
@@ -4404,9 +4403,17 @@ function buildStatic(){
   // Tlačidlo Služby na mobile otvára ponuku so zoznamom služieb — nemení zobrazenie
   $("#bnServices").onclick=()=>openSegSheet();
   const addRec=()=>openModal(null, state.view==="segment" ? state.segFilter : null);
-  $("#fbBubble").onclick=()=>openFeedback();
-  $("#railFb").onclick=()=>openFeedback();
-  $("#railAdd").onclick=addRec;
+  // Kliknutia riešime cez delegovanie na dokument — funguje aj keby sa niektorý
+  // prvok vykreslil neskôr alebo by sa predchádzajúci riadok nevykonal.
+  if(!window.__actionsWired){
+    window.__actionsWired=true;
+    document.addEventListener("click", (ev)=>{
+      const fb=ev.target.closest && ev.target.closest("#fbBubble,#railFb");
+      if(fb){ ev.preventDefault(); openFeedback(); return; }
+      const ad=ev.target.closest && ev.target.closest("#railAdd,#mobFab");
+      if(ad){ ev.preventDefault(); openModal(null, state.view==="segment" ? state.segFilter : null); }
+    });
+  }
 
   // ── MOBILE: segment sheet ──
   const segSheetList=$("#segSheetList");
