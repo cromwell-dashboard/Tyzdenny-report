@@ -740,6 +740,17 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .dmis-box.taken b{color:#5E3F06}
 .dmis-box.free{background:#EAF7F0;border:1px solid #B7E6CC;color:#0F6B43}
 .dmis-box.free b{color:#0B5233}
+.mat-badge{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;background:#F4EFFC;
+  color:#6D4FB3;border:1px solid #DDD0F2;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+/* Agentúra — zaškrtnutie priamo pri popiske Klient, rovnaké písmo, žiadne miesto navyše */
+.field label.lbl-row{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.ag-pill{display:inline-flex; align-items:center; gap:5px; flex:0 0 auto; cursor:pointer;
+  padding:2px 9px 2px 7px; border-radius:20px; border:1px solid var(--line); background:#fff;
+  font-size:10.5px; font-weight:700; letter-spacing:.02em; color:var(--muted); user-select:none}
+.ag-pill svg{width:11px; height:11px; flex:0 0 auto}
+.ag-pill input{position:absolute; opacity:0; width:0; height:0}
+.ag-pill:hover{border-color:#c5cff5; color:var(--brand)}
+.ag-pill:has(input:checked){background:var(--brand); border-color:var(--brand); color:#fff}
 .week-chip{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--line-2);color:var(--muted);white-space:nowrap}
 .nb-badge svg{width:11px;height:11px;flex:0 0 auto}
 .entry.nb,.tl-card.nb{border:1.5px solid var(--nb-border)}
@@ -758,6 +769,16 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .reg-danger-row input{padding:8px 11px; border:1px solid var(--line); border-radius:var(--r-sm); font-family:var(--mono); width:140px}
 .wipe-warn{margin-top:12px; font-size:13px; color:var(--ink-soft); line-height:1.5}
 .risk-badge{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:#fff; background:var(--red); border-radius:20px; padding:3px 10px 3px 8px; letter-spacing:.02em; white-space:nowrap; box-shadow:0 1px 3px rgba(181,68,58,.4)}
+/* Upozornenie a úloha vedľa seba — kým sú zbalené, zaberajú jeden riadok */
+.extra-row{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:13px; align-items:start}
+.extra-row>.field{margin-bottom:0}
+.extra-row .add-warning-btn,.extra-row .add-task-btn{width:100%; justify-content:center; height:34px; padding:0 10px; font-size:12px}
+.extra-row>.field:has(#warningInputWrap:not([style*="none"])),
+.extra-row>.field:has(#taskInputWrap:not([style*="none"])){grid-column:1/-1}
+#taskInputWrap label,#warningInputWrap label{font-size:12px; margin-bottom:5px}
+#warningInputWrap textarea{min-height:64px!important}
+.remove-warning-btn{margin-top:6px; font-size:11px}
+@media(max-width:640px){ .extra-row{grid-template-columns:1fr} }
 .add-task-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:20px;border:1px solid #C8D0EE;background:var(--brand-soft);color:var(--brand);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
 .add-task-btn:hover{background:#dde1f8}
 .add-task-btn svg{width:14px;height:14px;flex:0 0 auto}
@@ -813,6 +834,14 @@ input,select,textarea{font-family:inherit; font-size:14px}
   }
 @media(max-width:420px){
 }
+.fb-err{background:#FDF3F2;border:1px solid #F3C9C4;border-radius:10px;padding:11px 13px;
+  font-size:12.5px;line-height:1.55;color:#8A3A33;margin-top:4px}
+.fb-err code{font-family:var(--mono);font-size:11.5px;background:#fff;padding:1px 5px;border-radius:4px}
+.fb-err-code{display:inline-block;margin-top:5px;font-family:var(--mono);font-size:11px;opacity:.8}
+.fb-reply{margin-top:11px;padding:10px 13px;background:var(--brand-soft);border-left:3px solid var(--brand);
+  border-radius:0 9px 9px 0;font-size:13px;line-height:1.55;color:var(--ink-soft);white-space:pre-wrap}
+.fb-reply b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--brand);margin-bottom:3px}
+.fb-wait{margin-top:10px;font-size:11.5px;color:var(--muted);font-style:italic}
 .fb-list{display:flex; flex-direction:column; gap:10px}
 .fb-card{background:var(--card); border:1px solid var(--line); border-left:3px solid var(--nb);
   border-radius:12px; padding:14px 16px; box-shadow:var(--shadow-sm)}
@@ -1739,11 +1768,22 @@ input,select,textarea{font-family:inherit; font-size:14px}
         <div class="hint" id="fIcoHint">Načíta názov a adresu firmy.</div>
       </div>
       <div class="field">
-        <label>Klient</label>
+        <label class="lbl-row">Klient
+          <span class="ag-pill" id="fAgencyPill" role="button" tabindex="0">
+            <input type="checkbox" id="fAgency">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>Agentúra
+          </span>
+        </label>
         <input id="fClient" list="clientNames" placeholder="napr. Tesco, Generali, Červený nos…">
         <datalist id="clientNames"></datalist>
         <div class="addr-line" id="fAddrLine" style="display:none"></div>
         <div class="hint">Píš názov konzistentne — tak sa klient správne spáruje naprieč službami.</div>
+      </div>
+      <div class="field" id="fMaterialField" style="display:none">
+        <label>Materiál <span class="req">povinné</span></label>
+        <input id="fMaterial" list="materialNames" placeholder="napr. Tesco, Osmodry">
+        <datalist id="materialNames"></datalist>
+        <div class="hint">Každý materiál sa vedie ako samostatný záznam.</div>
       </div>
       <div class="lw-hint" id="lwHint" style="display:none">
         <div class="lw-hint-head">
@@ -1840,7 +1880,8 @@ input,select,textarea{font-family:inherit; font-size:14px}
         <textarea id="fEvents" placeholder="Stručný prehľad udalostí, stavu jednania, dohodnutých krokov…"></textarea>
         <div class="hint">Každú novú myšlienku daj na nový riadok — zobrazí sa pekne pod sebou.</div>
       </div>
-      <div class="field" id="warningField">
+      <div class="extra-row">
+        <div class="field" id="warningField">
         <button type="button" class="add-warning-btn" id="addWarningBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           Pridať upozornenie
@@ -1851,12 +1892,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
           <button type="button" class="remove-warning-btn" id="removeWarningBtn">✕ Odstrániť upozornenie</button>
         </div>
       </div>
-      <div class="field" id="fLossField" style="display:none">
-        <label>Dôvod straty <span class="req">povinné</span></label>
-        <select id="fLossReason"></select>
-        <div class="hint">Uvidíme, na čom prípady strácame.</div>
-      </div>
-      <div class="field" id="taskField">
+        <div class="field" id="taskField">
         <button type="button" class="add-task-btn" id="addTaskFromEntryBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
           Pridať úlohu s termínom
@@ -1878,6 +1914,12 @@ input,select,textarea{font-family:inherit; font-size:14px}
           </div>
           <button type="button" class="remove-warning-btn" id="removeTaskBtn">✕ Nepridávať úlohu</button>
         </div>
+      </div>
+      </div>
+      <div class="field" id="fLossField" style="display:none">
+        <label>Dôvod straty <span class="req">povinné</span></label>
+        <select id="fLossReason"></select>
+        <div class="hint">Uvidíme, na čom prípady strácame.</div>
       </div>
       <div class="row">
         <div class="field"><label>Obchodník</label><select id="fObch"></select></div>
@@ -2642,6 +2684,9 @@ function guessAssignee(text){
    klient je voľný. Register sa dopĺňa pri každom importe CSV aktivít. */
 // IČO sa v rôznych zdrojoch líši vedúcimi nulami (00321796 vs 321796) aj medzerami,
 // preto ho normalizujeme na holé číslo bez vedúcich núl.
+/* Agentúra objednáva pre viacero svojich klientov — každý materiál je samostatná
+   príležitosť, preto ho zahrnieme do kľúča. */
+function oppKey(e){ return clientKey(e.client)+(e.material?"|m:"+clientKey(e.material):""); }
 const icoKey=v=>String(v||"").replace(/\D/g,"").replace(/^0+/,"");
 function buildDmisOwners(rows){
   const byIco=new Map(), byName=new Map(), label=new Map();
@@ -3834,7 +3879,7 @@ function latestPerClient(entries){
   const map=new Map();
   entries.forEach(e=>{
     const k=clientKey(e.client); if(!k) return;
-    const key=k+"|"+(e.segment||"");
+    const key=oppKey(e)+"|"+(e.segment||"");
     const prev=map.get(key);
     if(!prev){ map.set(key,e); return; }
     const cmp=weekCmpDesc(e.weekId,prev.weekId);   // <0 = e je z novšieho týždňa
@@ -3966,6 +4011,7 @@ function demoBackend(){
     async saveCalculators(list){ calculators=list.map(c=>({...c})); sync(); },
     async sendFeedback(f){ feedback=[{...f,id:"fb"+Date.now()},...feedback]; sync(); },
     async setFeedbackDone(id,done){ feedback=feedback.map(f=>f.id===id?{...f,done}:f); sync(); },
+    async replyFeedback(id,reply){ feedback=feedback.map(f=>f.id===id?{...f,reply,repliedAt:Date.now(),done:true}:f); sync(); },
     async removeFeedback(id){ feedback=feedback.filter(f=>f.id!==id); sync(); },
     async releaseDmisOwner(ico,client,owner){
       dmisOwners=dmisOwners.map(e=>{
@@ -3998,7 +4044,7 @@ function demoBackend(){
 async function firebaseBackend(){
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
   const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
-  const { getFirestore, collection, query, onSnapshot, doc, setDoc, deleteDoc, getDoc, arrayUnion, arrayRemove, writeBatch } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+  const { getFirestore, collection, query, where, onSnapshot, doc, setDoc, deleteDoc, getDoc, arrayUnion, arrayRemove, writeBatch } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
   const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
   const app=initializeApp(firebaseConfig); const auth=getAuth(app); const db=getFirestore(app);
   const fx=getFunctions(app,"europe-west1");
@@ -4056,11 +4102,14 @@ async function firebaseBackend(){
       const u7=onSnapshot(doc(db,"meta","approachInfo"), snap=>{ state.approachInfos=snap.exists()?(snap.data().values||[]):[]; render(); });
       const u8=onSnapshot(doc(db,"meta","dmisOwners"), snap=>{ state.dmisOwners=snap.exists()?(snap.data().entries||[]):[]; render(); });
       const u9=onSnapshot(doc(db,"meta","calculators"), snap=>{ state.calculators=snap.exists()?(snap.data().items||[]):[]; render(); });
-      // Pripomienky číta len admin — ostatní ich len posielajú
-      const u10 = ADMIN_EMAILS.includes((state.user.key||"").toLowerCase())
-        ? onSnapshot(query(collection(db,"feedback")), snap=>{ state.feedback=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
-            err=>console.error("feedback snapshot:", err))
-        : (()=>{});
+      // Admin vidí všetky postrehy, obchodník len svoje vlastné
+      const isAdm = ADMIN_EMAILS.includes((state.user.key||"").toLowerCase());
+      const fbQuery = isAdm
+        ? query(collection(db,"feedback"))
+        : query(collection(db,"feedback"), where("authorKey","==",(state.user.key||"").toLowerCase()));
+      const u10 = onSnapshot(fbQuery,
+        snap=>{ state.feedback=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
+        err=>console.error("feedback snapshot:", err));
       const u4=onSnapshot(query(collection(db,"weeklyDone")),
         snap=>{ state.weeklyDone=snap.docs.map(d=>({id:d.id,entries:[],...d.data()})); render(); },
         err=>{ console.error("weeklyDone snapshot error:", err); toast("⚠ Chyba pri načítaní \"Hotovo\": "+(err.message||err.code||err)); });
@@ -4124,6 +4173,9 @@ async function firebaseBackend(){
       await setDoc(doc(db,"feedback",id),{...f,id});
     },
     async setFeedbackDone(id,done){ await setDoc(doc(db,"feedback",id),{done},{merge:true}); },
+    async replyFeedback(id,reply){
+      await setDoc(doc(db,"feedback",id),{reply, repliedAt:Date.now(), done:true},{merge:true});
+    },
     async removeFeedback(id){ await deleteDoc(doc(db,"feedback",id)); },
     async releaseDmisOwner(ico,client,owner){
       const next=(state.dmisOwners||[]).map(e=>{
@@ -4489,8 +4541,9 @@ function renderNow(){
   {
     const isAdmin=state.user.role==="admin";
     const nav=$("#navFeedback");
-    if(nav) nav.style.display=isAdmin?"":"none";
-    const nove=(state.feedback||[]).filter(f=>!f.done).length;
+    if(nav) nav.style.display="";          // sekciu vidí každý, obsah sa líši
+    const nove=isAdmin ? (state.feedback||[]).filter(f=>!f.done).length
+                       : (state.feedback||[]).filter(f=>f.reply && !f.seen).length;
     counts.feedback = nove;
     document.querySelectorAll('[data-cnt="feedback"]').forEach(x=>x.classList.toggle("has", nove>0));
   }
@@ -5492,7 +5545,7 @@ function staleNbCases(ownerOnly){
     if(!e.isNewBusiness) return;
     const k=clientKey(e.client); if(!k) return;
     if(ownerOnly && !isMine(e)) return;
-    const key=k+"|"+(e.segment||"");
+    const key=oppKey(e)+"|"+(e.segment||"");
     const prev=latest.get(key);
     if(!prev || (e.updatedAt||0)>(prev.updatedAt||0)) latest.set(key,e);
   });
@@ -5510,7 +5563,7 @@ function nbAnalytics(){
   // jedna príležitosť = klient × služba, berieme jej najnovší stav
   const opp=new Map();
   nb.forEach(e=>{
-    const k=clientKey(e.client)+"|"+e.segment; if(!clientKey(e.client)) return;
+    const k=oppKey(e)+"|"+e.segment; if(!clientKey(e.client)) return;
     const p=opp.get(k);
     if(!p || weekCmpDesc(e.weekId,p.weekId)<0 || (e.weekId===p.weekId && (e.updatedAt||0)>(p.updatedAt||0))) opp.set(k,e);
   });
@@ -5982,6 +6035,7 @@ function openFeedback(){
       <div class="field">
         <textarea id="fbText" rows="5" placeholder="napr. Po uložení záznamu mi zmizne filter, musím ho nastavovať odznova."></textarea>
       </div>
+      <div class="fb-err" id="fbErr" style="display:none"></div>
     </div>
     <div class="modal-f" style="justify-content:flex-end">
       <button class="btn" data-act="cancel">Zrušiť</button>
@@ -5991,14 +6045,29 @@ function openFeedback(){
   const close=()=>scrim.remove();
   scrim.querySelector('[data-act="cancel"]').onclick=close;
   scrim.onclick=ev=>{ if(ev.target===scrim) close(); };
-  scrim.querySelector('[data-act="send"]').onclick=async()=>{
+  const sendBtn=scrim.querySelector('[data-act="send"]');
+  sendBtn.onclick=async()=>{
     const t=scrim.querySelector("#fbText").value.trim();
     if(!t){ scrim.querySelector("#fbText").focus(); toast("Napíš prosím text."); return; }
+    sendBtn.disabled=true; sendBtn.textContent="Odosielam…";
+    const errBox=scrim.querySelector("#fbErr");
+    errBox.style.display="none";
     try{
-      await backend.sendFeedback({ text:t, author:state.user.name||"—",
-        authorKey:state.user.key||"", createdAt:Date.now(), done:false });
+      // Ak Firebase odmietne zápis, vie to visieť — po 8 sekundách to vzdáme a povieme prečo
+      await Promise.race([
+        backend.sendFeedback({ text:t, author:state.user.name||"—",
+          authorKey:(state.user.key||"").toLowerCase(), createdAt:Date.now(), done:false }),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),8000)),
+      ]);
       close(); toast("Ďakujem, odoslané.");
-    }catch(err){ console.error("Pripomienku sa nepodarilo odoslať:", err); toast("⚠ Nepodarilo sa odoslať."); }
+    }catch(err){
+      console.error("Postreh sa nepodarilo odoslať:", err);
+      sendBtn.disabled=false; sendBtn.textContent="Odoslať";
+      errBox.style.display="";
+      errBox.innerHTML=`<b>Odoslanie zlyhalo.</b> Appka nemá povolenie zapisovať postrehy —
+        treba doplniť pravidlo pre <code>feedback</code> vo Firebase.
+        Text si zatiaľ skopíruj a pošli Mirke.<br><span class="fb-err-code">${esc(err?.code||err?.message||"neznáma chyba")}</span>`;
+    }
   };
   document.body.appendChild(scrim);
   setTimeout(()=>scrim.querySelector("#fbText").focus(),40);
@@ -6006,14 +6075,19 @@ function openFeedback(){
 /* Prehľad pripomienok — len pre admina */
 function viewFeedback(){
   const wrap=el("div");
+  const isAdmin=state.user.role==="admin";
   const list=(state.feedback||[]).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   const open=list.filter(f=>!f.done);
   wrap.appendChild(el("div","page-h",`<div>
-    <div class="eyebrow">Od obchodníkov</div>
+    <div class="eyebrow">${isAdmin?"Od obchodníkov":"Tvoje postrehy a odpovede"}</div>
     <h1>Postrehy</h1>
-    <div class="sub">${open.length} ${plural(open.length,"nevybavená","nevybavené","nevybavených")} · ${list.length} celkovo</div></div><div></div>`));
+    <div class="sub">${isAdmin
+      ? `${open.length} ${plural(open.length,"nevybavená","nevybavené","nevybavených")} · ${list.length} celkovo`
+      : `${list.length} ${plural(list.length,"odoslaný postreh","odoslané postrehy","odoslaných postrehov")} · ${list.filter(f=>f.reply).length} zodpovedaných`}</div></div><div></div>`));
   if(!list.length){
-    wrap.appendChild(el("div","empty","<b>Zatiaľ nič neprišlo</b>Obchodníci posielajú postrehy cez zelenú bublinku vľavo dole."));
+    wrap.appendChild(el("div","empty", isAdmin
+      ? "<b>Zatiaľ nič neprišlo</b>Obchodníci posielajú postrehy cez zelené tlačidlo."
+      : "<b>Zatiaľ si nič neposlal</b>Použi zelené tlačidlo Postreh, podnet, návrh — odpoveď uvidíš tu."));
     return wrap;
   }
   const box=el("div","fb-list");
@@ -6027,14 +6101,27 @@ function viewFeedback(){
           <span>${p(d.getDate())}. ${p(d.getMonth()+1)}. ${d.getFullYear()} o ${p(d.getHours())}:${p(d.getMinutes())}</span></div>
         ${f.done?`<span class="fb-done-chip">vybavené</span>`:""}
       </div>
-      <div class="fb-text">${esc(f.text||"")}</div>`;
-    const acts=el("div","fb-acts");
-    const ok=el("button","fb-btn", f.done?"↺ Vrátiť medzi nové":"✓ Označiť ako vybavené"); ok.type="button";
-    ok.onclick=async()=>{ try{ await backend.setFeedbackDone(f.id,!f.done); }catch(err){ console.error(err); toast("⚠ Nepodarilo sa uložiť."); } };
-    const del=el("button","fb-btn ghost","Zmazať"); del.type="button";
-    del.onclick=async()=>{ if(!confirm("Zmazať tento postreh?")) return;
-      try{ await backend.removeFeedback(f.id); }catch(err){ console.error(err); toast("⚠ Nepodarilo sa zmazať."); } };
-    acts.appendChild(ok); acts.appendChild(del); card.appendChild(acts);
+      <div class="fb-text">${esc(f.text||"")}</div>
+      ${f.reply?`<div class="fb-reply"><b>Odpoveď</b>${esc(f.reply)}</div>`:""}`;
+    if(isAdmin){
+      const acts=el("div","fb-acts");
+      const rep=el("button","fb-btn", f.reply?"Upraviť odpoveď":"Odpovedať"); rep.type="button";
+      rep.onclick=()=>{
+        const t=prompt("Odpoveď pre "+(f.author||"obchodníka")+":", f.reply||"");
+        if(t===null) return;
+        backend.replyFeedback(f.id, t.trim())
+          .then(()=>toast("Odpoveď odoslaná."))
+          .catch(err=>{ console.error(err); toast("⚠ Nepodarilo sa uložiť."); });
+      };
+      const ok=el("button","fb-btn ghost", f.done?"↺ Vrátiť medzi nové":"✓ Vybavené"); ok.type="button";
+      ok.onclick=async()=>{ try{ await backend.setFeedbackDone(f.id,!f.done); }catch(err){ console.error(err); toast("⚠ Nepodarilo sa uložiť."); } };
+      const del=el("button","fb-btn ghost","Zmazať"); del.type="button";
+      del.onclick=async()=>{ if(!confirm("Zmazať tento postreh?")) return;
+        try{ await backend.removeFeedback(f.id); }catch(err){ console.error(err); toast("⚠ Nepodarilo sa zmazať."); } };
+      acts.appendChild(rep); acts.appendChild(ok); acts.appendChild(del); card.appendChild(acts);
+    } else if(!f.reply){
+      card.appendChild(el("div","fb-wait","Čaká na odpoveď."));
+    }
     box.appendChild(card);
   });
   wrap.appendChild(box);
@@ -7415,6 +7502,21 @@ function openModal(entry,presetSeg){
     }
   };
   syncIcoField();
+  {
+    const ag=$("#fAgency"), mf=$("#fMaterialField");
+    ag.checked=!!entry?.isAgency;
+    $("#fMaterial").value=entry?.material||"";
+    const syncAg=()=>{ mf.style.display=ag.checked?"":"none"; };
+    ag.onchange=syncAg; syncAg();
+    const pill=$("#fAgencyPill");
+    pill.onclick=()=>{ ag.checked=!ag.checked; syncAg(); };
+    pill.onkeydown=ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); pill.onclick(); } };
+    // ponuka už použitých materiálov danej agentúry
+    const dl=$("#materialNames");
+    const k=clientKey($("#fClient").value||entry?.client||"");
+    dl.innerHTML=[...new Set(state.all.filter(x=>clientKey(x.client)===k&&x.material).map(x=>x.material))]
+      .sort((a,b)=>a.localeCompare(b,"sk")).map(m=>`<option value="${esc(m)}">`).join("");
+  }
   $("#fClient").oninput=syncIcoField;   // len počas písania, nie po vyhľadaní
   pendingFinstat = entry?.companyInfo || null;
   // úloha s termínom — vždy prázdna, pridáva sa k práve ukladanému záznamu
@@ -7530,6 +7632,14 @@ async function saveFromModal(){
     return;
   }
   $("#fLossReason").style.borderColor="";
+  // Pri agentúre je materiál povinný — bez neho by sa záznamy zlievali do jedného
+  if($("#fAgency").checked && !$("#fMaterial").value.trim()){
+    $("#fMaterialField").style.display="";
+    $("#fMaterial").focus(); $("#fMaterial").style.borderColor="var(--red)";
+    toast("Pri agentúre vyplň materiál.");
+    return;
+  }
+  $("#fMaterial").style.borderColor="";
   const alreadyKnown=knownIcoFor(client);
   const icoVal=alreadyKnown || $("#fIco").value.replace(/\D/g,"");
   if(!icoVal){
@@ -7632,6 +7742,8 @@ async function saveFromModal(){
     dmisActType: $("#fActType").value || (baseEntry.dmisActType ?? null),
     dmisStreet: addrStreet || (baseEntry.dmisStreet ?? null),
     dmisCity: addrCity || (baseEntry.dmisCity ?? null),
+    isAgency: $("#fAgency").checked,
+    material: $("#fAgency").checked ? ($("#fMaterial").value.trim()||null) : null,
     lossReason: ["nechce","zrusene"].includes($("#fStatus").value) ? ($("#fLossReason").value||null) : null,
     nbApproach: $("#fApproach").value || (baseEntry.nbApproach ?? null),
     nbApproachInfo: $("#fApproachInfo").value.trim() || (baseEntry.nbApproachInfo ?? null),
