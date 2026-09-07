@@ -5860,7 +5860,8 @@ function viewDashboard(){
   STATUSES.forEach(s=>{
     const cnt=we.filter(e=>e.status===s.id).length;
     const row=el("div","st-row");
-    row.innerHTML=`${segIcon(s.id,14)}
+    // stavy nemajú ikonku služby — patrí sem farebná bodka stavu
+    row.innerHTML=`<span class="st-dot" style="background:${s.color}"></span>
       <span class="st-name">${esc(s.label)}</span>
       <div class="st-bar-wrap"><div class="st-bar" style="width:${cnt?Math.max(4,Math.round(cnt/maxCt*100)):0}%;background:${s.color}"></div></div>
       <span class="st-ct">${cnt}</span>`;
