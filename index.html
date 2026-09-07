@@ -4510,7 +4510,22 @@ let _renderPending=false;
 function render(){
   if(_renderPending) return;
   _renderPending=true;
-  requestAnimationFrame(()=>{ _renderPending=false; renderNow(); });
+  requestAnimationFrame(()=>{
+    _renderPending=false;
+    /* Prekreslenie zahodí a znovu vytvorí polia — bez tohto by sa pri písaní
+       do vyhľadávania stratilo zameranie a dalo by sa napísať len jedno písmeno. */
+    const a=document.activeElement;
+    const keep = a && (a.tagName==="INPUT"||a.tagName==="TEXTAREA") && a.id
+      ? { id:a.id, start:a.selectionStart, end:a.selectionEnd } : null;
+    renderNow();
+    if(keep){
+      const n=document.getElementById(keep.id);
+      if(n && n!==document.activeElement){
+        n.focus({preventScroll:true});
+        try{ n.setSelectionRange(keep.start, keep.end); }catch(_){}
+      }
+    }
+  });
 }
 function renderNow(){
   $("#uName").textContent=state.user.name;
@@ -5710,7 +5725,7 @@ function activityFeed(entries){
 
   // hľadanie
   const srch=el("div","fbar-search",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
-  const si=el("input"); si.placeholder="Hľadať klienta, text alebo obchodníka…"; si.value=state.feedQ||"";
+  const si=el("input"); si.id="feedSearch"; si.placeholder="Hľadať klienta, text alebo obchodníka…"; si.value=state.feedQ||"";
   si.oninput=()=>{ state.feedQ=si.value; state.feedLimit=20; render(); };
   srch.appendChild(si);
   if(state.feedQ){
@@ -6147,6 +6162,7 @@ function openQuickTask(e){
         <div class="field"><label>Zodpovedný</label>
           <select id="qtWho"></select></div>
       </div>
+      <div class="fb-err" id="qtErr" style="display:none"></div>
       <div class="hint qt-quick" id="qtQuick"></div>
     </div>
     <div class="modal-f" style="justify-content:flex-end">
@@ -6178,7 +6194,11 @@ function openQuickTask(e){
       close(); toast("Úloha pridaná.");
     }catch(err){
       console.error("Úlohu sa nepodarilo uložiť:", err);
-      toast("⚠ Úlohu sa nepodarilo uložiť — pravdepodobne chýba oprávnenie vo Firebase.");
+      const box=scrim.querySelector("#qtErr");
+      box.style.display="";
+      box.innerHTML=`<b>Úlohu sa nepodarilo uložiť.</b> Appka nemá povolenie zakladať úlohy —
+        vo Firebase treba upraviť pravidlo pre <code>tasks</code>.
+        <br><span class="fb-err-code">${esc(err?.code||err?.message||"neznáma chyba")}</span>`;
     }
   };
   document.body.appendChild(scrim);
@@ -7783,7 +7803,10 @@ async function saveFromModal(){
           createdBy:state.user.name, createdAt:Date.now(),
         });
         toast(`Úloha pridaná${$("#fTaskDue").value?` · termín ${fmtDay($("#fTaskDue").value)}`:""}`);
-      }catch(err){ console.error("Úlohu sa nepodarilo uložiť:", err); toast("⚠ Úlohu sa nepodarilo uložiť."); }
+      }catch(err){
+        console.error("Úlohu sa nepodarilo uložiť:", err);
+        toast("⚠ Úlohu sa nepodarilo uložiť — vo Firebase chýba oprávnenie pre tasks. Záznam sa uložil.");
+      }
     }
   }
   rememberApproachInfo($("#fApproachInfo")?.value);
