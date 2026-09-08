@@ -68,12 +68,16 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .brand .sub b{font-size:12.5px; font-weight:600}
 /* Názov Zappis — APP modré, podčiarknuté vlasovou linkou presne pod ním */
 .brand .sub b.zappis{font-size:16px; font-weight:500; letter-spacing:-.01em; line-height:1.25}
-.zappis{white-space:nowrap}
-.zappis .app{display:inline; position:relative; color:var(--brand)}
-.zappis .app::after{content:""; position:absolute; left:0; right:0; bottom:-1px;
-  height:1px; background:var(--brand)}
+/* Logo Zappis — písmená "app" nesú farby služieb.
+   V prehľade sú trojfarebné (modrá, zelená, cyan = všetky služby),
+   v konkrétnej službe sa všetky tri prefarbia na farbu tej služby. */
+.zappis{white-space:nowrap; --lg1:#3E56CB; --lg2:#5E9331; --lg3:#2FB47C}
+.zappis .app{display:inline}
+.zappis .app i{font-style:normal; transition:color .25s}
+.zappis .app i:nth-child(1){color:var(--lg1)}
+.zappis .app i:nth-child(2){color:var(--lg2)}
+.zappis .app i:nth-child(3){color:var(--lg3)}
 .login h1.zappis{letter-spacing:-.01em; font-weight:500}
-.login h1.zappis .app::after{bottom:-2px; height:1.5px}
 .brand .sub>span{display:block; font-size:11px; color:var(--muted)}
 
 .weekbar{display:flex; align-items:center; gap:10px; margin:0 auto; min-width:0; flex:0 1 auto; overflow:hidden}
@@ -124,7 +128,15 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .gs-clear svg{width:13px; height:13px}
 #gsWrapRail{margin:0 2px 12px}
 .gs-mobile{display:none; padding:10px 14px 0}
-@media (max-width:900px){ .gs-mobile{display:block} }
+.gs-mobile-btn{display:none; width:34px; height:34px; border-radius:9px; border:1px solid var(--line);
+  background:#fff; color:var(--ink-soft); place-items:center; flex:0 0 auto}
+.gs-mobile-btn svg{width:17px; height:17px}
+.gs-mobile-btn.on{background:var(--brand-soft); border-color:#c5cff5; color:var(--brand)}
+@media (max-width:900px){
+  .gs-mobile-btn{display:grid}
+  .gs-mobile{display:none}
+  .gs-mobile.open{display:block; padding:10px 14px 2px}
+}
 
 .gs-panel{display:none; position:fixed; z-index:70; background:#fff; border:1px solid var(--line);
   border-radius:13px; box-shadow:0 18px 44px rgba(22,26,36,.18); overflow:auto;
@@ -149,6 +161,107 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .gs-hint kbd{font-family:var(--mono); font-size:10.5px; background:var(--line-2);
   border-radius:4px; padding:1px 5px}
 
+/* ============================================================ ZOSKUPENÝ ZOZNAM ("Všetko") */
+/* Mriežka — hlavička aj riadky používajú rovnaké rozloženie stĺpcov, preto sedia pod sebou. */
+.gl-list{--gl-cols:22px minmax(150px,1.5fr) 22px 92px minmax(0,1fr) minmax(0,1fr) 106px 74px 46px 82px 24px;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+.gl-headrow{display:grid; grid-template-columns:var(--gl-cols); gap:10px; align-items:center;
+  padding:8px 14px; background:#F7F8FB; border-bottom:1px solid var(--line);
+  font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted)}
+.gl-headrow .r{text-align:right}
+.gl-row+.gl-row{border-top:1px solid var(--line-2)}
+.gl-rows .gl-row:nth-child(even) .gl-head{background:#FAFBFC}
+.gl-row.open>.gl-head{background:var(--brand-soft)}
+.gl-head{display:grid; grid-template-columns:var(--gl-cols); gap:10px; align-items:center; width:100%;
+  padding:9px 14px; background:none; border:none; cursor:pointer; font-family:inherit; text-align:left}
+.gl-head:hover{background:#F1F3F8}
+.gl-row.open>.gl-head:hover{background:#E8ECFA}
+.gl-head>span{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.gl-chev{display:grid; place-items:center; width:22px; height:22px; margin-left:-3px;
+  border-radius:50%; transition:transform .15s, filter .12s; overflow:visible}
+.gl-chev svg{width:13px; height:13px}
+.gl-row.open .gl-chev{transform:rotate(90deg)}
+.gl-head:hover .gl-chev{filter:brightness(.93)}
+.gl-name{display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--ink)}
+.gl-nm{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.gl-db{flex:0 0 auto; display:grid; place-items:center; color:#8B93A1; cursor:help}
+.gl-db svg{width:13px; height:13px}
+.gl-head:hover .gl-db{color:var(--brand)}
+.gl-mat{flex:0 0 auto; font-size:10.5px; font-weight:600; color:var(--brand);
+  background:var(--brand-soft); border-radius:20px; padding:1px 7px}
+.gl-seg{display:grid; place-items:center; overflow:visible}
+.gl-seg svg{width:16px; height:16px}
+.gl-type{font-size:11px; font-weight:700; letter-spacing:.01em}
+.gl-type.nb{color:var(--nb)}
+.gl-type.nb-app{color:#E07B18}
+.gl-type.cc{color:var(--muted); font-weight:600}
+.gl-appr{font-size:11.5px; color:var(--ink-soft)}
+.gl-status{font-size:11px; color:var(--muted)}
+.gl-status .tag{max-width:100%; overflow:hidden; text-overflow:ellipsis}
+.gl-sleep{font-size:10.5px; font-weight:700; color:var(--muted); background:var(--line-2);
+  border-radius:20px; padding:2px 9px}
+.gl-dmis{display:flex; align-items:center; gap:3px; overflow:visible}
+.gl-dmis .dm-ini{display:inline-grid; place-items:center; min-width:20px; height:18px; padding:0 5px;
+  border-radius:20px; background:var(--line-2); color:var(--ink-soft); font-size:9.5px; font-weight:700}
+.gl-none{color:var(--line)}
+.gl-ct{text-align:right; font-size:11.5px; color:var(--muted); font-family:var(--mono)}
+.gl-date{text-align:right; font-size:11.5px; color:var(--muted); font-family:var(--mono)}
+.gl-av{display:flex; align-items:center; gap:6px; overflow:visible}
+.gl-av .av-ini{width:22px; height:22px; border-radius:50%; display:grid; place-items:center; flex:0 0 auto;
+  color:#fff; font-size:9.5px; font-weight:700; background:var(--ink-soft)}
+.gl-av .av-name{display:none}
+.gl-row.sleeping .gl-name{color:var(--muted)}
+.gl-body{padding:2px 14px 12px 40px; display:flex; flex-direction:column; gap:10px;
+  border-top:1px dashed var(--line)}
+.gl-item{position:relative; border-left:2px solid var(--line); padding:2px 90px 2px 12px}
+.gl-item.sleeping{opacity:.7}
+.gl-item-meta{font-size:11px; color:var(--muted); margin-bottom:3px}
+.gl-nb{color:var(--nb); font-weight:600}
+.gl-nb.app{color:#E07B18}
+.gl-item-text{font-size:12.5px; color:var(--ink-soft); line-height:1.55; white-space:pre-wrap}
+.gl-item-open{position:absolute; right:0; top:0; border:1px solid var(--line); background:#fff;
+  border-radius:20px; padding:3px 10px; font-family:inherit; font-size:11px; font-weight:600;
+  color:var(--muted); cursor:pointer}
+.gl-item-open:hover{border-color:var(--brand); color:var(--brand)}
+
+/* Užšie obrazovky — postupne ubúdajú stĺpce, ktoré sa dajú dočítať po rozbalení */
+@media (max-width:1180px){
+  .gl-list{--gl-cols:22px minmax(140px,1.5fr) 22px 92px minmax(0,1fr) 106px 74px 46px 78px 24px}
+  .gl-headrow>span:nth-child(6),.gl-head>span:nth-child(6){display:none}
+}
+@media (max-width:980px){
+  .gl-list{--gl-cols:22px minmax(130px,1.5fr) 22px 88px 100px 46px 74px 24px}
+  .gl-headrow>span:nth-child(5),.gl-head>span:nth-child(5),
+  .gl-headrow>span:nth-child(8),.gl-head>span:nth-child(8){display:none}
+}
+@media (max-width:768px){
+  .gl-headrow{display:none}
+  /* Riadok sa zloží do dvoch úrovní:
+     hore firma a dátum, dole ikona služby, obchodník a typ aktivity. */
+  .gl-head{gap:0 8px; row-gap:3px; padding:9px 11px;
+    grid-template-columns:20px minmax(0,1fr) auto; grid-template-rows:auto auto}
+  .gl-head>span:nth-child(5),.gl-head>span:nth-child(6),
+  .gl-head>span:nth-child(7),.gl-head>span:nth-child(8),
+  .gl-head>span:nth-child(9){display:none}
+  .gl-head>span:nth-child(1){grid-area:1/1}
+  .gl-head>span:nth-child(2){grid-area:1/2}
+  .gl-head>span:nth-child(10){grid-area:1/3; text-align:right}
+  .gl-head>span:nth-child(3){grid-area:2/1; display:grid}
+  .gl-head>span:nth-child(11){grid-area:2/2}
+  .gl-head>span:nth-child(4){grid-area:2/3; text-align:right}
+  .gl-chev{width:20px;height:20px;margin-left:-2px}
+  .gl-chev svg{width:12px;height:12px}
+  .gl-seg svg{width:15px;height:15px}
+  .gl-name{font-size:12.5px}
+  .gl-type{font-size:10px}
+  .gl-date{font-size:10.5px}
+  .gl-av .av-ini{width:17px;height:17px;font-size:8px}
+  .gl-av .av-name{display:block; font-size:11px; color:var(--muted);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .gl-body{padding:2px 11px 12px 22px}
+  .gl-item{padding-right:0; padding-bottom:26px}
+  .gl-item-open{top:auto; bottom:0; right:auto; left:12px}
+}
 /* ============================================================ SHELL */
 .shell{display:flex; min-height:calc(100vh - 62px)}
 .rail{width:230px; flex:0 0 auto; padding:16px 12px; border-right:1px solid var(--line); position:sticky; top:62px;
@@ -171,9 +284,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .rail hr{border:none; border-top:1px solid var(--line); margin:14px 6px}
 .rail-foot{margin-top:auto}
 
-.btn-primary{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px; border-radius:var(--r-sm); border:none; background:var(--brand); color:#fff; font-weight:600; font-size:13.5px; box-shadow:0 1px 2px rgba(62,86,203,.35)}
+.btn-primary{display:flex; align-items:center; justify-content:center; gap:7px; width:100%; height:34px; padding:0 12px; border-radius:var(--r-sm); border:none; background:var(--brand); color:#fff; font-weight:600; font-size:12.5px; box-shadow:0 1px 2px rgba(62,86,203,.28)}
 .btn-primary:hover{background:var(--brand-dark)}
-.btn-primary svg{width:16px;height:16px}
+.btn-primary svg{width:14px;height:14px}
 
 .main{flex:1 1 auto; min-width:0; padding:24px 28px 60px; max-width:1180px}
 /* Veľké a veľmi veľké monitory — obsah nemusí zostať v pásiku 1180 px */
@@ -197,7 +310,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
   .navitem .ct{font-size:11px; padding:1px 6px; min-width:21px}
   .rail .grp{font-size:10px; margin:3px 8px 4px}
   .rail hr{margin:7px 6px}
-  .btn-primary{padding:8px; font-size:12.5px}
+  .btn-primary{height:31px; padding:0 10px; font-size:12px}
 }
 @media (max-height:640px){
   .navitem{padding:4px 8px; font-size:12px}
@@ -695,18 +808,65 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .fpill.on>svg:first-child,.fpill.on .fpill-c{color:var(--brand)}
 .fpill select{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;font-size:16px}
 .feed-title{font-size:15px;font-weight:700;margin:26px 0 12px}
+/* "Zobraziť moje" — výrazný prepínač medzi hľadaním a filtrami */
+.fbar-mine{display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;height:38px;padding:0 15px;
+  border:1px solid #C5CFF5;background:var(--brand-soft);color:var(--brand);border-radius:20px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:700;white-space:nowrap;transition:background .12s,color .12s}
+.fbar-mine svg{width:15px;height:15px;flex:0 0 auto}
+.fbar-mine:hover{background:#DDE3FA;border-color:#AFBDF0}
+.fbar-mine.on{background:var(--brand);border-color:var(--brand);color:#fff;
+  box-shadow:0 1px 4px rgba(62,86,203,.32)}
+.fbar-mine.on:hover{background:var(--brand-dark);border-color:var(--brand-dark)}
 .fbar-clear{display:inline-flex;align-items:center;height:38px;padding:0 13px;flex:0 0 auto;
   border:1px solid #F0CFCB;background:#FDF3F2;color:#B3261E;border-radius:20px;cursor:pointer;
   font-family:inherit;font-size:12.5px;font-weight:600;white-space:nowrap}
 .fbar-clear:hover{background:#FBE7E5;border-color:#E4B5B0}
 .feed-count{font-size:11.5px;color:var(--muted);margin-bottom:10px}
-/* Mobil — pole na celú šírku, pilulky po dvoch v riadku, nič nepreteká do strany */
+/* Desktop: obal pilulek je priehľadný, pilulky zostávajú priamo v lište. */
+.fbar-pills{display:contents}
+.fbar-more,.fbar-scrim,.sheet-only{display:none}
+
+/* Mobil: filtre sa zbalia za tlačidlo "Filtre (n)" a otvárajú sa zdola. */
 @media (max-width:768px){
-  .fbar{gap:6px}
-  .fbar-search{flex:1 1 100%; height:40px; padding:0 13px}
-  .fpill{flex:1 1 calc(50% - 3px); min-width:0; max-width:none; justify-content:center;
-    height:36px; padding:0 11px; font-size:12px}
-  .fbar-clear{flex:1 1 100%; justify-content:center; height:36px; padding:0 11px; font-size:12px}
+  .fbar{gap:6px; flex-wrap:nowrap}
+  .fbar-search{flex:1 1 auto; min-width:0; height:38px; padding:0 12px}
+  .fbar-mine{height:38px; padding:0 11px; gap:0}
+  .fbar-mine .fm-lbl{display:none}
+  .fbar-more{display:inline-flex; align-items:center; gap:6px; flex:0 0 auto; height:38px; padding:0 13px;
+    border:1px solid var(--line); background:#fff; border-radius:20px; cursor:pointer;
+    font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink-soft); white-space:nowrap}
+  .fbar-more svg{width:14px; height:14px}
+  .fbar-more.on{background:var(--brand-soft); border-color:#c5cff5; color:var(--brand)}
+
+  .fbar-pills{display:none}
+  .fbar.sheet-open .fbar-scrim{display:block; position:fixed; inset:0; z-index:70;
+    background:rgba(22,26,36,.42)}
+  .fbar.sheet-open .fbar-pills{display:flex; flex-direction:column; align-items:stretch; gap:9px;
+    position:fixed; left:0; right:0; bottom:0; z-index:71; background:#fff;
+    border-radius:18px 18px 0 0; padding:10px 16px calc(16px + env(safe-area-inset-bottom));
+    max-height:82vh; overflow:auto; box-shadow:0 -8px 30px rgba(22,26,36,.18)}
+  .fbar.sheet-open .sheet-only{display:flex}
+  .fs-head{align-items:center; gap:10px; position:relative; padding:2px 0 8px;
+    border-bottom:1px solid var(--line-2); margin-bottom:2px}
+  .fs-grip{position:absolute; top:-4px; left:50%; transform:translateX(-50%);
+    width:34px; height:4px; border-radius:2px; background:var(--line)}
+  .fs-head b{font-size:14px}
+  .fs-close{margin-left:auto; border:none; background:none; color:var(--muted); font-size:15px;
+    cursor:pointer; padding:2px 4px; font-family:inherit}
+  .fbar.sheet-open .fpill{width:100%; max-width:none; height:44px; justify-content:flex-start;
+    padding:0 14px; font-size:13.5px}
+  .fbar.sheet-open .fbar-clear{width:100%; justify-content:center; height:42px; font-size:13px}
+  .fs-apply{justify-content:center; align-items:center; height:46px; border:none; border-radius:12px;
+    background:var(--ink); color:#fff; font-family:inherit; font-size:14px; font-weight:600;
+    cursor:pointer; margin-top:4px}
+
+  /* Segmentové čipy — jeden posúvateľný pás namiesto troch radov */
+  .nb-stats{flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none; padding-bottom:2px}
+  .nb-stats::-webkit-scrollbar{display:none}
+  .nb-stat{flex:0 0 auto}
+  /* dlhý popis sekcie na mobile len zaberá miesto */
+  .page-h .sub{display:none}
 }
 .feed-list{display:flex;flex-direction:column;gap:9px}
 @media (max-width:768px){
@@ -948,23 +1108,26 @@ input,select,textarea{font-family:inherit; font-size:14px}
 /* --- Akčné tlačidlá: v menu na počítači, ako krúžky na mobile --- */
 /* Akčné tlačidlá vpravo hore v lište — vedľa seba, vždy na mieste */
 .top-actions{display:flex; align-items:center; gap:7px; flex:0 1 auto; min-width:0; margin-left:auto}
-.ta-btn{display:inline-flex; align-items:center; gap:7px; height:36px; padding:0 15px; border-radius:20px;
-  border:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:700; color:#fff; white-space:nowrap}
-.ta-btn svg{width:14px; height:14px; flex:0 0 auto}
+/* Akčné tlačidlá v lište. "Pridať záznam" je hlavná akcia — plná výplň.
+   "Postreh" je vedľajšia, preto len obrys, aby lišta nemala dve rovnako hlasné tlačidlá. */
+.ta-btn{display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-radius:16px;
+  border:1px solid transparent; cursor:pointer; font-family:inherit; font-size:12px; font-weight:600;
+  color:#fff; white-space:nowrap; line-height:1}
+.ta-btn svg{width:13px; height:13px; flex:0 0 auto}
 .ta-btn.add{background:var(--brand)}
 .ta-btn.add:hover{background:#3549b0}
-.ta-btn.fb{background:linear-gradient(135deg,#17A968 0%,#0F7C4C 100%)}
-.ta-btn.fb:hover{background:linear-gradient(135deg,#1CBB74 0%,#128A55 100%)}
+.ta-btn.fb{background:#fff; border-color:#B7DFC9; color:#0F7C4C}
+.ta-btn.fb:hover{background:#F1FAF5; border-color:#8FCDB0}
 /* Postupné stláčanie hornej lišty. Šírka v CSS pixeloch klesá aj pri priblížení
    prehliadača (Ctrl +) a pri škálovaní Windowsu na 125/150 %, takže tieto pravidlá
    platia rovnako pre malý monitor ako pre veľký monitor s priblížením. */
 @media(min-width:769px) and (max-width:1500px){
   .brand .sub>span{display:none}                 /* "Obchodné oddelenie" */
-  .ta-btn{font-size:12px; padding:0 12px}
+  .ta-btn{font-size:11.5px; padding:0 11px}
 }
 @media(min-width:769px) and (max-width:1360px){
   .ta-btn.fb .ta-lbl{display:none}               /* Postreh — už len ikona */
-  .ta-btn.fb{padding:0 11px}
+  .ta-btn.fb{padding:0 9px}
   .topbar{gap:12px}
 }
 @media(min-width:769px) and (max-width:1220px){
@@ -973,7 +1136,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 }
 @media(min-width:769px) and (max-width:1080px){
   .ta-btn.add .ta-lbl{display:none}              /* Pridať záznam — už len ikona */
-  .ta-btn.add{padding:0 11px}
+  .ta-btn.add{padding:0 9px}
   .today-link{display:none}
   .scope-switch button{padding:6px 11px}
 }
@@ -985,8 +1148,18 @@ input,select,textarea{font-family:inherit; font-size:14px}
   display:grid; place-items:center; padding:0}
 .fab-round svg{width:22px; height:22px}
 .fab-round.add{background:var(--brand); box-shadow:0 4px 16px rgba(62,86,203,.36)}
-.fab-round.fb{background:linear-gradient(135deg,#17A968 0%,#0F7C4C 100%); box-shadow:0 4px 16px rgba(15,124,76,.34)}
 .fab-round:active{transform:scale(.94)}
+.fab-round svg{transition:transform .18s}
+.fab-stack.open .fab-round svg{transform:rotate(45deg)}
+/* Ponuka nad tlačidlom — nahradila druhé plávajúce tlačidlo */
+.fab-menu{display:none; flex-direction:column; align-items:flex-end; gap:8px; margin-bottom:10px}
+.fab-stack.open .fab-menu{display:flex}
+.fab-item{display:inline-flex; align-items:center; gap:9px; height:42px; padding:0 16px; border-radius:24px;
+  border:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; color:#fff;
+  background:var(--brand); box-shadow:0 4px 14px rgba(62,86,203,.3); white-space:nowrap}
+.fab-item svg{width:16px; height:16px; flex:0 0 auto}
+.fab-item.fb{background:#0F7C4C; box-shadow:0 4px 14px rgba(15,124,76,.3)}
+.fab-item:active{transform:scale(.97)}
 @media(max-width:900px){
   .fab-stack{position:fixed; right:14px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:60;
     display:flex; flex-direction:column; gap:10px}
@@ -1047,17 +1220,22 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .new-badge{display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
   color:#fff;background:var(--nb);border-radius:20px;padding:2px 6px;margin-left:6px;vertical-align:1px;line-height:1}
 .navitem .new-slot{margin-left:auto;display:inline-flex}
+.scope-switch .new-slot{display:inline-flex;margin-left:6px;vertical-align:1px}
+.scope-switch .new-badge{margin-left:0;cursor:help}
 .navitem .new-slot .new-badge{margin-left:0}
 .urgent-dot{position:absolute;top:6px;right:8px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--red);color:#fff;font-size:9.5px;font-weight:700;display:grid;place-items:center;line-height:1}
 .navitem{position:relative}
 /* --- Kalkulačky: výraznejšie tlačidlo v menu --- */
-.navitem-calc{background:linear-gradient(135deg,#FF9A3C 0%,#E07B18 100%);color:#fff;border:none;margin:4px 0 2px;
-  box-shadow:0 2px 8px rgba(224,123,24,.32)}
-.navitem-calc:hover{background:linear-gradient(135deg,#FFA855 0%,#EE8720 100%)}
-.navitem-calc .ic{color:#fff}
-.navitem-calc .lbl{font-weight:700}
-.navitem-calc .ct{background:rgba(255,255,255,.24);color:#fff}
-.navitem-calc.active{background:linear-gradient(135deg,#E07B18 0%,#C46A10 100%);color:#fff}
+/* Kalkulačky — jemné oranžové odlíšenie, nie kričiaci gradient */
+.navitem-calc{background:#FDF3E7;color:#9A5A0E;border:1px solid #F3DCC0;margin:4px 0 2px;
+  box-shadow:none;font-weight:600}
+.navitem-calc:hover{background:#FBEAD6;border-color:#EACDA8}
+.navitem-calc .ic{color:#C87A1A}
+.navitem-calc .lbl{font-weight:600}
+.navitem-calc .ct{background:#F5E0C6;color:#9A5A0E}
+.navitem-calc.active{background:#E07B18;border-color:#E07B18;color:#fff}
+.navitem-calc.active .ic{color:#fff}
+.navitem-calc.active .ct{background:rgba(255,255,255,.24);color:#fff}
 /* --- Stránka Kalkulačky --- */
 .calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
 .calc-card{position:relative;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
@@ -1784,7 +1962,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 <div id="loginView" class="login-wrap hidden">
   <div class="login">
     <img id="loginLogo" src="data:image/png;base64,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" alt="Cromwell Group" style="height:34px;width:auto">
-    <h1 class="zappis">Z<span class="app">app</span>is</h1>
+    <h1 class="zappis">Z<span class="app"><i>a</i><i>p</i><i>p</i></span>is</h1>
     <p>Obchodné oddelenie Cromwell Group. Prihlás sa firemným účtom.</p>
     <button class="gbtn" id="googleLogin">
       <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
@@ -1807,7 +1985,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
     <div class="brand" id="brandHome" title="Prehľad" role="button" tabindex="0">
       <img id="topLogo" src="data:image/png;base64,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" alt="Cromwell Group">
       <div class="divider"></div>
-      <div class="sub"><b class="zappis">Z<span class="app">app</span>is</b><span>Obchodné oddelenie</span></div>
+      <div class="sub"><b class="zappis" id="topZappis">Z<span class="app"><i>a</i><i>p</i><i>p</i></span>is</b><span>Obchodné oddelenie</span></div>
     </div>
 
     <div class="weekbar">
@@ -1820,7 +1998,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 
     <div class="scope-switch" id="scopeSwitch" style="display:none">
       <button type="button" data-scope="week" title="Zobraziť len záznamy zvoleného týždňa">Týždeň</button>
-      <button type="button" data-scope="all" title="Od každého klienta posledná aktivita, naprieč všetkými týždňami">Všetko</button>
+      <button type="button" data-scope="all" title="Od každého klienta posledná aktivita, naprieč všetkými týždňami">Všetko<span class="new-slot" data-new="groupedAll"></span></button>
     </div>
     </div>
 
@@ -1833,6 +2011,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
       </button>
     </div>
     <div class="user">
+      <button class="gs-mobile-btn" id="gsMobileBtn" aria-label="Hľadať" title="Hľadať">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
       <div class="meta"><b id="uName">–</b><span id="uRole">–</span></div>
       <div class="avatar" id="uAvatar">–</div>
       <button class="iconbtn" id="logoutBtn" title="Odhlásiť sa">
@@ -1912,11 +2093,11 @@ input,select,textarea{font-family:inherit; font-size:14px}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           Nový záznam
         </button>
-        <button class="btn-primary" id="addTaskBtn" style="background:#fff;color:var(--ink-soft);border:1px solid var(--line);box-shadow:none;margin-top:8px">
+        <button class="btn-primary" id="addTaskBtn" style="background:#fff;color:var(--ink-soft);border:1px solid var(--line);box-shadow:none;margin-top:6px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           Nová úloha
         </button>
-        <button class="btn-primary" id="importNbBtn" style="background:#fff;color:var(--nb);border:1px solid var(--nb-border);box-shadow:none;margin-top:8px;display:none">
+        <button class="btn-primary" id="importNbBtn" style="background:#fff;color:var(--nb);border:1px solid var(--nb-border);box-shadow:none;margin-top:6px;display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Import New Business (CSV)
         </button>
@@ -2184,10 +2365,15 @@ input,select,textarea{font-family:inherit; font-size:14px}
 
 <!-- FAB -->
 <div class="fab-stack">
-  <button class="fab-round fb" id="fbBubble" aria-label="Postreh, podnet, návrh" title="Postreh, podnet, návrh">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-  </button>
-  <button class="fab-round add" id="mobFab" aria-label="Nový záznam" title="Pridať záznam">
+  <div class="fab-menu" id="fabMenu">
+    <button class="fab-item" id="mobFab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Pridať záznam
+    </button>
+    <button class="fab-item fb" id="fbBubble">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Postreh, podnet, návrh
+    </button>
+  </div>
+  <button class="fab-round add" id="fabToggle" aria-label="Pridať" title="Pridať">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
   </button>
 </div>
@@ -2767,8 +2953,11 @@ const state = {
   nbCopyPreview:null,      // {segId, entries} — sivý náhľad New Business záznamov, ktoré sa nedajú kopírovať
   meetings:[],             // zápisy z porád (Fathom)
   approachInfos:[],        // číselník textov "Oslovenie — info"
+  materials:[],            // číselník materiálov agentúr (meta/materials)
   dmisOwners:[],           // register vlastníkov z DMIS (IČO/klient → obchodníci)
   calculators:[],          // odkazy na kalkulačky (spravuje admin)
+  onlyMine:false,          // rýchly prepínač "Zobraziť moje" v zoznamoch
+  filterSheetOpen:false,   // mobil — otvorený spodný panel s filtrami
   fbDoneOpen:false,        // rozbalená sekcia vybavených postrehov
   gsQuery:"",              // globálne hľadanie — dotaz sa zachová aj po otvorení výsledku
   kolosOffers:new Map(),   // IČO (8 číslic) → dokument kolosOffers/<ico> (ponuky z Kolos kalkulačky)
@@ -4143,16 +4332,21 @@ const LOSS_REASONS = ["Cena","Konkurencia","Nemá záujem","Nereaguje","Nevhodn�
    Ku každej je dátum, dokedy sa odznak ukazuje — potom zmizne sám,
    netreba nič mazať z kódu. Formát YYYY-MM-DD. */
 const NEW_UNTIL = {
-  calculators: "2026-09-10",   // sekcia Kalkulačky
-  dashboard:   "2026-09-10",   // vyhodnotenie New business na Prehľade
   reminders:   "2026-09-10",   // pripomienky zabudnutých príležitostí
   finstat:     "2026-09-09",   // načítanie firmy z Finstatu — 5 dní
+  groupedAll:  "2026-09-11",   // zoskupený zoznam v zobrazení "Všetko" — 3 dni
 };
 const isNewFeature = key => {
   const d=NEW_UNTIL[key];
   return !!d && Date.now() <= Date.parse(d+"T23:59:59");
 };
-const newDot = key => isNewFeature(key) ? `<span class="new-badge">nové</span>` : "";
+const newDot = key => isNewFeature(key) ? `<span class="new-badge"${NEW_HINT[key]?` title="${esc(NEW_HINT[key])}"`:""}>nové</span>` : "";
+/* Vysvetlenie, ktoré sa ukáže po nastavení myšou na odznak */
+const NEW_HINT = {
+  groupedAll: "Nové zobrazenie všetkých aktivít. Záznamy zapísané počas jednotlivých týždňov "
+    + "sú zlúčené do jedného riadku podľa klienta a služby — kliknutím na riadok si rozbalíš "
+    + "celú históriu. Vyskúšaj si to.",
+};
 /* Odznak s fajkou — pri veciach, ktoré práve začali fungovať */
 const okDot = key => isNewFeature(key)
   ? `<span class="ok-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Už funkčné</span>` : "";
@@ -4180,6 +4374,16 @@ function fillApproachInfoList(){
   const dl=$("#approachInfoList"); if(!dl) return;
   dl.innerHTML=(state.approachInfos||[]).slice().sort((a,b)=>a.localeCompare(b,"sk"))
     .map(v=>`<option value="${esc(v)}">`).join("");
+}
+/* Materiály agentúr — spoločný číselník, aby ich obchodníci zadávali konzistentne.
+   Bez neho vzniká z jedného materiálu viac zápisov s inou diakritikou či skratkou
+   a zoznam vo „Všetko" sa rozpadne na viac riadkov. */
+async function rememberMaterial(text){
+  const t=(text||"").trim();
+  if(!t) return;
+  if((state.materials||[]).some(v=>normalizeForCompare(v)===normalizeForCompare(t))) return;
+  try{ await backend.addMaterial(t); }
+  catch(err){ console.warn("Číselník materiálov sa nepodarilo doplniť:", err); }
 }
 async function rememberApproachInfo(text){
   const t=(text||"").trim();
@@ -4432,10 +4636,11 @@ function demoBackend(){
   let meetings=[];
   let leads=[];
   let approachInfos=[];
+  let materials=[];
   let dmisOwners=[];
   let calculators=[];
   let feedback=[];
-  const sync=()=>{ _ciCache=null; gsInvalidate(); state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; state.weeklyDone=weeklyDone.map(d=>({...d, entries:[...d.entries]})); state.meetings=meetings.map(m=>({...m})); state.leads=leads.map(l=>({...l})); state.approachInfos=[...approachInfos]; state.dmisOwners=dmisOwners.map(e=>({...e})); state.calculators=calculators.map(c=>({...c})); state.feedback=feedback.map(f=>({...f})); render(); };
+  const sync=()=>{ _ciCache=null; gsInvalidate(); state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; state.weeklyDone=weeklyDone.map(d=>({...d, entries:[...d.entries]})); state.meetings=meetings.map(m=>({...m})); state.leads=leads.map(l=>({...l})); state.approachInfos=[...approachInfos]; state.materials=[...materials]; state.dmisOwners=dmisOwners.map(e=>({...e})); state.calculators=calculators.map(c=>({...c})); state.feedback=feedback.map(f=>({...f})); render(); };
   return {
     mode:"demo",
     start(){ sync(); },
@@ -4477,6 +4682,8 @@ function demoBackend(){
     ensureLeads(){},
     async finstatLookup(){ throw new Error("V demo režime Finstat nie je dostupný."); },
     async addApproachInfo(t){ if(!approachInfos.includes(t)) approachInfos.push(t); sync(); },
+    async addMaterial(t){ if(!materials.includes(t)) materials.push(t); sync(); },
+    async removeMaterial(t){ materials=materials.filter(x=>x!==t); sync(); },
     async saveDmisOwners(list){ dmisOwners=mergeDmisOwners(dmisOwners,list); sync(); return dmisOwners.length; },
     async saveCalculators(list){ calculators=list.map(c=>({...c})); sync(); },
     async sendFeedback(f){ feedback=[{...f,id:"fb"+Date.now()},...feedback]; sync(); },
@@ -4570,6 +4777,7 @@ async function firebaseBackend(){
       const u2=onSnapshot(query(collection(db,"tasks")), snap=>{ state.tasks=snap.docs.map(d=>({id:d.id,...d.data()})); gsInvalidate(); render(); });
       const u3=onSnapshot(doc(db,"meta","hiddenClients"), snap=>{ state.hiddenClientNames=snap.exists()?(snap.data().names||[]):[]; render(); });
       const u7=onSnapshot(doc(db,"meta","approachInfo"), snap=>{ state.approachInfos=snap.exists()?(snap.data().values||[]):[]; render(); });
+      const u11=onSnapshot(doc(db,"meta","materials"), snap=>{ state.materials=snap.exists()?(snap.data().values||[]):[]; render(); });
       const u8=onSnapshot(doc(db,"meta","dmisOwners"), snap=>{ state.dmisOwners=snap.exists()?(snap.data().entries||[]):[]; render(); });
       const u9=onSnapshot(doc(db,"meta","calculators"), snap=>{ state.calculators=snap.exists()?(snap.data().items||[]):[]; render(); });
       // Admin vidí všetky postrehy, obchodník len svoje vlastné
@@ -4599,7 +4807,7 @@ async function firebaseBackend(){
       }
       // Databázy firiem sa NENAČÍTAVAJÚ pri štarte — býva ich tisíce a väčšina
       // používateľov ich vôbec neotvorí. Načítajú sa až pri prvom použití.
-      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); if(leadsUnsub) leadsUnsub(); };
+      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); if(leadsUnsub) leadsUnsub(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
@@ -4646,6 +4854,8 @@ async function firebaseBackend(){
     },
     async finstatLookup(ico){ const r=await finstatCallable({ico}); return r.data; },
     async addApproachInfo(t){ await setDoc(doc(db,"meta","approachInfo"),{values:arrayUnion(t)},{merge:true}); },
+    async addMaterial(t){ await setDoc(doc(db,"meta","materials"),{values:arrayUnion(t)},{merge:true}); },
+    async removeMaterial(t){ await setDoc(doc(db,"meta","materials"),{values:arrayRemove(t)},{merge:true}); },
     async saveDmisOwners(list){
       const merged=mergeDmisOwners(state.dmisOwners,list);
       await setDoc(doc(db,"meta","dmisOwners"),{entries:merged,updatedAt:Date.now()},{merge:true});
@@ -4815,7 +5025,7 @@ function buildStatic(){
   });
 
   document.querySelectorAll(".rail .navitem").forEach(b=>{
-    b.onclick=()=>{ state.view=b.dataset.view; if(b.dataset.seg)state.segFilter=b.dataset.seg; state.search=""; state.activeClient=null; render(); };
+    b.onclick=()=>{ state.view=b.dataset.view; if(b.dataset.seg)state.segFilter=b.dataset.seg; state.search=""; state.activeClient=null; state.filterSheetOpen=false; render(); };
   });
 
   // firma logos
@@ -4937,22 +5147,33 @@ function buildStatic(){
 
   // ── MOBILE: bottom nav ──
   $("#bottomNav").querySelectorAll(".bn-item[data-view]").forEach(b=>{
-    b.onclick=()=>{ state.view=b.dataset.view; state.activeClient=null; state.search=""; render(); };
+    b.onclick=()=>{ state.view=b.dataset.view; state.activeClient=null; state.search=""; state.filterSheetOpen=false; render(); };
   });
   // Služby tab → segment sheet
   // Tlačidlo Služby na mobile otvára ponuku so zoznamom služieb — nemení zobrazenie
   $("#bnServices").onclick=()=>openSegSheet();
   const addRec=()=>openModal(null, state.view==="segment" ? state.segFilter : null);
+  const closeFabMenu=()=>$(".fab-stack")?.classList.remove("open");
   // Kliknutia riešime cez delegovanie na dokument — funguje aj keby sa niektorý
   // prvok vykreslil neskôr alebo by sa predchádzajúci riadok nevykonal.
   if(!window.__actionsWired){
     window.__actionsWired=true;
     document.addEventListener("click", (ev)=>{
       const fb=ev.target.closest && ev.target.closest("#fbBubble,#railFb");
-      if(fb){ ev.preventDefault(); openFeedback(); return; }
+      if(fb){ ev.preventDefault(); closeFabMenu(); openFeedback(); return; }
       const ad=ev.target.closest && ev.target.closest("#railAdd,#mobFab");
-      if(ad){ ev.preventDefault(); openModal(null, state.view==="segment" ? state.segFilter : null); }
+      if(ad){ ev.preventDefault(); closeFabMenu(); openModal(null, state.view==="segment" ? state.segFilter : null); }
     });
+    // Jedno plávajúce tlačidlo — po ťuknutí ponúkne obe akcie
+    $("#fabToggle").onclick=(ev)=>{ ev.stopPropagation(); $(".fab-stack").classList.toggle("open"); };
+    document.addEventListener("click",(ev)=>{ if(!ev.target.closest(".fab-stack")) closeFabMenu(); });
+    // Lupa v hlavičke otvorí pole globálneho hľadania (mobil)
+    $("#gsMobileBtn").onclick=()=>{
+      const bar=$("#gsMobileBar"), btn=$("#gsMobileBtn");
+      const opened=bar.classList.toggle("open");
+      btn.classList.toggle("on", opened);
+      if(opened) setTimeout(()=>$("#gsInputMobile").focus(),40); else gsClose();
+    };
   }
 
   // ── MOBILE: segment sheet ──
@@ -5092,6 +5313,7 @@ function renderNow(){
 
   const setActive=(view,seg)=>view===state.view&&(view!=="segment"||seg===state.segFilter);
   document.querySelectorAll(".rail .navitem").forEach(b=>{ const v=b.dataset.view; b.classList.toggle("active", v==="segment"?(state.view==="segment"&&b.dataset.seg===state.segFilter):state.view===v); });
+  syncLogoColors();
 
   // Bottom nav aktívne stavy
   document.querySelectorAll(".bottom-nav .bn-item[data-view]").forEach(b=>{
@@ -5125,6 +5347,23 @@ function renderNow(){
   else if(state.view==="leads") c.appendChild(viewLeads());
   else if(state.view==="clientRegistry") c.appendChild(viewClientRegistry());
   else if(state.view==="help") c.appendChild(viewHelp());
+}
+/* Farby loga podľa otvorenej sekcie.
+   Prehľad a všetko ostatné = trojfarebné (všetky služby).
+   Konkrétna služba = všetky tri písmená v jej farbe.
+   Farby sú upravené verzie farieb služieb — samotné služby ostávajú nedotknuté,
+   lebo cyan aj tmavá navy sú ako text na bielom nečitateľné. */
+const LOGO_SEG_COLOR = {
+  baliky:"#1E5AA8", digital:"#2FB47C", zelena:"#5E9331",
+  tlac:"#3E56CB", ad:"#3E56CB", nad:"#3E56CB",
+};
+const LOGO_DEFAULT = ["#3E56CB","#5E9331","#2FB47C"];   // modrá, zelená, cyan
+function syncLogoColors(){
+  const lg=document.getElementById("topZappis");
+  if(!lg) return;
+  const c = state.view==="segment" ? LOGO_SEG_COLOR[state.segFilter] : null;
+  const cols = c ? [c,c,c] : LOGO_DEFAULT;
+  cols.forEach((v,i)=>lg.style.setProperty("--lg"+(i+1), v));
 }
 function importAllDepts25_26Entries(){
   const ts=Date.now();
@@ -6227,6 +6466,131 @@ function staleNbReminder(){
   }
   return box;
 }
+/* ---------------------------------------------------------------- ZOBRAZENIE "VŠETKO" — ZOSKUPENÝ ZOZNAM
+   Kompaktný riadok = firma + služba (+ materiál pri agentúrach). Aktivity naprieč
+   týždňami sa skryjú pod riadok a rozbalia sa až na kliknutie.
+   Režim "Týždeň" tadiaľto neprechádza — ten zostáva na pôvodnej ceste. */
+const openGroups=new Set();
+
+/* IČO firmy sa berie z ktoréhokoľvek jej záznamu, nie zo záznamu samotného.
+   Vďaka tomu sa po doplnení IČO pri jednom zázname prepnú na IČO všetky ostatné
+   záznamy tej firmy naraz a riadok sa nerozpadne na dva. */
+function resolveClientIco(name){
+  const c=clientIndex().find(x=>x.key===clientKey(name));
+  return c?.ico || "";
+}
+function groupKeyFor(e){
+  const ic=icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client));
+  const base = ic ? ("i:"+ic) : ("n:"+clientKey(e.client));
+  return base+"|"+(e.segment||"")+(e.material?"|m:"+clientKey(e.material):"");
+}
+function groupEntries(list){
+  const map=new Map();
+  list.forEach(e=>{
+    const key=groupKeyFor(e);
+    if(!map.has(key)) map.set(key,{ key, name:e.client||"—", segment:e.segment,
+      material:e.material||"", ico:"", entries:[] });
+    const g=map.get(key);
+    g.entries.push(e);
+    if(!g.ico) g.ico=String(e.leadIco||e.ico||"");
+    if((e.client||"").length>g.name.length) g.name=e.client;   // dlhší/úplnejší názov
+  });
+  const out=[...map.values()].map(g=>{
+    // najnovšia aktivita = podľa týždňa, pri zhode podľa času úpravy
+    g.entries.sort((a,b)=>weekCmpDesc(a.weekId,b.weekId) || entryTs(b)-entryTs(a));
+    const last=g.entries[0];
+    return {...g, ico:g.ico||resolveClientIco(g.name), last, lastTs:entryTs(last),
+            sleeping:!!last.sleeping, owner:resolveOwnerName(last)};
+  });
+  return out;
+}
+function sortGroups(groups){
+  if(state.sortBy==="client")           groups.sort((a,b)=>(a.name||"").localeCompare(b.name||"","sk"));
+  else if(state.sortBy==="salesperson") groups.sort((a,b)=>a.owner.localeCompare(b.owner,"sk") || (a.name||"").localeCompare(b.name||"","sk"));
+  else groups.sort((a,b)=>weekCmpDesc(a.last.weekId,b.last.weekId) || b.lastTs-a.lastTs);   // podľa dátumu
+  return groups;
+}
+/* Doplnkové údaje skupiny — berú sa z najnovšieho záznamu, ktorý ich má vyplnené. */
+function groupExtras(g){
+  const nb=g.entries.find(e=>e.isNewBusiness) || null;
+  const src=g.entries.find(e=>e.nbApproach || e.nbApproachInfo) || nb || g.last;
+  const infoRaw=src?.nbApproachInfo || "";
+  const dupDb = infoRaw && src?.fromDatabase && clientKey(infoRaw)===clientKey(src.fromDatabase);
+  return {
+    isNb: !!g.last.isNewBusiness,
+    viaApp: g.last.entrySource==="app",
+    sposob: cleanApproachText(src?.nbApproach || ""),
+    info: dupDb ? "" : cleanApproachText(infoRaw),
+    dmis: dmisOwnersFor(g.last.leadIco||g.last.ico||g.ico, g.name).filter(isAppPerson),
+    db: (g.entries.find(e=>e.fromDatabase)||{}).fromDatabase || "",
+  };
+}
+/* Dátum poslednej aktivity. Berie sa skutočný čas zápisu/importu — nie koniec týždňa,
+   ktorý by pri prebiehajúcom týždni ukazoval dátum v budúcnosti. */
+function groupLastDate(g){
+  const ts=g.lastTs;
+  if(ts){ const d=new Date(ts); return `${d.getDate()}. ${d.getMonth()+1}. ${d.getFullYear()}`; }
+  return weekRangeLabel(g.last.weekId).split(" – ").pop();
+}
+/* Vykreslí kompaktný zoznam ako mriežku. Vracia počet skupín. */
+function renderGroupedList(container, list, opts={}){
+  const groups=sortGroups(groupEntries(list));
+  const box=el("div","gl-list");
+
+  const head=el("div","gl-headrow");
+  head.innerHTML=`<span></span><span>Firma</span><span></span><span>Typ</span>
+    <span>Oslovenie</span><span>Oslovenie — info</span><span>Stav</span>
+    <span>Vlastník DMIS</span><span class="r">Aktivít</span><span class="r">Posledná</span><span></span>`;
+  box.appendChild(head);
+
+  const rows=el("div","gl-rows");
+  groups.forEach(g=>{
+    const isOpen=openGroups.has(g.key);
+    const x=groupExtras(g);
+    const seg=SEG[g.segment];
+    const row=el("div","gl-row"+(isOpen?" open":"")+(g.sleeping?" sleeping":""));
+    const hd=el("button","gl-head"); hd.type="button";
+    const segCol = seg ? seg.color : "#9AA1AC";
+    hd.innerHTML=`<span class="gl-chev" style="color:${segCol};background:${hexA(segCol,.14)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+      <span class="gl-name"><span class="gl-nm" title="${esc(g.name)}${g.ico?` · IČO ${esc(g.ico)}`:""}">${esc(g.name)}</span>${g.material?`<span class="gl-mat">${esc(g.material)}</span>`:""}${x.db?`<span class="gl-db" title="Klient z databázy ${esc(x.db)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span>`:""}</span>
+      <span class="gl-seg" title="${esc(seg?seg.name:"—")}">${seg?segIcon(seg.id,16):""}</span>
+      <span class="gl-type${x.isNb?(x.viaApp?" nb-app":" nb"):" cc"}">${x.isNb?"New business":"Customer care"}</span>
+      <span class="gl-appr" title="${esc(x.sposob)}">${esc(x.sposob)||"—"}</span>
+      <span class="gl-appr" title="${esc(x.info)}">${esc(x.info)||"—"}</span>
+      <span class="gl-status">${g.sleeping?`<span class="gl-sleep">spiaci</span>`:((g.last.isNewBusiness && g.last.status==="lead")?"—":statusTag(g.last.status))}</span>
+      <span class="gl-dmis">${x.dmis.length?x.dmis.map(o=>`<span class="dm-ini" title="${esc(o)}">${esc(initials(o))}</span>`).join(""):`<span class="gl-none">—</span>`}</span>
+      <span class="gl-ct">${g.entries.length}</span>
+      <span class="gl-date">${esc(groupLastDate(g))}</span>
+      <span class="gl-av" title="${esc(g.owner)}"><span class="av-ini">${initials(g.owner)}</span><span class="av-name">${esc(g.owner)}</span></span>`;
+    hd.onclick=()=>{
+      if(openGroups.has(g.key)) openGroups.delete(g.key); else openGroups.add(g.key);
+      render();
+    };
+    row.appendChild(hd);
+    if(isOpen){
+      const body=el("div","gl-body");
+      g.entries.forEach(e=>{
+        const it=el("div","gl-item"+(e.sleeping?" sleeping":""));
+        const {week}=parseWeekId(e.weekId);
+        const d=entryTs(e)?new Date(entryTs(e)):null;
+        const dtxt=d?` · ${d.getDate()}. ${d.getMonth()+1}. ${d.getFullYear()}`:"";
+        it.innerHTML=`<div class="gl-item-meta">Týždeň ${week} · ${esc(weekRangeLabel(e.weekId))}${dtxt} · ${esc(resolveOwnerName(e))}${e.isNewBusiness?` · <span class="gl-nb${e.entrySource==="app"?" app":""}">New business</span>`:""}${e.sleeping?" · spiaci":""}</div>
+          <div class="gl-item-text">${esc(e.events||"—")}</div>`;
+        const opn=el("button","gl-item-open","Otvoriť ↗"); opn.type="button";
+        opn.title="Prejsť na tento týždeň a záznam";
+        opn.onclick=(ev)=>{ ev.stopPropagation(); gsOpenEntry(e); };
+        it.appendChild(opn);
+        body.appendChild(it);
+      });
+      row.appendChild(body);
+    }
+    rows.appendChild(row);
+  });
+  box.appendChild(rows);
+  container.appendChild(box);
+  return groups.length;
+}
+
 /* ---------------------------------------------------------------- SPOLOČNÝ FILTRAČNÝ PANEL
    Jeden panel pre všetky zoznamy aktivít: Všetko, jednotlivé služby, Moje záznamy
    aj New Business. Rovnaké ovládanie, rovnaký stav — filtre teda "idú s tebou". */
@@ -6258,6 +6622,7 @@ function applyEntryFilters(list, lock){
   return list.filter(e=>{
     if(type==="nb" && !e.isNewBusiness) return false;
     if(type==="cc" &&  e.isNewBusiness) return false;
+    if(state.onlyMine && !isMine(e)) return false;
     if(state.filterSalesperson && !entryHasOwner(e,state.filterSalesperson)) return false;
     if(state.filterApproach && cleanApproachText(e.nbApproach||"")!==state.filterApproach) return false;
     if(state.filterApproachInfo && cleanApproachText(e.nbApproachInfo||"")!==state.filterApproachInfo) return false;
@@ -6276,12 +6641,14 @@ function sortEntries(rows){
 }
 function activeFilterCount(lock){
   return ((state.search||"").trim()?1:0)
+       + (state.onlyMine?1:0)
        + (state.filterSalesperson?1:0)
        + (!lock?.recType && state.filterRecType?1:0)
        + (state.filterApproach?1:0)
        + (state.filterApproachInfo?1:0);
 }
 function clearEntryFilters(){
+  state.onlyMine=false;
   state.search=""; state.filterSalesperson=""; state.filterRecType="";
   state.filterApproach=""; state.filterApproachInfo="";
 }
@@ -6306,8 +6673,46 @@ function entryFilterBar(list, opts={}){
   }
   bar.appendChild(srch);
 
+  // Rýchly prepínač "Zobraziť moje" — jeden klik namiesto hľadania sa vo výbere obchodníka.
+  // V sekcii "Moje záznamy" nedáva zmysel, tam je obmedzenie už zabudované.
+  if(state.view!=="mine"){
+    const mine=el("button","fbar-mine"+(state.onlyMine?" on":""),
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="fm-lbl">${state.onlyMine?"Moje záznamy":"Zobraziť moje"}</span>`);
+    mine.type="button";
+    mine.title=state.onlyMine?"Zobraziť záznamy všetkých":"Zobraziť len moje záznamy";
+    mine.onclick=()=>{ state.onlyMine=!state.onlyMine; state.feedLimit=20; rerender(); };
+    bar.appendChild(mine);
+  } else if(state.onlyMine) state.onlyMine=false;
+
+  // Mobil: filtre sa zbalia za jedno tlačidlo. Desktop ho nezobrazuje (CSS).
+  const activeN=activeFilterCount(lock);
+  const moreBtn=el("button","fbar-more"+(activeN?" on":""),
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filtre${activeN?` (${activeN})`:""}`);
+  moreBtn.type="button";
+  moreBtn.onclick=()=>{ state.filterSheetOpen=true; rerender(); };
+  bar.appendChild(moreBtn);
+
+  // Prekrytie a obal pilulek. Na desktope je obal `display:contents`,
+  // takže pilulky zostávajú priamo v lište a nič sa nemení.
+  const scrim=el("div","fbar-scrim");
+  scrim.onclick=()=>{ state.filterSheetOpen=false; rerender(); };
+  bar.appendChild(scrim);
+  const pills=el("div","fbar-pills");
+  bar.appendChild(pills);
+  if(state.filterSheetOpen) bar.classList.add("sheet-open");
+
+  // hlavička panela (viditeľná len na mobile)
+  {
+    const h=el("div","sheet-only fs-head");
+    h.innerHTML=`<span class="fs-grip"></span><b>Filtre</b>`;
+    const close=el("button","fs-close","✕"); close.type="button"; close.title="Zavrieť";
+    close.onclick=()=>{ state.filterSheetOpen=false; rerender(); };
+    h.appendChild(close);
+    pills.appendChild(h);
+  }
+
   // zoradenie — predvolene podľa dátumu
-  bar.appendChild(fpill(ICO_SORT,
+  pills.appendChild(fpill(ICO_SORT,
     LIST_SORTS.find(x=>x[0]===state.sortBy)?.[1]||"Podľa dátumu",
     state.sortBy!=="date",
     LIST_SORTS.map(([v,t])=>[v,t,v===state.sortBy]),
@@ -6315,7 +6720,7 @@ function entryFilterBar(list, opts={}){
 
   // typ záznamu — v New Business je typ pevne daný, pilulku tam nezobrazujeme
   if(!lock.recType){
-    bar.appendChild(fpill(ICO_TYPE,
+    pills.appendChild(fpill(ICO_TYPE,
       REC_TYPES.find(x=>x[0]===state.filterRecType)?.[1]||"Všetko",
       !!state.filterRecType,
       REC_TYPES.map(([v,t])=>[v,t,v===state.filterRecType]),
@@ -6327,7 +6732,7 @@ function entryFilterBar(list, opts={}){
   list.forEach(e=>entryOwnerNames(e).forEach(n=>nameCounts.set(n,(nameCounts.get(n)||0)+1)));
   const names=[...nameCounts.keys()].sort((a,b)=>a.localeCompare(b,"sk"));
   if(names.length>1){
-    bar.appendChild(fpill(ICO_USER,
+    pills.appendChild(fpill(ICO_USER,
       state.filterSalesperson||"Všetci",
       !!state.filterSalesperson,
       [["",`Všetci obchodníci (${list.length})`,!state.filterSalesperson],
@@ -6340,7 +6745,7 @@ function entryFilterBar(list, opts={}){
     const vals=f=>[...new Set(list.map(e=>cleanApproachText(e[f]||"")).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"sk"));
     const ap=vals("nbApproach");
     if(ap.length){
-      bar.appendChild(fpill(ICO_APPR,
+      pills.appendChild(fpill(ICO_APPR,
         state.filterApproach||"Oslovenie",
         !!state.filterApproach,
         [["","Každý spôsob oslovenia",!state.filterApproach],
@@ -6349,7 +6754,7 @@ function entryFilterBar(list, opts={}){
     } else if(state.filterApproach) state.filterApproach="";
     const ai=vals("nbApproachInfo");
     if(ai.length){
-      bar.appendChild(fpill(ICO_APPR,
+      pills.appendChild(fpill(ICO_APPR,
         state.filterApproachInfo||"Oslovenie — info",
         !!state.filterApproachInfo,
         [["","Každá informácia",!state.filterApproachInfo],
@@ -6362,7 +6767,15 @@ function entryFilterBar(list, opts={}){
   if(n){
     const clr=el("button","fbar-clear",`✕ Zrušiť filtre (${n})`); clr.type="button";
     clr.onclick=()=>{ clearEntryFilters(); state.feedLimit=20; rerender(); };
-    bar.appendChild(clr);
+    pills.appendChild(clr);
+  }
+  // päta panela — koľko záznamov po filtrovaní zostane (viditeľná len na mobile)
+  {
+    const n=applyEntryFilters(list, lock).length;
+    const ok=el("button","sheet-only fs-apply",`Zobraziť ${n} ${plural(n,"záznam","záznamy","záznamov")}`);
+    ok.type="button";
+    ok.onclick=()=>{ state.filterSheetOpen=false; rerender(); };
+    pills.appendChild(ok);
   }
   return bar;
 }
@@ -6381,6 +6794,13 @@ function activityFeed(entries){
     panel.appendChild(el("div","svc-empty", activeFilterCount()
       ? "Zvoleným filtrom nezodpovedá žiadna aktivita."
       : "Za zvolené obdobie tu zatiaľ nie sú žiadne aktivity."));
+    return panel;
+  }
+
+  if(state.listScope==="all"){
+    const n=renderGroupedList(panel, rows);
+    panel.querySelector(".feed-count").textContent=
+      `${n} ${plural(n,"firma","firmy","firiem")} · ${rows.length} ${plural(rows.length,"aktivita","aktivity","aktivít")}`;
     return panel;
   }
 
@@ -7192,6 +7612,11 @@ function viewNewBusiness(){
         <b>${filtered?"Nič sa nenašlo":"Za tento týždeň zatiaľ žiadne New Business záznamy"}</b>${filtered?"Skús iný výraz alebo filter.":"Naimportuj CSV export z CRM cez tlačidlo v bočnom paneli."}`;
       listWrap.appendChild(em); return;
     }
+    if(state.listScope==="all"){
+      const n=renderGroupedList(listWrap, rows);
+      countLine.textContent=`${n} ${plural(n,"firma","firmy","firiem")} · ${rows.length} ${plural(rows.length,"aktivita","aktivity","aktivít")}`;
+      return;
+    }
     rows.forEach(e=>listWrap.appendChild(entryCard(e,clients,{showSegChip:true})));
   }
   renderBar();
@@ -7447,6 +7872,13 @@ function viewList(list,title,sub,seg,logoHtml){
         if(!q){ const a=el("button","btn solid","+ Pridať záznam"); a.onclick=()=>openModal(null,seg?seg.id:null); em.appendChild(a); }
       }
       listWrap.appendChild(em); return;
+    }
+
+    // Zobrazenie "Všetko" — kompaktný zoskupený zoznam. "Týždeň" zostáva bez zmeny.
+    if(state.listScope==="all"){
+      const n=renderGroupedList(listWrap, rows);
+      countLine.textContent=`${n} ${plural(n,"firma","firmy","firiem")} · ${rows.length} ${plural(rows.length,"aktivita","aktivity","aktivít")}`;
+      return;
     }
 
     // Spiace záznamy idú vždy úplne na spodok, bez ohľadu na zvolené zoradenie
@@ -8181,8 +8613,12 @@ function openModal(entry,presetSeg){
     // ponuka už použitých materiálov danej agentúry
     const dl=$("#materialNames");
     const k=clientKey($("#fClient").value||entry?.client||"");
-    dl.innerHTML=[...new Set(state.all.filter(x=>clientKey(x.client)===k&&x.material).map(x=>x.material))]
-      .sort((a,b)=>a.localeCompare(b,"sk")).map(m=>`<option value="${esc(m)}">`).join("");
+    const vlastne=[...new Set(state.all.filter(x=>clientKey(x.client)===k&&x.material).map(x=>x.material))]
+      .sort((a,b)=>a.localeCompare(b,"sk"));
+    const pouzite=new Set(vlastne.map(normalizeForCompare));
+    const ostatne=(state.materials||[]).filter(m=>!pouzite.has(normalizeForCompare(m)))
+      .sort((a,b)=>a.localeCompare(b,"sk"));
+    dl.innerHTML=[...vlastne, ...ostatne].map(m=>`<option value="${esc(m)}">`).join("");
   }
   $("#fClient").oninput=syncIcoField;   // len počas písania, nie po vyhľadaní
   pendingFinstat = entry?.companyInfo || null;
@@ -8451,6 +8887,7 @@ async function saveFromModal(){
     }
   }
   rememberApproachInfo($("#fApproachInfo")?.value);
+  if($("#fAgency")?.checked) rememberMaterial($("#fMaterial")?.value);
   pendingLeadOrigin=null; pendingFinstat=null;
   if(forceSleeping) toast("Záznam uložený a zaradený medzi spiace.");
   else toast(isSuggestion?`✓ Záznam uložený`: wasEditing?"Záznam upravený":"Záznam pridaný");
