@@ -165,6 +165,22 @@ input,select,textarea{font-family:inherit; font-size:14px}
 /* Mriežka — hlavička aj riadky používajú rovnaké rozloženie stĺpcov, preto sedia pod sebou. */
 .gl-list{--gl-cols:22px minmax(150px,1.5fr) 22px 92px minmax(0,1fr) minmax(0,1fr) 106px 74px 46px 82px 24px;
   background:var(--card); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+/* Stĺpec IČO má len sekcia Klienti. V DOM je posledný, na druhé miesto ho posúva `order`,
+   takže poradie nth-child v responzívnych pravidlách zostáva nezmenené. */
+.gl-ico{display:none; font-family:var(--mono); font-size:11.5px; color:var(--muted)}
+.gl-list.with-ico{--gl-cols:22px minmax(140px,1.5fr) 74px 22px 92px minmax(0,1fr) minmax(0,1fr) 106px 74px 46px 82px 24px}
+.gl-list.with-ico .gl-ico{display:block; order:2}
+.gl-list.with-ico .gl-head>span,.gl-list.with-ico .gl-headrow>span{order:3}
+.gl-list.with-ico .gl-chev{order:0}
+.gl-list.with-ico .gl-name{order:1}
+.gl-xs{flex:0 0 auto; font-size:10px; font-weight:700; color:#8A5A00; background:#FFF3DC;
+  border-radius:20px; padding:1px 7px}
+.gl-seg{gap:4px}
+.gl-more{font-size:10px; color:var(--muted); font-weight:600}
+.gl-detail{align-self:flex-start; margin-bottom:4px; border:1px solid var(--line); background:#fff;
+  border-radius:20px; padding:4px 12px; font-family:inherit; font-size:11.5px; font-weight:600;
+  color:var(--brand); cursor:pointer}
+.gl-detail:hover{border-color:var(--brand); background:var(--brand-soft)}
 .gl-headrow{display:grid; grid-template-columns:var(--gl-cols); gap:10px; align-items:center;
   padding:8px 14px; background:#F7F8FB; border-bottom:1px solid var(--line);
   font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted)}
@@ -189,13 +205,16 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .gl-head:hover .gl-db{color:var(--brand)}
 .gl-mat{flex:0 0 auto; font-size:10.5px; font-weight:600; color:var(--brand);
   background:var(--brand-soft); border-radius:20px; padding:1px 7px}
-.gl-seg{display:grid; place-items:center; overflow:visible}
+.gl-seg{display:flex; align-items:center; justify-content:center; overflow:visible}
 .gl-seg svg{width:16px; height:16px}
+.gl-list.with-ico .gl-seg,.gl-row .gl-seg{min-width:0}
 .gl-type{font-size:11px; font-weight:700; letter-spacing:.01em}
 .gl-type.nb{color:var(--nb)}
 .gl-type.nb-app{color:#E07B18}
 .gl-type.cc{color:var(--muted); font-weight:600}
 .gl-appr{font-size:11.5px; color:var(--ink-soft)}
+.gl-appr:not(.info){color:var(--brand); font-weight:600}
+.gl-appr.is-empty{color:var(--line); font-weight:400}
 .gl-status{font-size:11px; color:var(--muted)}
 .gl-status .tag{max-width:100%; overflow:hidden; text-overflow:ellipsis}
 .gl-sleep{font-size:10.5px; font-weight:700; color:var(--muted); background:var(--line-2);
@@ -226,16 +245,18 @@ input,select,textarea{font-family:inherit; font-size:14px}
 
 /* Užšie obrazovky — postupne ubúdajú stĺpce, ktoré sa dajú dočítať po rozbalení */
 @media (max-width:1180px){
-  .gl-list{--gl-cols:22px minmax(140px,1.5fr) 22px 92px minmax(0,1fr) 106px 74px 46px 78px 24px}
+  .gl-list.with-ico .gl-ico{display:none}
+  .gl-list,.gl-list.with-ico{--gl-cols:22px minmax(140px,1.5fr) 22px 92px minmax(0,1fr) 106px 74px 46px 78px 24px}
   .gl-headrow>span:nth-child(6),.gl-head>span:nth-child(6){display:none}
 }
 @media (max-width:980px){
-  .gl-list{--gl-cols:22px minmax(130px,1.5fr) 22px 88px 100px 46px 74px 24px}
+  .gl-list,.gl-list.with-ico{--gl-cols:22px minmax(130px,1.5fr) 22px 88px 100px 46px 74px 24px}
   .gl-headrow>span:nth-child(5),.gl-head>span:nth-child(5),
   .gl-headrow>span:nth-child(8),.gl-head>span:nth-child(8){display:none}
 }
 @media (max-width:768px){
   .gl-headrow{display:none}
+  .gl-list.with-ico .gl-ico{display:none}
   /* Riadok sa zloží do dvoch úrovní:
      hore firma a dátum, dole ikona služby, obchodník a typ aktivity. */
   .gl-head{gap:0 8px; row-gap:3px; padding:9px 11px;
@@ -252,11 +273,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
      display:block je nutné — širšie breakpointy oba stĺpce skrývajú. */
   .gl-head>span:nth-child(5){display:block; grid-area:3/2/auto/span 2}
   .gl-head>span:nth-child(6){display:block; grid-area:4/2/auto/span 2}
-  .gl-head>span:nth-child(5).empty,.gl-head>span:nth-child(6).empty{display:none}
+  .gl-head>span:nth-child(5).is-empty,.gl-head>span:nth-child(6).is-empty{display:none}
   .gl-appr{font-size:11px}
-  .gl-appr::before{color:var(--line); font-weight:600}
-  .gl-head>span:nth-child(5)::before{content:"Oslovenie · "}
-  .gl-head>span:nth-child(6)::before{content:"Info · "}
+  .gl-head>span:nth-child(6)::before{content:"Info · "; color:var(--line); font-weight:600}
   /* ikonka služby slúži ako odrážka pred menom obchodníka */
   .gl-av .av-ini{display:none}
   .gl-chev{width:20px;height:20px;margin-left:-2px}
@@ -2965,6 +2984,10 @@ const state = {
   materials:[],            // číselník materiálov agentúr (meta/materials)
   dmisOwners:[],           // register vlastníkov z DMIS (IČO/klient → obchodníci)
   calculators:[],          // odkazy na kalkulačky (spravuje admin)
+  groupBy:"clientSeg",     // "clientSeg" | "client" — zoskupenie riadkov v zozname
+  groupLimit:60,           // stránkovanie zoskupeného zoznamu
+  filterDmis:"",           // filter na vlastníka v DMIS ("_free" = bez vlastníka)
+  filterDb:"",             // filter na zdrojovú databázu
   onlyMine:false,          // rýchly prepínač "Zobraziť moje" v zoznamoch
   filterSheetOpen:false,   // mobil — otvorený spodný panel s filtrami
   fbDoneOpen:false,        // rozbalená sekcia vybavených postrehov
@@ -5034,7 +5057,7 @@ function buildStatic(){
   });
 
   document.querySelectorAll(".rail .navitem").forEach(b=>{
-    b.onclick=()=>{ state.view=b.dataset.view; if(b.dataset.seg)state.segFilter=b.dataset.seg; state.search=""; state.activeClient=null; state.filterSheetOpen=false; render(); };
+    b.onclick=()=>{ state.view=b.dataset.view; if(b.dataset.seg)state.segFilter=b.dataset.seg; state.search=""; state.activeClient=null; state.filterSheetOpen=false; state.groupLimit=60; render(); };
   });
 
   // firma logos
@@ -5156,7 +5179,7 @@ function buildStatic(){
 
   // ── MOBILE: bottom nav ──
   $("#bottomNav").querySelectorAll(".bn-item[data-view]").forEach(b=>{
-    b.onclick=()=>{ state.view=b.dataset.view; state.activeClient=null; state.search=""; state.filterSheetOpen=false; render(); };
+    b.onclick=()=>{ state.view=b.dataset.view; state.activeClient=null; state.search=""; state.filterSheetOpen=false; state.groupLimit=60; render(); };
   });
   // Služby tab → segment sheet
   // Tlačidlo Služby na mobile otvára ponuku so zoznamom služieb — nemení zobrazenie
@@ -6488,30 +6511,38 @@ function resolveClientIco(name){
   const c=clientIndex().find(x=>x.key===clientKey(name));
   return c?.ico || "";
 }
-function groupKeyFor(e){
+/* Kľúč skupiny. V režime "client" je riadok jedna firma naprieč všetkými službami,
+   v režime "clientSeg" sa firma delí podľa služby a materiálu agentúry. */
+function groupKeyFor(e, mode){
   const ic=icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client));
   const base = ic ? ("i:"+ic) : ("n:"+clientKey(e.client));
+  if(mode==="client") return base;
   return base+"|"+(e.segment||"")+(e.material?"|m:"+clientKey(e.material):"");
 }
-function groupEntries(list){
+function groupEntries(list, mode){
   const map=new Map();
   list.forEach(e=>{
-    const key=groupKeyFor(e);
-    if(!map.has(key)) map.set(key,{ key, name:e.client||"—", segment:e.segment,
-      material:e.material||"", ico:"", entries:[] });
+    const key=groupKeyFor(e, mode);
+    if(!map.has(key)) map.set(key,{ key, name:e.client||"—",
+      segments:new Set(), materials:new Set(), ico:"", entries:[] });
     const g=map.get(key);
     g.entries.push(e);
+    if(e.segment) g.segments.add(e.segment);
+    if(e.material) g.materials.add(e.material);
     if(!g.ico) g.ico=String(e.leadIco||e.ico||"");
     if((e.client||"").length>g.name.length) g.name=e.client;   // dlhší/úplnejší názov
   });
-  const out=[...map.values()].map(g=>{
+  return [...map.values()].map(g=>{
     // najnovšia aktivita = podľa týždňa, pri zhode podľa času úpravy
     g.entries.sort((a,b)=>weekCmpDesc(a.weekId,b.weekId) || entryTs(b)-entryTs(a));
     const last=g.entries[0];
-    return {...g, ico:g.ico||resolveClientIco(g.name), last, lastTs:entryTs(last),
+    const segs=[...g.segments];
+    return {...g, segs, segment:segs[0]||last.segment,
+            material:[...g.materials][0]||"", materialCount:g.materials.size,
+            crossSell:segs.length>1,
+            ico:g.ico||resolveClientIco(g.name), last, lastTs:entryTs(last),
             sleeping:!!last.sleeping, owner:resolveOwnerName(last)};
   });
-  return out;
 }
 function sortGroups(groups){
   if(state.sortBy==="client")           groups.sort((a,b)=>(a.name||"").localeCompare(b.name||"","sk"));
@@ -6541,36 +6572,46 @@ function groupLastDate(g){
   if(ts){ const d=new Date(ts); return `${d.getDate()}. ${d.getMonth()+1}. ${d.getFullYear()}`; }
   return weekRangeLabel(g.last.weekId).split(" – ").pop();
 }
-/* Vykreslí kompaktný zoznam ako mriežku. Vracia počet skupín. */
+/* Vykreslí kompaktný zoznam ako mriežku. Vracia počet skupín.
+   opts.groupBy — vynúti zoskupenie (sekcia Klienti), inak sa berie zo state.
+   opts.showIco — pridá stĺpec IČO. */
 function renderGroupedList(container, list, opts={}){
-  const groups=sortGroups(groupEntries(list));
-  const box=el("div","gl-list");
+  const mode = opts.groupBy || state.groupBy;
+  const groups=sortGroups(groupEntries(list, mode));
+  const showIco=!!opts.showIco;
+  const box=el("div","gl-list"+(showIco?" with-ico":""));
 
   const head=el("div","gl-headrow");
   head.innerHTML=`<span></span><span>Firma</span><span></span><span>Typ</span>
     <span>Oslovenie</span><span>Oslovenie — info</span><span>Stav</span>
-    <span>Vlastník DMIS</span><span class="r">Aktivít</span><span class="r">Posledná</span><span></span>`;
+    <span>Vlastník DMIS</span><span class="r">Aktivít</span><span class="r">Posledná</span><span></span>
+    <span class="gl-ico">IČO</span>`;
   box.appendChild(head);
 
   const rows=el("div","gl-rows");
-  groups.forEach(g=>{
+  const limit=state.groupLimit||60;
+  groups.slice(0,limit).forEach(g=>{
     const isOpen=openGroups.has(g.key);
     const x=groupExtras(g);
-    const seg=SEG[g.segment];
     const row=el("div","gl-row"+(isOpen?" open":"")+(g.sleeping?" sleeping":""));
+    const segCol = SEG[g.segment] ? SEG[g.segment].color : "#9AA1AC";
+    // v režime "podľa klienta" má firma viac služieb — ukážeme všetky ikony
+    const segIcons=(g.segs.length?g.segs:[g.segment]).slice(0,4).map(sg=>{
+      const v=SEG[sg]; return v?`<span title="${esc(v.name)}">${segIcon(sg,16)}</span>`:"";
+    }).join("")+(g.segs.length>4?`<span class="gl-more">+${g.segs.length-4}</span>`:"");
     const hd=el("button","gl-head"); hd.type="button";
-    const segCol = seg ? seg.color : "#9AA1AC";
     hd.innerHTML=`<span class="gl-chev" style="color:${segCol};background:${hexA(segCol,.14)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
-      <span class="gl-name"><span class="gl-nm" title="${esc(g.name)}${g.ico?` · IČO ${esc(g.ico)}`:""}">${esc(g.name)}</span>${g.material?`<span class="gl-mat">${esc(g.material)}</span>`:""}${x.db?`<span class="gl-db" title="Klient z databázy ${esc(x.db)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span>`:""}</span>
-      <span class="gl-seg" title="${esc(seg?seg.name:"—")}">${seg?segIcon(seg.id,16):""}</span>
+      <span class="gl-name"><span class="gl-nm" title="${esc(g.name)}${g.ico?` · IČO ${esc(g.ico)}`:""}">${esc(g.name)}</span>${g.material?`<span class="gl-mat">${esc(g.material)}${g.materialCount>1?` +${g.materialCount-1}`:""}</span>`:""}${g.crossSell?`<span class="gl-xs">cross-sell</span>`:""}${x.db?`<span class="gl-db" title="Klient z databázy ${esc(x.db)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span>`:""}</span>
+      <span class="gl-seg">${segIcons}</span>
       <span class="gl-type${x.isNb?(x.viaApp?" nb-app":" nb"):" cc"}">${x.isNb?"New business":"Customer care"}</span>
-      <span class="gl-appr${x.sposob?"":" empty"}" title="${esc(x.sposob)}">${esc(x.sposob)||"—"}</span>
-      <span class="gl-appr info${x.info?"":" empty"}" title="${esc(x.info)}">${esc(x.info)||"—"}</span>
+      <span class="gl-appr${x.sposob?"":" is-empty"}" title="${esc(x.sposob)}">${esc(x.sposob)||"—"}</span>
+      <span class="gl-appr info${x.info?"":" is-empty"}" title="${esc(x.info)}">${esc(x.info)||"—"}</span>
       <span class="gl-status">${g.sleeping?`<span class="gl-sleep">spiaci</span>`:((g.last.isNewBusiness && g.last.status==="lead")?"—":statusTag(g.last.status))}</span>
       <span class="gl-dmis">${x.dmis.length?x.dmis.map(o=>`<span class="dm-ini" title="${esc(o)}">${esc(initials(o))}</span>`).join(""):`<span class="gl-none">—</span>`}</span>
       <span class="gl-ct">${g.entries.length}</span>
       <span class="gl-date">${esc(groupLastDate(g))}</span>
-      <span class="gl-av" title="${esc(g.owner)}"><span class="av-ini">${initials(g.owner)}</span><span class="av-name">${esc(g.owner)}</span></span>`;
+      <span class="gl-av" title="${esc(g.owner)}"><span class="av-ini">${initials(g.owner)}</span><span class="av-name">${esc(g.owner)}</span></span>
+      <span class="gl-ico">${g.ico?esc(g.ico):"—"}</span>`;
     hd.onclick=()=>{
       if(openGroups.has(g.key)) openGroups.delete(g.key); else openGroups.add(g.key);
       render();
@@ -6578,12 +6619,15 @@ function renderGroupedList(container, list, opts={}){
     row.appendChild(hd);
     if(isOpen){
       const body=el("div","gl-body");
+      const det=el("button","gl-detail","Otvoriť detail klienta ↗"); det.type="button";
+      det.onclick=(ev)=>{ ev.stopPropagation(); goClient(clientKey(g.name)); };
+      body.appendChild(det);
       g.entries.forEach(e=>{
         const it=el("div","gl-item"+(e.sleeping?" sleeping":""));
         const {week}=parseWeekId(e.weekId);
         const d=entryTs(e)?new Date(entryTs(e)):null;
         const dtxt=d?` · ${d.getDate()}. ${d.getMonth()+1}. ${d.getFullYear()}`:"";
-        it.innerHTML=`<div class="gl-item-meta">Týždeň ${week} · ${esc(weekRangeLabel(e.weekId))}${dtxt} · ${esc(resolveOwnerName(e))}${e.isNewBusiness?` · <span class="gl-nb${e.entrySource==="app"?" app":""}">New business</span>`:""}${e.sleeping?" · spiaci":""}</div>
+        it.innerHTML=`<div class="gl-item-meta">${mode==="client"?`<b style="color:${SEG[e.segment]?SEG[e.segment].color:"#9AA1AC"}">${esc(SEG[e.segment]?SEG[e.segment].short:"—")}</b> · `:""}Týždeň ${week} · ${esc(weekRangeLabel(e.weekId))}${dtxt} · ${esc(resolveOwnerName(e))}${e.isNewBusiness?` · <span class="gl-nb${e.entrySource==="app"?" app":""}">New business</span>`:""}${e.sleeping?" · spiaci":""}</div>
           <div class="gl-item-text">${esc(e.events||"—")}</div>`;
         const opn=el("button","gl-item-open","Otvoriť ↗"); opn.type="button";
         opn.title="Prejsť na tento týždeň a záznam";
@@ -6597,6 +6641,12 @@ function renderGroupedList(container, list, opts={}){
   });
   box.appendChild(rows);
   container.appendChild(box);
+  if(groups.length>limit){
+    const more=el("button","btn",`Zobraziť ďalších ${Math.min(60,groups.length-limit)} z ${groups.length-limit}`);
+    more.style.cssText="display:block;margin:12px auto 0";
+    more.onclick=()=>{ state.groupLimit=limit+60; render(); };
+    container.appendChild(more);
+  }
   return groups.length;
 }
 
@@ -6605,6 +6655,9 @@ function renderGroupedList(container, list, opts={}){
    aj New Business. Rovnaké ovládanie, rovnaký stav — filtre teda "idú s tebou". */
 const REC_TYPES  = [["","Všetko"],["cc","Customer care"],["nb","New business"]];
 const LIST_SORTS = [["date","Podľa dátumu"],["client","Podľa klienta"],["salesperson","Podľa obchodníka"]];
+const LIST_GROUPS = [["clientSeg","Podľa klienta a služby"],["client","Podľa klienta"]];
+const ICO_DB    = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`;
+const ICO_GROUP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
 const ICO_SORT   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>`;
 const ICO_USER   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
 const ICO_TYPE   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"/></svg>`;
@@ -6632,11 +6685,18 @@ function applyEntryFilters(list, lock){
     if(type==="nb" && !e.isNewBusiness) return false;
     if(type==="cc" &&  e.isNewBusiness) return false;
     if(state.onlyMine && !isMine(e)) return false;
+    if(state.filterDb && clientKey(e.fromDatabase||"")!==clientKey(state.filterDb)) return false;
+    if(state.filterDmis){
+      const own=dmisOwnersFor(e.leadIco||e.ico, e.client);
+      if(state.filterDmis==="_free"){ if(own.length) return false; }
+      else if(!own.some(o=>normalizeForCompare(o)===normalizeForCompare(state.filterDmis))) return false;
+    }
     if(state.filterSalesperson && !entryHasOwner(e,state.filterSalesperson)) return false;
     if(state.filterApproach && cleanApproachText(e.nbApproach||"")!==state.filterApproach) return false;
     if(state.filterApproachInfo && cleanApproachText(e.nbApproachInfo||"")!==state.filterApproachInfo) return false;
     if(q && !((e.client||"").toLowerCase().includes(q)
            || (e.events||"").toLowerCase().includes(q)
+           || gsIcoVariants(e.leadIco||e.ico).some(v=>v.includes(q))
            || entryOwnerNames(e).some(n=>n.toLowerCase().includes(q)))) return false;
     return true;
   });
@@ -6654,12 +6714,15 @@ function activeFilterCount(lock){
        + (state.filterSalesperson?1:0)
        + (!lock?.recType && state.filterRecType?1:0)
        + (state.filterApproach?1:0)
-       + (state.filterApproachInfo?1:0);
+       + (state.filterApproachInfo?1:0)
+       + (state.filterDmis?1:0)
+       + (state.filterDb?1:0);
 }
 function clearEntryFilters(){
   state.onlyMine=false;
   state.search=""; state.filterSalesperson=""; state.filterRecType="";
   state.filterApproach=""; state.filterApproachInfo="";
+  state.filterDmis=""; state.filterDb="";
 }
 /* Zostaví panel. `opts.lock.recType` = pevný kontext sekcie (New Business).
    `opts.approach` = zobraziť filtre spôsobu oslovenia (New Business). */
@@ -6770,6 +6833,40 @@ function entryFilterBar(list, opts={}){
          ...ai.map(v=>[v,v,v===state.filterApproachInfo])],
         v=>{ state.filterApproachInfo=v; state.feedLimit=20; rerender(); }, "Oslovenie — info"));
     } else if(state.filterApproachInfo) state.filterApproachInfo="";
+  }
+
+  // vlastník v DMIS
+  {
+    const own=[...new Set(list.flatMap(e=>dmisOwnersFor(e.leadIco||e.ico, e.client)).filter(isAppPerson))]
+      .sort((a,b)=>a.localeCompare(b,"sk"));
+    if(own.length){
+      pills.appendChild(fpill(ICO_USER,
+        state.filterDmis==="_free"?"Bez vlastníka":(state.filterDmis||"Vlastník DMIS"),
+        !!state.filterDmis,
+        [["","Každý vlastník DMIS",!state.filterDmis],
+         ["_free","— bez vlastníka —",state.filterDmis==="_free"],
+         ...own.map(n2=>[n2,n2,n2===state.filterDmis])],
+        v=>{ state.filterDmis=v; state.groupLimit=60; rerender(); }, "Vlastník v DMIS"));
+    } else if(state.filterDmis) state.filterDmis="";
+  }
+  // zdrojová databáza
+  {
+    const dbs=[...new Set(list.map(e=>e.fromDatabase).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"sk"));
+    if(dbs.length){
+      pills.appendChild(fpill(ICO_DB,
+        state.filterDb||"Databáza",
+        !!state.filterDb,
+        [["","Každá databáza",!state.filterDb], ...dbs.map(d=>[d,d,d===state.filterDb])],
+        v=>{ state.filterDb=v; state.groupLimit=60; rerender(); }, "Zdrojová databáza"));
+    } else if(state.filterDb) state.filterDb="";
+  }
+  // zoskupenie riadkov — v sekcii Klienti je pevne dané, preto sa tam nezobrazuje
+  if(!lock.groupBy && (state.listScope==="all" || opts.alwaysGrouped)){
+    pills.appendChild(fpill(ICO_GROUP,
+      LIST_GROUPS.find(x=>x[0]===state.groupBy)?.[1]||"Podľa klienta a služby",
+      state.groupBy!=="clientSeg",
+      LIST_GROUPS.map(([v,t])=>[v,t,v===state.groupBy]),
+      v=>{ state.groupBy=v; state.groupLimit=60; openGroups.clear(); rerender(); }, "Zoskupiť riadky"));
   }
 
   const n=activeFilterCount(lock);
@@ -7301,182 +7398,32 @@ function openCalcModal(idx){
 }
 function viewClients(){
   const wrap=el("div");
-  const f=state.clientFilter;
-  const all=clientIndex();
-
   wrap.appendChild(el("div","page-h",`<div>
     <div class="eyebrow">Naprieč všetkými týždňami</div>
     <h1>Klienti</h1>
-    <div class="sub">Všetci klienti, ktorí sa kedy objavili v zázname. Klikni na riadok pre podrobnosti.</div></div><div></div>`));
+    <div class="sub">Všetci klienti, ktorí sa kedy objavili v zázname. Klikni na riadok pre históriu, alebo otvor plný detail.</div></div><div></div>`));
 
-
-  const info=el("div","lead-count"); wrap.appendChild(info);
-  const tbl=el("div","cl-table");
-  const newestOf=(c,k)=>c.entries.slice().sort((x,y)=>weekCmpDesc(x.weekId,y.weekId)||(y.updatedAt||0)-(x.updatedAt||0)).find(e=>e[k])?.[k]||"";
-  const uniq=fn=>[...new Set(all.flatMap(fn).filter(Boolean))].sort((x,y)=>String(x).localeCompare(String(y),"sk"));
-  const clientType=c=>{
-    const nb=c.entries.some(e=>e.isNewBusiness), cc=c.entries.some(e=>!e.isNewBusiness);
-    return nb&&cc?"both":nb?"nb":"cc";
-  };
-
-  // Hlavička: názov stĺpca + šípka, po kliknutí sa rozbalí filter daného stĺpca
-  const head=el("div","cl-head");
-  const cols=[
-    {k:"q",     t:"Klient",           type:"text", ph:"Hľadať klienta…"},
-    {k:"ico",   t:"IČO",              type:"text", ph:"IČO…"},
-    {k:"type",  t:"Typ",              type:"sel",  opts:()=>[["nb","New business"],["cc","Customer care"],["both","Oboje"]]},
-    {k:"seg",   t:"Služba",           type:"sel",  opts:()=>SEGMENTS.map(sg=>[sg.id,`${sg.short} (${all.filter(c=>c.segments.includes(sg.id)).length})`])},
-    {k:"owner", t:"Obchodník",        type:"sel",  opts:()=>uniq(c=>c.entries.map(e=>resolveOwnerName(e))).map(n=>[n,n])},
-    {k:"dmis",  t:"Vlastník DMIS",    type:"sel",  opts:()=>[["_free","— bez vlastníka —"],...uniq(c=>dmisOwnersFor(c.ico,c.name)).map(n=>[n,n])]},
-    {k:"approach",t:"Spôsob oslovenia",type:"sel", opts:()=>uniq(c=>[newestOf(c,"nbApproach")]).map(n=>[n,cleanApproachText(n)])},
-    {k:"info",  t:"Oslovenie info",   type:"text", ph:"Info…"},
-    {k:"db",    t:"Databáza",         type:"sel",  opts:()=>uniq(c=>[newestOf(c,"fromDatabase")]).map(n=>[n,n])},
-  ];
-  cols.forEach(col=>{
-    const cell=el("div","cl-th"+(f[col.k]?" filtered":""));
-    const btn=el("button","cl-th-btn",`<span>${esc(col.t)}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`);
-    btn.type="button"; btn.title=f[col.k]?`Filter: ${f[col.k]}`:"Filtrovať";
-    btn.onclick=(ev)=>{ ev.stopPropagation(); state.openColFilter=(state.openColFilter===col.k?null:col.k); render(); };
-    cell.appendChild(btn);
-    if(state.openColFilter===col.k){
-      const pop=el("div","cl-pop"); pop.onclick=e=>e.stopPropagation();
-      if(col.type==="text"){
-        const i=el("input"); i.placeholder=col.ph; i.value=f[col.k]||"";
-        i.oninput=()=>{ f[col.k]=i.value; state.clientLimit=60; paint(); };
-        pop.appendChild(i); setTimeout(()=>i.focus(),30);
-      } else {
-        const sel=el("select");
-        const o0=el("option","","— všetky —"); o0.value=""; sel.appendChild(o0);
-        col.opts().forEach(([v,t])=>{ const o=el("option","",t); o.value=v; sel.appendChild(o); });
-        sel.value=f[col.k]||"";
-        sel.onchange=()=>{ f[col.k]=sel.value; state.clientLimit=60; state.openColFilter=null; render(); };
-        pop.appendChild(sel);
-      }
-      if(f[col.k]){
-        const x=el("button","cl-pop-x","✕ Zrušiť filter"); x.type="button";
-        x.onclick=()=>{ f[col.k]=""; state.clientLimit=60; state.openColFilter=null; render(); };
-        pop.appendChild(x);
-      }
-      cell.appendChild(pop);
-    }
-    head.appendChild(cell);
-  });
-  const nF=cols.filter(c=>f[c.k]).length;
-  const clrCell=el("div","cl-th");
-  if(nF){
-    const clr=el("button","cl-clear","✕"); clr.type="button"; clr.title=`Zrušiť všetky filtre (${nF})`;
-    clr.onclick=()=>{ state.clientFilter={q:"",ico:"",type:"",seg:"",owner:"",dmis:"",approach:"",info:"",db:""}; state.openColFilter=null; state.clientLimit=60; render(); };
-    clrCell.appendChild(clr);
-  }
-  head.appendChild(clrCell);
-  tbl.appendChild(head);
-  const listWrap=el("div","cl-list"); tbl.appendChild(listWrap); wrap.appendChild(tbl);
-  const moreWrap=el("div"); moreWrap.style.textAlign="center"; wrap.appendChild(moreWrap);
+  // Rovnaký zoznam ako v zobrazení "Všetko", len pevne zoskupený podľa klienta
+  // a vždy naprieč všetkými týždňami aj službami.
+  const list=state.all;
+  const barWrap=el("div"); wrap.appendChild(barWrap);
+  const countLine=el("div","feed-count"); wrap.appendChild(countLine);
+  const listWrap=el("div"); wrap.appendChild(listWrap);
 
   function paint(){
-    const q=(f.q||"").trim().toLowerCase();
-    let rows=all.filter(c=>{
-      if(f.seg && !c.segments.includes(f.seg)) return false;
-      if(f.owner && !c.entries.some(e=>resolveOwnerName(e)===f.owner)) return false;
-      if(f.dmis){
-        const own=dmisOwnersFor(c.ico,c.name);
-        if(f.dmis==="_free"){ if(own.length) return false; }
-        else if(!own.includes(f.dmis)) return false;
-      }
-      if(q && !c.name.toLowerCase().includes(q)) return false;
-      if(f.ico && !String(c.ico||"").includes(f.ico.replace(/\D/g,""))) return false;
-      if(f.type){
-        const nb=c.entries.some(e=>e.isNewBusiness), cc=c.entries.some(e=>!e.isNewBusiness);
-        const t=nb&&cc?"both":nb?"nb":"cc";
-        if(t!==f.type) return false;
-      }
-      if(f.approach && newestOf(c,"nbApproach")!==f.approach) return false;
-      if(f.db && newestOf(c,"fromDatabase")!==f.db) return false;
-      if(f.info && !String(newestOf(c,"nbApproachInfo")).toLowerCase().includes(f.info.toLowerCase())) return false;
-      return true;
-    });
-    rows.sort((a,b)=>a.name.localeCompare(b.name,"sk"));
-    info.textContent=`${rows.length} ${plural(rows.length,"klient","klienti","klientov")}`;
-    listWrap.innerHTML=""; moreWrap.innerHTML="";
-    if(!rows.length){ listWrap.appendChild(el("div","empty","<b>Nič nevyhovuje filtru</b>Skús zmeniť filter alebo hľadaný výraz.")); return; }
-    rows.slice(0,state.clientLimit).forEach((c,i)=>listWrap.appendChild(clientRow(c,i)));
-    if(rows.length>state.clientLimit){
-      const more=el("button","btn",`Zobraziť ďalších ${Math.min(60,rows.length-state.clientLimit)} z ${rows.length-state.clientLimit}`);
-      more.onclick=()=>{ state.clientLimit+=60; paint(); };
-      moreWrap.appendChild(more);
-    }
+    barWrap.innerHTML=""; listWrap.innerHTML="";
+    barWrap.appendChild(entryFilterBar(list,{
+      lock:{groupBy:"client"},
+      approach:true,
+      placeholder:"Hľadať klienta, IČO, text alebo obchodníka…",
+      onChange:paint,
+    }));
+    const rows=applyEntryFilters(list);
+    const n=renderGroupedList(listWrap, rows, {groupBy:"client", showIco:true});
+    countLine.textContent=`${n} ${plural(n,"klient","klienti","klientov")} · ${rows.length} ${plural(rows.length,"aktivita","aktivity","aktivít")}`;
   }
   paint();
   return wrap;
-}
-
-/* Jeden riadok zoznamu klientov — kompaktný, po kliknutí sa rozbalí */
-function clientRow(c,idx){
-  const open=state.openClientRow===c.key;
-  const app=[...new Set(c.entries.map(e=>resolveOwnerName(e)).filter(Boolean))];
-  const dmis=dmisOwnersFor(c.ico,c.name);
-  const past=dmisPastOwnersFor(c.ico,c.name);
-  // z najnovšieho záznamu, kde je údaj vyplnený
-  const newest=c.entries.slice().sort((a,b)=>weekCmpDesc(a.weekId,b.weekId)||(b.updatedAt||0)-(a.updatedAt||0));
-  const pick=k=>newest.find(e=>e[k])?.[k]||"";
-  const approach=pick("nbApproach"), aInfo=pick("nbApproachInfo"), db=pick("fromDatabase");
-  const holder=el("div","cl-item"+(open?" open":"")+(idx%2?" alt":""));
-  const row=el("div","cl-row");
-  row.innerHTML=`
-    <span class="cl-name">${esc(c.name)}${c.crossSell?`<span class="cl-xs">cross-sell</span>`:""}</span>
-    <span class="cl-ico">${c.ico?esc(c.ico):"—"}</span>
-    <span class="cl-type" data-l="Typ">${(()=>{
-      const nb=c.entries.some(e=>e.isNewBusiness), cc=c.entries.some(e=>!e.isNewBusiness);
-      if(nb&&cc) return `<span class="ty nb">NB</span><span class="ty cc">CC</span>`;
-      return nb?`<span class="ty nb">New business</span>`:`<span class="ty cc">Customer care</span>`;
-    })()}</span>
-    <span class="cl-segs">${c.segments.map(sg=>{const v=SEG[sg];return v?`<span class="cl-seg" title="${esc(v.name)}">${segIcon(sg,15)}</span>`:"";}).join("")}</span>
-    <span class="cl-own" data-l="Obchodník">${app.length?esc(app.join(", ")):"—"}</span>
-    <span class="cl-own dm" data-l="DMIS">${dmis.length?esc(dmis.join(", ")):(past.length?`<i>kedysi ${esc(past.join(", "))}</i>`:"—")}</span>
-    <span class="cl-txt" data-l="Oslovenie" title="${esc(approach)}">${approach?esc(cleanApproachText(approach)):"—"}</span>
-    <span class="cl-txt" data-l="Info" title="${esc(aInfo)}">${aInfo?esc(aInfo):"—"}</span>
-    <span class="cl-txt" data-l="Databáza" title="${esc(db)}">${db?esc(db):"—"}</span>
-    <span class="cl-chev">${open?"▲":"▼"}</span>`;
-  row.onclick=()=>{ state.openClientRow=open?null:c.key; render(); };
-  holder.appendChild(row);
-
-  if(open){
-    const body=el("div","cl-body");
-    const first=c.weeks[c.weeks.length-1], last=c.weeks[0];
-    const nb=c.entries.filter(e=>e.isNewBusiness).length;
-    const contacts=c.entries.flatMap(e=>e.contacts||[]);
-    const seen=new Set(); const uniqC=contacts.filter(x=>{const k=(x.firstName+x.lastName+x.phone+x.email).toLowerCase(); if(seen.has(k))return false; seen.add(k); return true;});
-    body.innerHTML=`<div class="cl-grid">
-      ${c.ico?`<div class="lf"><span>IČO</span><b>${esc(c.ico)}</b></div>`:""}
-      <div class="lf"><span>Typ klienta</span><b>${nb&&c.entries.length>nb?"New business + Customer care":nb?"New business":"Customer care"}</b></div>
-      <div class="lf"><span>Záznamov</span><b>${c.entries.length}${nb?` · z toho ${nb}× New business`:""}</b></div>
-      <div class="lf"><span>Prvý záznam</span><b>${esc(weekRangeLabel(first))}</b></div>
-      <div class="lf"><span>Posledný záznam</span><b>${esc(weekRangeLabel(last))}</b></div>
-      <div class="lf"><span>Služby</span><b>${c.segments.map(sg=>SEG[sg]?esc(SEG[sg].name):"").filter(Boolean).join(", ")}</b></div>
-      <div class="lf"><span>Obchodník v appke</span><b>${app.length?esc(app.join(", ")):"—"}</b></div>
-      ${dmis.length?`<div class="lf"><span>Vlastník v DMIS</span><b>${esc(dmis.join(", "))}</b></div>`:""}
-      ${past.length?`<div class="lf"><span>V minulosti riešil</span><b>${esc(past.join(", "))}</b></div>`:""}
-    </div>`;
-    if(uniqC.length){
-      body.appendChild(el("div","cl-sec","Kontaktné osoby"));
-      const cw=el("div","cl-contacts");
-      uniqC.forEach(x=>{
-        const nm=[x.firstName,x.lastName].filter(Boolean).join(" ")||"(bez mena)";
-        const ph=(x.phone||"").split(/·|,|;/)[0]?.trim(), ml=(x.email||"").split(/[,;]/)[0]?.trim();
-        cw.appendChild(el("span","e-contact",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><b>${esc(nm)}</b>${x.position?` · ${esc(x.position)}`:""}${ph?` · <a href="tel:${esc(ph.replace(/\s/g,""))}">${esc(ph)}</a>`:""}${ml?` · <a href="mailto:${esc(ml)}">${esc(ml)}</a>`:""}`));
-      });
-      body.appendChild(cw);
-    }
-    body.appendChild(el("div","cl-sec",`História záznamov (${c.entries.length})`));
-    const tl=el("div","cl-hist");
-    const clients=clientIndex();
-    c.entries.slice().sort((a,b)=>weekCmpDesc(a.weekId,b.weekId)||(b.updatedAt||0)-(a.updatedAt||0))
-      .slice(0,12).forEach(e=>tl.appendChild(entryCard(e,clients,{showSegChip:true})));
-    body.appendChild(tl);
-    if(c.entries.length>12) body.appendChild(el("div","lead-hint",`Zobrazených 12 najnovších z ${c.entries.length}.`));
-    holder.appendChild(body);
-  }
-  return holder;
 }
 
 function viewClientDetail(){
