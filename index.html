@@ -1044,6 +1044,30 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .scope-switch button.on{background:#fff; color:var(--brand); box-shadow:0 1px 3px rgba(22,26,36,.10)}
 .dmis-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:#7A5208;background:#FFF6EC;border:1px solid #F0DDB4;border-radius:20px;padding:2px 9px;white-space:nowrap;max-width:230px;overflow:hidden;text-overflow:ellipsis}
 .dmis-badge svg{width:10px;height:10px;flex:0 0 auto}
+/* Chyba pri ukladaní úlohy — zostáva v okne, kým sa nezavrie */
+/* Úprava poznámky priamo vo vlákne */
+.n-edited{margin-left:7px;font-size:10px;font-weight:600;color:var(--muted);font-style:italic}
+.n-acts{display:flex;gap:10px;margin-top:5px}
+.n-acts button{border:none;background:none;padding:0;font-family:inherit;font-size:11px;
+  font-weight:600;color:var(--muted);cursor:pointer}
+.n-acts button:hover{color:var(--brand);text-decoration:underline}
+.n-acts button.rm:hover{color:var(--red)}
+.n-edit{margin-top:6px}
+.n-edit textarea{width:100%;min-height:62px;border:1px solid var(--line);border-radius:9px;
+  padding:8px 10px;font-family:inherit;font-size:12.5px;color:var(--ink);resize:vertical}
+.n-edit textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.n-edit-row{display:flex;gap:8px;margin-top:6px}
+.n-edit-row button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:4px 12px;
+  font-family:inherit;font-size:11.5px;font-weight:600;color:var(--ink-soft);cursor:pointer}
+.n-edit-row button.ok{background:var(--brand);border-color:var(--brand);color:#fff}
+.n-edit-row button.ok:disabled{opacity:.6;cursor:default}
+.task-err{display:none;width:100%;margin-bottom:10px;padding:9px 12px;border-radius:9px;
+  background:#FDF3F2;border:1px solid #F0CFCB;color:#B3261E;font-size:12.5px;line-height:1.5}
+.task-err.on{display:block}
+.task-hint{width:100%;margin-bottom:10px;padding:8px 12px;border-radius:9px;background:var(--brand-soft);
+  color:var(--brand);font-size:12px;line-height:1.5}
+#tTitle:disabled,#tAssignee:disabled,#tClient:disabled,#tSegment:disabled{
+  background:var(--line-2);color:var(--muted);cursor:not-allowed}
 .due-quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
 .due-quick button{font:inherit;font-size:11.5px;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:20px;padding:4px 11px;cursor:pointer}
 .due-quick button:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
@@ -2453,6 +2477,8 @@ input,select,textarea{font-family:inherit; font-size:14px}
       </div>
     </div>
     <div class="modal-f">
+      <div class="task-err" id="taskErr"></div>
+      <div class="task-hint" id="taskLockHint" style="display:none">Ako obchodník môžeš meniť stav, poznámku a termín. Názov, zodpovedného, klienta a službu mení líder alebo šéf.</div>
       <button class="btn danger" id="taskDeleteBtn">Zmazať</button>
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
         <button class="btn" id="taskCancelBtn">Zrušiť</button>
@@ -2982,6 +3008,7 @@ const state = {
   meetings:[],             // zápisy z porád (Fathom)
   approachInfos:[],        // číselník textov "Oslovenie — info"
   materials:[],            // číselník materiálov agentúr (meta/materials)
+  users:[],                // prihlásení používatelia (users/{uid}) — kvôli párovaniu mena na UID
   dmisOwners:[],           // register vlastníkov z DMIS (IČO/klient → obchodníci)
   calculators:[],          // odkazy na kalkulačky (spravuje admin)
   groupBy:"clientSeg",     // "clientSeg" | "client" — zoskupenie riadkov v zozname
@@ -4698,6 +4725,13 @@ function demoBackend(){
     async addComment(entryId,comment){
       all=all.map(e=>e.id===entryId?{...e, comments:[...(e.comments||[]), comment]}:e); sync();
     },
+    async updateComment(entryId,commentId,text){
+      all=all.map(e=>e.id===entryId?{...e, comments:(e.comments||[]).map(c=>c.id===commentId?{...c,text,editedAt:Date.now()}:c)}:e); sync();
+    },
+    async removeComment(entryId,commentId){
+      all=all.map(e=>e.id===entryId?{...e, comments:(e.comments||[]).filter(c=>c.id!==commentId)}:e); sync();
+    },
+    async getTask(id){ return tasks.find(t=>t.id===id)||null; },
     async saveTask(task){
       if(task.id && tasks.some(t=>t.id===task.id)) tasks=tasks.map(t=>t.id===task.id?{...task}:t);
       else { task.id="t"+Math.random().toString(36).slice(2,9); tasks.push({...task}); }
@@ -4810,6 +4844,11 @@ async function firebaseBackend(){
       const u3=onSnapshot(doc(db,"meta","hiddenClients"), snap=>{ state.hiddenClientNames=snap.exists()?(snap.data().names||[]):[]; render(); });
       const u7=onSnapshot(doc(db,"meta","approachInfo"), snap=>{ state.approachInfos=snap.exists()?(snap.data().values||[]):[]; render(); });
       const u11=onSnapshot(doc(db,"meta","materials"), snap=>{ state.materials=snap.exists()?(snap.data().values||[]):[]; render(); });
+      // Zoznam používateľov potrebujeme na to, aby sa pri priradení úlohy uložilo
+      // aj UID zodpovedného — pravidlá Firestore kontrolujú assigneeUid, nie meno.
+      const u12=onSnapshot(collection(db,"users"),
+        snap=>{ state.users=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },
+        err=>{ console.warn("Zoznam používateľov sa nepodarilo načítať:", err); });
       const u8=onSnapshot(doc(db,"meta","dmisOwners"), snap=>{ state.dmisOwners=snap.exists()?(snap.data().entries||[]):[]; render(); });
       const u9=onSnapshot(doc(db,"meta","calculators"), snap=>{ state.calculators=snap.exists()?(snap.data().items||[]):[]; render(); });
       // Admin vidí všetky postrehy, obchodník len svoje vlastné
@@ -4839,7 +4878,7 @@ async function firebaseBackend(){
       }
       // Databázy firiem sa NENAČÍTAVAJÚ pri štarte — býva ich tisíce a väčšina
       // používateľov ich vôbec neotvorí. Načítajú sa až pri prvom použití.
-      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); if(leadsUnsub) leadsUnsub(); };
+      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); if(leadsUnsub) leadsUnsub(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
@@ -4863,6 +4902,20 @@ async function firebaseBackend(){
       const cur=snap.exists()?(snap.data().comments||[]):[];
       await setDoc(ref,{comments:[...cur,comment]},{merge:true});
     },
+    async updateComment(entryId,commentId,text){
+      const ref=doc(db,"entries",entryId); const snap=await getDoc(ref);
+      const cur=snap.exists()?(snap.data().comments||[]):[];
+      const next=cur.map(c=>c.id===commentId?{...c, text, editedAt:Date.now()}:c);
+      await setDoc(ref,{comments:next},{merge:true});
+    },
+    async removeComment(entryId,commentId){
+      const ref=doc(db,"entries",entryId); const snap=await getDoc(ref);
+      const cur=snap.exists()?(snap.data().comments||[]):[];
+      await setDoc(ref,{comments:cur.filter(c=>c.id!==commentId)},{merge:true});
+    },
+    // Po zápise si prečítame dokument späť — ak sa zmena neuložila (najčastejšie
+    // pravidlá Firestore), vieme to používateľovi povedať namiesto tichého zlyhania.
+    async getTask(id){ const sn=await getDoc(doc(db,"tasks",id)); return sn.exists()?{id:sn.id,...sn.data()}:null; },
     async saveTask(task){
       const id=task.id||doc(collection(db,"tasks")).id;
       // Firestore odmieta polia s hodnotou undefined — celý zápis by zlyhal.
@@ -5745,6 +5798,28 @@ function isMine(e){
   return (e.coSalespeople||[]).some(n=>String(n||"").toLowerCase().includes(last));
 }
 function isMyTask(t){ const last=state.user.name.split(" ").pop().toLowerCase(); return (t.assignee||"").toLowerCase().includes(last); }
+/* UID používateľa podľa zobrazovaného mena.
+   Pravidlá Firestore pri úlohách kontrolujú assigneeUid, preto ho musíme uložiť
+   pri každom vytvorení aj priradení úlohy. Ak sa človek do appky ešte neprihlásil,
+   jeho UID nepoznáme a uložíme null — úlohu si potom prevezme sám tlačidlom "Prevziať". */
+function uidForName(name){
+  const n=(name||"").trim();
+  if(!n) return null;
+  if(normalizeForCompare(n)===normalizeForCompare(state.user.name)) return state.user.uid||null;
+  const byName=(state.users||[]).find(u=>normalizeForCompare(u.name||"")===normalizeForCompare(n));
+  if(byName) return byName.uid||null;
+  const mail=NAME_TO_EMAIL[n] || NAME_TO_EMAIL[Object.keys(NAME_TO_EMAIL).find(k=>normalizeForCompare(k)===normalizeForCompare(n))||""];
+  if(mail){
+    const byMail=(state.users||[]).find(u=>(u.email||"").toLowerCase()===String(mail).toLowerCase());
+    if(byMail) return byMail.uid||null;
+  }
+  return null;
+}
+/* Doplní k úlohe meno aj UID zodpovedného. */
+function withAssignee(task, name){
+  const meno=(name||"").trim();
+  return {...task, assignee:meno, assigneeUid:meno?uidForName(meno):null};
+}
 // Môže editovať záznam: admin/sef/lider=všetko, obchodník=len svoje
 function canEdit(e){
   return true; // všetci prihlásení užívatelia môžu upravovať akýkoľvek záznam
@@ -6142,9 +6217,47 @@ function notesBlock(e){
   if(!isOpen){ wrap.style.display="none"; return wrap; }
   {
     const thread=el("div","notes-thread");
+    // Vlastnú poznámku si môže autor upraviť alebo zmazať; admin a šéf hociktorú.
+    const mozeUpravit=c=>normalizeForCompare(c.author||"")===normalizeForCompare(state.user.name)
+      || ["admin","sef"].includes(state.user.role);
     (e.comments||[]).forEach(c=>{
       const item=el("div","note-item role-"+(c.role||"obchodnik"));
-      item.innerHTML=`<div class="n-av">${initials(c.author)}</div><div class="n-body"><div class="n-head">${esc(c.author)}</div><div class="n-text">${esc(c.text)}</div></div>`;
+      item.innerHTML=`<div class="n-av">${initials(c.author)}</div><div class="n-body">
+        <div class="n-head">${esc(c.author)}${c.editedAt?`<span class="n-edited">upravené</span>`:""}</div>
+        <div class="n-text">${esc(c.text)}</div></div>`;
+      if(c.id && mozeUpravit(c)){
+        const acts=el("div","n-acts");
+        const ed=el("button",null,"Upraviť"); ed.type="button";
+        const rm=el("button","rm","Zmazať"); rm.type="button";
+        ed.onclick=()=>{
+          const body=item.querySelector(".n-body");
+          const txt=body.querySelector(".n-text");
+          if(body.querySelector(".n-edit")) return;
+          const box=el("div","n-edit");
+          const ta=el("textarea"); ta.value=c.text||"";
+          const ok=el("button","ok","Uložiť"); ok.type="button";
+          const no=el("button",null,"Zrušiť"); no.type="button";
+          const row=el("div","n-edit-row"); row.appendChild(ok); row.appendChild(no);
+          box.appendChild(ta); box.appendChild(row);
+          txt.style.display="none"; acts.style.display="none"; body.appendChild(box);
+          ta.focus();
+          no.onclick=()=>{ box.remove(); txt.style.display=""; acts.style.display=""; };
+          ok.onclick=async()=>{
+            const t=ta.value.trim();
+            if(!t){ ta.focus(); return; }
+            ok.disabled=true; ok.textContent="Ukladám…";
+            try{ await backend.updateComment(e.id, c.id, t); toast("Poznámka upravená"); }
+            catch(err){ console.error("updateComment:",err); toast("⚠ Poznámku sa nepodarilo upraviť: "+(err?.message||err?.code||"neznáma chyba")); ok.disabled=false; ok.textContent="Uložiť"; }
+          };
+        };
+        rm.onclick=async()=>{
+          if(!confirm("Naozaj zmazať túto poznámku?")) return;
+          try{ await backend.removeComment(e.id, c.id); toast("Poznámka zmazaná"); }
+          catch(err){ console.error("removeComment:",err); toast("⚠ Poznámku sa nepodarilo zmazať: "+(err?.message||err?.code||"neznáma chyba")); }
+        };
+        acts.appendChild(ed); acts.appendChild(rm);
+        item.querySelector(".n-body").appendChild(acts);
+      }
       thread.appendChild(item);
     });
     const canComment=canEdit(e)||["sef","admin","lider"].includes(state.user.role);
@@ -6153,8 +6266,11 @@ function notesBlock(e){
       const input=el("input"); input.placeholder=canManageTasks()?"Napíš poznámku obchodníkovi…":"Odpovedať šéfovi…";
       const btn=el("button",null,"Pridať");
       const submit=async()=>{ const text=input.value.trim(); if(!text) return;
+        btn.disabled=true; btn.textContent="Ukladám…";
         const comment={ id:"c"+Math.random().toString(36).slice(2,8), author:state.user.name, role:["sef","admin","lider"].includes(state.user.role)?state.user.role:"obchodnik", text, ts:Date.now() };
-        await backend.addComment(e.id,comment); toast("Poznámka pridaná"); };
+        try{ await backend.addComment(e.id,comment); input.value=""; toast("Poznámka pridaná"); }
+        catch(err){ console.error("addComment:",err); toast("⚠ Poznámku sa nepodarilo pridať: "+(err?.message||err?.code||"neznáma chyba")); }
+        finally{ btn.disabled=false; btn.textContent="Pridať"; } };
       btn.onclick=submit; input.onkeydown=ev=>{ if(ev.key==="Enter") submit(); };
       addRow.appendChild(input); addRow.appendChild(btn); thread.appendChild(addRow);
     } else if(!count){
@@ -7331,11 +7447,11 @@ function openQuickTask(e){
     const title=scrim.querySelector("#qtTitle").value.trim();
     if(!title){ scrim.querySelector("#qtTitle").focus(); toast("Napíš, čo treba urobiť."); return; }
     try{
-      await backend.saveTask({
-        title, assignee:who.value, due:scrim.querySelector("#qtDue").value||"",
+      await backend.saveTask(withAssignee({
+        title, due:scrim.querySelector("#qtDue").value||"",
         client:e.client||"", segment:e.segment||"", note:"", status:"open",
         createdBy:state.user.name, createdAt:Date.now(),
-      });
+      }, who.value));
       close(); toast("Úloha pridaná.");
     }catch(err){
       console.error("Úlohu sa nepodarilo uložiť:", err);
@@ -8079,7 +8195,7 @@ function taskRow(t){
     take.title="Priradiť túto úlohu sebe";
     take.onclick=async()=>{
       take.disabled=true;
-      try{ await backend.saveTask({...t, assignee:state.user.name}); toast("Úloha priradená tebe."); }
+      try{ await backend.saveTask({...t, assignee:state.user.name, assigneeUid:state.user.uid||null}); toast("Úloha priradená tebe."); }
       catch(err){ console.error(err); toast("⚠ Nepodarilo sa priradiť: "+(err.message||err.code||"chyba")); take.disabled=false; }
     };
     ac.appendChild(take);
@@ -8154,14 +8270,13 @@ async function saveMeetingFromModal(){
       if(!r.querySelector("input[type=checkbox]").checked) continue;
       const t=r.querySelector(".mx-title").value.trim();
       if(!t) continue;
-      await backend.saveTask({
+      await backend.saveTask(withAssignee({
         title:t,
-        assignee:r.querySelector(".mx-assignee").value||"",
         due:r.querySelector(".mx-due").value||"",
         client:"", segment:"", note:"", status:"open",
         fromMeeting:meetingId||null, fromMeetingTitle:title,
         createdBy:state.user.name, createdAt:Date.now(),
-      });
+      }, r.querySelector(".mx-assignee").value||""));
       made++;
     }
     closeMeetingModal();
@@ -8827,14 +8942,13 @@ async function saveFromModal(){
     const tTitle=$("#fTaskTitle").value.trim();
     if(tTitle && $("#taskInputWrap").style.display!=="none"){
       try{
-        await backend.saveTask({
+        await backend.saveTask(withAssignee({
           title:tTitle,
-          assignee:$("#fTaskAssignee").value||state.user.name,
           due:$("#fTaskDue").value||"",
           client, segment:segId, note:"", status:"open",
           fromEntryClient:client,
           createdBy:state.user.name, createdAt:Date.now(),
-        });
+        }, $("#fTaskAssignee").value||state.user.name));
         toast(`Úloha pridaná${$("#fTaskDue").value?` · termín ${fmtDay($("#fTaskDue").value)}`:""}`);
       }catch(err){
         console.error("Úlohu sa nepodarilo uložiť:", err);
@@ -8870,6 +8984,19 @@ function openTaskModal(task){
   $("#tClient").value=task?.client||"";
   $("#tSegment").value=task?.segment||"";
   $("#tNote").value=task?.note||"";
+  // Obchodník smie na existujúcej úlohe upraviť len stav, poznámku a termín —
+  // ostatné polia sú uzamknuté, aby ich zápis neodmietli pravidlá Firestore.
+  {
+    const zamknut = isExisting && !canManageTasks();
+    ["#tTitle","#tAssignee","#tClient","#tSegment"].forEach(sel=>{
+      const f=$(sel); if(!f) return;
+      f.disabled=zamknut;
+      f.title=zamknut?"Toto pole môže meniť len líder, šéf alebo admin.":"";
+    });
+    const hint=$("#taskLockHint");
+    if(hint) hint.style.display=zamknut?"":"none";
+  }
+  taskError("");
   $("#taskScrim").classList.add("open"); setTimeout(()=>$("#tTitle").focus(),60);
 }
 function closeTaskModal(){ $("#taskScrim").classList.remove("open"); editingTask=null; }
@@ -8890,48 +9017,76 @@ function taskFromModal(extra){
   const title=$("#tTitle").value.trim();
   const assignee=$("#tAssignee").value.trim();
   // prázdny zodpovedný je povolený — úlohu si potom niekto prevezme tlačidlom "Prevziať"
-  return { ...(editingTask||{}),
-    title, assignee, due:$("#tDue").value||new Date().toISOString().slice(0,10),
+  const base={ ...(editingTask||{}),
+    due:$("#tDue").value||new Date().toISOString().slice(0,10),
     client:$("#tClient").value.trim(), segment:$("#tSegment").value, note:$("#tNote").value.trim(),
     status:editingTask?.status||"open", createdBy:editingTask?.createdBy||state.user.name,
-    createdAt:editingTask?.createdAt||Date.now(), ...(extra||{}) };
+    createdAt:editingTask?.createdAt||Date.now() };
+  return { ...withAssignee({...base, title}, assignee), ...(extra||{}) };
 }
-/* Uloženie úlohy. Predtým tu nebol žiadny catch — keď zápis do Firestore zlyhal
-   (napr. na oprávneniach), okno len ostalo otvorené a nič sa nestalo. Teraz sa
-   chyba vždy zobrazí. */
-async function saveTaskFromModal(){
+function taskError(msg){
+  const box=$("#taskErr");
+  if(!box) return;
+  box.textContent=msg||"";
+  box.classList.toggle("on", !!msg);
+}
+/* Uloženie úlohy s overením.
+   Toast sa dá prehliadnuť, preto chyba zostáva napísaná priamo v okne.
+   Po zápise si dokument prečítame späť — ak sa zmena neuložila (typicky pravidlá
+   Firestore odmietnu úpravu cudzej úlohy), povieme to namiesto tichého zlyhania. */
+/* Obchodník smie na svojej úlohe meniť len stav, poznámku a termín.
+   Posielame preto len tieto polia — pravidlá Firestore tak nemusíme obchádzať
+   a zároveň sa nedá omylom prepísať názov ani zodpovedný. */
+const TASK_FIELDS_OBCHODNIK = ["status","note","due"];
+function taskPayload(extra){
+  const full=taskFromModal(extra);
+  if(editingTask?.id && !canManageTasks()){
+    const out={id:editingTask.id};
+    TASK_FIELDS_OBCHODNIK.forEach(k=>out[k]=full[k]);
+    return out;
+  }
+  return full;
+}
+async function saveTaskAndVerify(extra, btnId, busyLabel, okMsg){
   if(!$("#tTitle").value.trim()){ $("#tTitle").focus(); $("#tTitle").style.borderColor="var(--red)"; return; }
+  taskError("");
   const wasEditing=!!editingTask?.id;
-  const btn=$("#taskSaveBtn"); const label=btn.textContent;
-  btn.disabled=true; btn.textContent="Ukladám…";
+  const btn=$(btnId); const label=btn.textContent;
+  btn.disabled=true; btn.textContent=busyLabel;
   try{
-    await backend.saveTask(taskFromModal());
-    closeTaskModal(); toast(wasEditing?"Úloha upravená":"Úloha pridaná");
+    const task=taskPayload(extra);
+    await backend.saveTask(task);
+    if(wasEditing && backend.getTask){
+      const saved=await backend.getTask(editingTask.id);
+      if(!saved) throw new Error("Úloha sa po uložení nenašla v databáze.");
+      // kontrolujeme len tie polia, ktoré sme naozaj poslali
+      const chyba=Object.keys(task).filter(k=>k!=="id"&&k!=="createdAt")
+        .find(k=>String(saved[k]??"")!==String(task[k]??""));
+      if(chyba) throw new Error(`Databáza zmenu neprijala — pole „${chyba}" zostalo pôvodné. `
+        + "Najčastejšou príčinou sú pravidlá Firestore, ktoré túto úpravu nepovoľujú.");
+    }
+    closeTaskModal(); toast(okMsg(wasEditing));
   }catch(err){
     console.error("saveTask:", err);
-    toast("⚠ Úlohu sa nepodarilo uložiť: "+(err?.message||err?.code||"neznáma chyba"));
+    taskError("⚠ "+(err?.message||err?.code||"Neznáma chyba pri ukladaní."));
   }finally{ btn.disabled=false; btn.textContent=label; }
+}
+async function saveTaskFromModal(){
+  await saveTaskAndVerify(null, "#taskSaveBtn", "Ukladám…", w=>w?"Úloha upravená":"Úloha pridaná");
 }
 // Uzavretie (alebo znovuotvorenie) úlohy priamo z okna — uloží aj rozpísané zmeny.
 async function toggleTaskFromModal(){
-  if(!editingTask?.id) return;
+  if(!editingTask?.id){ taskError("Úlohu najprv ulož, potom ju bude možné uzavrieť."); return; }
   const closing=editingTask.status!=="done";
-  if(!$("#tTitle").value.trim()){ $("#tTitle").focus(); $("#tTitle").style.borderColor="var(--red)"; return; }
-  const btn=$("#taskCloseTaskBtn"); const label=btn.textContent;
-  btn.disabled=true; btn.textContent=closing?"Uzatváram…":"Otváram…";
-  try{
-    await backend.saveTask(taskFromModal({status:closing?"done":"open"}));
-    closeTaskModal(); toast(closing?"Úloha uzavretá":"Úloha znovu otvorená");
-  }catch(err){
-    console.error("saveTask (uzavretie):", err);
-    toast("⚠ Nepodarilo sa uložiť: "+(err?.message||err?.code||"neznáma chyba"));
-  }finally{ btn.disabled=false; btn.textContent=label; }
+  await saveTaskAndVerify({status:closing?"done":"open"}, "#taskCloseTaskBtn",
+    closing?"Uzatváram…":"Otváram…", ()=>closing?"Úloha uzavretá":"Úloha znovu otvorená");
 }
 async function deleteTaskFromModal(){
   if(!editingTask) return;
   if(!confirm("Naozaj zmazať túto úlohu?")) return;
+  taskError("");
   try{ await backend.removeTask(editingTask.id); closeTaskModal(); toast("Úloha zmazaná"); }
-  catch(err){ console.error("removeTask:", err); toast("⚠ Úlohu sa nepodarilo zmazať: "+(err?.message||err?.code||"neznáma chyba")); }
+  catch(err){ console.error("removeTask:", err); taskError("⚠ Úlohu sa nepodarilo zmazať: "+(err?.message||err?.code||"neznáma chyba")); }
 }
 
 /* ---------------------------------------------------------------- GLOBÁLNE HĽADANIE — UI
