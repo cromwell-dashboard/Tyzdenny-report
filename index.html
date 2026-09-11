@@ -578,6 +578,39 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .entry .e-foot .e-actions .notes-toggle{margin-right:4px; padding-right:10px; border-right:1px solid var(--line-2)}
 .tag{font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px}
 .tag .d{width:6px;height:6px;border-radius:50%}
+.tag-btn{border:none;cursor:pointer;font-family:inherit;gap:5px;transition:filter .12s}
+.tag-btn svg{width:10px;height:10px;opacity:.6;margin-left:1px}
+.tag-btn:hover{filter:brightness(.94)}
+.pw-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pw-row select{flex:1 1 260px;min-width:0}
+.pw-row input{flex:1 1 200px;min-width:0;font-family:var(--mono)}
+.pw-row .btn{flex:0 0 auto}
+.dup-box{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}
+.dup-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.dup-text{margin-top:7px;font-size:12.5px;color:var(--ink-soft);line-height:1.55;white-space:pre-wrap}
+.statuspick{display:flex;flex-direction:column;gap:4px}
+.sp-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;cursor:pointer;
+  border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 11px;
+  font-family:inherit;font-size:12.5px;color:var(--ink-soft)}
+.sp-item:hover{border-color:var(--line-2);background:var(--bg)}
+.sp-item.on{font-weight:600}
+.sp-item .d{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.qsp{position:fixed;z-index:95;background:#fff;border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 14px 38px rgba(22,26,36,.18);padding:6px;max-height:min(70vh,420px);overflow:auto}
+.qsp-h{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);padding:7px 10px 5px}
+.qsp-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:none;background:none;
+  padding:8px 10px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12.5px;color:var(--ink)}
+.qsp-item:hover{background:var(--line-2)}
+.qsp-item.on{background:var(--brand-soft);color:var(--brand);font-weight:600}
+.qsp-item .d{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.qsp textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 10px;
+  font-family:inherit;font-size:12.5px;resize:vertical}
+.qsp textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.qsp-row{display:flex;gap:8px;margin-top:8px}
+.qsp-row button{flex:1;border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px;
+  font-family:inherit;font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer}
+.qsp-row .qsp-ok{background:var(--brand);border-color:var(--brand);color:#fff}
 .obch{font-size:12px; color:var(--muted); display:flex; align-items:center; gap:8px; margin-left:auto}
 .obch .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;background:var(--ink-soft)}
 .obch-info{display:flex; flex-direction:column; gap:1px; line-height:1.3}
@@ -2396,9 +2429,11 @@ input,select,textarea{font-family:inherit; font-size:14px}
         <select id="fLossReason"></select>
         <div class="hint">Uvidíme, na čom prípady strácame.</div>
       </div>
-      <div class="row">
-        <div class="field"><label>Obchodník</label><select id="fObch"></select></div>
-        <div class="field"><label>Stav</label><select id="fStatus"></select></div>
+      <div class="field"><label>Obchodník</label><select id="fObch"></select></div>
+      <div class="field" id="fStatusField">
+        <label>Stav</label>
+        <div class="statuspick" id="fStatusPick"></div>
+        <select id="fStatus" style="display:none"></select>
       </div>
       <div class="field" id="coObchField">
         <button type="button" class="add-coobch-btn" id="addCoObchBtn">
@@ -2944,6 +2979,24 @@ function fillStatusSelect(isNB, segment, current){
     return `<option value="${id}">${esc(st.label)}${stary}</option>`;
   }).join("");
   if(current && ids.includes(current)) sel.value=current;
+  renderStatusPick();
+}
+/* Farebný výber stavu v okne záznamu — tá istá postupnosť a farby ako na karte.
+   Zapisuje do skrytého <select>, takže zvyšok kódu zostáva nezmenený. */
+function renderStatusPick(){
+  const box=$("#fStatusPick"), sel=$("#fStatus");
+  if(!box||!sel) return;
+  const ids=[...sel.options].map(o=>o.value);
+  box.innerHTML="";
+  ids.forEach(id=>{
+    const st=ST[id]; if(!st) return;
+    const b=el("button","sp-item"+(sel.value===id?" on":""));
+    b.type="button";
+    b.innerHTML=`<span class="d" style="background:${st.color}"></span><span>${esc(st.label)}</span>`;
+    if(sel.value===id) b.style.cssText=`background:${hexA(st.color,.12)};border-color:${hexA(st.color,.45)};color:${st.color}`;
+    b.onclick=()=>{ sel.value=id; sel.dispatchEvent(new Event("change",{bubbles:true})); renderStatusPick(); };
+    box.appendChild(b);
+  });
 }
 
 /* ============================================================================
@@ -3566,13 +3619,15 @@ function ico8(v){
 // Vráti dokument ponuky pre záznam, alebo null.
 function kolosOfferFor(e){
   if(!e) return null;
+  // Kolos kalkulačka počíta balíky. Ponuka preto patrí výhradne k záznamom
+  // v službe Balíky — inak by sa tá istá firma označila ako "ponuka zaslaná"
+  // aj pri Zelenej pošte či Tlači, kde s ňou nemá nič spoločné.
+  if(e.segment!=="baliky") return null;
   const key=ico8(e.leadIco||e.ico);
   if(!key) return null;
   return state.kolosOffers.get(key) || null;
 }
-// Odznak sa zobrazuje len v Balíkoch a pri New business záznamoch.
 function kolosOfferBadge(e){
-  if(!(e && (e.segment==="baliky" || e.isNewBusiness))) return "";
   const off=kolosOfferFor(e);
   if(!off) return "";
   return `<button type="button" class="offer-badge" data-ico="${esc(ico8(e.leadIco||e.ico))}" title="Detail ponuky z Kolos kalkulačky">📦 zaslaná ponuka (Kolos kalkulačka)</button>`;
@@ -4596,6 +4651,7 @@ const LOSS_REASONS = ["Cena","Konkurencia","Nemá záujem","Nereaguje","Nevhodn�
    netreba nič mazať z kódu. Formát YYYY-MM-DD. */
 const NEW_UNTIL = {
   produkt:     "2026-10-05",   // upresnenie typu služby (Zelená pošta ad hoc, Tlač Externá)
+  quickStatus: "2026-09-25",   // zmena fázy kliknutím na odznak stavu
   reminders:   "2026-09-10",   // pripomienky zabudnutých príležitostí
   finstat:     "2026-09-09",   // načítanie firmy z Finstatu — 5 dní
   groupedAll:  "2026-09-11",   // zoskupený zoznam v zobrazení "Všetko" — 3 dni
@@ -4609,6 +4665,8 @@ const newDot = key => isNewFeature(key) ? `<span class="new-badge"${NEW_HINT[key
 const NEW_HINT = {
   produkt: "Nové pole. Pri Zelenej pošte a Tlači upresni typ služby — "
     + "Zelená pošta ad hoc a Tlač Externá sa odmeňujú inak než základný variant.",
+  quickStatus: "Kliknutím na odznak stavu môžeš meniť fázu aktivity bez toho, "
+    + "aby si musel vojsť do záznamu.",
   groupedAll: "Nové zobrazenie všetkých aktivít. Záznamy zapísané počas jednotlivých týždňov "
     + "sú zlúčené do jedného riadku podľa klienta a služby — kliknutím na riadok si rozbalíš "
     + "celú históriu. Vyskúšaj si to.",
@@ -4859,6 +4917,83 @@ function schipLogo(segId){
   return `<span class="logo-pill"><span class="dot" style="background:${s.color};width:7px;height:7px;border-radius:50%;flex:0 0 auto"></span>${logo1}${logo2}<span style="font-size:11px;font-weight:600;color:${textColor}">${esc(s.short)}</span></span>`;
 }
 function statusTag(id){ const st=ST[id]||STATUSES[0]; return `<span class="tag" style="background:${hexA(st.color,.13)};color:${st.color}"><span class="d" style="background:${st.color}"></span>${esc(st.label)}</span>`; }
+/* Rovnaký odznak, ale klikateľný — otvorí rýchlu zmenu stavu bez okna záznamu. */
+let _quickStatusTipShown=false;   // odznak NOVÉ len pri prvej karte, nie pri každej
+function statusTagBtn(e){
+  const st=ST[e.status]||STATUSES[0];
+  let tip="";
+  if(!_quickStatusTipShown && isNewFeature("quickStatus")){
+    _quickStatusTipShown=true;
+    // len odznak — celá veta je v bubline po nastavení myšou
+    tip=newDot("quickStatus");
+  }
+  return `<button type="button" class="tag tag-btn" data-qstatus="${esc(e.id||"")}" title="Zmeniť stav"
+    style="background:${hexA(st.color,.13)};color:${st.color}"><span class="d" style="background:${st.color}"></span>${esc(st.label)}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>${tip}`;
+}
+
+/* Rýchla zmena stavu priamo z karty.
+   Ponuka je tá istá ako v okne záznamu — podľa typu záznamu a služby.
+   Pri prehratom stave sa vypýta dôvod, rovnako ako pri riadnom uložení. */
+function openStatusQuickPick(e, anchor){
+  document.querySelector(".qsp")?.remove();
+  const ids=statusOptions(!!e.isNewBusiness, e.segment, e.status);
+  const box=el("div","qsp");
+  box.innerHTML=`<div class="qsp-h">Zmeniť stav</div>`;
+  const stratove=["nechce","zrusene","nb_odmietnutie"];
+
+  const uloz=async(id, dovod)=>{
+    box.remove();
+    try{
+      const upd={ ...e, status:id,
+        lossReason: stratove.includes(id) ? (dovod || e.lossReason || null) : null,
+        editedByName: state.user.name, editedByKey: state.user.key, editedByAt: Date.now() };
+      await backend.save(upd);
+      if(upd.isNewBusiness && upd.opportunityId) await zosuladPripad(upd);
+      toast(`Stav zmenený na „${ST[id]?.label||id}"`);
+    }catch(err){
+      console.error("rýchla zmena stavu:", err);
+      toast("⚠ Stav sa nepodarilo uložiť: "+(err?.message||err?.code||"neznáma chyba"));
+    }
+  };
+
+  ids.forEach(id=>{
+    const st=ST[id]; if(!st) return;
+    const b=el("button","qsp-item"+(id===e.status?" on":""));
+    b.type="button";
+    b.innerHTML=`<span class="d" style="background:${st.color}"></span><span>${esc(st.label)}</span>`;
+    b.onclick=(ev)=>{
+      ev.stopPropagation();
+      if(id===e.status){ box.remove(); return; }
+      if(stratove.includes(id) && !e.lossReason){
+        // dôvod straty je povinný — vypýtame ho hneď tu
+        box.innerHTML=`<div class="qsp-h">Dôvod straty</div>`;
+        const ta=el("textarea"); ta.rows=3; ta.placeholder="Prečo klient odmietol?";
+        const row=el("div","qsp-row");
+        const ok=el("button","qsp-ok","Uložiť"); ok.type="button";
+        const no=el("button","qsp-no","Späť"); no.type="button";
+        no.onclick=(e2)=>{ e2.stopPropagation(); openStatusQuickPick(e, anchor); };
+        ok.onclick=(e2)=>{ e2.stopPropagation(); const t=ta.value.trim(); if(!t){ ta.focus(); return; } uloz(id,t); };
+        row.appendChild(no); row.appendChild(ok);
+        box.appendChild(ta); box.appendChild(row); ta.focus();
+        return;
+      }
+      uloz(id);
+    };
+    box.appendChild(b);
+  });
+
+  document.body.appendChild(box);
+  const r=anchor.getBoundingClientRect();
+  const w=Math.min(280, window.innerWidth-20);
+  box.style.width=w+"px";
+  box.style.left=Math.max(10, Math.min(r.left, window.innerWidth-10-w))+"px";
+  const pod=r.bottom+6, vyska=box.offsetHeight;
+  box.style.top=(pod+vyska>window.innerHeight-10 ? Math.max(10, r.top-vyska-6) : pod)+"px";
+  setTimeout(()=>{
+    const zavri=(ev)=>{ if(!box.contains(ev.target)){ box.remove(); document.removeEventListener("mousedown",zavri); } };
+    document.addEventListener("mousedown",zavri);
+  },0);
+}
 
 /* ============================================================================
    KLIENTI — agregácia
@@ -4951,6 +5086,7 @@ function demoBackend(){
     },
     async getTask(id){ return tasks.find(t=>t.id===id)||null; },
     async saveClientProfile(key,data){ state.clientProfiles={...state.clientProfiles,[key]:{id:key,...(state.clientProfiles[key]||{}),...data}}; _ciCache=null; render(); },
+    async setUserPassword(){ throw new Error("V ukážkovom režime sa heslá nemenia."); },
     async saveOpportunity(o){
       const id=o.id||("opp_"+Math.random().toString(36).slice(2,10));
       const i=state.opportunities.findIndex(x=>x.id===id);
@@ -5025,6 +5161,7 @@ async function firebaseBackend(){
   const improveTextCallable=httpsCallable(fx,"improveText");
   const generateSuggestionsCallable=httpsCallable(fx,"generateSuggestions");
   const finstatCallable=httpsCallable(fx,"finstatLookup");
+  const setPasswordCallable=httpsCallable(fx,"setUserPassword");
   let unsub=null, leadsUnsub=null;
   async function resolveUser(u){
     const email=(u.email||"").toLowerCase();
@@ -5154,6 +5291,8 @@ async function firebaseBackend(){
     // pravidlá Firestore), vieme to používateľovi povedať namiesto tichého zlyhania.
     async getTask(id){ const sn=await getDoc(doc(db,"tasks",id)); return sn.exists()?{id:sn.id,...sn.data()}:null; },
     async saveClientProfile(key, data){ await setDoc(doc(db,"clients",key), data, {merge:true}); },
+    // Zmenu hesla robí server cez Admin SDK — klient na cudzie účty nesmie.
+    async setUserPassword(email, password){ const r=await setPasswordCallable({email,password}); return r.data; },
     async saveOpportunity(o){
       const id=o.id||doc(collection(db,"opportunities")).id;
       const clean={}; Object.entries({...o,id}).forEach(([k,v])=>{ if(v!==undefined) clean[k]=v; });
@@ -5683,6 +5822,7 @@ function renderNow(){
 
   const c=$("#content"); c.innerHTML="";
   if(state.openColFilter) document.onclick=()=>{ if(state.openColFilter){ state.openColFilter=null; document.onclick=null; render(); } };
+  _quickStatusTipShown=false;                          // tip o zmene stavu sa ukáže raz za obrazovku
   if(state.view==="meetings") state.view="dashboard";   // sekcia porád už v UI nie je
   if(state.activeClient) c.appendChild(viewClientDetail());
   else if(state.view==="dashboard") c.appendChild(viewDashboard());
@@ -6900,6 +7040,50 @@ function staleNbReminder(){
    Týka sa výhradne New business záznamov — Customer care a interné sú mimo. */
 const OPP_OPEN_STATES = ["aktivny","vyhrany"];
 
+/* Stav obchodného prípadu sa odvodzuje zo stavu záznamu.
+   "vyhrany" zostáva otvorený — obchod beží a ďalšie týždenné zápisy k nemu patria.
+   "prehraty" otvorený nie je, takže ďalší zápis pre tú istú firmu a službu
+   vyvolá otázku, či ide o nový obchod. */
+const OPP_WON  = ["nb_zakazka","nb_vyfakturovane","bezi","vyfakturovane"];
+const OPP_LOST = ["nb_odmietnutie","nechce","zrusene"];
+function oppStavZoZaznamu(status){
+  if(OPP_WON.includes(status))  return "vyhrany";
+  if(OPP_LOST.includes(status)) return "prehraty";
+  return "aktivny";
+}
+/* Prvý mesiac, v ktorom sa obchod dostal do realizácie (Zadanie zákazky
+   alebo Vyfakturované). Signál, od ktorého sa neskôr odvodí NB obdobie. */
+const jeRealizacia = status => OPP_WON.includes(status);
+
+/* Po uložení záznamu zosúladí prípad so stavmi VŠETKÝCH jeho záznamov.
+   Rozhoduje najnovší záznam prípadu — nie ten, ktorý sa práve uložil.
+   Inak by úprava staršieho zápisu vrátila prípad späť do skoršej fázy. */
+async function zosuladPripad(e){
+  const opp=oppById(e.opportunityId);
+  if(!opp) return;
+  // práve uložený záznam ešte nemusí byť v state.all — doplníme ho ručne
+  const zaznamy=[e, ...state.all.filter(x=>x.id!==e.id && x.opportunityId===opp.id)];
+  zaznamy.sort((a,b)=>weekCmpDesc(a.weekId,b.weekId) || entryTs(b)-entryTs(a));
+  const najnovsi=zaznamy[0];
+
+  const novyStav=oppStavZoZaznamu(najnovsi.status);
+  const zmeny={};
+  if(opp.stav!==novyStav){
+    zmeny.stav=novyStav;
+    zmeny.uzavreteOd = (novyStav==="prehraty") ? mesiacZTyzdna(najnovsi.weekId) : null;
+  }
+  // prvá realizácia sa nastaví raz a späť sa už neruší
+  if(!opp.fakturovaneOd){
+    const prva=zaznamy.slice().reverse().find(x=>jeRealizacia(x.status));
+    if(prva) zmeny.fakturovaneOd = mesiacZTyzdna(prva.weekId);
+  }
+  if(!Object.keys(zmeny).length) return;
+  try{
+    await backend.saveOpportunity({ id:opp.id, ...zmeny,
+      updatedBy:state.user?.name||null, updatedAt:Date.now() });
+  }catch(err){ console.error("zosuladPripad:", err); }
+}
+
 function oppMatchKey(e){
   const ic = icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client));
   return (ic ? "i:"+ic : "n:"+clientKey(e.client))
@@ -6978,6 +7162,40 @@ function mesiacZTyzdna(weekId){
   }catch(err){ return null; }
 }
 
+/* Za týždeň má byť pri jednej firme a službe jeden zápis.
+   Nebránime uloženiu — len upozorníme a ukážeme, čo už existuje. */
+function upozorniNaDuplicitu(novy, existujuci){
+  return new Promise(resolve=>{
+    const st=ST[existujuci.status];
+    const ukazka=(existujuci.events||"").replace(/\s+/g," ").trim().slice(0,180);
+    const scrim=el("div","scrim open"); scrim.style.zIndex="95";
+    scrim.innerHTML=`<div class="modal" style="max-width:500px">
+      <div class="modal-h"><h2>Takýto záznam už tento týždeň existuje</h2></div>
+      <div class="modal-b">
+        <p style="margin:0 0 12px;font-size:13.5px;line-height:1.6">
+          Pre <b>${esc(entryTitle(novy)||"—")}</b> a službu <b>${esc(segLabel(novy.segment,novy.produkt,true))}</b>
+          už máš zápis za ${esc(weekRangeLabel(novy.weekId))}.
+        </p>
+        <div class="dup-box">
+          <div class="dup-head">${st?`<span class="tag" style="background:${hexA(st.color,.13)};color:${st.color}"><span class="d" style="background:${st.color}"></span>${esc(st.label)}</span>`:""}
+            <span>${esc(resolveOwnerName(existujuci))}</span></div>
+          ${ukazka?`<div class="dup-text">${esc(ukazka)}${(existujuci.events||"").length>180?" …":""}</div>`:""}
+        </div>
+        <p style="margin:12px 0 0;font-size:12.5px;color:var(--muted);line-height:1.6">
+          Za týždeň by mal byť pri jednej firme a službe jeden zápis — inak si stavy
+          obchodného prípadu môžu protirečiť. Radšej doplň existujúci záznam.
+        </p>
+      </div>
+      <div class="modal-f" style="justify-content:flex-end;flex-wrap:wrap">
+        <button class="btn" data-act="back">Späť na úpravu</button>
+        <button class="btn solid" data-act="save">Uložiť aj tak</button>
+      </div></div>`;
+    scrim.querySelectorAll("[data-act]").forEach(b=>{
+      b.onclick=()=>{ scrim.remove(); resolve(b.dataset.act==="save"); };
+    });
+    document.body.appendChild(scrim);
+  });
+}
 /* Opakovaný obchod — rozhodnúť musí človek, automaticky sa to uhádnuť nedá.
    Vracia true (nový prípad), false (pokračovanie starého) alebo null (zrušiť). */
 function spytajSaNaNovyPripad(e, zavrete){
@@ -8632,7 +8850,7 @@ function entryCard(e,clients,opts={}){
   card.innerHTML=`<div style="background:${stripColor}"></div><div class="ebody">
     <div class="e-top"><div class="e-client">${clientLabel}${e.material?`<span class="mat-badge" title="Materiál agentúry ${esc(e.client||"")}">${esc(e.material)}</span>`:""}
       ${sleepBadge}
-      ${(e.isNewBusiness && e.status==="lead") ? "" : statusTag(e.status)}
+      ${(e.isNewBusiness && e.status==="lead") ? "" : statusTagBtn(e)}
       ${e.riskFlag?`<span class="risk-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Problém / sťažnosť</span>`:""}
       ${approachBadges(e)}
     </div></div>
@@ -8658,6 +8876,9 @@ function entryCard(e,clients,opts={}){
     }
   }
   card.querySelector(".lk").onclick=()=>goClient(k);
+  card.querySelectorAll("[data-qstatus]").forEach(btn=>{
+    btn.onclick=(ev)=>{ ev.stopPropagation(); openStatusQuickPick(e, btn); };
+  });
   card.querySelectorAll(".offer-badge").forEach(btn=>{
     btn.onclick=(ev)=>{ ev.stopPropagation(); openKolosOfferModal(btn.dataset.ico, e.client); };
   });
@@ -8960,6 +9181,51 @@ function viewClientRegistry(){
     <h1>Číselník klientov</h1>
     <div class="sub">Skry meno klienta, ktoré sa už nemá ponúkať obchodníkom pri písaní záznamu (napr. duplicity alebo preklepy). Historické záznamy zostanú nedotknuté, len sa dané meno prestane objavovať v nápovede.</div></div>`));
 
+  // ---- Zmena hesla používateľa (len admin) ----
+  if(state.user.role==="admin"){
+    const box=el("div","msec"); box.style.marginBottom="18px";
+    box.innerHTML=`<div class="msec-h">Zmena hesla používateľa</div>
+      <div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:10px">
+        Nastaví nové heslo priamo, bez e-mailu. Používateľovi ho oznám osobne —
+        nie mailom. Zmena sa zapíše do <code>adminLog</code>.
+      </div>`;
+    const row=el("div","pw-row");
+    const sel=el("select");
+    sel.innerHTML=`<option value="">— vyber používateľa —</option>`
+      + Object.entries(NAME_BY_EMAIL).sort((a,b)=>a[1].localeCompare(b[1],"sk"))
+          .map(([mail,meno])=>`<option value="${esc(mail)}">${esc(meno)} · ${esc(mail)}</option>`).join("");
+    const inp=el("input"); inp.type="text"; inp.placeholder="Nové heslo (aspoň 8 znakov)"; inp.autocomplete="off";
+    const btn=el("button","btn solid","Nastaviť heslo");
+    row.appendChild(sel); row.appendChild(inp); row.appendChild(btn);
+    box.appendChild(row);
+    const hint=el("div","hint"); box.appendChild(hint);
+
+    const gen=el("button","btn","Vygenerovať heslo"); gen.type="button"; gen.style.marginTop="8px";
+    gen.onclick=()=>{
+      const znaky="abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      inp.value=Array.from({length:12},()=>znaky[Math.floor(Math.random()*znaky.length)]).join("");
+      hint.textContent="Heslo vygenerované — skopíruj si ho pred uložením.";
+    };
+    box.appendChild(gen);
+
+    btn.onclick=async()=>{
+      const mail=sel.value, heslo=inp.value;
+      if(!mail){ hint.textContent="Najprv vyber používateľa."; sel.focus(); return; }
+      if(heslo.length<8){ hint.textContent="Heslo musí mať aspoň 8 znakov."; inp.focus(); return; }
+      if(!confirm(`Nastaviť nové heslo pre ${NAME_BY_EMAIL[mail]||mail}?\n\nPoužívateľ sa starým heslom už neprihlási.`)) return;
+      btn.disabled=true; btn.textContent="Nastavujem…"; hint.textContent="";
+      try{
+        await backend.setUserPassword(mail, heslo);
+        hint.innerHTML=`<span class="ico-ok">✓ Heslo nastavené pre ${esc(NAME_BY_EMAIL[mail]||mail)}</span> — oznám mu ho osobne.`;
+        toast("Heslo nastavené");
+      }catch(err){
+        console.error("setUserPassword:", err);
+        hint.textContent="⚠ "+(err?.message||err?.code||"Nepodarilo sa nastaviť heslo.");
+      }finally{ btn.disabled=false; btn.textContent="Nastaviť heslo"; }
+    };
+    wrap.appendChild(box);
+  }
+
   // ---- Migrácia: založenie obchodných prípadov k existujúcim New business záznamom ----
   if(["admin","sef"].includes(state.user.role)){
     const nb=state.all.filter(e=>e.isNewBusiness);
@@ -8996,8 +9262,14 @@ function viewClientRegistry(){
           if(opp){ pripojenych++; }
           else {
             const najstarsi=zaznamy[zaznamy.length-1];
-            const zaklad=novyPripad(zaznamy[0], oppsForKey(mk).length+1);
+            const najnovsi=zaznamy[0];
+            const zaklad=novyPripad(najnovsi, oppsForKey(mk).length+1);
             zaklad.otvoreneOd = mesiacZTyzdna(najstarsi.weekId);
+            // stav podľa najnovšieho záznamu, prvá realizácia podľa najstaršieho, ktorý ju dosiahol
+            zaklad.stav = oppStavZoZaznamu(najnovsi.status);
+            zaklad.uzavreteOd = zaklad.stav==="prehraty" ? mesiacZTyzdna(najnovsi.weekId) : null;
+            const prvaReal = zaznamy.slice().reverse().find(x=>jeRealizacia(x.status));
+            zaklad.fakturovaneOd = prvaReal ? mesiacZTyzdna(prvaReal.weekId) : null;
             const id=await backend.saveOpportunity(zaklad);
             opp={id}; novych++;
           }
@@ -9389,7 +9661,7 @@ function openModal(entry,presetSeg){
     $("#fApproachSection").style.display = (canPickKind && nb) ? "" : "none";
     $("#fDmisSection").style.display = (canPickKind && nb) ? "" : "none";
     // stav pri internom zázname nedáva zmysel — ukladá sa natvrdo "Realizuje sa"
-    $("#fStatus").closest(".field").style.display = vnutorne ? "none" : "";
+    $("#fStatusField").style.display = vnutorne ? "none" : "";
     applySegVisibility(canPickKind && nb);
 
     $("#fKind").querySelectorAll("label").forEach(l=>l.classList.toggle("on", l.querySelector("input").checked));
@@ -9606,8 +9878,35 @@ async function saveFromModal(){
     coSalespeople: [...$("#coObchPick").querySelectorAll("input:checked")].map(i=>i.value).filter(n=>n!==selectedName),
     editedByName, editedByAt, editedByKey };
 
-  // Obchodný prípad — len pri New business. Ak firma v tejto službe už mala obchod
-  // a je uzavretý, opýtame sa, či ide o pokračovanie alebo o nový obchod.
+  // Upozornenie na duplicitu: ten istý klient a služba v tom istom týždni.
+  // Za týždeň má byť jeden zápis — inak si stavy prípadu protirečia.
+  if(!wasEditing){
+    const dvojnik = state.all.find(x =>
+      x.id!==entry.id &&
+      x.weekId===entry.weekId &&
+      x.segment===entry.segment &&
+      clientKey(entryTitle(x))===clientKey(entryTitle(entry)) &&
+      (x.material||"")===(entry.material||"") &&
+      (x.produkt||"")===(entry.produkt||"")
+    );
+    if(dvojnik){
+      const pokracovat = await upozorniNaDuplicitu(entry, dvojnik);
+      if(!pokracovat) return;
+    }
+  }
+
+  // Obchodný prípad — len pri New business.
+  if(!entry.isNewBusiness){
+    // zmena typu záznamu na Customer care alebo Interné väzbu na prípad ruší
+    entry.opportunityId = null;
+  } else if(entry.opportunityId){
+    // Zmena služby, produktu, materiálu alebo IČO znamená iný obchodný prípad.
+    // Väzbu preto zrušíme a nižšie sa dohľadá alebo založí správny.
+    const terajsi=oppById(entry.opportunityId);
+    if(terajsi && terajsi.matchKey!==oppMatchKey(entry)) entry.opportunityId=null;
+  }
+  // Ak firma v tejto službe už mala obchod a je uzavretý, opýtame sa,
+  // či ide o pokračovanie alebo o nový obchod.
   if(entry.isNewBusiness && !entry.opportunityId){
     const mk=oppMatchKey(entry);
     const otvoreny=openOppForKey(mk);
@@ -9624,6 +9923,8 @@ async function saveFromModal(){
   }
 
   await backend.save(entry);
+  // stav prípadu ide za stavom záznamu — "Vyfakturované" prípad označí ako vyhraný
+  if(entry.isNewBusiness && entry.opportunityId) await zosuladPripad(entry);
 
   // Odstrániť z návrhov + znovu vykresliť
   if(isSuggestion && suggestionId){
