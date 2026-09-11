@@ -2792,7 +2792,58 @@ const STATUSES = [
   { id:"pozastavene",label:"Pozastavené",             color:"#B08D2B" },
   { id:"zrusene",    label:"Ukončenie spolupráce",    color:"#7A2E28" },
 ];
-const ST = Object.fromEntries(STATUSES.map(s=>[s.id,s]));
+/* Stavy podľa DMIS — platia pre nové New business záznamy od septembra 2026.
+   Staré záznamy si ponechávajú pôvodné stavy vyššie a nič sa im nemení.
+   Customer care používa pôvodné stavy ďalej. */
+const STATUSES_NB = [
+  { id:"nb_oslovenie",    label:"Aktívne oslovenie klienta",                  color:"#8b95a1" },
+  { id:"nb_ponuka",       label:"Zaslaná cenová ponuka",                      color:"#C6810A" },
+  { id:"nb_cennik",       label:"Oboznámenie klienta s cenovými podmienkami", color:"#C6810A" },
+  { id:"nb_vyjednavanie", label:"Spätná väzba od klienta (vyjednávame)",      color:"#3E56CB" },
+  { id:"nb_potvrdenie",   label:"Potvrdenie spolupráce",                      color:"#6D4FB3" },
+  { id:"nb_registracia",  label:"Klient sa zaregistroval do Zelenej pošty",   color:"#6D4FB3" },
+  { id:"nb_zakazka",      label:"Zadanie zákazky",                            color:"#2E7D5B" },
+  { id:"nb_vyfakturovane",label:"Vyfakturované",                              color:"#0F6B43" },
+  { id:"nb_odmietnutie",  label:"Odmietnutie spolupráce",                     color:"#C24444" },
+];
+const ST = Object.fromEntries([...STATUSES, ...STATUSES_NB].map(s=>[s.id,s]));
+
+/* Ktoré stavy sa ponúkajú v okne záznamu.
+   Zelená pošta má vlastnú postupnosť, ostatné služby spoločnú. */
+const STATUS_SETS = {
+  nbZelena: ["nb_oslovenie","nb_cennik","nb_vyjednavanie","nb_registracia","nb_zakazka","nb_vyfakturovane","nb_odmietnutie"],
+  nbOstatne:["nb_oslovenie","nb_ponuka","nb_vyjednavanie","nb_potvrdenie","nb_zakazka","nb_vyfakturovane","nb_odmietnutie"],
+};
+/* `current` = stav, ktorý záznam už má. Ak v novej sade nie je (starý záznam),
+   doplní sa na koniec, aby sa uložením ticho nezmenil. */
+function statusOptions(isNB, segment, current){
+  if(!isNB) return STATUSES.map(s=>s.id).concat(
+    (current && !ST[current]) ? [] : (STATUSES.some(s=>s.id===current)?[]:[current]).filter(Boolean));
+  const ids=[...(segment==="zelena" ? STATUS_SETS.nbZelena : STATUS_SETS.nbOstatne)];
+  if(current && !ids.includes(current)) ids.push(current);
+  return ids;
+}
+let modalEntry=null;   // záznam otvorený v okne — potrebný pri prekreslení ponuky stavov
+/* Prekreslí ponuku stavov po zmene typu záznamu alebo služby. */
+function syncStatusList(){
+  const segNow=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
+  const isNBnow=$("#fKindField").style.display!=="none"
+    ? $("#fKind").querySelector("input:checked")?.value==="nb"
+    : !!modalEntry?.isNewBusiness;
+  fillStatusSelect(isNBnow, segNow, $("#fStatus").value);
+  window.__syncLossField?.();
+}
+function fillStatusSelect(isNB, segment, current){
+  const sel=$("#fStatus"); if(!sel) return;
+  const ids=statusOptions(isNB, segment, current);
+  const nove=new Set(isNB ? (segment==="zelena"?STATUS_SETS.nbZelena:STATUS_SETS.nbOstatne) : STATUSES.map(s=>s.id));
+  sel.innerHTML=ids.map(id=>{
+    const st=ST[id]; if(!st) return "";
+    const stary=!nove.has(id) ? " · pôvodný stav" : "";
+    return `<option value="${id}">${esc(st.label)}${stary}</option>`;
+  }).join("");
+  if(current && ids.includes(current)) sel.value=current;
+}
 
 /* ============================================================================
    ISO TÝŽDNE
@@ -5122,6 +5173,7 @@ function buildStatic(){
 
   const fSeg=$("#fSegment"); fSeg.innerHTML="";
   SEGMENTS.forEach((s,i)=>fSeg.appendChild(el("label",null,`<input type="radio" name="seg" value="${s.id}"${i===0?" checked":""}>${segIcon(s.id,14)}${s.short}`)));
+  fSeg.querySelectorAll("input").forEach(i=>{ i.addEventListener("change", syncStatusList); });
   const updateFirmaVis=()=>{
     const sel=[...fSeg.querySelectorAll("input")].find(i=>i.checked)?.value;
     const seg=SEG[sel]; const show=!!(seg&&seg.firm);
@@ -5129,7 +5181,7 @@ function buildStatic(){
   };
   fSeg.querySelectorAll("label").forEach(l=>l.onclick=()=>setTimeout(()=>{ fSeg.querySelectorAll("label").forEach(x=>x.classList.toggle("on",x.querySelector("input").checked)); updateFirmaVis(); },0));
   updateFirmaVis();
-  $("#fStatus").innerHTML=STATUSES.map(s=>`<option value="${s.id}">${s.label}</option>`).join("");
+  // #fStatus sa napĺňa až pri otvorení okna — ponuka závisí od typu záznamu a služby
 
   $("#prevWeek").onclick=()=>{ state.week=shiftWeek(state.week,-1); state.suggestions=[]; state.nbCopyPreview=null; render(); };
   $("#nextWeek").onclick=()=>{ state.week=shiftWeek(state.week,1); state.suggestions=[]; state.nbCopyPreview=null; render(); };
@@ -5179,7 +5231,7 @@ function buildStatic(){
     const ph=el("option","","— vyber dôvod —"); ph.value=""; sel.appendChild(ph);
     LOSS_REASONS.forEach(r=>{ const o=el("option","",r); o.value=r; sel.appendChild(o); });
     const sync=()=>{
-      const lost=["nechce","zrusene"].includes($("#fStatus").value);
+      const lost=["nechce","zrusene","nb_odmietnutie"].includes($("#fStatus").value);
       $("#fLossField").style.display=lost?"":"none";
     };
     $("#fStatus").addEventListener("change",sync);
@@ -5856,6 +5908,16 @@ const STATUS_FLOW = {
   bezi:       { next:"bezi",       hint:"Spolupráca prebieha štandardne. Monitoring výsledkov, bežná agenda." },
   pozastavene:{ next:"jednanie",   hint:"Obnovený kontakt s klientom. Riešime dôvod prerušenia, hľadáme cestu vpred." },
   zrusene:    { next:"lead",       hint:"Priestor na nové oslovenie po čase, s inou ponukou." },
+  /* DMIS stavy pre New business */
+  nb_oslovenie:    { next:"nb_ponuka",        hint:"Klient aktívne oslovený. Pripravujeme a posielame cenovú ponuku." },
+  nb_ponuka:       { next:"nb_vyjednavanie",  hint:"Cenová ponuka odoslaná. Čakáme na spätnú väzbu klienta." },
+  nb_cennik:       { next:"nb_vyjednavanie",  hint:"Klient oboznámený s cenovými podmienkami. Čakáme na jeho vyjadrenie." },
+  nb_vyjednavanie: { next:"nb_potvrdenie",    hint:"Vyjednávame podmienky. Finalizujeme a očakávame potvrdenie spolupráce." },
+  nb_potvrdenie:   { next:"nb_zakazka",       hint:"Spolupráca potvrdená. Čakáme na zadanie prvej zákazky." },
+  nb_registracia:  { next:"nb_zakazka",       hint:"Klient zaregistrovaný v Zelenej pošte. Čakáme na prvé podanie." },
+  nb_zakazka:      { next:"nb_vyfakturovane", hint:"Zákazka zadaná. Realizujeme a pripravujeme fakturáciu." },
+  nb_vyfakturovane:{ next:"nb_vyfakturovane", hint:"Vyfakturované. Sledujeme ďalšie objednávky a výsledky." },
+  nb_odmietnutie:  { next:"nb_oslovenie",     hint:"Skúšame znova s odstupom času, inou ponukou alebo argumentáciou." },
 };
 
 function generateSuggestionsLocal(segId){
@@ -5994,7 +6056,7 @@ async function importNewBusinessRows(rows){
     const entry={
       id:entryId, segment:segId, weekId:wId,
       client:klient||"—", events:popis, salesperson:obch||"—",
-      status: existing?.status || "lead",
+      status: existing?.status || "nb_oslovenie",
       firma:null,
       isNewBusiness:true, nbSourceId:csvId, nbImportedAt:Date.now(),
       nbApproach:sposobOslovenia||null, nbApproachInfo:oslovenieInfo||null,
@@ -6451,9 +6513,12 @@ function taskReminder(){
    Prah nečinnosti podľa fázy: pri čerstvo oslovenom je ticho v poriadku dlhšie,
    pri rozjednanom prípade s ponukou je aj pár dní veľa. */
 const NB_STALE_DAYS = { lead:14, ponuka:10, jednanie:10, potvrdene:14 };
-const NB_OPEN   = ["lead","ponuka","jednanie","potvrdene"];
-const NB_WON    = ["bezi","vyfakturovane"];
-const NB_LOST   = ["nechce","zrusene"];
+/* Vyhodnotenie New business počíta staré aj nové stavy naraz,
+   aby sa po prechode na DMIS stavy nestratili rozbehnuté obchody. */
+const NB_OPEN   = ["lead","ponuka","jednanie","potvrdene",
+                   "nb_oslovenie","nb_ponuka","nb_cennik","nb_vyjednavanie","nb_potvrdenie","nb_registracia"];
+const NB_WON    = ["bezi","vyfakturovane","nb_zakazka","nb_vyfakturovane"];
+const NB_LOST   = ["nechce","zrusene","nb_odmietnutie"];
 
 /* Príležitosti bez pohybu — vlastné, zoradené podľa toho, čo najviac horí */
 function staleNbCases(ownerOnly){
@@ -6510,9 +6575,9 @@ function nbAnalytics(){
   wrap.appendChild(kpis);
 
   const steps=[["Oslovených",total,"#8b95a1"],
-    ["Zaslaná ponuka",list.filter(e=>["ponuka","jednanie","potvrdene",...NB_WON].includes(e.status)).length,"#C6810A"],
-    ["Jednanie",list.filter(e=>["jednanie","potvrdene",...NB_WON].includes(e.status)).length,"#3E56CB"],
-    ["Potvrdené",list.filter(e=>["potvrdene",...NB_WON].includes(e.status)).length,"#6D4FB3"],
+    ["Zaslaná ponuka",list.filter(e=>["ponuka","jednanie","potvrdene","nb_ponuka","nb_cennik","nb_vyjednavanie","nb_potvrdenie","nb_registracia",...NB_WON].includes(e.status)).length,"#C6810A"],
+    ["Jednanie",list.filter(e=>["jednanie","potvrdene","nb_vyjednavanie","nb_potvrdenie","nb_registracia",...NB_WON].includes(e.status)).length,"#3E56CB"],
+    ["Potvrdené",list.filter(e=>["potvrdene","nb_potvrdenie","nb_registracia",...NB_WON].includes(e.status)).length,"#6D4FB3"],
     ["Vyfakturované",invoiced.length,"#0F6B43"]];
   const fun=el("div","nba-fun");
   fun.appendChild(el("div","nba-sec","Lievik — kam sa príležitosti strácajú"));
@@ -8739,7 +8804,7 @@ function openModal(entry,presetSeg){
     applySegVisibility(canPickKind && nb);
     $("#fKind").querySelectorAll("label").forEach(l=>l.classList.toggle("on", l.querySelector("input").checked));
   };
-  $("#fKind").querySelectorAll("input").forEach(i=>{ i.onchange=syncKindUI; });
+  $("#fKind").querySelectorAll("input").forEach(i=>{ i.onchange=()=>{ syncKindUI(); syncStatusList(); }; });
   syncKindUI();
   $("#fClient").value=entry?.client||"";
   $("#fEvents").value=entry?.events||"";
@@ -8773,7 +8838,16 @@ function openModal(entry,presetSeg){
     $("#coObchWrap").style.display = coList.length ? "" : "none";
     $("#addCoObchBtn").style.display = coList.length ? "none" : "";
   }
-  $("#fStatus").value=entry?.status||"jednanie";
+  {
+    // stav sa ponúka podľa typu záznamu a služby
+    modalEntry=entry||null;
+    const segNow=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
+    const isNBnow=$("#fKindField").style.display!=="none"
+      ? $("#fKind").querySelector("input:checked")?.value==="nb"
+      : !!entry?.isNewBusiness;
+    const predvolene = entry?.status || (isNBnow ? "nb_oslovenie" : "jednanie");
+    fillStatusSelect(isNBnow, segNow, predvolene);
+  }
   // firma field
   const segId2=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
   const seg2=SEG[segId2];
@@ -8804,7 +8878,7 @@ async function saveFromModal(){
   if(!client){ $("#fClient").focus(); $("#fClient").style.borderColor="var(--red)"; return; }
   // IČO sa zadáva raz na klienta. Ak ho už poznáme, prevezmeme ho a nepýtame znova.
   // dôvod straty je povinný, keď sa prípad uzatvára ako prehratý
-  if(["nechce","zrusene"].includes($("#fStatus").value) && !$("#fLossReason").value){
+  if(["nechce","zrusene","nb_odmietnutie"].includes($("#fStatus").value) && !$("#fLossReason").value){
     $("#fLossField").style.display="";
     $("#fLossReason").focus(); $("#fLossReason").style.borderColor="var(--red)";
     toast("Vyber prosím dôvod straty.");
@@ -8923,7 +8997,7 @@ async function saveFromModal(){
     dmisCity: addrCity || (baseEntry.dmisCity ?? null),
     isAgency: $("#fAgency").checked,
     material: $("#fAgency").checked ? ($("#fMaterial").value.trim()||null) : null,
-    lossReason: ["nechce","zrusene"].includes($("#fStatus").value) ? ($("#fLossReason").value||null) : null,
+    lossReason: ["nechce","zrusene","nb_odmietnutie"].includes($("#fStatus").value) ? ($("#fLossReason").value||null) : null,
     nbApproach: $("#fApproach").value || (baseEntry.nbApproach ?? null),
     nbApproachInfo: $("#fApproachInfo").value.trim() || (baseEntry.nbApproachInfo ?? null),
     fromDatabase: pendingLeadOrigin ? pendingLeadOrigin.dbName : (baseEntry.fromDatabase ?? null),
