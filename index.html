@@ -2204,13 +2204,6 @@ input,select,textarea{font-family:inherit; font-size:14px}
       <button class="ghost" id="modalClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-b">
-      <div class="field" id="fProjektField" style="display:none">
-        <label>Projekt / interná téma <span class="req">povinné</span></label>
-        <input id="fProjekt" list="projektNames" placeholder="napr. Nový produkt — mailingový portál">
-        <datalist id="projektNames"></datalist>
-        <div class="hint">Klienta nižšie vyplň len vtedy, keď sa aktivita týka konkrétnej firmy.</div>
-      </div>
-
       <div class="field" id="fKindField" style="display:none">
         <div class="kindpick" id="fKind">
           <label><input type="radio" name="ekind" value="cc" checked><span>Customer care</span></label>
@@ -2843,8 +2836,11 @@ const REC_KINDS = {
 };
 const kindOf = e => e?.recordKind || (e?.isNewBusiness ? "nb" : "cc");
 const isInternal = e => kindOf(e)==="int";
-/* Nadpis záznamu — klient, a ak ide o interný záznam bez firmy, názov projektu. */
-const entryTitle = e => (e?.client || e?.projekt || "").trim();
+/* Nadpis záznamu. Interný záznam bez firmy sa volá vždy "Interné / projekty".
+   `projekt` je pozostatok po prvej verzii — staršie záznamy si ho ponechajú. */
+const INTERNE_LABEL = "Interné / projekty";
+const entryTitle = e =>
+  (e?.client || e?.projekt || (isInternal(e) ? INTERNE_LABEL : "")).trim();
 
 const STATUSES_NB = [
   { id:"nb_odmietnutie",  label:"Odmietnutie spolupráce",                     color:"#C2362B" },
@@ -3344,7 +3340,7 @@ function gsBuildIndex(){
     const notes=(e.comments||[]).map(x=>x.text||"").join(" ");
     idx.entries.push({ e, hay:gsFold([
       e.client, e.projekt, e.events, notes, e.material, e.nbApproachInfo, e.nbApproach, e.fromDatabase,
-      entryOwnerNames(e).join(" "), ...gsIcoVariants(e.leadIco||e.ico)
+      entryOwnerNamesAll(e).join(" "), ...gsIcoVariants(e.leadIco||e.ico)
     ].filter(Boolean).join(" ")) });
   });
 
@@ -3476,7 +3472,7 @@ function gsOpenLead(l){
    zadaní v okne záznamu a ďalší, ktorí podľa importu DMIS s firmou preukázateľne
    pracujú (v CSV je stĺpec "Obchodník" s viacerými menami oddelenými čiarkou —
    do záznamu sa dostal len prvý). Filtre a vyhľadávanie pracujú so všetkými. */
-function entryOwnerNames(e){
+const _owNames=(e, sDmis)=>{
   if(!e) return [];
   const out=[], seen=new Set();
   const add=n=>{
@@ -3486,17 +3482,22 @@ function entryOwnerNames(e){
   };
   add(resolveOwnerName(e));
   (e.coSalespeople||[]).forEach(add);
-  // z DMIS berieme len mená, ktoré patria aktuálnym ľuďom v appke
-  dmisOwnersFor(e.leadIco||e.ico, e.client).forEach(n=>{ if(isAppPerson(n)) add(n); });
+  if(sDmis) dmisOwnersFor(e.leadIco||e.ico, e.client).forEach(n=>{ if(isAppPerson(n)) add(n); });
   return out;
-}
+};
+/* Obchodníci ZAPÍSANÍ na zázname — vlastník a spolupracujúci.
+   Vlastníci z DMIS sem nepatria, tí majú na karte vlastný odznak. */
+function entryOwnerNames(e){ return _owNames(e, false); }
+/* Rovnaké mená plus vlastníci z DMIS. Používa sa len na filtrovanie a hľadanie,
+   aby sa dal nájsť aj záznam firmy, ktorú kolega rieši podľa DMIS. */
+function entryOwnerNamesAll(e){ return _owNames(e, true); }
 // Mená okrem hlavného vlastníka — to, čo sa na karte vypisuje za znakom "+".
 function coOwnerNames(e){ return entryOwnerNames(e).slice(1); }
 // Patrí záznam danému obchodníkovi? (prázdne meno = bez filtra)
 function entryHasOwner(e, name){
   if(!name) return true;
   const k=normalizeForCompare(name);
-  return entryOwnerNames(e).some(n=>normalizeForCompare(n)===k);
+  return entryOwnerNamesAll(e).some(n=>normalizeForCompare(n)===k);
 }
 /* ---------------------------------------------------------------- PONUKY Z KOLOS KALKULAČKY
    Kolekcia `kolosOffers` má ako ID dokumentu IČO. Načítava sa dávkovo jedným getDocs()
@@ -6971,7 +6972,7 @@ function applyEntryFilters(list, lock){
            || (e.projekt||"").toLowerCase().includes(q)
            || (e.events||"").toLowerCase().includes(q)
            || gsIcoVariants(e.leadIco||e.ico).some(v=>v.includes(q))
-           || entryOwnerNames(e).some(n=>n.toLowerCase().includes(q)))) return false;
+           || entryOwnerNamesAll(e).some(n=>n.toLowerCase().includes(q)))) return false;
     return true;
   });
 }
@@ -7080,7 +7081,7 @@ function entryFilterBar(list, opts={}){
 
   // obchodník (vrátane spoluobchodníkov)
   const nameCounts=new Map();
-  list.forEach(e=>entryOwnerNames(e).forEach(n=>nameCounts.set(n,(nameCounts.get(n)||0)+1)));
+  list.forEach(e=>entryOwnerNamesAll(e).forEach(n=>nameCounts.set(n,(nameCounts.get(n)||0)+1)));
   const names=[...nameCounts.keys()].sort((a,b)=>a.localeCompare(b,"sk"));
   if(names.length>1){
     pills.appendChild(fpill(ICO_USER,
@@ -9056,10 +9057,10 @@ function openModal(entry,presetSeg){
   const syncKindUI=()=>{
     const kind = $("#fKind").querySelector("input:checked")?.value || "cc";
     const nb = kind==="nb", vnutorne = kind==="int";
-    // Interný záznam má vlastný názov projektu; klient a IČO sú nepovinné,
-    // ale keď sa aktivita týka konkrétnej firmy, vyplnia sa a záznam sa objaví v jej histórii.
-    $("#fProjektField").style.display = vnutorne ? "" : "none";
-    $("#fIcoField").style.display = "";
+    // Interný záznam nemá vlastný názov — volá sa vždy "Interné / projekty".
+    // Klient je nepovinný; keď sa aktivita týka konkrétnej firmy, vyplní sa
+    // a záznam sa objaví v jej histórii. IČO sa pri internom zázname nepýta.
+    $("#fIcoField").style.display = vnutorne ? "none" : "";
     $("#fContactsField").style.display = (canPickKind && nb) ? "" : "none";
     $("#fApproachSection").style.display = (canPickKind && nb) ? "" : "none";
     $("#fDmisSection").style.display = (canPickKind && nb) ? "" : "none";
@@ -9073,13 +9074,6 @@ function openModal(entry,presetSeg){
   $("#fKind").querySelectorAll("input").forEach(i=>{ i.onchange=()=>{ syncKindUI(); syncStatusList(); }; });
   syncKindUI();
   $("#fClient").value=entry?.client||"";
-  $("#fProjekt").value=entry?.projekt||"";
-  {
-    // ponuka už použitých projektov
-    const dl=$("#projektNames");
-    if(dl) dl.innerHTML=[...new Set(state.all.map(x=>x.projekt).filter(Boolean))]
-      .sort((a,b)=>a.localeCompare(b,"sk")).map(v=>`<option value="${esc(v)}">`).join("");
-  }
   $("#fEvents").value=entry?.events||"";
   const warningVal=entry?.warning||"";
   $("#fWarning").value=warningVal;
@@ -9149,11 +9143,8 @@ function closeModal(){ $("#scrim").classList.remove("open"); editing=null; pendi
 async function saveFromModal(){
   const client=$("#fClient").value.trim();
   const vnutorne = $("#fKind").querySelector("input:checked")?.value==="int";
-  // Pri internom zázname je povinný projekt, klient nie. Inak naopak.
-  if(vnutorne){
-    if(!$("#fProjekt").value.trim()){ $("#fProjekt").focus(); $("#fProjekt").style.borderColor="var(--red)"; return; }
-    $("#fProjekt").style.borderColor="";
-  } else if(!client){ $("#fClient").focus(); $("#fClient").style.borderColor="var(--red)"; return; }
+  // Pri internom zázname je klient nepovinný — záznam sa volá vždy "Interné / projekty".
+  if(!vnutorne && !client){ $("#fClient").focus(); $("#fClient").style.borderColor="var(--red)"; return; }
   // IČO sa zadáva raz na klienta. Ak ho už poznáme, prevezmeme ho a nepýtame znova.
   // dôvod straty je povinný, keď sa prípad uzatvára ako prehratý
   if(["nechce","zrusene","nb_odmietnutie"].includes($("#fStatus").value) && !$("#fLossReason").value){
@@ -9253,8 +9244,6 @@ async function saveFromModal(){
     events:eventsText,
     salesperson: selectedName,
     status: ($("#fKind").querySelector("input:checked")?.value==="int") ? "bezi" : $("#fStatus").value,
-    projekt: ($("#fKind").querySelector("input:checked")?.value==="int")
-             ? ($("#fProjekt").value.trim() || null) : (baseEntry.projekt ?? null),
     firma,
     ownerKey:newOwnerKey, ownerName:newOwnerName, ownerUid:newOwnerUid,
     // ak niekto ručne upraví importovaný záznam New Business, ďalší CSV import ho už neprepíše
