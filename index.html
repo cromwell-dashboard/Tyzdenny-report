@@ -71,7 +71,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 /* Logo Zappis — písmená "app" nesú farby služieb.
    V prehľade sú trojfarebné (modrá, zelená, cyan = všetky služby),
    v konkrétnej službe sa všetky tri prefarbia na farbu tej služby. */
-.zappis{white-space:nowrap; --lg1:#3E56CB; --lg2:#5E9331; --lg3:#22C3B4}
+.zappis{white-space:nowrap; --lg1:#3E56CB; --lg2:#5E9331; --lg3:#69BFB6}
 .zappis .app{display:inline}
 .zappis .app i{font-style:normal; transition:color .25s}
 .zappis .app i:nth-child(1){color:var(--lg1)}
@@ -5620,10 +5620,10 @@ function renderNow(){
    Farby sú upravené verzie farieb služieb — samotné služby ostávajú nedotknuté,
    lebo cyan aj tmavá navy sú ako text na bielom nečitateľné. */
 const LOGO_SEG_COLOR = {
-  baliky:"#1E5AA8", digital:"#22C3B4", zelena:"#5E9331",
+  baliky:"#1E5AA8", digital:"#69BFB6", zelena:"#5E9331",
   tlac:"#3E56CB", ad:"#3E56CB", nad:"#3E56CB",
 };
-const LOGO_DEFAULT = ["#3E56CB","#5E9331","#22C3B4"];   // modrá, zelená, cyan
+const LOGO_DEFAULT = ["#3E56CB","#5E9331","#69BFB6"];   // modrá, zelená, cyan
 function syncLogoColors(){
   const lg=document.getElementById("topZappis");
   if(!lg) return;
@@ -8209,18 +8209,10 @@ function viewList(list,title,sub,seg,logoHtml){
   }
 
   // Filter návrhov/kópií podľa obchodníka + hromadné zrušenie všetkých návrhov naraz.
-  const sugNames=[...new Set(segSuggestions.map(s=>resolveOwnerName(s)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"sk"));
   if(segSuggestions.length>0){
     const sfWrap=el("div","sug-filter-wrap");
-    if(sugNames.length>1){
-      sfWrap.appendChild(el("span","sort-label","Návrhy/kópie od:"));
-      const sel=el("select");
-      const allOpt=el("option","","Všetci"); allOpt.value=""; sel.appendChild(allOpt);
-      sugNames.forEach(n=>{ const o=el("option","",n); o.value=n; sel.appendChild(o); });
-      sel.value=state.sugFilterName||"";
-      sel.onchange=()=>{ state.sugFilterName=sel.value; renderRows(); };
-      sfWrap.appendChild(sel);
-    }
+    state.sugFilterName="";   // filtrovanie preberá spoločná lišta nad zoznamom
+    sfWrap.appendChild(el("span","sort-label","Návrhy a kópie sa filtrujú lištou vyššie"));
     const clearBtn=el("button","sug-clear-all",`✕ Zrušiť všetky návrhy (${segSuggestions.length})`);
     clearBtn.onclick=()=>{
       if(confirm(`Zrušiť všetkých ${segSuggestions.length} ${plural(segSuggestions.length,"návrh","návrhy","návrhov")}/kópií pre tento týždeň? Nič sa neuloží.`)){
@@ -8259,9 +8251,15 @@ function viewList(list,title,sub,seg,logoHtml){
     countLine.textContent=`${rows.length} ${plural(rows.length,"záznam","záznamy","záznamov")}`;
     listWrap.innerHTML="";
 
-    // AI návrhy — vždy na vrchu (aj pri vyhľadávaní), voliteľne filtrované podľa obchodníka
-    let visibleSug = q ? segSuggestions.filter(s=>(s.client||"").toLowerCase().includes(q)) : segSuggestions;
-    if(state.sugFilterName) visibleSug = visibleSug.filter(s=>resolveOwnerName(s)===state.sugFilterName);
+    // AI návrhy a kópie z minulého týždňa sa riadia tou istou lištou ako zoznam
+    // pod nimi — "Zobraziť moje" aj filter obchodníka na ne teda platia.
+    let visibleSug = q
+      ? segSuggestions.filter(s=>(s.client||"").toLowerCase().includes(q)
+          || entryOwnerNamesAll(s).some(n=>n.toLowerCase().includes(q)))
+      : segSuggestions;
+    if(state.onlyMine)           visibleSug = visibleSug.filter(isMine);
+    if(state.filterSalesperson)  visibleSug = visibleSug.filter(s=>entryHasOwner(s, state.filterSalesperson));
+    if(state.sugFilterName)      visibleSug = visibleSug.filter(s=>resolveOwnerName(s)===state.sugFilterName);
     visibleSug.forEach(sug=>{
       const isCopy = sug._source==="copy";
       const sc=el("div","entry suggested"); sc.style.gridTemplateColumns="4px 1fr";
