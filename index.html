@@ -814,6 +814,20 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .kindpick label:first-child.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}  /* Customer care */
 .kindpick label:last-child.on{border-color:#7C5CD6;background:#F3EFFE;color:#5B3FB0}       /* Interné / projekty */
 .kindpick input{display:none}
+#cpLookup{white-space:nowrap}
+.cd-name-row{display:flex; align-items:center; gap:8px}
+.cd-edit{display:grid; place-items:center; width:28px; height:28px; flex:0 0 auto;
+  border:1px solid var(--line); background:#fff; border-radius:8px; color:var(--muted); cursor:pointer}
+.cd-edit:hover{border-color:var(--brand); color:var(--brand); background:var(--brand-soft)}
+.cd-edit svg{width:14px; height:14px}
+.cd-ico{font-family:var(--mono); font-size:11px; font-weight:600; color:var(--ink-soft);
+  background:var(--line-2); border-radius:20px; padding:2px 9px}
+.cd-ico.missing{color:#B45F0C; background:#FFF6EC}
+.cp-derived{margin-top:12px; padding:10px 12px; background:var(--bg); border-radius:10px;
+  display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:var(--muted)}
+.cp-derived b{font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:3px}
+.chk-row{display:flex; align-items:center; gap:8px; margin-top:12px; font-size:12.5px; color:var(--ink-soft); cursor:pointer}
+.chk-row input{width:15px; height:15px; flex:0 0 auto}
 .opt{font-size:9px;font-weight:700;color:var(--muted);background:var(--line-2);border-radius:20px;padding:1px 6px;margin-left:5px;letter-spacing:.02em;vertical-align:1px}
 .req{font-size:9px;font-weight:700;color:var(--red);background:#FDF3F2;border-radius:20px;padding:1px 6px;margin-left:5px;letter-spacing:.02em;vertical-align:1px}
 .ico-row{display:flex;gap:8px;align-items:stretch}
@@ -3099,6 +3113,7 @@ const state = {
   approachInfos:[],        // číselník textov "Oslovenie — info"
   materials:[],            // číselník materiálov agentúr (meta/materials)
   users:[],                // prihlásení používatelia (users/{uid}) — kvôli párovaniu mena na UID
+  clientProfiles:{},       // clients/{key} — údaje klienta nad rámec záznamov (IČO, obchodník, poznámka)
   dmisOwners:[],           // register vlastníkov z DMIS (IČO/klient → obchodníci)
   calculators:[],          // odkazy na kalkulačky (spravuje admin)
   groupBy:"clientSeg",     // "clientSeg" | "client" — zoskupenie riadkov v zozname
@@ -4751,7 +4766,8 @@ function statusTag(id){ const st=ST[id]||STATUSES[0]; return `<span class="tag" 
    rozdiel medzi 8 prechodmi a jedným. */
 let _ciCache=null, _ciKey="";
 function clientIndex(){
-  const key=state.all.length+"|"+(state.all.length?(state.all[state.all.length-1].updatedAt||0):0)+"|"+state.hiddenClientNames.length;
+  const key=state.all.length+"|"+(state.all.length?(state.all[state.all.length-1].updatedAt||0):0)
+    +"|"+state.hiddenClientNames.length+"|"+Object.keys(state.clientProfiles||{}).length;
   if(_ciCache && _ciKey===key) return _ciCache;
   _ciKey=key; _ciCache=clientIndexCompute();
   return _ciCache;
@@ -4772,6 +4788,14 @@ function clientIndexCompute(){
   const arr=[...map.values()].map(c=>{
     const weeks=[...new Set(c.entries.map(e=>e.weekId))].sort(weekCmpDesc);
     return {...c, segments:[...c.segments], people:[...c.people], weeks, lastWeek:weeks[0], crossSell:c.segments.size>1};
+  });
+  // profil klienta (clients/{key}) má prednosť pred údajmi odvodenými zo záznamov
+  arr.forEach(c=>{
+    const p=(state.clientProfiles||{})[c.key];
+    if(!p) return;
+    if(p.ico) c.ico=icoKey(p.ico);
+    if(p.name) c.name=p.name;
+    c.profile=p;
   });
   return arr;
 }
@@ -4824,6 +4848,8 @@ function demoBackend(){
       all=all.map(e=>e.id===entryId?{...e, comments:(e.comments||[]).filter(c=>c.id!==commentId)}:e); sync();
     },
     async getTask(id){ return tasks.find(t=>t.id===id)||null; },
+    async saveClientProfile(key,data){ state.clientProfiles={...state.clientProfiles,[key]:{id:key,...(state.clientProfiles[key]||{}),...data}}; _ciCache=null; render(); },
+    async setIcoOnEntries(clientK,ico){ all=all.map(e=>clientKey(e.client)===clientK?{...e,ico}:e); sync(); return all.length; },
     async saveTask(task){
       if(task.id && tasks.some(t=>t.id===task.id)) tasks=tasks.map(t=>t.id===task.id?{...task}:t);
       else { task.id="t"+Math.random().toString(36).slice(2,9); tasks.push({...task}); }
@@ -4938,6 +4964,9 @@ async function firebaseBackend(){
       const u11=onSnapshot(doc(db,"meta","materials"), snap=>{ state.materials=snap.exists()?(snap.data().values||[]):[]; render(); });
       // Zoznam používateľov potrebujeme na to, aby sa pri priradení úlohy uložilo
       // aj UID zodpovedného — pravidlá Firestore kontrolujú assigneeUid, nie meno.
+      const u13=onSnapshot(collection(db,"clients"),
+        snap=>{ const m={}; snap.forEach(d=>m[d.id]={id:d.id,...d.data()}); state.clientProfiles=m; _ciCache=null; gsInvalidate(); render(); },
+        err=>{ console.warn("Profily klientov sa nepodarilo načítať:", err); });
       const u12=onSnapshot(collection(db,"users"),
         snap=>{ state.users=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },
         err=>{ console.warn("Zoznam používateľov sa nepodarilo načítať:", err); });
@@ -4970,7 +4999,7 @@ async function firebaseBackend(){
       }
       // Databázy firiem sa NENAČÍTAVAJÚ pri štarte — býva ich tisíce a väčšina
       // používateľov ich vôbec neotvorí. Načítajú sa až pri prvom použití.
-      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); if(leadsUnsub) leadsUnsub(); };
+      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); u13(); if(leadsUnsub) leadsUnsub(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
@@ -5008,6 +5037,17 @@ async function firebaseBackend(){
     // Po zápise si prečítame dokument späť — ak sa zmena neuložila (najčastejšie
     // pravidlá Firestore), vieme to používateľovi povedať namiesto tichého zlyhania.
     async getTask(id){ const sn=await getDoc(doc(db,"tasks",id)); return sn.exists()?{id:sn.id,...sn.data()}:null; },
+    async saveClientProfile(key, data){ await setDoc(doc(db,"clients",key), data, {merge:true}); },
+    // Voliteľné doplnenie IČO do všetkých záznamov klienta — spúšťa sa len na požiadanie.
+    async setIcoOnEntries(clientK, ico){
+      const ids=state.all.filter(e=>clientKey(e.client)===clientK).map(e=>e.id);
+      for(let i=0;i<ids.length;i+=400){
+        const b=writeBatch(db);
+        ids.slice(i,i+400).forEach(id=>b.set(doc(db,"entries",id),{ico},{merge:true}));
+        await b.commit();
+      }
+      return ids.length;
+    },
     async saveTask(task){
       const id=task.id||doc(collection(db,"tasks")).id;
       // Firestore odmieta polia s hodnotou undefined — celý zápis by zlyhal.
@@ -6968,13 +7008,18 @@ function entryFilterBar(list, opts={}){
   // hľadanie v sekcii
   const srch=el("div","fbar-search",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
   const si=el("input");
+  si.id="fbarSearch";          // bez ID by render() nevedel vrátiť zameranie
+  si.autocomplete="off";
   si.placeholder=opts.placeholder||"Hľadať klienta, text alebo obchodníka…";
   si.value=state.search||"";
-  si.oninput=()=>{ state.search=si.value; state.feedLimit=20; rerender(); };
+  // Písanie prekresľuje len zoznam. Keby sa prekreslila celá lišta, pole by sa
+  // zahodilo a vytvorilo nanovo — a dalo by sa napísať len jedno písmeno.
+  const onType=opts.onSearch||rerender;
+  si.oninput=()=>{ state.search=si.value; state.feedLimit=20; state.groupLimit=60; onType(); };
   srch.appendChild(si);
   if((state.search||"").trim()){
     const x=el("button","fbar-x","✕"); x.type="button"; x.title="Zrušiť hľadanie";
-    x.onclick=()=>{ state.search=""; state.feedLimit=20; rerender(); };
+    x.onclick=()=>{ state.search=""; state.feedLimit=20; state.groupLimit=60; rerender(); };
     srch.appendChild(x);
   }
   bar.appendChild(srch);
@@ -7645,13 +7690,8 @@ function viewInternal(){
   const countLine=el("div","feed-count"); wrap.appendChild(countLine);
   const listWrap=el("div","entry-list"); wrap.appendChild(listWrap);
 
-  function paint(){
-    barWrap.innerHTML=""; listWrap.innerHTML="";
-    barWrap.appendChild(entryFilterBar(list,{
-      lock:{recType:"int"},
-      placeholder:"Hľadať projekt, text alebo obchodníka…",
-      onChange:paint,
-    }));
+  function paintList(){
+    listWrap.innerHTML="";
     const rows=applyEntryFilters(list,{recType:"int"});
     if(state.listScope==="all"){
       const n=renderGroupedList(listWrap, rows);
@@ -7666,6 +7706,16 @@ function viewInternal(){
     }
     const clients=clientIndex();
     rows.forEach(e=>listWrap.appendChild(entryCard(e,clients,{showSegChip:true})));
+  }
+  function paint(){
+    barWrap.innerHTML="";
+    barWrap.appendChild(entryFilterBar(list,{
+      lock:{recType:"int"},
+      placeholder:"Hľadať projekt, text alebo obchodníka…",
+      onChange:paint,
+      onSearch:paintList,
+    }));
+    paintList();
   }
   paint();
   return wrap;
@@ -7684,22 +7734,126 @@ function viewClients(){
   const countLine=el("div","feed-count"); wrap.appendChild(countLine);
   const listWrap=el("div"); wrap.appendChild(listWrap);
 
+  function paintList(){
+    listWrap.innerHTML="";
+    const rows=applyEntryFilters(list);
+    const n=renderGroupedList(listWrap, rows, {groupBy:"client", showIco:true});
+    countLine.textContent=`${n} ${plural(n,"klient","klienti","klientov")} · ${rows.length} ${plural(rows.length,"aktivita","aktivity","aktivít")}`;
+  }
   function paint(){
-    barWrap.innerHTML=""; listWrap.innerHTML="";
+    barWrap.innerHTML="";
     barWrap.appendChild(entryFilterBar(list,{
       lock:{groupBy:"client"},
       approach:true,
       placeholder:"Hľadať klienta, IČO, text alebo obchodníka…",
       onChange:paint,
+      onSearch:paintList,
     }));
-    const rows=applyEntryFilters(list);
-    const n=renderGroupedList(listWrap, rows, {groupBy:"client", showIco:true});
-    countLine.textContent=`${n} ${plural(n,"klient","klienti","klientov")} · ${rows.length} ${plural(rows.length,"aktivita","aktivity","aktivít")}`;
+    paintList();
   }
   paint();
   return wrap;
 }
 
+/* Okno na úpravu údajov klienta.
+   Zapisuje do kolekcie `clients` — existujúce záznamy sa nemenia.
+   Doplnenie IČO do samotných záznamov je samostatná, výslovne potvrdená akcia. */
+function openClientProfile(c){
+  const p=c.profile||{};
+  const scrim=el("div","scrim open"); scrim.style.zIndex="90";
+  scrim.innerHTML=`<div class="modal" style="max-width:520px">
+    <div class="modal-h"><h2>Údaje klienta</h2>
+      <button class="ghost" data-act="cancel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-b">
+      <div class="field"><label>Názov klienta</label><input id="cpName" value="${esc(p.name||c.name||"")}"></div>
+      <div class="field"><label>IČO</label>
+        <div class="ico-row">
+          <input id="cpIco" inputmode="numeric" autocomplete="off" value="${esc(p.ico||c.ico||"")}" placeholder="8 číslic">
+          <button type="button" class="btn" id="cpLookup">Načítať z Finstatu</button>
+        </div>
+        <div class="hint" id="cpIcoHint">Zadaj IČO a načítaj údaje, alebo nechaj hľadať podľa názvu klienta.</div></div>
+      <div class="field"><label>Obchodník v Zappise</label>
+        <select id="cpObch"><option value="">— nezvolený —</option>${
+          OBCH_NAME_LIST.map(n=>`<option value="${esc(n)}"${(p.obchodnik||"")===n?" selected":""}>${esc(n)}</option>`).join("")
+        }</select>
+        <div class="hint">Hlavný obchodník klienta. Nemení vlastníkov jednotlivých záznamov.</div></div>
+      <div class="field"><label>Poznámka</label><textarea id="cpNote" rows="3">${esc(p.poznamka||"")}</textarea></div>
+      <label class="chk-row"><input type="checkbox" id="cpPropagate"><span>Doplniť toto IČO aj do všetkých záznamov klienta (${c.entries.length})</span></label>
+      <div class="cp-derived">
+        <b>Zo záznamov</b>
+        <span>Obchodníci: ${esc(c.people.join(", ")||"—")}</span>
+        <span>Služby: ${esc(c.segments.map(sg=>SEG[sg]?.short).filter(Boolean).join(", ")||"—")}</span>
+        <span>Záznamov: ${c.entries.length} · posledný týždeň ${esc(c.lastWeek?weekRangeLabel(c.lastWeek):"—")}</span>
+      </div>
+      <div class="task-err" id="cpErr"></div>
+    </div>
+    <div class="modal-f" style="justify-content:flex-end">
+      <button class="btn" data-act="cancel">Zrušiť</button>
+      <button class="btn solid" data-act="save">Uložiť</button>
+    </div></div>`;
+  const close=()=>scrim.remove();
+  scrim.querySelectorAll('[data-act="cancel"]').forEach(b=>b.onclick=close);
+
+  /* Načítanie z Finstatu — rovnaká Cloud Function ako v okne záznamu.
+     Keď je IČO prázdne, skúsi sa hľadať podľa názvu klienta. */
+  scrim.querySelector("#cpLookup").onclick=async(ev)=>{
+    const btn=ev.currentTarget;
+    const inIco=scrim.querySelector("#cpIco");
+    const inName=scrim.querySelector("#cpName");
+    const hint=scrim.querySelector("#cpIcoHint");
+    const dotaz=(inIco.value||"").replace(/\D/g,"") || (inName.value||"").trim();
+    if(!dotaz){ hint.textContent="Zadaj IČO alebo názov firmy."; return; }
+    const orig=btn.textContent;
+    btn.disabled=true; btn.textContent="Hľadám…";
+    hint.textContent="Overujem vo Finstate…";
+    try{
+      const r=await backend.finstatLookup(dotaz);
+      if(r && r.found){
+        if(r.ico) inIco.value=String(r.ico).replace(/\D/g,"");
+        if(r.name) inName.value=r.name;
+        const adresa=[r.street,[r.zipCode,r.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+        const own=dmisOwnersFor(r.ico, r.name);
+        hint.innerHTML=`<span class="ico-ok">✓ ${esc(r.name||"")}</span>`
+          + (adresa?` · ${esc(adresa)}`:"")
+          + (r.icDph?` · IČ DPH ${esc(r.icDph)}`:"")
+          + (own.length?` · v DMIS: ${esc(own.join(", "))}`:" · voľná firma");
+      } else {
+        hint.textContent="Firma sa vo Finstate nenašla. IČO môžeš zadať ručne.";
+      }
+    }catch(err){
+      console.error("finstatLookup:", err);
+      hint.textContent="⚠ Finstat neodpovedal: "+(err?.message||err?.code||"neznáma chyba");
+    }finally{ btn.disabled=false; btn.textContent=orig; }
+  };
+  scrim.onclick=ev=>{ if(ev.target===scrim) close(); };
+  scrim.querySelector('[data-act="save"]').onclick=async(ev)=>{
+    const btn=ev.currentTarget; const err=scrim.querySelector("#cpErr");
+    const ico=(scrim.querySelector("#cpIco").value||"").replace(/\D/g,"");
+    if(ico && ico.length>8){ err.textContent="⚠ IČO má mať najviac 8 číslic."; err.classList.add("on"); return; }
+    btn.disabled=true; btn.textContent="Ukladám…";
+    try{
+      await backend.saveClientProfile(c.key,{
+        key:c.key,
+        name:(scrim.querySelector("#cpName").value||"").trim()||c.name,
+        ico: ico ? ico.padStart(8,"0") : null,
+        obchodnik: scrim.querySelector("#cpObch").value || null,
+        poznamka: (scrim.querySelector("#cpNote").value||"").trim() || null,
+        updatedBy: state.user.name, updatedAt: Date.now(),
+      });
+      if(ico && scrim.querySelector("#cpPropagate").checked){
+        const n=await backend.setIcoOnEntries(c.key, ico.padStart(8,"0"));
+        toast(`Údaje uložené · IČO doplnené do ${n} ${plural(n,"záznamu","záznamov","záznamov")}`);
+      } else toast("Údaje klienta uložené");
+      close();
+    }catch(e2){
+      console.error("saveClientProfile:", e2);
+      err.textContent="⚠ "+(e2?.message||e2?.code||"Nepodarilo sa uložiť.");
+      err.classList.add("on");
+      btn.disabled=false; btn.textContent="Uložiť";
+    }
+  };
+  document.body.appendChild(scrim);
+}
 function viewClientDetail(){
   const wrap=el("div");
   const c=clientIndex().find(x=>x.key===state.activeClient);
@@ -7724,11 +7878,13 @@ function viewClientDetail(){
   const head=el("div","cd-head");
   const specialC = SPECIAL_CLIENTS[c.key] || null;
   head.innerHTML=`<div class="cd-id"><div class="cd-av" ${specialC?`style="background:${specialC.color}"`:""}>${specialC?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">${specialC.icon}</svg>`:initials(c.name)}</div>
-    <div><div class="cd-name" ${specialC?`style="color:${specialC.color}"`:""}>${esc(specialC?specialC.label:c.name)}</div>
-      <div class="cd-chips">${c.segments.map(s=>schip(s)).join("")}</div></div></div>
-    <div class="cd-people">Obchodníci: ${esc(c.people.join(", ")||"—")} · ${c.entries.length} ${plural(c.entries.length,"záznam","záznamy","záznamov")} v ${c.weeks.length} ${plural(c.weeks.length,"týždni","týždňoch","týždňoch")}</div>
+    <div><div class="cd-name-row"><span class="cd-name" ${specialC?`style="color:${specialC.color}"`:""}>${esc(specialC?specialC.label:c.name)}</span>
+        <button class="cd-edit" id="cdEdit" title="Upraviť údaje klienta" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button></div>
+      <div class="cd-chips">${c.ico?`<span class="cd-ico">IČO ${esc(c.ico)}</span>`:`<span class="cd-ico missing">IČO chýba</span>`}${c.segments.map(s=>schip(s)).join("")}</div></div></div>
+    <div class="cd-people">${c.profile?.obchodnik?`<b>Obchodník: ${esc(c.profile.obchodnik)}</b> · `:""}Zo záznamov: ${esc(c.people.join(", ")||"—")} · ${c.entries.length} ${plural(c.entries.length,"záznam","záznamy","záznamov")} v ${c.weeks.length} ${plural(c.weeks.length,"týždni","týždňoch","týždňoch")}</div>
     ${c.crossSell?`<div class="cd-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>Cross-sell klient — pracuje naň ${c.segments.length} služieb. Dobrý kandidát na koordinovaný prístup.</div>`:""}`;
   wrap.appendChild(head);
+  { const b=head.querySelector("#cdEdit"); if(b) b.onclick=()=>openClientProfile(c); }
 
   // timeline
   wrap.appendChild(el("div","section-title","História"));
@@ -7811,6 +7967,7 @@ function viewNewBusiness(){
       approach:true,
       placeholder:"Hľadať klienta, text alebo obchodníka…",
       onChange:()=>{ renderBar(); renderStats(); renderRows(); },
+      onSearch:()=>{ renderStats(); renderRows(); },
     }));
   }
 
@@ -7999,7 +8156,10 @@ function viewList(list,title,sub,seg,logoHtml){
   wrap.appendChild(countLine);
   function renderFilterBar(){
     filterBarWrap.innerHTML="";
-    filterBarWrap.appendChild(entryFilterBar(list,{onChange:()=>{ renderFilterBar(); renderRows(); }}));
+    filterBarWrap.appendChild(entryFilterBar(list,{
+      onChange:()=>{ renderFilterBar(); renderRows(); },
+      onSearch:renderRows,
+    }));
   }
 
   // Filter návrhov/kópií podľa obchodníka + hromadné zrušenie všetkých návrhov naraz.
