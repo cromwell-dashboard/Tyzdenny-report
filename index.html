@@ -2219,6 +2219,12 @@ input,select,textarea{font-family:inherit; font-size:14px}
         <div class="segpick" id="fSegment"></div>
       </div>
 
+      <div class="field" id="fProduktField" style="display:none">
+        <label>Produkt</label>
+        <div class="segpick" id="fProdukt"></div>
+        <div class="hint">Rozhoduje o pravidle odmeňovania — napríklad Zelená pošta ad hoc sa počíta inak než bežná.</div>
+      </div>
+
       <div class="msec" id="fFirmaSection">
         <div class="msec-h">Firma</div>
       <div class="field" id="fIcoField">
@@ -2655,7 +2661,7 @@ const OBCHODNIK_EMAILS = {
   "ladislav.krammer@cromwell.sk":      { name:"Ladislav Krammer",    firma:"Cromwell Post", segments:[] },
   "linda.husarovicova@cromwell.sk":    { name:"Linda Husárovičová",  firma:"Cromwell Post", segments:[] },
   "zuzana.kovalcikova@zelenaposta.sk": { name:"Zuzana Kovalčíková",   firma:"Zelená pošta",  segments:["zelena"] },
-  "zuzana.dvorakova@zelenaposta.sk":   { name:"Zuzana Dvořáková",     firma:"Zelená pošta",  segments:["zelena"] },
+  "zuzana.dvorakova@zelenaposta.sk":   { name:"Zuzana Dvořáková",     firma:"Zelená pošta",  segments:["zelena","tlac","ad"] },
   "henrieta.kriskova@zelenaposta.sk":  { name:"Henrieta Krišková",    firma:"Zelená pošta",  segments:["zelena"] },
   "katarina.chmelova@cromwell.sk":     { name:"Katarína Chmelová",    firma:"Cromwell Post", segments:["ad","nad"] },
   // Balíky — KOLOS
@@ -2718,10 +2724,30 @@ const SEGMENTS = [
   { id:"ad",      name:"Poštové služby — adresné",    short:"Adresné",      color:"#3E56CB", logoKey:"post", logoKey2:"kolos_s", firm:["Cromwell Post","KOLOS"] },
   { id:"nad",     name:"Poštové služby — neadresné",  short:"Neadresné",    color:"#3E56CB", logoKey:"post", logoKey2:"kolos_s", firm:["Cromwell Post","KOLOS"] },
   { id:"zelena",  name:"Zelená pošta",                short:"Zelená pošta", color:"#73A541", logoKey:"zelena",             firm:null },
+  { id:"ine",     name:"Iné",                         short:"Iné",          color:"#7A8394", logoKey:null,                 firm:null },
 ];
+
+/* Produkt vnútri služby. Rozhoduje o pravidle odmeňovania (Zelená pošta ad hoc
+   sa počíta z marže a 1 rok, bežná Zelená pošta z obratu a 3 roky).
+   Prázdna hodnota = základný variant služby. */
+const PRODUKTY = {
+  zelena: [{ id:"ad-hoc",  label:"ad hoc" }],
+  tlac:   [{ id:"externa", label:"Externá" }],
+};
+const produktLabel = (segId, prodId) =>
+  (PRODUKTY[segId]||[]).find(p=>p.id===prodId)?.label || "";
+/* Zobrazený názov služby vrátane produktu — "Zelená pošta ad hoc", "Tlač Externá". */
+function segLabel(segId, prodId, short){
+  const s=SEG[segId]; if(!s) return "—";
+  const base=short?s.short:s.name;
+  const p=produktLabel(segId, prodId);
+  return p ? `${base} ${p}` : base;
+}
 const SEG = Object.fromEntries(SEGMENTS.map(s=>[s.id,s]));
 /* Ikony služieb — nahradili farebné bodky. Kreslia sa v farbe danej služby. */
 const SEG_ICONS = {
+  // tri bodky — služba, ktorá nepatrí nikam inam
+  ine:`<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>`,
   // krabica
   baliky:`<path d="M21 8v8a2 2 0 0 1-1 1.73l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8a2 2 0 0 1 1-1.73l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8z"/><polyline points="3.3 7 12 12 20.7 7"/><line x1="12" y1="22" x2="12" y2="12"/>`,
   // monitor / digitálne
@@ -2750,8 +2776,8 @@ function nbIcon(size=14){
 
 // "Skupina hotovosti" pre týždenný checklist — Adresné a Neadresné sa počítajú spolu
 // (rovnakí obchodníci pracujú na oboch), ostatné služby majú vlastnú samostatnú skupinu.
-const COMPLETION_GROUP = { baliky:"baliky", digital:"digital", tlac:"tlac", ad:"postove", nad:"postove", zelena:"zelena" };
-const COMPLETION_GROUP_LABEL = { baliky:"Balíky", digital:"Digitálne služby", tlac:"Tlač", postove:"Poštové služby (adresné + neadresné)", zelena:"Zelená pošta" };
+const COMPLETION_GROUP = { baliky:"baliky", digital:"digital", tlac:"tlac", ad:"postove", nad:"postove", zelena:"zelena", ine:"ine" };
+const COMPLETION_GROUP_LABEL = { baliky:"Balíky", digital:"Digitálne služby", tlac:"Tlač", postove:"Poštové služby (adresné + neadresné)", zelena:"Zelená pošta", ine:"Iné" };
 // Nájde e-mail(y) lídra, ktorý má na starosti daný segment (napr. "ad"/"nad" → líder poštových služieb)
 function liderEmailsForSegment(segId){
   return Object.entries(LIDER_EMAILS).filter(([,segs])=>segs.includes(segId)).map(([email])=>email);
@@ -2764,6 +2790,7 @@ const GROUP_EXPECTED_NAMES = {
   tlac:    ["Miloslav Donar","Peter Papaj","Juraj Praženica"],
   postove: ["Dagmar Ševcechová","Peter Moravčík","Zuzana Dávidová","Simona Bucseková","Dagmar Stanček","Tadeáš Bílek","Veronika Bajúsová","Alexandra Uhláriková","Juraj Praženica"],
   zelena:  ["Zuzana Kovalčíková","Zuzana Dvořáková","Henrieta Krišková","Miroslav Cvacho"],
+  ine:     [],   // Iné nemá pevne pridelených obchodníkov — checklist ju nevyžaduje
 };
 function assignedNamesForGroup(group){
   return GROUP_EXPECTED_NAMES[group] || [];
@@ -2873,9 +2900,27 @@ function statusOptions(isNB, segment, current){
   return ids;
 }
 let modalEntry=null;   // záznam otvorený v okne — potrebný pri prekreslení ponuky stavov
+/* Ponuka produktov podľa zvolenej služby. Služby bez produktov pole skryjú. */
+function fillProduktPick(segId, current){
+  const box=$("#fProdukt"), field=$("#fProduktField");
+  if(!box||!field) return;
+  const list=PRODUKTY[segId]||[];
+  field.style.display = list.length ? "" : "none";
+  if(!list.length){ box.innerHTML=""; return; }
+  const opts=[{id:"",label:SEG[segId]?.short||"Základný"}, ...list];
+  box.innerHTML=opts.map((p,i)=>
+    `<label class="${(current||"")===p.id?"on":""}"><input type="radio" name="eprod" value="${esc(p.id)}"${(current||"")===p.id?" checked":(i===0&&!opts.some(o=>o.id===(current||""))?" checked":"")}>${esc(p.label)}</label>`
+  ).join("");
+  box.querySelectorAll("input").forEach(i=>{
+    i.onchange=()=>box.querySelectorAll("label").forEach(l=>l.classList.toggle("on", l.querySelector("input").checked));
+  });
+}
+const selectedProdukt = () => $("#fProdukt")?.querySelector("input:checked")?.value || null;
+
 /* Prekreslí ponuku stavov po zmene typu záznamu alebo služby. */
 function syncStatusList(){
   const segNow=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
+  fillProduktPick(segNow, selectedProdukt());
   const isNBnow=$("#fKindField").style.display!=="none"
     ? $("#fKind").querySelector("input:checked")?.value==="nb"
     : !!modalEntry?.isNewBusiness;
@@ -4798,7 +4843,7 @@ function schip(segId, firma){
 function schipLogo(segId){
   const s=SEG[segId];
   const textColor = segId==="digital" ? "#00244D" : segId==="zelena" ? "#0E6A38" : s.color;
-  const logo1=`<img src="${LOGOS[s.logoKey]}" style="height:13px;width:auto;object-fit:contain;flex:0 0 auto">`;
+  const logo1=s.logoKey?`<img src="${LOGOS[s.logoKey]}" style="height:13px;width:auto;object-fit:contain;flex:0 0 auto">`:segIcon(segId,13);
   const logo2=s.logoKey2?`<img src="${LOGOS[s.logoKey2]}" style="height:10px;width:auto;object-fit:contain;flex:0 0 auto;opacity:.8">`:""
   return `<span class="logo-pill"><span class="dot" style="background:${s.color};width:7px;height:7px;border-radius:50%;flex:0 0 auto"></span>${logo1}${logo2}<span style="font-size:11px;font-weight:600;color:${textColor}">${esc(s.short)}</span></span>`;
 }
@@ -5620,7 +5665,7 @@ function renderNow(){
    Farby sú upravené verzie farieb služieb — samotné služby ostávajú nedotknuté,
    lebo cyan aj tmavá navy sú ako text na bielom nečitateľné. */
 const LOGO_SEG_COLOR = {
-  baliky:"#1E5AA8", digital:"#69BFB6", zelena:"#5E9331",
+  baliky:"#1E5AA8", digital:"#69BFB6", zelena:"#5E9331", ine:"#6B7280",
   tlac:"#3E56CB", ad:"#3E56CB", nad:"#3E56CB",
 };
 const LOGO_DEFAULT = ["#3E56CB","#5E9331","#69BFB6"];   // modrá, zelená, cyan
@@ -6827,7 +6872,9 @@ function groupKeyFor(e, mode){
   const ic=icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client));
   const base = ic ? ("i:"+ic) : ("n:"+clientKey(entryTitle(e)));
   if(mode==="client") return base;
-  return base+"|"+(e.segment||"")+(e.material?"|m:"+clientKey(e.material):"");
+  return base+"|"+(e.segment||"")
+       +(e.produkt?"|p:"+clientKey(e.produkt):"")
+       +(e.material?"|m:"+clientKey(e.material):"");
 }
 function groupEntries(list, mode){
   const map=new Map();
@@ -6838,6 +6885,7 @@ function groupEntries(list, mode){
     const g=map.get(key);
     g.entries.push(e);
     if(e.segment) g.segments.add(e.segment);
+    if(e.produkt && !g.produkt) g.produkt=e.produkt;
     if(e.material) g.materials.add(e.material);
     if(!g.ico) g.ico=String(e.leadIco||e.ico||"");
     if(entryTitle(e).length>g.name.length) g.name=entryTitle(e);   // dlhší/úplnejší názov
@@ -6912,7 +6960,7 @@ function renderGroupedList(container, list, opts={}){
       : (SEG[g.segment] ? SEG[g.segment].color : "#9AA1AC");
     // v režime "podľa klienta" má firma viac služieb — ukážeme všetky ikony
     const segIcons=(g.segs.length?g.segs:[g.segment]).slice(0,4).map(sg=>{
-      const v=SEG[sg]; return v?`<span title="${esc(v.name)}">${segIcon(sg,16)}</span>`:"";
+      const v=SEG[sg]; return v?`<span title="${esc(segLabel(sg, sg===g.segment?g.produkt:null))}">${segIcon(sg,16)}</span>`:"";
     }).join("")+(g.segs.length>4?`<span class="gl-more">+${g.segs.length-4}</span>`:"");
     const hd=el("button","gl-head"); hd.type="button";
     hd.innerHTML=`<span class="gl-chev" style="color:${segCol};background:${hexA(segCol,.14)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -8152,7 +8200,9 @@ function weeklyDoneBar(seg){
 }
 function viewSegment(){
   const s=SEG[state.segFilter]||SEGMENTS[0];
-  const logoHtml = s.logoKey2
+  const logoHtml = !s.logoKey
+    ? ""                                    // služba "Iné" logo nemá
+    : s.logoKey2
     ? `<div class="seg-logo-box"><img src="${LOGOS[s.logoKey]}" alt="${s.short}"></div>
        <div class="seg-logo-box"><img src="${LOGOS[s.logoKey2]}" class="kolos-logo" alt="KOLOS"></div>`
     : `<div class="seg-logo-box"><img src="${LOGOS[s.logoKey]}" alt="${s.short}"></div>`;
@@ -8392,7 +8442,7 @@ function entryCard(e,clients,opts={}){
   const metaBits=[];
   if(e.isNewBusiness) metaBits.push(`<span class="mt-nb${e.entrySource==="app"?" app":""}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span>`);
   else if(isInternal(e)) metaBits.push(`<span class="mt-int">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V8l6-4 6 4v13M10 12h4M10 16h4"/></svg>'}Interné / projekt</span>`);
-  if(opts.showSegChip) metaBits.push(`<span class="mt-seg" style="color:${SEG[e.segment].color}">${esc(SEG[e.segment].short)}</span>`);
+  if(opts.showSegChip) metaBits.push(`<span class="mt-seg" style="color:${SEG[e.segment].color}">${esc(segLabel(e.segment, e.produkt, true))}</span>`);
   if(e.firma) metaBits.push(`<span class="mt-firma"><img src="${firmaLogoSrc}" alt="${esc(e.firma)}"></span>`);
   if(kolosOfferFor(e)) metaBits.push(`<button type="button" class="mt-link offer-badge" data-ico="${esc(ico8(e.leadIco||e.ico))}" title="Detail ponuky z Kolos kalkulačky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>ponuka zaslaná</button>`);
   if(e.isNewBusiness) metaBits.push(e.entrySource==="app"
@@ -9150,6 +9200,7 @@ function openModal(entry,presetSeg){
     // stav sa ponúka podľa typu záznamu a služby
     modalEntry=entry||null;
     const segNow=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
+    fillProduktPick(segNow, entry?.produkt||"");
     const isNBnow=$("#fKindField").style.display!=="none"
       ? $("#fKind").querySelector("input:checked")?.value==="nb"
       : !!entry?.isNewBusiness;
@@ -9285,6 +9336,7 @@ async function saveFromModal(){
     events:eventsText,
     salesperson: selectedName,
     status: ($("#fKind").querySelector("input:checked")?.value==="int") ? "bezi" : $("#fStatus").value,
+    produkt: selectedProdukt(),
     firma,
     ownerKey:newOwnerKey, ownerName:newOwnerName, ownerUid:newOwnerUid,
     // ak niekto ručne upraví importovaný záznam New Business, ďalší CSV import ho už neprepíše
