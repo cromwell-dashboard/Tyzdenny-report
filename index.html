@@ -126,7 +126,11 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .gs-wrap.has .gs-clear{display:grid}
 .gs-clear:hover{background:var(--line-2); color:var(--ink)}
 .gs-clear svg{width:13px; height:13px}
-#gsWrapRail{margin:0 2px 12px}
+/* Rovnaká výška ako položky menu (9px odsadenie + riadok) a ako tlačidlo
+   „Nový záznam", aby pole v bočnom paneli nevytŕčalo. */
+#gsWrapRail{margin:0 2px 10px; height:36px; padding:0 10px; border-radius:var(--r-sm); gap:10px}
+#gsWrapRail .gs-input{font-size:13.5px}
+#gsWrapRail .gs-ic svg{width:15px; height:15px}
 .gs-mobile{display:none; padding:10px 14px 0}
 .gs-mobile-btn{display:none; width:34px; height:34px; border-radius:9px; border:1px solid var(--line);
   background:#fff; color:var(--ink-soft); place-items:center; flex:0 0 auto}
@@ -341,6 +345,8 @@ input,select,textarea{font-family:inherit; font-size:14px}
   .navitem .seg-logo2{height:12px}
   .navitem .ct{font-size:11px; padding:1px 6px; min-width:21px}
   .rail .grp{font-size:10px; margin:3px 8px 4px}
+  #gsWrapRail{height:32px; margin-bottom:8px}
+  #gsWrapRail .gs-input{font-size:12.5px}
   .rail hr{margin:7px 6px}
   .btn-primary{height:31px; padding:0 10px; font-size:12px}
 }
@@ -1295,6 +1301,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .new-badge{display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
   color:#fff;background:var(--nb);border-radius:20px;padding:2px 6px;margin-left:6px;vertical-align:1px;line-height:1}
 .navitem .new-slot{margin-left:auto;display:inline-flex}
+.field label .new-slot{display:inline-flex;margin-left:7px;vertical-align:1px}
 .scope-switch .new-slot{display:inline-flex;margin-left:6px;vertical-align:1px}
 .scope-switch .new-badge{margin-left:0;cursor:help}
 .navitem .new-slot .new-badge{margin-left:0}
@@ -2220,9 +2227,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
       </div>
 
       <div class="field" id="fProduktField" style="display:none">
-        <label>Produkt</label>
+        <label>Produkt<span class="new-slot" data-new="produkt"></span></label>
         <div class="segpick" id="fProdukt"></div>
-        <div class="hint">Rozhoduje o pravidle odmeňovania — napríklad Zelená pošta ad hoc sa počíta inak než bežná.</div>
+        <div class="hint">Upresni prosím typ služby — rozhoduje o pravidle odmeňovania.</div>
       </div>
 
       <div class="msec" id="fFirmaSection">
@@ -3157,6 +3164,7 @@ const state = {
   materials:[],            // číselník materiálov agentúr (meta/materials)
   users:[],                // prihlásení používatelia (users/{uid}) — kvôli párovaniu mena na UID
   clientProfiles:{},       // clients/{key} — údaje klienta nad rámec záznamov (IČO, obchodník, poznámka)
+  opportunities:[],        // obchodné prípady (New business) — firma × služba × priebeh obchodu
   dmisOwners:[],           // register vlastníkov z DMIS (IČO/klient → obchodníci)
   calculators:[],          // odkazy na kalkulačky (spravuje admin)
   groupBy:"clientSeg",     // "clientSeg" | "client" — zoskupenie riadkov v zozname
@@ -4587,6 +4595,7 @@ const LOSS_REASONS = ["Cena","Konkurencia","Nemá záujem","Nereaguje","Nevhodn�
    Ku každej je dátum, dokedy sa odznak ukazuje — potom zmizne sám,
    netreba nič mazať z kódu. Formát YYYY-MM-DD. */
 const NEW_UNTIL = {
+  produkt:     "2026-10-05",   // upresnenie typu služby (Zelená pošta ad hoc, Tlač Externá)
   reminders:   "2026-09-10",   // pripomienky zabudnutých príležitostí
   finstat:     "2026-09-09",   // načítanie firmy z Finstatu — 5 dní
   groupedAll:  "2026-09-11",   // zoskupený zoznam v zobrazení "Všetko" — 3 dni
@@ -4598,6 +4607,8 @@ const isNewFeature = key => {
 const newDot = key => isNewFeature(key) ? `<span class="new-badge"${NEW_HINT[key]?` title="${esc(NEW_HINT[key])}"`:""}>nové</span>` : "";
 /* Vysvetlenie, ktoré sa ukáže po nastavení myšou na odznak */
 const NEW_HINT = {
+  produkt: "Nové pole. Pri Zelenej pošte a Tlači upresni typ služby — "
+    + "Zelená pošta ad hoc a Tlač Externá sa odmeňujú inak než základný variant.",
   groupedAll: "Nové zobrazenie všetkých aktivít. Záznamy zapísané počas jednotlivých týždňov "
     + "sú zlúčené do jedného riadku podľa klienta a služby — kliknutím na riadok si rozbalíš "
     + "celú históriu. Vyskúšaj si to.",
@@ -4940,6 +4951,17 @@ function demoBackend(){
     },
     async getTask(id){ return tasks.find(t=>t.id===id)||null; },
     async saveClientProfile(key,data){ state.clientProfiles={...state.clientProfiles,[key]:{id:key,...(state.clientProfiles[key]||{}),...data}}; _ciCache=null; render(); },
+    async saveOpportunity(o){
+      const id=o.id||("opp_"+Math.random().toString(36).slice(2,10));
+      const i=state.opportunities.findIndex(x=>x.id===id);
+      const next={...o,id};
+      state.opportunities = i>=0 ? state.opportunities.map(x=>x.id===id?{...x,...next}:x) : [...state.opportunities,next];
+      render(); return id;
+    },
+    async setOpportunityOnEntries(pairs){
+      const m=new Map(pairs);
+      all=all.map(e=>m.has(e.id)?{...e,opportunityId:m.get(e.id)}:e); sync(); return pairs.length;
+    },
     async setIcoOnEntries(clientK,ico){ all=all.map(e=>clientKey(e.client)===clientK?{...e,ico}:e); sync(); return all.length; },
     async saveTask(task){
       if(task.id && tasks.some(t=>t.id===task.id)) tasks=tasks.map(t=>t.id===task.id?{...task}:t);
@@ -5055,6 +5077,9 @@ async function firebaseBackend(){
       const u11=onSnapshot(doc(db,"meta","materials"), snap=>{ state.materials=snap.exists()?(snap.data().values||[]):[]; render(); });
       // Zoznam používateľov potrebujeme na to, aby sa pri priradení úlohy uložilo
       // aj UID zodpovedného — pravidlá Firestore kontrolujú assigneeUid, nie meno.
+      const u14=onSnapshot(collection(db,"opportunities"),
+        snap=>{ state.opportunities=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
+        err=>{ console.warn("Obchodné prípady sa nepodarilo načítať:", err); });
       const u13=onSnapshot(collection(db,"clients"),
         snap=>{ const m={}; snap.forEach(d=>m[d.id]={id:d.id,...d.data()}); state.clientProfiles=m; _ciCache=null; gsInvalidate(); render(); },
         err=>{ console.warn("Profily klientov sa nepodarilo načítať:", err); });
@@ -5090,7 +5115,7 @@ async function firebaseBackend(){
       }
       // Databázy firiem sa NENAČÍTAVAJÚ pri štarte — býva ich tisíce a väčšina
       // používateľov ich vôbec neotvorí. Načítajú sa až pri prvom použití.
-      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); u13(); if(leadsUnsub) leadsUnsub(); };
+      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); u13(); u14(); if(leadsUnsub) leadsUnsub(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
@@ -5129,6 +5154,21 @@ async function firebaseBackend(){
     // pravidlá Firestore), vieme to používateľovi povedať namiesto tichého zlyhania.
     async getTask(id){ const sn=await getDoc(doc(db,"tasks",id)); return sn.exists()?{id:sn.id,...sn.data()}:null; },
     async saveClientProfile(key, data){ await setDoc(doc(db,"clients",key), data, {merge:true}); },
+    async saveOpportunity(o){
+      const id=o.id||doc(collection(db,"opportunities")).id;
+      const clean={}; Object.entries({...o,id}).forEach(([k,v])=>{ if(v!==undefined) clean[k]=v; });
+      await setDoc(doc(db,"opportunities",id), clean, {merge:true});
+      return id;
+    },
+    // Hromadné priradenie opportunityId k záznamom — použije sa pri migrácii.
+    async setOpportunityOnEntries(pairs){
+      for(let i=0;i<pairs.length;i+=400){
+        const b=writeBatch(db);
+        pairs.slice(i,i+400).forEach(([entryId,oppId])=>b.set(doc(db,"entries",entryId),{opportunityId:oppId},{merge:true}));
+        await b.commit();
+      }
+      return pairs.length;
+    },
     // Voliteľné doplnenie IČO do všetkých záznamov klienta — spúšťa sa len na požiadanie.
     async setIcoOnEntries(clientK, ico){
       const ids=state.all.filter(e=>clientKey(e.client)===clientK).map(e=>e.id);
@@ -6853,6 +6893,144 @@ function staleNbReminder(){
   }
   return box;
 }
+/* ---------------------------------------------------------------- OBCHODNÉ PRÍPADY (New business)
+   Prípad = firma × služba × produkt × materiál × jeden priebeh obchodu.
+   Identita je náhodné `id`; `matchKey` je len vyhľadávací kľúč, ktorý sa smie
+   kedykoľvek prepočítať (napr. keď sa firme doplní IČO).
+   Týka sa výhradne New business záznamov — Customer care a interné sú mimo. */
+const OPP_OPEN_STATES = ["aktivny","vyhrany"];
+
+function oppMatchKey(e){
+  const ic = icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client));
+  return (ic ? "i:"+ic : "n:"+clientKey(e.client))
+       + "|" + (e.segment||"")
+       + (e.produkt  ? "|p:"+clientKey(e.produkt)  : "")
+       + (e.material ? "|m:"+clientKey(e.material) : "");
+}
+const oppById = id => id ? (state.opportunities||[]).find(o=>o.id===id) || null : null;
+const oppsForKey = mk => (state.opportunities||[]).filter(o=>o.matchKey===mk);
+const openOppForKey = mk => oppsForKey(mk).find(o=>OPP_OPEN_STATES.includes(o.stav)) || null;
+
+/* Prípad, do ktorého záznam patrí. Najprv uložená väzba, potom dohľadanie cez kľúč —
+   vďaka tomu model funguje aj pred migráciou starých záznamov. */
+function oppForEntry(e){
+  if(!e || !e.isNewBusiness) return null;
+  return oppById(e.opportunityId) || openOppForKey(oppMatchKey(e));
+}
+
+/* Nové IČO oproti existujúcemu — hľadá sa, či firma figurovala v Zappise skôr,
+   naprieč všetkými službami. Obchodník to môže v prípade prepísať. */
+function odhadniTypKlienta(e){
+  const ic = icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client));
+  const k  = clientKey(e.client);
+  const skorsie = state.all.some(x=>{
+    if(x.id===e.id) return false;
+    const xi = icoKey(x.leadIco||x.ico);
+    const sedi = ic ? (xi===ic) : (clientKey(x.client)===k);
+    if(!sedi) return false;
+    return weekCmpDesc(x.weekId, e.weekId) > 0;      // x je starší týždeň
+  });
+  return skorsie ? "existujuce" : "nove";
+}
+
+function vlastniciZoZaznamu(e){
+  const v=[];
+  const hlavny=resolveOwnerName(e);
+  if(hlavny) v.push({ uid:e.ownerUid||uidForName(hlavny)||null, key:e.ownerKey||null, meno:hlavny, podiel:1 });
+  (e.coSalespeople||[]).forEach(n=>{
+    if(v.some(x=>normalizeForCompare(x.meno)===normalizeForCompare(n))) return;
+    v.push({ uid:uidForName(n)||null, key:NAME_TO_EMAIL[n]||null, meno:n, podiel:0 });
+  });
+  return v;
+}
+
+/* Zostaví nový obchodný prípad zo záznamu. Neukladá — to robí volajúci. */
+function novyPripad(e, seq){
+  const mk=oppMatchKey(e);
+  const ic=icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client));
+  const vlastnici=vlastniciZoZaznamu(e);
+  return {
+    matchKey: mk, seq: seq||1,
+    ico: ic || null,
+    clientKeyFallback: ic ? null : clientKey(e.client),
+    client: e.client || "",
+    segment: e.segment || null,
+    produkt: e.produkt || null,
+    material: e.material || null,
+    stav: "aktivny",
+    otvoreneOd: mesiacZTyzdna(e.weekId),
+    uzavreteOd: null,
+    typKlienta: odhadniTypKlienta(e),
+    typKlientaZdroj: "auto",
+    vlastnici,
+    ownerUids: vlastnici.map(v=>v.uid).filter(Boolean),
+    jeNewBusiness: true,
+    createdBy: state.user?.name || null, createdAt: Date.now(),
+    updatedBy: state.user?.name || null, updatedAt: Date.now(),
+  };
+}
+/* Mesiac, do ktorého týždeň patrí — podľa jeho pondelka. Formát "2026-09". */
+function mesiacZTyzdna(weekId){
+  try{
+    const {year,week}=parseWeekId(weekId);
+    const d=mondayOf(year,week);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}`;
+  }catch(err){ return null; }
+}
+
+/* Opakovaný obchod — rozhodnúť musí človek, automaticky sa to uhádnuť nedá.
+   Vracia true (nový prípad), false (pokračovanie starého) alebo null (zrušiť). */
+function spytajSaNaNovyPripad(e, zavrete){
+  return new Promise(resolve=>{
+    const posledny=zavrete.slice().sort((a,b)=>(b.seq||0)-(a.seq||0))[0];
+    const scrim=el("div","scrim open"); scrim.style.zIndex="95";
+    scrim.innerHTML=`<div class="modal" style="max-width:480px">
+      <div class="modal-h"><h2>Nový obchod, alebo pokračovanie?</h2></div>
+      <div class="modal-b">
+        <p style="margin:0 0 10px;font-size:13.5px;line-height:1.6">
+          Pre <b>${esc(e.client||"—")}</b> a službu <b>${esc(segLabel(e.segment,e.produkt,true))}</b>
+          už existuje uzavretý obchodný prípad${posledny?.otvoreneOd?` z obdobia ${esc(posledny.otvoreneOd)}`:""}.
+        </p>
+        <p style="margin:0;font-size:12.5px;color:var(--muted);line-height:1.6">
+          Ak ide o ten istý obchod, záznam sa k nemu pripojí. Ak začínaš odznova,
+          vznikne nový prípad s vlastným obdobím a odmenou — starý zostane nedotknutý.
+        </p>
+      </div>
+      <div class="modal-f" style="justify-content:flex-end;flex-wrap:wrap">
+        <button class="btn" data-act="cancel">Zrušiť</button>
+        <button class="btn" data-act="old">Pokračovanie starého</button>
+        <button class="btn solid" data-act="new">Nový obchod</button>
+      </div></div>`;
+    scrim.querySelectorAll("[data-act]").forEach(b=>{
+      b.onclick=()=>{ scrim.remove();
+        resolve(b.dataset.act==="cancel" ? null : b.dataset.act==="new"); };
+    });
+    document.body.appendChild(scrim);
+  });
+}
+/* Zabezpečí, že záznam má obchodný prípad. Vracia jeho id, alebo null pri chybe.
+   `naNovy` = používateľ potvrdil, že ide o nový obchod (opakovaná spolupráca). */
+async function zabezpecPripad(e, naNovy){
+  if(!e || !e.isNewBusiness) return null;
+  const mk=oppMatchKey(e);
+  try{
+    if(!naNovy){
+      const existuje = oppById(e.opportunityId) || openOppForKey(mk);
+      if(existuje) return existuje.id;
+      // pokračovanie starého obchodu — posledný uzavretý sa znovu otvorí
+      const zavrete=oppsForKey(mk).slice().sort((a,b)=>(b.seq||0)-(a.seq||0));
+      if(zavrete.length){
+        const p=zavrete[0];
+        await backend.saveOpportunity({ id:p.id, stav:"aktivny", uzavreteOd:null,
+          updatedBy:state.user?.name||null, updatedAt:Date.now() });
+        return p.id;
+      }
+    }
+    const seq = oppsForKey(mk).length + 1;
+    return await backend.saveOpportunity(novyPripad(e, seq));
+  }catch(err){ console.error("saveOpportunity:", err); return null; }
+}
+
 /* ---------------------------------------------------------------- ZOBRAZENIE "VŠETKO" — ZOSKUPENÝ ZOZNAM
    Kompaktný riadok = firma + služba (+ materiál pri agentúrach). Aktivity naprieč
    týždňami sa skryjú pod riadok a rozbalia sa až na kliknutie.
@@ -8782,6 +8960,60 @@ function viewClientRegistry(){
     <h1>Číselník klientov</h1>
     <div class="sub">Skry meno klienta, ktoré sa už nemá ponúkať obchodníkom pri písaní záznamu (napr. duplicity alebo preklepy). Historické záznamy zostanú nedotknuté, len sa dané meno prestane objavovať v nápovede.</div></div>`));
 
+  // ---- Migrácia: založenie obchodných prípadov k existujúcim New business záznamom ----
+  if(["admin","sef"].includes(state.user.role)){
+    const nb=state.all.filter(e=>e.isNewBusiness);
+    const bez=nb.filter(e=>!e.opportunityId);
+    const box=el("div","msec"); box.style.marginBottom="18px";
+    const info=el("div");
+    const renderInfo=()=>{
+      const skupiny=new Set(bez.map(oppMatchKey));
+      info.innerHTML=`<div class="msec-h">Obchodné prípady</div>
+        <div style="font-size:12.5px;color:var(--muted);line-height:1.6">
+          New business záznamov: <b>${nb.length}</b> · bez prípadu: <b>${bez.length}</b> ·
+          vznikne prípadov: <b>${skupiny.size}</b><br>
+          Záznamy sa zoskupia podľa IČO, služby, produktu a materiálu. Existujúce prípady
+          sa nemenia, Customer care ani interné záznamy sa nedotknú.
+        </div>`;
+    };
+    renderInfo();
+    box.appendChild(info);
+    const btn=el("button","btn solid",`Založiť obchodné prípady (${bez.length})`);
+    btn.style.marginTop="10px";
+    btn.disabled=!bez.length;
+    btn.onclick=async()=>{
+      if(!confirm(`Založiť obchodné prípady pre ${bez.length} New business ${plural(bez.length,"záznam","záznamy","záznamov")}?\n\nExistujúce záznamy sa neprepisujú, doplní sa im len väzba na prípad.`)) return;
+      btn.disabled=true; btn.textContent="Zakladám…";
+      try{
+        // zoskupenie podľa kľúča; v každej skupine najnovší záznam určí údaje prípadu
+        const skupiny=new Map();
+        bez.forEach(e=>{ const k=oppMatchKey(e); if(!skupiny.has(k)) skupiny.set(k,[]); skupiny.get(k).push(e); });
+        const pary=[];
+        let novych=0, pripojenych=0;
+        for(const [mk,zaznamy] of skupiny){
+          zaznamy.sort((a,b)=>weekCmpDesc(a.weekId,b.weekId) || entryTs(b)-entryTs(a));
+          let opp=openOppForKey(mk);
+          if(opp){ pripojenych++; }
+          else {
+            const najstarsi=zaznamy[zaznamy.length-1];
+            const zaklad=novyPripad(zaznamy[0], oppsForKey(mk).length+1);
+            zaklad.otvoreneOd = mesiacZTyzdna(najstarsi.weekId);
+            const id=await backend.saveOpportunity(zaklad);
+            opp={id}; novych++;
+          }
+          zaznamy.forEach(e=>pary.push([e.id, opp.id]));
+        }
+        await backend.setOpportunityOnEntries(pary);
+        toast(`Hotovo · ${novych} ${plural(novych,"nový prípad","nové prípady","nových prípadov")} · ${pary.length} ${plural(pary.length,"záznam prepojený","záznamy prepojené","záznamov prepojených")}`);
+      }catch(err){
+        console.error("migrácia prípadov:", err);
+        toast("⚠ Migrácia zlyhala: "+(err?.message||err?.code||"neznáma chyba"));
+      }finally{ btn.disabled=false; btn.textContent="Založiť obchodné prípady"; render(); }
+    };
+    box.appendChild(btn);
+    wrap.appendChild(box);
+  }
+
   // ---- Hromadné vymazanie záznamov od zvoleného týždňa (admin) ----
   if(state.user.role==="admin"){
     const box=el("div","reg-danger-box");
@@ -9373,6 +9605,23 @@ async function saveFromModal(){
     sleepingSince: forceSleeping ? state.week : (baseEntry.sleepingSince ?? null),
     coSalespeople: [...$("#coObchPick").querySelectorAll("input:checked")].map(i=>i.value).filter(n=>n!==selectedName),
     editedByName, editedByAt, editedByKey };
+
+  // Obchodný prípad — len pri New business. Ak firma v tejto službe už mala obchod
+  // a je uzavretý, opýtame sa, či ide o pokračovanie alebo o nový obchod.
+  if(entry.isNewBusiness && !entry.opportunityId){
+    const mk=oppMatchKey(entry);
+    const otvoreny=openOppForKey(mk);
+    let naNovy=false;
+    if(!otvoreny){
+      const zavrete=oppsForKey(mk);
+      if(zavrete.length){
+        naNovy = await spytajSaNaNovyPripad(entry, zavrete);
+        if(naNovy===null) return;          // používateľ zrušil uloženie
+      }
+    }
+    const oppId=await zabezpecPripad(entry, naNovy);
+    if(oppId) entry.opportunityId=oppId;
+  }
 
   await backend.save(entry);
 
