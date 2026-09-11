@@ -71,7 +71,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 /* Logo Zappis — písmená "app" nesú farby služieb.
    V prehľade sú trojfarebné (modrá, zelená, cyan = všetky služby),
    v konkrétnej službe sa všetky tri prefarbia na farbu tej služby. */
-.zappis{white-space:nowrap; --lg1:#3E56CB; --lg2:#5E9331; --lg3:#2FB47C}
+.zappis{white-space:nowrap; --lg1:#3E56CB; --lg2:#5E9331; --lg3:#22C3B4}
 .zappis .app{display:inline}
 .zappis .app i{font-style:normal; transition:color .25s}
 .zappis .app i:nth-child(1){color:var(--lg1)}
@@ -1648,6 +1648,8 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .lead-status.dmis.former .dm-lbl{font-style:italic}
 .dmis-own.former{opacity:.75}
 .dmis-former-note{font-size:10px;font-style:italic;opacity:.8;margin-left:5px}
+.lead-act{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;border:1px solid;
+  border-radius:20px;padding:2px 9px;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
 .lead-owner{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap}
 .lead-owner .av{width:20px;height:20px;font-size:9px}
 .lead-hero{display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:14px}
@@ -2217,7 +2219,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
         <div class="segpick" id="fSegment"></div>
       </div>
 
-      <div class="msec">
+      <div class="msec" id="fFirmaSection">
         <div class="msec-h">Firma</div>
       <div class="field" id="fIcoField">
         <label>IČO <span class="req">povinné</span></label>
@@ -3125,7 +3127,7 @@ const state = {
   feedback:[],             // pripomienky od obchodníkov (vidí len admin)
   leadsLoading:false,      // databázy firiem sa načítavajú až na požiadanie
   leads:[],                // databáza leadov (firmy z XLS)
-  leadFilter:{seg:"", status:"", owner:"free", q:"", service:"", db:""},
+  leadFilter:{seg:"", status:"", owner:"", act:"", q:"", service:"", db:""},   // predvolene celá databáza
   leadLimit:60,            // koľko sa vykreslí naraz (výkon pri stovkách firiem)
   openLead:null,           // id otvoreného leadu v detaile
   expandedMeeting:null,    // id rozbaleného zápisu
@@ -4129,7 +4131,7 @@ function viewLeads(){
   si.oninput=()=>{ f.q=si.value; state.leadLimit=60; paint(); };
   search.appendChild(si); top.appendChild(search);
   // Na mobile sa zvyšok filtrov skryje pod tlačidlo — inak zaberá pol obrazovky
-  const nActive=[f.service,f.db,f.status,f.seg].filter(Boolean).length + (f.owner!=="free"?1:0);
+  const nActive=[f.service,f.db,f.status,f.seg,f.act].filter(Boolean).length + (f.owner?1:0);
   const tgl=el("button","lf-toggle"+(state.leadFiltersOpen?" on":""),
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>Filtre${nActive?`<b>${nActive}</b>`:""}`);
   tgl.type="button";
@@ -4160,13 +4162,22 @@ function viewLeads(){
   // 2) Vlastník — segmentovaný prepínač
   const row2=el("div","lf-row");
   const ownWrap=el("div","lf-seg");
-  [["free","Voľné"],["mine","Moje"],["taken","Obsadené"],["","Všetky"]].forEach(([v,t])=>{
+  [["","Všetky"],["free","Voľné"],["mine","Moje"],["taken","Obsadené"]].forEach(([v,t])=>{
     const b=el("button",null,t); b.type="button";
     b.className=(f.owner===v?"on":"");
     b.onclick=()=>{ f.owner=v; state.leadLimit=60; render(); };
     ownWrap.appendChild(b);
   });
   row2.appendChild(ownWrap);
+  // Prevolané = firma už má v Zappise aspoň jednu aktivitu
+  const actWrap=el("div","lf-seg");
+  [["","Všetko"],["yes","Prevolané"],["no","Neprevolané"]].forEach(([v,t])=>{
+    const b=el("button",null,t); b.type="button";
+    b.className=(f.act===v?"on":"");
+    b.onclick=()=>{ f.act=v; state.leadLimit=60; render(); };
+    actWrap.appendChild(b);
+  });
+  row2.appendChild(actWrap);
 
   // 3) Priorita — písmenkové dlaždice vo farbe
   const prioWrap=el("div","lf-prio");
@@ -4223,6 +4234,8 @@ function viewLeads(){
       if(f.owner==="free" && l.ownerKey) return false;
       if(f.owner==="mine" && l.ownerKey!==state.user.key) return false;
       if(f.owner==="taken" && !l.ownerKey) return false;
+      if(f.act==="yes" && !leadActivity(l)) return false;
+      if(f.act==="no"  &&  leadActivity(l)) return false;
       if(q){
         const hay=[l.company,l.ico,(l.shops||[]).join(" "),(l.urls||[]).join(" ")].join(" ").toLowerCase();
         if(!hay.includes(q)) return false;
@@ -4230,7 +4243,13 @@ function viewLeads(){
       return true;
     });
     rows.sort((a,b)=>(LEAD_SEG_ORDER[a.segment]??9)-(LEAD_SEG_ORDER[b.segment]??9) || b.score-a.score);
-    info.textContent=`${rows.length} ${plural(rows.length,"firma","firmy","firiem")}`;
+    {
+      const prevolane=rows.filter(r=>leadActivity(r)).length;
+      const prevzate=rows.filter(r=>r.ownerKey).length;
+      info.innerHTML=`${rows.length} ${plural(rows.length,"firma","firmy","firiem")}`
+        + ` · <b>${prevolane}</b> ${plural(prevolane,"prevolaná","prevolané","prevolaných")}`
+        + ` · ${prevzate} ${plural(prevzate,"prevzatá","prevzaté","prevzatých")}`;
+    }
     listWrap.innerHTML=""; moreWrap.innerHTML="";
     if(!rows.length){ listWrap.appendChild(el("div","empty","<b>Nič nevyhovuje filtru</b>Skús zmeniť filter alebo hľadaný výraz.")); return; }
     rows.slice(0,state.leadLimit).forEach(l=>listWrap.appendChild(leadRow(l)));
@@ -4243,6 +4262,23 @@ function viewLeads(){
   paint();
   return wrap;
 }
+/* Najnovšia aktivita v Zappise k firme z databázy — páruje sa cez IČO.
+   Líder tak v databáze vidí, ktoré firmy sú už prevolané a ako ďaleko sú. */
+const _leadActIdx = { key:null, map:null };
+function leadActivityIndex(){
+  const key = state.all.length + "|" + (state.all.length ? (state.all[state.all.length-1].updatedAt||0) : 0);
+  if(_leadActIdx.key===key) return _leadActIdx.map;
+  const m=new Map();
+  state.all.forEach(e=>{
+    const k=icoKey(e.leadIco||e.ico); if(!k) return;
+    const prev=m.get(k);
+    if(!prev || weekCmpDesc(e.weekId, prev.weekId)<0 || (e.weekId===prev.weekId && entryTs(e)>entryTs(prev))) m.set(k,e);
+  });
+  _leadActIdx.key=key; _leadActIdx.map=m;
+  return m;
+}
+function leadActivity(l){ const k=icoKey(l.ico); return k ? (leadActivityIndex().get(k)||null) : null; }
+
 function leadRow(l){
   const seg=LEAD_SEGMENTS[l.segment]||LEAD_SEGMENTS.E;
   const st=LEAD_STATUSES[l.status]||LEAD_STATUSES.new;
@@ -4288,6 +4324,15 @@ function leadRow(l){
         }
         return `<span class="lead-status" style="color:${st.color};border-color:${st.color}33;background:${st.color}14">${esc(st.label)}</span>`
              + own.map(o=>chip(o,!isAppPerson(o))).join("");
+      })()}
+      ${(()=>{
+        const a=leadActivity(l);
+        if(!a) return "";
+        const st2=ST[a.status];
+        const kto=resolveOwnerName(a);
+        return `<span class="lead-act" title="Posledná aktivita v Zappise · ${esc(weekRangeLabel(a.weekId))}"
+          style="color:${st2?st2.color:"#646d7e"};border-color:${st2?st2.color+"44":"var(--line)"};background:${st2?st2.color+"14":"var(--line-2)"}">
+          ${esc(st2?st2.label:"Zapísané")}${kto?` · ${esc(initials(kto))}`:""}</span>`;
       })()}
       ${l.ownerName?`<span class="lead-owner"><span class="av">${initials(l.ownerName)}</span>${esc(l.ownerName)}</span>`:""}
     </div>`;
@@ -5575,10 +5620,10 @@ function renderNow(){
    Farby sú upravené verzie farieb služieb — samotné služby ostávajú nedotknuté,
    lebo cyan aj tmavá navy sú ako text na bielom nečitateľné. */
 const LOGO_SEG_COLOR = {
-  baliky:"#1E5AA8", digital:"#2FB47C", zelena:"#5E9331",
+  baliky:"#1E5AA8", digital:"#22C3B4", zelena:"#5E9331",
   tlac:"#3E56CB", ad:"#3E56CB", nad:"#3E56CB",
 };
-const LOGO_DEFAULT = ["#3E56CB","#5E9331","#2FB47C"];   // modrá, zelená, cyan
+const LOGO_DEFAULT = ["#3E56CB","#5E9331","#22C3B4"];   // modrá, zelená, cyan
 function syncLogoColors(){
   const lg=document.getElementById("topZappis");
   if(!lg) return;
@@ -9057,18 +9102,16 @@ function openModal(entry,presetSeg){
   const syncKindUI=()=>{
     const kind = $("#fKind").querySelector("input:checked")?.value || "cc";
     const nb = kind==="nb", vnutorne = kind==="int";
-    // Interný záznam nemá vlastný názov — volá sa vždy "Interné / projekty".
-    // Klient je nepovinný; keď sa aktivita týka konkrétnej firmy, vyplní sa
-    // a záznam sa objaví v jej histórii. IČO sa pri internom zázname nepýta.
-    $("#fIcoField").style.display = vnutorne ? "none" : "";
+    // Interný záznam sa nikdy neviaže na firmu — celá sekcia Firma zmizne.
+    $("#fFirmaSection").style.display = vnutorne ? "none" : "";
+    $("#fIcoField").style.display = "";
     $("#fContactsField").style.display = (canPickKind && nb) ? "" : "none";
     $("#fApproachSection").style.display = (canPickKind && nb) ? "" : "none";
     $("#fDmisSection").style.display = (canPickKind && nb) ? "" : "none";
     // stav pri internom zázname nedáva zmysel — ukladá sa natvrdo "Realizuje sa"
     $("#fStatus").closest(".field").style.display = vnutorne ? "none" : "";
     applySegVisibility(canPickKind && nb);
-    const lab=$("#fClientLabel");
-    if(lab) lab.innerHTML = vnutorne ? 'Klient <span class="opt">nepovinné</span>' : "Klient";
+
     $("#fKind").querySelectorAll("label").forEach(l=>l.classList.toggle("on", l.querySelector("input").checked));
   };
   $("#fKind").querySelectorAll("input").forEach(i=>{ i.onchange=()=>{ syncKindUI(); syncStatusList(); }; });
@@ -9141,8 +9184,8 @@ function updateLastWeekHint(){
 }
 function closeModal(){ $("#scrim").classList.remove("open"); editing=null; pendingLeadOrigin=null; pendingFinstat=null; }
 async function saveFromModal(){
-  const client=$("#fClient").value.trim();
   const vnutorne = $("#fKind").querySelector("input:checked")?.value==="int";
+  const client = vnutorne ? "" : $("#fClient").value.trim();
   // Pri internom zázname je klient nepovinný — záznam sa volá vždy "Interné / projekty".
   if(!vnutorne && !client){ $("#fClient").focus(); $("#fClient").style.borderColor="var(--red)"; return; }
   // IČO sa zadáva raz na klienta. Ak ho už poznáme, prevezmeme ho a nepýtame znova.
