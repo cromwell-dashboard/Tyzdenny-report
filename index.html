@@ -211,6 +211,9 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .gl-money{font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); text-align:right}
 .gl-money.marza{color:var(--nb); font-weight:600}
 .st-ic{display:inline-flex; align-items:center; justify-content:center}
+.st-ic-btn{display:inline-flex; align-items:center; justify-content:center; border:1px solid transparent;
+  background:none; padding:2px; border-radius:7px; cursor:pointer}
+.st-ic-btn:hover{border-color:var(--line); background:#fff}
 .st-ic.sp{color:#9AA1AC}
 .gl-headrow>span:nth-child(7){visibility:hidden}   /* v hlavičke stačí jeden popis */
 .gl-head>span:nth-child(7){font-size:10.5px}
@@ -1996,8 +1999,14 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .lf a{color:var(--brand)}
 .lead-sec-title{font-size:12.5px;font-weight:700;color:var(--ink-soft);margin:20px 0 9px}
 .lead-status-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
-.lead-st-btn{padding:6px 13px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
-.lead-st-btn:disabled{opacity:.5;cursor:not-allowed}
+.lead-noact{font-size:12px;color:var(--muted);padding:4px 0}
+.lead-acth{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.lead-actit{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px;background:#fff}
+.lead-actit-h{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:5px}
+.lead-actit-seg{font-size:11.5px;font-weight:600;color:var(--ink-soft)}
+.lead-actit-w{font-size:11px;color:var(--muted);margin-left:auto}
+.lead-actit-t{font-size:12.5px;color:var(--ink-soft);line-height:1.55;white-space:pre-wrap}
+.lead-act .st-ic{margin-right:2px}
 .lead-hint{font-size:11.5px;color:var(--muted)}
 .lead-notes{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow:auto}
 .lead-note{background:#FAFBFC;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:12.5px;color:var(--ink-soft);line-height:1.5}
@@ -2988,7 +2997,7 @@ const OBCHODNIK_EMAILS = {
   "veronika.bajusova@cromwell.sk":     { name:"Veronika Bajúsová",    firma:"Cromwell Post", segments:["ad"] },
   "zuzana.davidova@cromwell.sk":       { name:"Zuzana Dávidová",      firma:"Cromwell Post", segments:["nad","zelena"] },
   "ladislav.krammer@cromwell.sk":      { name:"Ladislav Krammer",    firma:"Cromwell Post", segments:[] },
-  "linda.husarovicova@cromwell.sk":    { name:"Linda Husárovičová",  firma:"Cromwell Post", segments:[] },
+  "linda.husarovicova@cromwell.sk":    { name:"Linda Husarovičová",  firma:"Cromwell Post", segments:[] },
   "zuzana.kovalcikova@zelenaposta.sk": { name:"Zuzana Kovalčíková",   firma:"Zelená pošta",  segments:["zelena"] },
   "zuzana.dvorakova@zelenaposta.sk":   { name:"Zuzana Dvořáková",     firma:"Zelená pošta",  segments:["zelena","tlac","ad"] },
   "henrieta.kriskova@zelenaposta.sk":  { name:"Henrieta Krišková",    firma:"Zelená pošta",  segments:["zelena"] },
@@ -3171,14 +3180,6 @@ const LEAD_SEGMENTS = {
   E:{label:"E — Nezaraďovať",    color:"#9AA1AC", short:"E"},
 };
 const LEAD_SEG_ORDER = {A:0,B:1,C:2,D:3,E:4};
-const LEAD_STATUSES = {
-  new:        {label:"Voľný",         color:"#8b95a1"},
-  taken:      {label:"Prevzatý",      color:"#3E56CB"},
-  contacted:  {label:"Kontaktovaný",  color:"#C6810A"},
-  negotiating:{label:"Rokovanie",     color:"#6D4FB3"},
-  won:        {label:"Získaný",       color:"#12915A"},
-  lost:       {label:"Odmietnutý",    color:"#C24444"},
-};
 const STATUSES = [
   { id:"lead",       label:"Lead / oslovený",         color:"#8b95a1" },
   { id:"ponuka",     label:"Zaslaná ponuka",          color:"#C6810A" },
@@ -4199,7 +4200,7 @@ const leadService=l=>l.service||"baliky";
 const leadDbName=l=>l.dbName||l.importBatch||"—";
 /* Koľko leadov má daný používateľ práve prevzatých (nezapočítava uzavreté) */
 function myTakenLeadsCount(){
-  return state.leads.filter(l=>l.ownerKey===state.user.key && !["won","lost"].includes(l.status)).length;
+  return state.leads.filter(l=>l.ownerKey===state.user.key).length;
 }
 async function claimLead(l){
   if(l.ownerKey && l.ownerKey!==state.user.key){ toast("Tento záznam už má prevzatý "+(l.ownerName||"iný kolega")+"."); return; }
@@ -4208,7 +4209,7 @@ async function claimLead(l){
     return;
   }
   try{
-    await backend.saveLead({...l, status:l.status==="new"?"taken":l.status,
+    await backend.saveLead({...l,
       ownerKey:state.user.key, ownerName:state.user.name, takenAt:Date.now(), lastTouchAt:Date.now()});
     toast("Prevzaté — nájdeš to pod filtrom „Moje“.");
   }catch(err){ console.error(err); toast("⚠ Nepodarilo sa prevziať: "+(err.message||err.code||"chyba")); }
@@ -4220,9 +4221,11 @@ async function releaseLead(l){
     toast("Uvoľnené späť do banky.");
   }catch(err){ console.error(err); toast("⚠ Nepodarilo sa uvoľniť."); }
 }
-async function setLeadStatus(l,status){
-  try{ await backend.saveLead({...l, status, lastTouchAt:Date.now()}); }
-  catch(err){ console.error(err); toast("⚠ Nepodarilo sa uložiť stav."); }
+/* Poznačí, že sa firmy niekto dotkol. Stav leadu sa už nevedie — nahradil ho
+   stav poslednej aktivity v Zappise, ktorý sa s ním predtým rozchádzal. */
+async function dotknutyLead(l){
+  try{ await backend.saveLead({...l, lastTouchAt:Date.now()}); }
+  catch(err){ console.error(err); }
 }
 async function addLeadNote(l,text){
   if(!text.trim()) return;
@@ -4410,17 +4413,31 @@ function renderLeadModal(){
     }catch(err){ console.error(err); toast("⚠ Kontakt sa nepodarilo uložiť."); }
   };
 
-  // stavy
-  const sr=$("#leadStatusRow");
-  Object.entries(LEAD_STATUSES).forEach(([k,v])=>{
-    if(k==="new") return;
-    const b=el("button","lead-st-btn"+(l.status===k?" on":""),v.label);
-    if(l.status===k) b.style.cssText=`background:${v.color};border-color:${v.color};color:#fff`;
-    b.disabled=!isMine;
-    b.onclick=()=>setLeadStatus(l,k);
-    sr.appendChild(b);
-  });
-  if(!isMine) sr.appendChild(el("span","lead-hint","Stav môže meniť len ten, kto to má prevzaté."));
+  /* Stavy leadu sme zrušili — duplikovali stav aktivity a rozchádzali sa s ním.
+     Namiesto nich sa tu zobrazia texty aktivít, ktoré k firme v Zappise sú. */
+  {
+    const sr=$("#leadStatusRow");
+    const k=icoKey(l.ico);
+    const akt = k ? state.all.filter(e=>icoKey(e.leadIco||e.ico)===k) : [];
+    akt.sort((a,b)=>weekCmpDesc(a.weekId,b.weekId) || entryTs(b)-entryTs(a));
+    if(!akt.length){
+      sr.appendChild(el("div","lead-noact","K tejto firme zatiaľ v Zappise nie je žiadna aktivita."));
+    } else {
+      sr.appendChild(el("div","lead-acth",`${akt.length} ${plural(akt.length,"aktivita","aktivity","aktivít")} v Zappise`));
+      akt.slice(0,8).forEach(e=>{
+        const st2=ST[e.status];
+        const it=el("div","lead-actit");
+        it.innerHTML=`<div class="lead-actit-h">
+            ${st2?`<span class="lead-act" style="color:${st2.color};border-color:${st2.color}44;background:${st2.color}14">${statusIcon(e.status,13)}${esc(st2.label)}</span>`:""}
+            <span class="lead-actit-seg">${esc(segLabel(e.segment, e.produkt, true))}</span>
+            <span class="lead-actit-w">${esc(weekRangeLabel(e.weekId))} · ${esc(resolveOwnerName(e))}</span>
+          </div>
+          ${e.events?`<div class="lead-actit-t">${esc(e.events)}</div>`:""}`;
+        sr.appendChild(it);
+      });
+      if(akt.length>8) sr.appendChild(el("div","lead-noact",`… a ďalších ${akt.length-8}`));
+    }
+  }
 
   // poznámky
   const nb=$("#leadNotes");
@@ -4463,7 +4480,8 @@ function renderLeadModal(){
         if(typeof updateLastWeekHint==="function") updateLastWeekHint();
         if(switched) toast(`Prepnuté na aktuálny týždeň (${weekRangeLabel(CURRENT_WEEK)}).`);
       },80);
-      setLeadStatus(l, l.status==="taken"?"contacted":l.status);
+      // stav leadu sa už nevedie — o fáze hovorí stav zapísanej aktivity
+      dotknutyLead(l);
     };
     right.appendChild(act);
   } else if(isFree){
@@ -4595,7 +4613,7 @@ function viewLeads(){
   si.oninput=()=>{ f.q=si.value; state.leadLimit=60; paint(); };
   search.appendChild(si); top.appendChild(search);
   // Na mobile sa zvyšok filtrov skryje pod tlačidlo — inak zaberá pol obrazovky
-  const nActive=[f.service,f.db,f.status,f.seg,f.act].filter(Boolean).length + (f.owner?1:0);
+  const nActive=[f.service,f.db,f.seg,f.act].filter(Boolean).length + (f.owner?1:0);
   const tgl=el("button","lf-toggle"+(state.leadFiltersOpen?" on":""),
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>Filtre${nActive?`<b>${nActive}</b>`:""}`);
   tgl.type="button";
@@ -4670,10 +4688,10 @@ function viewLeads(){
   };
   const dbs=[...new Set(state.leads.map(leadDbName))].filter(d=>d!=="—").sort((a,b)=>a.localeCompare(b,"sk"));
   if(dbs.length>1) row3.appendChild(mkSel("Databáza","db",[["","Všetky databázy"],...dbs.map(d=>[d,d])]));
-  row3.appendChild(mkSel("Stav","status",[["","Všetky stavy"],...Object.entries(LEAD_STATUSES).map(([k,v])=>[k,v.label])]));
+
 
   // zrušenie filtrov — len keď je čo rušiť
-  const active=[f.service,f.db,f.status,f.seg,f.q].filter(Boolean).length + (f.owner!=="free"?1:0);
+  const active=[f.service,f.db,f.seg,f.q].filter(Boolean).length + (f.owner!=="free"?1:0);
   if(active){
     const clr=el("button","lf-clear",`✕ Zrušiť filtre (${active})`); clr.type="button";
     clr.onclick=()=>{ state.leadFilter={seg:"",status:"",owner:"free",q:"",service:"",db:""}; state.leadLimit=60; render(); };
@@ -4694,7 +4712,7 @@ function viewLeads(){
       if(f.db && leadDbName(l)!==f.db) return false;
       if(f.seg){ if(l.segment!==f.seg) return false; }
       else if(l.segment==="E") return false;              // E je defaultne skryté
-      if(f.status && l.status!==f.status) return false;
+
       if(f.owner==="free" && l.ownerKey) return false;
       if(f.owner==="mine" && l.ownerKey!==state.user.key) return false;
       if(f.owner==="taken" && !l.ownerKey) return false;
@@ -4745,7 +4763,6 @@ function leadActivity(l){ const k=icoKey(l.ico); return k ? (leadActivityIndex()
 
 function leadRow(l){
   const seg=LEAD_SEGMENTS[l.segment]||LEAD_SEGMENTS.E;
-  const st=LEAD_STATUSES[l.status]||LEAD_STATUSES.new;
   const isMine=l.ownerKey===state.user.key;
   const row=el("div","lead-row"+(isMine?" mine":""));
   row.innerHTML=`<div class="lead-seg" style="background:${seg.color}" title="${esc(seg.label)}">${seg.short}</div>
@@ -4778,16 +4795,18 @@ function leadRow(l){
         // Ak firmu nikto neprevzal v appke, ale v DMIS na nej niekto robí,
         // je zavádzajúce písať "Voľný" — ukážeme radšej vlastníka z DMIS.
         const chip=(o,past)=>`<span class="lead-status dmis${past?" former":""}" title="${esc(o)}${past?" — firmu už nerieši":""}"><span class="dm-lbl">${past?"Kedysi riešil":"Vlastník DMIS"}</span><span class="dm-ini">${esc(initials(o))}</span></span>`;
-        if(own.length && l.status==="new"){
+        if(own.length && !l.ownerKey){
           return own.map(o=>chip(o,!isAppPerson(o))).join("");
         }
         const past=dmisPastOwnersFor(l.ico,l.company);
-        if(!own.length && past.length && l.status==="new"){
+        // Vlastné stavy leadu sme zrušili — o tom, ako ďaleko firma je,
+        // hovorí stav poslednej aktivity v Zappise. Tu zostávajú len
+        // vlastníci z DMIS a označenie voľnej firmy.
+        if(!own.length && past.length && !l.ownerKey){
           return `<span class="lead-status" style="color:var(--nb);border-color:#B7E6CC;background:#EAF7F0">Voľný</span>`
                + past.map(o=>chip(o,true)).join("");
         }
-        return `<span class="lead-status" style="color:${st.color};border-color:${st.color}33;background:${st.color}14">${esc(st.label)}</span>`
-             + own.map(o=>chip(o,!isAppPerson(o))).join("");
+        return own.map(o=>chip(o,!isAppPerson(o))).join("");
       })()}
       ${(()=>{
         const a=leadActivity(l);
@@ -5218,7 +5237,7 @@ function viewMine(){
     all?"Posledná aktivita pri každom klientovi pod tvojím účtom.":"Záznamy pod tvojím účtom za tento týždeň.",null);
 
   backend.ensureLeads();
-  const taken=state.leads.filter(l=>l.ownerKey===state.user.key && !["won","lost"].includes(l.status));
+  const taken=state.leads.filter(l=>l.ownerKey===state.user.key);
   if(!taken.length) return wrap;
 
   // ku ktorým už existuje záznam (kedykoľvek, nielen tento týždeň)
@@ -5237,14 +5256,12 @@ function viewMine(){
   const list=el("div","taken-list");
   [...noAct,...withAct].forEach(l=>{
     const seg=LEAD_SEGMENTS[l.segment]||LEAD_SEGMENTS.E;
-    const st=LEAD_STATUSES[l.status]||LEAD_STATUSES.new;
     const done=!noAct.includes(l);
     const row=el("div","taken-row"+(done?" done":""));
     row.innerHTML=`<span class="lead-seg" style="background:${seg.color}">${seg.short}</span>
       <div class="taken-main">
         <div class="taken-name">${esc(l.company)}</div>
         <div class="taken-meta">
-          <span class="lead-status" style="color:${st.color};border-color:${st.color}33;background:${st.color}14">${esc(st.label)}</span>
           ${(()=>{const sv=SEG[leadService(l)]; return sv?`<span class="lead-svc" style="background:${sv.color};color:${contrastText(sv.color)}">${esc(sv.short)}</span>`:"";})()}
           ${done?`<span class="taken-ok">✓ aktivita zapísaná</span>`:`<span class="taken-todo">zatiaľ bez aktivity</span>`}
         </div>
@@ -8512,7 +8529,7 @@ function renderGroupedList(container, list, opts={}){
       <span class="gl-appr info${x.info?"":" is-empty"}" title="${esc(x.info)}">${esc(x.info)||"—"}</span>
       <span class="gl-status">${g.sleeping
         ? `<span class="st-ic sp" title="Spiaci klient"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>`
-        : statusIcon(g.last.status)}</span>
+        : `<button type="button" class="st-ic-btn" data-qstatus-g="${esc(g.last.id||"")}" title="${esc(ST[g.last.status]?.label||"")} — klikni pre zmenu">${statusIcon(g.last.status)}</button>`}</span>
       <span class="gl-dmis">${x.dmis.length?x.dmis.map(o=>`<span class="dm-ini" title="${esc(o)}">${esc(initials(o))}</span>`).join(""):`<span class="gl-none">—</span>`}</span>
       <span class="gl-ct">${g.entries.length}</span>
       <span class="gl-date">${esc(groupLastDate(g))}</span>
@@ -8520,6 +8537,15 @@ function renderGroupedList(container, list, opts={}){
         return `<span class="gl-money">${su?esc(eurKratko(su.trzba)):"—"}</span>
                 <span class="gl-money marza">${su?esc(eurKratko(su.marza)):"—"}</span>`;
       })()}`;
+    {
+      // zmena fázy priamo zo zoznamu, rovnako ako na karte v týždennom zobrazení
+      const b=hd.querySelector("[data-qstatus-g]");
+      if(b) b.onclick=(ev)=>{
+        ev.stopPropagation();
+        const e=state.all.find(x=>x.id===b.dataset.qstatusG);
+        if(e) openStatusQuickPick(e, b);
+      };
+    }
     hd.onclick=()=>{
       if(openGroups.has(g.key)) openGroups.delete(g.key); else openGroups.add(g.key);
       render();
