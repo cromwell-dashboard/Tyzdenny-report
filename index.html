@@ -3072,10 +3072,14 @@ const PRODUKTY = {
   ]},
 };
 const produktyPre = segId => PRODUKTY[segId]?.items || [];
+/* `base` je popis základného variantu LEN pre tlačidlo výberu.
+   V odznakoch a názvoch sa základný variant volá jednoducho podľa služby —
+   "Zelená pošta", nie "Zelená pošta – Aut.". Odlišujú sa až produkty. */
 const produktLabel = (segId, prodId) =>
-  prodId ? (produktyPre(segId).find(p=>p.id===prodId)?.label || "")
-         : (PRODUKTY[segId]?.base || "");
-/* Zobrazený názov služby vrátane produktu — "Zelená pošta – Aut.", "Tlač – Externá". */
+  prodId ? (produktyPre(segId).find(p=>p.id===prodId)?.label || "") : "";
+const produktLabelVyber = (segId, prodId) =>
+  prodId ? produktLabel(segId, prodId) : (PRODUKTY[segId]?.base || "");
+/* Zobrazený názov služby — "Zelená pošta", "Zelená pošta – Ad-hoc", "Tlač – Externá". */
 function segLabel(segId, prodId, short){
   const s=SEG[segId]; if(!s) return "—";
   const base=short?s.short:s.name;
@@ -3277,7 +3281,7 @@ function fillProduktPick(segId, current){
   const list=produktyPre(segId);
   field.style.display = list.length ? "" : "none";
   if(!list.length){ box.innerHTML=""; return; }
-  const opts=[{id:"", label:PRODUKTY[segId]?.base || SEG[segId]?.short || "Základný"}, ...list];
+  const opts=[{id:"", label:produktLabelVyber(segId,null) || SEG[segId]?.short || "Základný"}, ...list];
   box.innerHTML=opts.map((p,i)=>
     `<label class="${(current||"")===p.id?"on":""}"><input type="radio" name="eprod" value="${esc(p.id)}"${(current||"")===p.id?" checked":(i===0&&!opts.some(o=>o.id===(current||""))?" checked":"")}>${esc(p.label)}</label>`
   ).join("");
