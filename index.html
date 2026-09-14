@@ -11389,17 +11389,21 @@ async function saveFromModal(){
     return;
   }
   $("#fLossReason").style.borderColor="";
-  // Pri agentúre je materiál povinný — bez neho by sa záznamy zlievali do jedného
-  if($("#fAgency").checked && !$("#fMaterial").value.trim()){
+  // Pri agentúre je materiál povinný — bez neho by sa záznamy zlievali do jedného.
+  // Interného záznamu sa to netýka, ten firmu ani agentúru nemá.
+  if(!vnutorne && $("#fAgency").checked && !$("#fMaterial").value.trim()){
     $("#fMaterialField").style.display="";
     $("#fMaterial").focus(); $("#fMaterial").style.borderColor="var(--red)";
     toast("Pri agentúre vyplň materiál.");
     return;
   }
   $("#fMaterial").style.borderColor="";
-  const alreadyKnown=knownIcoFor(client);
-  const icoVal=alreadyKnown || $("#fIco").value.replace(/\D/g,"");
-  if(!icoVal){
+  // IČO je povinné len tam, kde je firma. Interný záznam sekciu Firma vôbec nemá,
+  // takže by sa kontrola dožadovala poľa, ktoré používateľ ani nevidí —
+  // uloženie by sa ticho prerušilo a nič by sa nestalo.
+  const alreadyKnown = vnutorne ? "" : knownIcoFor(client);
+  const icoVal = vnutorne ? "" : (alreadyKnown || $("#fIco").value.replace(/\D/g,""));
+  if(!vnutorne && !icoVal){
     $("#fIcoField").style.display="";
     $("#fIco").focus(); $("#fIco").style.borderColor="var(--red)";
     $("#fIcoHint").innerHTML=`<span class="ico-none">Tohto klienta ešte nepoznáme — zadaj IČO.</span> Nájdeš ho na webe firmy, vo faktúre alebo na finstat.sk.`;
