@@ -836,6 +836,8 @@ input,select,textarea{font-family:inherit; font-size:14px}
   font-family:inherit;font-size:12.5px;color:var(--ink-soft)}
 .sp-item:hover{border-color:var(--line-2);background:var(--bg)}
 .sp-item.on{font-weight:600}
+.sp-fix{display:flex;align-items:center;gap:9px;border:1px solid;border-radius:9px;padding:9px 11px;
+  font-size:12.5px;font-weight:600}
 .sp-item .st-ic{flex:0 0 auto}
 .qsp-item .st-ic{flex:0 0 auto}
 .qsp{position:fixed;z-index:95;background:#fff;border:1px solid var(--line);border-radius:12px;
@@ -3312,6 +3314,24 @@ function fillStatusSelect(isNB, segment, current){
 function renderStatusPick(){
   const box=$("#fStatusPick"), sel=$("#fStatus");
   if(!box||!sel) return;
+
+  /* Nový New business záznam vždy začína na „Aktívne oslovenie klienta“.
+     Fáza sa posúva až neskôr — kliknutím na odznak stavu na karte. Bez toho
+     by obchodník mohol založiť obchod rovno ako vyfakturovaný a spustiť si
+     tým obdobie odmeny skôr, než sa čokoľvek stalo. */
+  const novyNB = !modalEntry
+    && $("#fKindField").style.display!=="none"
+    && $("#fKind").querySelector("input:checked")?.value==="nb";
+  if(novyNB){
+    sel.value="nb_oslovenie";
+    const st=ST.nb_oslovenie;
+    box.innerHTML=`<div class="sp-fix" style="background:${hexA(st.color,.12)};border-color:${hexA(st.color,.45)};color:${st.color}">
+        ${statusIcon("nb_oslovenie",16)}<span>${esc(st.label)}</span>
+      </div>
+      <div class="hint">Nový obchod vždy začína tu. Fázu posunieš neskôr kliknutím na odznak stavu na karte záznamu.</div>`;
+    return;
+  }
+
   const ids=[...sel.options].map(o=>o.value);
   box.innerHTML="";
   ids.forEach(id=>{
@@ -11401,12 +11421,20 @@ async function saveFromModal(){
   // IČO je povinné len tam, kde je firma. Interný záznam sekciu Firma vôbec nemá,
   // takže by sa kontrola dožadovala poľa, ktoré používateľ ani nevidí —
   // uloženie by sa ticho prerušilo a nič by sa nestalo.
+  const poleIco = $("#fIco").value.replace(/\D/g,"");
   const alreadyKnown = vnutorne ? "" : knownIcoFor(client);
-  const icoVal = vnutorne ? "" : (alreadyKnown || $("#fIco").value.replace(/\D/g,""));
-  if(!vnutorne && !icoVal){
+  /* Pri zápise z databázy sa IČO NEPREBERÁ podľa mena klienta — zhoda názvov
+     nie je dôkaz, že ide o tú istú firmu. Musí byť načítané alebo napísané. */
+  const icoVal = vnutorne ? "" : (pendingLeadOrigin ? poleIco : (alreadyKnown || poleIco));
+  if(!vnutorne && (!icoVal || icoVal.length < 6)){
     $("#fIcoField").style.display="";
     $("#fIco").focus(); $("#fIco").style.borderColor="var(--red)";
-    $("#fIcoHint").innerHTML=`<span class="ico-none">Tohto klienta ešte nepoznáme — zadaj IČO.</span> Nájdeš ho na webe firmy, vo faktúre alebo na finstat.sk.`;
+    $("#fIcoHint").innerHTML = poleIco && poleIco.length < 6
+      ? `<span class="ico-none">IČO má aspoň 6 číslic.</span> Skontroluj, či si ho opísala celé.`
+      : pendingLeadOrigin
+      ? `<span class="ico-none">Pri zápise z databázy je IČO povinné.</span> Zadaj ho a daj Načítať — overí sa tým, že ide naozaj o túto firmu.`
+      : `<span class="ico-none">Tohto klienta ešte nepoznáme — zadaj IČO.</span> Nájdeš ho na webe firmy, vo faktúre alebo na finstat.sk.`;
+    toast("Bez IČO sa záznam uložiť nedá.");
     return;
   }
   $("#fIco").style.borderColor="";
@@ -11523,11 +11551,17 @@ async function saveFromModal(){
 
   // Upozornenie na duplicitu: ten istý klient a služba v tom istom týždni.
   // Za týždeň má byť jeden zápis — inak si stavy prípadu protirečia.
-  if(!wasEditing){
+  // Interné záznamy sa nekontrolujú vôbec — nemajú názov, takže by si boli
+  // podobné všetky. Jeden človek môže mať za týždeň viac interných aktivít.
+  if(!wasEditing && !isInternal(entry)){
+    const mojeMeno = normalizeForCompare(resolveOwnerName(entry));
     const dvojnik = state.all.find(x =>
       x.id!==entry.id &&
       x.weekId===entry.weekId &&
       x.segment===entry.segment &&
+      // upozorňujeme len na vlastný zápis — kolegov záznam k tej istej firme
+      // je bežná vec a nie je to duplicita
+      normalizeForCompare(resolveOwnerName(x))===mojeMeno &&
       clientKey(entryTitle(x))===clientKey(entryTitle(entry)) &&
       (x.material||"")===(entry.material||"") &&
       (x.produkt||"")===(entry.produkt||"")
