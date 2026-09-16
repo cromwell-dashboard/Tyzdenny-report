@@ -311,6 +311,10 @@ button.gl-nb-mes:hover{text-decoration:underline}
 .gl-zak{flex:0 0 auto; font-size:10px; font-weight:700; color:#5B3FB0; background:#F3EFFE;
   border-radius:20px; padding:1px 7px; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .entry .e-meta .mt-zak,.tl-card .e-meta .mt-zak{color:#5B3FB0; font-weight:600}
+/* Meno klienta ako odkaz — jemné podčiarknutie, výraznejšie po nabehnutí. */
+.kl-link{cursor:pointer; text-decoration:underline; text-decoration-color:var(--line);
+  text-underline-offset:2px; text-decoration-thickness:1px}
+.kl-link:hover{color:var(--brand); text-decoration-color:var(--brand)}
 .rs-zak{display:block; font-size:10.5px; font-weight:500; color:#5B3FB0;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .gl-mat{flex:0 0 auto; font-size:10.5px; font-weight:600; color:var(--brand);
@@ -912,6 +916,12 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .res-grid.bez-kusov .res-row{grid-template-columns:minmax(100px,1fr) .9fr .9fr .9fr 100px 86px}
 .res-odm{text-align:right;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--nb)}
 .res-odm.nic{color:var(--line);font-weight:400}
+.res-odm.rucne{color:#B45F0C}
+button.res-odm{border:none;background:none;padding:0;font-family:var(--mono);cursor:pointer;
+  text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+button.res-odm:hover{text-decoration-color:currentColor}
+.res-odm-r{display:block;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;color:#B45F0C}
 .res-sum{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px;padding:12px 14px;
   background:#F2F9F5;border:1px solid #CFE8DA;border-radius:10px}
 .res-sum-l{flex:1 1 auto;font-size:12.5px;font-weight:600;color:var(--ink)}
@@ -6120,6 +6130,9 @@ function openStatusQuickPick(e, anchor){
    Výsledok si zapamätáme, kým sa dáta nezmenia — pri tisíckach záznamov je to
    rozdiel medzi 8 prechodmi a jedným. */
 let _ciCache=null, _ciKey="";
+/* Názvy klientov, ktoré sa zlúčili pod iný zápis tej istej firmy. */
+let clientAliasMap=new Map();
+const klientKluc = k => clientAliasMap.get(k) || k;
 function clientIndex(){
   const key=state.all.length+"|"+(state.all.length?(state.all[state.all.length-1].updatedAt||0):0)
     +"|"+state.hiddenClientNames.length+"|"+Object.keys(state.clientProfiles||{}).length;
@@ -6140,6 +6153,33 @@ function clientIndexCompute(){
     if(e.salesperson) e.salesperson.split("/").forEach(p=>c.people.add(p.trim()));
     if(e.client.length>c.name.length) c.name=e.client; // dlhší/úplnejší názov
   });
+  /* Zlúčenie podľa IČO. Klient sa zoskupuje podľa názvu, lenže ten istý
+     klient býva zapísaný viacerými spôsobmi — „CEWE a. s.", „CEWE a.s.",
+     „CEWE". Keď majú rovnaké IČO, ide o jednu firmu a patria k sebe.
+     Hlavný zápis je ten s najviac aktivitami, pri zhode s najdlhším názvom. */
+  {
+    const podlaIco=new Map();
+    map.forEach(c=>{
+      const ic=icoKey(c.ico);
+      if(!ic) return;
+      if(!podlaIco.has(ic)) podlaIco.set(ic, []);
+      podlaIco.get(ic).push(c);
+    });
+    clientAliasMap=new Map();
+    podlaIco.forEach(skupina=>{
+      if(skupina.length<2) return;
+      const hlavny=skupina.slice().sort((a,b)=>
+        b.entries.length-a.entries.length || b.name.length-a.name.length)[0];
+      skupina.forEach(c=>{
+        if(c===hlavny) return;
+        c.entries.forEach(e=>hlavny.entries.push(e));
+        c.segments.forEach(x=>hlavny.segments.add(x));
+        c.people.forEach(x=>hlavny.people.add(x));
+        clientAliasMap.set(c.key, hlavny.key);   // staré odkazy vedú na hlavný
+        map.delete(c.key);
+      });
+    });
+  }
   const arr=[...map.values()].map(c=>{
     const weeks=[...new Set(c.entries.map(e=>e.weekId))].sort(weekCmpDesc);
     return {...c, segments:[...c.segments], people:[...c.people], weeks, lastWeek:weeks[0], crossSell:c.segments.size>1};
@@ -7455,7 +7495,19 @@ function canEdit(e){
 }
 // Môže zadávať/upravovať úlohy: admin/sef/líder=áno, obchodník=len označiť hotovo na svojej
 function canManageTasks(){ return ["admin","sef","lider"].includes(state.user.role); }
+/* Meno klienta je klikateľné v celej appke. Prvok stačí označiť triedou
+   `kl-link` a dať mu data-klient s menom — obsluha je jedna pre celý dokument,
+   takže sa nedá zabudnúť napojiť ju v novej sekcii. */
+document.addEventListener("click", ev=>{
+  const a=ev.target?.closest?.(".kl-link[data-klient]");
+  if(!a) return;
+  ev.stopPropagation(); ev.preventDefault();
+  const k=clientKey(a.dataset.klient);
+  if(k) goClient(k);
+});
+
 function goClient(key){
+  key=klientKluc(key);   // zlúčené zápisy vedú na hlavného klienta
   state.returnTo = {
     view: state.view, segFilter: state.segFilter, search: state.search,
     clientFilter: state.clientFilter, openClientRow: state.openClientRow,
@@ -8419,12 +8471,17 @@ function oppForEntry(e){
 function odhadniTypKlienta(e){
   const ic = icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client));
   const k  = clientKey(e.client);
+  /* Existujúci klient = firma, ktorá s nami už niečo robí. Počíta sa aj
+     cross-sell: keď klient beží v inej službe, nový obchod už nie je
+     získaním nového klienta a sadzba je polovičná. */
   const skorsie = state.all.some(x=>{
     if(x.id===e.id) return false;
     const xi = icoKey(x.leadIco||x.ico);
     const sedi = ic ? (xi===ic) : (clientKey(x.client)===k);
     if(!sedi) return false;
-    return weekCmpDesc(x.weekId, e.weekId) > 0;      // x je starší týždeň
+    if(weekCmpDesc(x.weekId, e.weekId) > 0) return true;        // staršia aktivita
+    // iná služba v tom istom týždni — cross-sell, aj tak nejde o nového klienta
+    return x.segment !== e.segment && weekCmpDesc(x.weekId, e.weekId) >= 0;
   });
   return skorsie ? "existujuce" : "nove";
 }
@@ -8885,7 +8942,7 @@ function openResultsModal(opp){
           <span class="res-sluzba-ic">${segIcon(opp.segment, 20)}</span>
           <div>
             <b class="res-sluzba-n">${esc(segLabel(opp.segment, opp.produkt, true))}</b>
-            <div class="res-sluzba-k">${esc(opp.client||"—")}${opp.zakazka?` · ${esc(opp.zakazka)}`:""}${opp.material?` · ${esc(opp.material)}`:""}</div>
+            <div class="res-sluzba-k"><span class="kl-link" data-klient="${esc(opp.client||"")}" title="Otvoriť detail klienta">${esc(opp.client||"—")}</span>${opp.zakazka?` · ${esc(opp.zakazka)}`:""}${opp.material?` · ${esc(opp.material)}`:""}</div>
           </div>
           <span class="res-uplynulo" title="Koľký mesiac obdobia práve beží">${esc(uplynuleMesiace(opp))}</span>
         </div>
@@ -8932,7 +8989,12 @@ function openResultsModal(opp){
             ${kusy?`<input data-f="mnozstvo" inputmode="numeric" value="${esc(formatCislo(r?.mnozstvo))}" placeholder="—"${bez?" disabled":""}>`:""}
             <label class="res-nil" title="Tento mesiac sa nefakturovalo. Obdobie odmeny beží ďalej."><input type="checkbox" data-f="bez"${bez?" checked":""}><span>bez fakturácie</span></label>
             ${(()=>{ const o=odmenaZaVysledok(opp, r);
-              return `<span class="res-odm${o.suma?"":" nic"}" title="${esc(o.dovod||`Základ ${o.zaklad??"—"} × ${Math.round((o.sadzba||0)*1000)/10} %`)}">${o.suma==null?"—":eur(o.suma)}</span>`;
+              const txt=`${o.suma==null?"—":eur(o.suma)}${o.rucne?`<span class="res-odm-r">ručne</span>`:""}`;
+              const tit=esc(o.dovod||`Základ ${o.zaklad??"—"} × ${Math.round((o.sadzba||0)*1000)/10} %`);
+              // vedenie môže sumu prepísať priamo tu
+              return smieMenitOdmenu()
+                ? `<button type="button" class="res-odm odm-btn${o.suma?"":" nic"}${o.rucne?" rucne":""}" data-odm="${m}" title="${tit} — klikni pre ručnú úpravu">${txt}</button>`
+                : `<span class="res-odm${o.suma?"":" nic"}${o.rucne?" rucne":""}" title="${tit}">${txt}</span>`;
             })()}
           </div>`;
         }).join("")}
@@ -9042,6 +9104,17 @@ function openResultsModal(opp){
       }
     };
   }
+
+  // ručná úprava odmeny za konkrétny mesiac
+  scrim.querySelectorAll("[data-odm]").forEach(b=>{
+    b.onclick=(ev)=>{
+      ev.stopPropagation();
+      const r=resultFor(opp.id, b.dataset.odm);
+      if(!r){ toast("Najprv zadaj tržbu za tento mesiac."); return; }
+      const v=odmenaZaVysledok(opp, r);
+      openOdmenaEdit({ res:r, suma:v.suma, vypocet:v, opp }, b);
+    };
+  });
 
   // periodicita — mení len to, za ktoré mesiace sa čísla očakávajú
   {
@@ -10371,6 +10444,9 @@ function viditelnePripady(){
     || (o.vlastnici||[]).some(v=>normalizeForCompare(v.meno||"")===normalizeForCompare(meno)));
 }
 
+/* Kto smie prepísať odmenu ručne. */
+const smieMenitOdmenu = () => ["admin","sef","lider"].includes(state.user?.role);
+
 /* Ručná úprava odmeny. Používa sa, keď výpočet nesedí so skutočnosťou —
    typicky nastavenie na nulu. Ukladá sa na mesačný výsledok spolu s dôvodom,
    aby bolo neskôr dohľadateľné, kto sumu zmenil a prečo. */
@@ -10542,7 +10618,7 @@ function viewRewards(){
       : r.stav==="nesulad" ? `<span class="odm-st nes" title="Výsledok sa po schválení zmenil">nesúlad</span>`
       : r.vratene ? `<span class="odm-st vrat" title="Vrátil ${esc(r.vratene.vratilMeno||"")}">vrátené</span>`
       : `<span class="odm-st">čaká</span>`;
-    row.innerHTML=`<span class="odm-cl" title="${esc(r.opp.client||"")}${r.opp.zakazka?` · ${esc(r.opp.zakazka)}`:""}">${esc(r.opp.client||"—")}${r.opp.zakazka?`<span class="rs-zak">${esc(r.opp.zakazka)}</span>`:""}</span>
+    row.innerHTML=`<span class="odm-cl"><span class="kl-link" data-klient="${esc(r.opp.client||"")}" title="${esc(r.opp.client||"")} — otvoriť detail klienta">${esc(r.opp.client||"—")}</span>${r.opp.zakazka?`<span class="rs-zak">${esc(r.opp.zakazka)}</span>`:""}</span>
       <span class="gl-seg" title="${esc(segLabel(r.opp.segment,r.opp.produkt))}">${seg?segIcon(r.opp.segment,16):""}</span>
       <span class="odm-zk">${r.vypocet?.zaklad!=null?eur(r.vypocet.zaklad):"—"}<span>${r.opp.pravidlo?.zaklad==="obrat"?"obrat":"marža"}</span></span>
       <span class="odm-sd">${r.vypocet?.sadzba!=null?Math.round(r.vypocet.sadzba*1000)/10+" %":"—"}</span>
@@ -10650,7 +10726,7 @@ function viewResults(){
       const v=stavVyplnenia(o);
       const seg=SEG[o.segment];
       const r=el("div","rs-row"+(v.chyba?" chyba":""));
-      r.innerHTML=`<span class="rs-name" title="${esc(o.client||"")}${o.zakazka?` · ${esc(o.zakazka)}`:""}">${esc(o.client||"—")}${o.zakazka?`<span class="rs-zak">${esc(o.zakazka)}</span>`:""}</span>
+      r.innerHTML=`<span class="rs-name"><span class="kl-link" data-klient="${esc(o.client||"")}" title="${esc(o.client||"")} — otvoriť detail klienta">${esc(o.client||"—")}</span>${o.zakazka?`<span class="rs-zak">${esc(o.zakazka)}</span>`:""}</span>
         <span class="gl-seg" title="${esc(segLabel(o.segment,o.produkt))}">${seg?segIcon(o.segment,16):""}</span>
         <span class="rs-own">${esc((o.vlastnici||[]).map(x=>x.meno).join(", ")||"—")}</span>
         <span class="rs-obd">${esc(menoMesiaca(o.nbOd))} – ${esc(menoMesiaca(o.nbDo))}</span>
@@ -11596,7 +11672,7 @@ function taskRow(t){
   check.onclick=()=>backend.toggleTask(t.id, t.status==="done"?"open":"done");
   row.appendChild(check);
   const body=el("div","t-body");
-  body.innerHTML=`${t.client?`<div class="t-client">${esc(t.client)}</div>`:""}
+  body.innerHTML=`${t.client?`<div class="t-client"><span class="kl-link" data-klient="${esc(t.client)}" title="Otvoriť detail klienta">${esc(t.client)}</span></div>`:""}
     <div class="t-title">${esc(t.title)}</div>
     <div class="t-meta">
       ${dl?`<span class="t-due${dl.cls?" overdue":""}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>${esc(dl.text)}</span>`:""}
@@ -12470,6 +12546,23 @@ function openModal(entry,presetSeg){
     // stav sa ponúka podľa typu záznamu a služby
     modalEntry=entry||null;
     statusOdomknuty=false;
+    /* Nový záznam začína vždy načisto. Predtým sa stávalo, že v poli zostalo
+       IČO alebo meno predchádzajúceho klienta — stačilo, aby niektorá vetva
+       pole nepremazala. Radšej ich vyčistíme všetky naraz a bez výnimky. */
+    if(!entry){
+      ["fClient","fIco","fWeb","fZakazka","fSluzbaIna","fMaterial",
+       "fApproachInfo","fWarning","fEvents"].forEach(id=>{
+        const x=$("#"+id); if(x) x.value="";
+      });
+      pendingFinstat=null;
+      entryContacts=[];
+      $("#fIcoLockedNum").textContent="";
+      $("#fIcoLockedName").textContent="";
+      $("#fIcoLocked").style.display="none";
+      $("#fIcoRow").style.display="";
+      $("#fIco").style.borderColor="";
+      const fa=$("#fAgency"); if(fa) fa.checked=false;
+    }
     const segNow=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
     fillProduktPick(segNow, entry?.produkt||"");
     fillLinkPick();
