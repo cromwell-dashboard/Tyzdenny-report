@@ -6844,7 +6844,13 @@ function buildStatic(){
   $("#importResBtn").onclick=()=>$("#resFileInput").click();
   $("#resFileInput").onchange=async(ev)=>{
     const f=ev.target.files?.[0]; ev.target.value="";
-    if(f) await nacitajImportVysledkov(f);
+    if(!f) return;
+    // chyby musia byť vidieť — tichý pád vyzerá, akoby tlačidlo nefungovalo
+    try{ await nacitajImportVysledkov(f); }
+    catch(err){
+      console.error("import výsledkov:", err);
+      toast("⚠ Import zlyhal: "+(err?.message||err?.code||"neznáma chyba"));
+    }
   };
   $("#nbFileInput").onchange=(e)=>{ const f=e.target.files[0]; handleNbFile(f); e.target.value=""; };
   $("#modalClose").onclick=$("#cancelBtn").onclick=closeModal;
@@ -13449,6 +13455,10 @@ function impSpracuj(tabulka){
 
 /* Načítanie súboru a okno s náhľadom. */
 async function nacitajImportVysledkov(file){
+  if(typeof XLSX==="undefined"){
+    toast("⚠ Knižnica na čítanie XLSX sa nenačítala. Skontroluj pripojenie na internet a načítaj stránku znova.");
+    return;
+  }
   let tabulka;
   try{
     const buf=await file.arrayBuffer();
@@ -13460,9 +13470,14 @@ async function nacitajImportVysledkov(file){
     toast("⚠ Súbor sa nepodarilo prečítať. Musí to byť XLSX alebo CSV.");
     return;
   }
+  console.info("Import: prečítaných riadkov v hárku:", tabulka.length);
   const res=impSpracuj(tabulka);
   if(res.chyba){ toast("⚠ "+res.chyba); return; }
-  if(!res.riadky.length){ toast("V súbore nie sú žiadne dátové riadky."); return; }
+  if(!res.riadky.length){
+    toast("V súbore nie sú žiadne dátové riadky — skontroluj hlavičku a názvy stĺpcov.");
+    return;
+  }
+  console.info("Import: spracovaných riadkov:", res.riadky.length);
   oknoImportu(res.riadky, file.name);
 }
 
