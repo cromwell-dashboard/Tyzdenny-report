@@ -1926,7 +1926,10 @@ select:disabled{cursor:default; opacity:.65}
 /* Vlastné zaškrtávacie políčko — systémové vyzerá v každom prehliadači inak
    a k zaobleným riadkom nesedí. */
 .co-obch-pick input[type="checkbox"]{appearance:none; -webkit-appearance:none; margin:0;
-  width:17px; height:17px; flex:0 0 auto; border:1.5px solid var(--line); border-radius:5px;
+  /* pevná veľkosť — v pružnom riadku sa políčko inak natiahne na výšku riadku */
+  width:17px; height:17px; min-width:17px; min-height:17px; max-width:17px; max-height:17px;
+  flex:0 0 17px; align-self:center; box-sizing:border-box; padding:0;
+  border:1.5px solid var(--line); border-radius:5px;
   background:#fff; cursor:pointer; transition:background .12s, border-color .12s}
 .co-obch-pick label:hover input[type="checkbox"]{border-color:var(--brand)}
 .co-obch-pick input[type="checkbox"]:checked{background:var(--brand); border-color:var(--brand);
@@ -2836,7 +2839,12 @@ select:disabled{cursor:default; opacity:.65}
         <input id="fClient" list="clientNames" placeholder="napr. Tesco, Generali, Červený nos…">
         <datalist id="clientNames"></datalist>
         <div class="addr-line" id="fAddrLine" style="display:none"></div>
-        <div class="field zak-field" id="fZakazkaField">
+        <div class="field" id="fSluzbaInaField" style="display:none">
+        <label>Aká služba <span class="req">povinné</span></label>
+        <input id="fSluzbaIna" list="sluzbaInaList" autocomplete="off" placeholder="napr. konzultácia, grafika">
+        <datalist id="sluzbaInaList"></datalist>
+      </div>
+      <div class="field zak-field" id="fZakazkaField">
           <label>Názov zákazky <span class="opt">nepovinné</span></label>
           <input id="fZakazka" list="zakazkaNames" autocomplete="off" placeholder="napr. DOVE DEO, jarná kampaň">
           <datalist id="zakazkaNames"></datalist>
@@ -3363,6 +3371,11 @@ function segLabel(segId, prodId, short){
   const p=produktLabel(segId, prodId);
   return p ? `${base} – ${p}` : base;
 }
+/* Názov služby na karte. Pri „Iné" pripojí, o akú službu vlastne išlo. */
+const segLabelZaznam = (e, short) => {
+  const zaklad=segLabel(e?.segment, e?.produkt, short);
+  return (e?.segment==="ine" && e.sluzbaIna) ? `${zaklad} – ${e.sluzbaIna}` : zaklad;
+};
 const SEG = Object.fromEntries(SEGMENTS.map(s=>[s.id,s]));
 /* Ikony služieb — nahradili farebné bodky. Kreslia sa v farbe danej služby. */
 const SEG_ICONS = {
@@ -3634,6 +3647,7 @@ function syncStatusList(){
   const segNow=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
   fillProduktPick(segNow, selectedProdukt());
   fillLinkPick();
+  { const f=$("#fSluzbaInaField"); if(f) f.style.display = segNow==="ine" ? "" : "none"; }
   const isNBnow=$("#fKindField").style.display!=="none"
     ? $("#fKind").querySelector("input:checked")?.value==="nb"
     : !!modalEntry?.isNewBusiness;
@@ -3914,6 +3928,7 @@ const state = {
   nbCopyPreview:null,      // {segId, entries} — sivý náhľad New Business záznamov, ktoré sa nedajú kopírovať
   meetings:[],             // zápisy z porád (Fathom)
   approachInfos:[],        // číselník textov "Oslovenie — info"
+  sluzbyIne:[],            // číselník upresnení pri službe „Iné" (meta/sluzbyIne)
   materials:[],            // číselník materiálov agentúr (meta/materials)
   users:[],                // prihlásení používatelia (users/{uid}) — kvôli párovaniu mena na UID
   clientProfiles:{},       // clients/{key} — údaje klienta nad rámec záznamov (IČO, obchodník, poznámka)
@@ -5733,6 +5748,21 @@ async function rememberMaterial(text){
   try{ await backend.addMaterial(t); }
   catch(err){ console.warn("Číselník materiálov sa nepodarilo doplniť:", err); }
 }
+/* Upresnenia pri službe „Iné" — spoločný číselník, aby sa tá istá služba
+   nezapisovala zakaždým inak. Rovnaká logika ako pri „Oslovenie — info". */
+function fillSluzbaInaList(){
+  const dl=$("#sluzbaInaList"); if(!dl) return;
+  dl.innerHTML=(state.sluzbyIne||[]).slice().sort((a,b)=>a.localeCompare(b,"sk"))
+    .map(v=>`<option value="${esc(v)}">`).join("");
+}
+async function rememberSluzbaIna(text){
+  const t=(text||"").trim();
+  if(!t) return;
+  if((state.sluzbyIne||[]).some(v=>normalizeForCompare(v)===normalizeForCompare(t))) return;
+  try{ await backend.addSluzbaIna(t); }
+  catch(err){ console.warn("Číselník služieb sa nepodarilo doplniť:", err); }
+}
+
 async function rememberApproachInfo(text){
   const t=(text||"").trim();
   if(!t) return;
@@ -6165,6 +6195,7 @@ function demoBackend(){
     ensureLeads(){},
     async finstatLookup(){ throw new Error("V demo režime Finstat nie je dostupný."); },
     async addApproachInfo(t){ if(!approachInfos.includes(t)) approachInfos.push(t); sync(); },
+    async addSluzbaIna(t){ if(!state.sluzbyIne.includes(t)) state.sluzbyIne=[...state.sluzbyIne,t]; render(); },
     async addMaterial(t){ if(!materials.includes(t)) materials.push(t); sync(); },
     async removeMaterial(t){ materials=materials.filter(x=>x!==t); sync(); },
     async saveDmisOwners(list){ dmisOwners=mergeDmisOwners(dmisOwners,list); sync(); return dmisOwners.length; },
@@ -6263,6 +6294,7 @@ async function firebaseBackend(){
       const u3=onSnapshot(doc(db,"meta","hiddenClients"), snap=>{ state.hiddenClientNames=snap.exists()?(snap.data().names||[]):[]; render(); });
       const u7=onSnapshot(doc(db,"meta","approachInfo"), snap=>{ state.approachInfos=snap.exists()?(snap.data().values||[]):[]; render(); });
       const u11=onSnapshot(doc(db,"meta","materials"), snap=>{ state.materials=snap.exists()?(snap.data().values||[]):[]; render(); });
+      const u18=onSnapshot(doc(db,"meta","sluzbyIne"), snap=>{ state.sluzbyIne=snap.exists()?(snap.data().values||[]):[]; render(); });
       // Zoznam používateľov potrebujeme na to, aby sa pri priradení úlohy uložilo
       // aj UID zodpovedného — pravidlá Firestore kontrolujú assigneeUid, nie meno.
       /* Odmeny — obchodník má podľa pravidiel prístup len k svojim.
@@ -6331,7 +6363,7 @@ async function firebaseBackend(){
       }
       // Databázy firiem sa NENAČÍTAVAJÚ pri štarte — býva ich tisíce a väčšina
       // používateľov ich vôbec neotvorí. Načítajú sa až pri prvom použití.
-      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); u13(); u14(); u15(); u16(); u17(); if(leadsUnsub) leadsUnsub(); };
+      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); u13(); u14(); u15(); u16(); u17(); u18(); if(leadsUnsub) leadsUnsub(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
@@ -6459,6 +6491,7 @@ async function firebaseBackend(){
     },
     async finstatLookup(ico){ const r=await finstatCallable({ico}); return r.data; },
     async addApproachInfo(t){ await setDoc(doc(db,"meta","approachInfo"),{values:arrayUnion(t)},{merge:true}); },
+    async addSluzbaIna(t){ await setDoc(doc(db,"meta","sluzbyIne"),{values:arrayUnion(t)},{merge:true}); },
     async addMaterial(t){ await setDoc(doc(db,"meta","materials"),{values:arrayUnion(t)},{merge:true}); },
     async removeMaterial(t){ await setDoc(doc(db,"meta","materials"),{values:arrayRemove(t)},{merge:true}); },
     async saveDmisOwners(list){
@@ -11337,7 +11370,7 @@ function entryCard(e,clients,opts={}){
   const footBits=[];      // technické údaje patria k menu a dátumu, nie k obchodu
   if(e.isNewBusiness) metaBits.push(`<span class="mt-nb${e.entrySource==="app"?" app":""}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span>`);
   else if(isInternal(e)) metaBits.push(`<span class="mt-int">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V8l6-4 6 4v13M10 12h4M10 16h4"/></svg>'}Interné / projekt</span>`);
-  if(opts.showSegChip) metaBits.push(`<span class="mt-seg" style="color:${SEG[e.segment].color}">${esc(segLabel(e.segment, e.produkt, true))}</span>`);
+  if(opts.showSegChip) metaBits.push(`<span class="mt-seg" style="color:${SEG[e.segment].color}">${esc(segLabelZaznam(e, true))}</span>`);
   if(e.zakazka) metaBits.push(`<span class="mt-zak" title="Názov zákazky">${esc(e.zakazka)}</span>`);
   if(e.firma) footBits.push(`<span class="ft-firma" title="${esc(e.firma)}"><img src="${firmaLogoSrc}" alt="${esc(e.firma)}"></span>`);
   if(kolosOfferFor(e)) footBits.push(`<button type="button" class="ft-chip offer-badge" data-ico="${esc(ico8(e.leadIco||e.ico))}" title="Detail ponuky z Kolos kalkulačky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>ponuka zaslaná</button>`);
@@ -12389,6 +12422,9 @@ function openModal(entry,presetSeg){
     const segNow=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
     fillProduktPick(segNow, entry?.produkt||"");
     fillLinkPick();
+    fillSluzbaInaList();
+    $("#fSluzbaIna").value = entry?.sluzbaIna || "";
+    $("#fSluzbaInaField").style.display = segNow==="ine" ? "" : "none";
     const isNBnow=$("#fKindField").style.display!=="none"
       ? $("#fKind").querySelector("input:checked")?.value==="nb"
       : !!entry?.isNewBusiness;
@@ -12575,6 +12611,7 @@ async function saveFromModalInner(){
     weekId: $("#fWeek").value || state.week,
     web: vnutorne ? null : (normalizujWeb($("#fWeb").value) || null),
     zakazka: (vnutorne || $("#fAgency").checked) ? null : ($("#fZakazka").value.trim() || null),
+    sluzbaIna: (segId==="ine") ? ($("#fSluzbaIna").value.trim() || null) : null,
     firma,
     ownerKey:newOwnerKey, ownerName:newOwnerName, ownerUid:newOwnerUid,
     // ak niekto ručne upraví importovaný záznam New Business, ďalší CSV import ho už neprepíše
@@ -12721,6 +12758,10 @@ async function saveFromModalInner(){
     }
   }
   rememberApproachInfo($("#fApproachInfo")?.value);
+  {
+    const sg=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
+    if(sg==="ine") rememberSluzbaIna($("#fSluzbaIna")?.value);
+  }
   if($("#fAgency")?.checked) rememberMaterial($("#fMaterial")?.value);
   pendingLeadOrigin=null; pendingFinstat=null;
   if(forceSleeping) toast("Záznam uložený a zaradený medzi spiace.");
