@@ -2299,7 +2299,11 @@ select:disabled{cursor:default; opacity:.65}
 .lc-link:hover svg{color:var(--brand)}
 .lc-none{font-size:11.5px;color:var(--muted);font-style:italic}
 .lc-call{margin-top:7px;font-size:11px;color:var(--muted);font-style:italic}
-.lc-del{position:absolute;top:9px;right:9px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:6px}
+.lc-akcie{position:absolute;top:7px;right:7px;display:flex;align-items:center;gap:2px}
+.lc-edit{border:none;background:none;padding:3px;border-radius:6px;cursor:pointer;color:var(--muted);line-height:0}
+.lc-edit svg{width:13px;height:13px}
+.lc-edit:hover{background:var(--line-2);color:var(--brand)}
+.lc-del{position:static;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:6px}
 .lc-del:hover{color:var(--red);background:#FDF3F2}
 .lead-cform{margin-top:10px;padding:12px;background:#FAFBFC;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;gap:8px}
 .lead-cform-row{display:flex;gap:8px}
@@ -3452,7 +3456,9 @@ async function markWeeklyDoneFor(group, targetKey, targetName, currentlyDone){
 /* ---------------------------------------------------------------- LEADY
    Databáza firiem (import z XLS). Jednotka = firma, zlúčená podľa IČO.
    IČO je zatiaľ len na pozadí — môže byť nepresné, neskôr sa overí cez Finstat. */
-const LEAD_CAP = 15;   // koľko leadov môže mať jeden obchodník naraz prevzatých
+/* Strop na počet prevzatých firiem sme zrušili — obchodník si môže prevziať
+   toľko kontaktov, koľko potrebuje. Číslo zostáva len ako orientačný údaj
+   v prehľade, nič neblokuje. */
 const LEAD_SEGMENTS = {
   A:{label:"A — Rýchle výhry",   color:"#12915A", short:"A"},
   B:{label:"B — Key account",    color:"#3E56CB", short:"B"},
@@ -3551,9 +3557,17 @@ const STATUS_SETS = {
 function statusOptions(isNB, segment, current){
   if(!isNB) return STATUSES.map(s=>s.id).concat(
     (current && !ST[current]) ? [] : (STATUSES.some(s=>s.id===current)?[]:[current]).filter(Boolean));
-  const ids=[...(segment==="zelena" ? STATUS_SETS.nbZelena : STATUS_SETS.nbOstatne)];
-  if(current && !ids.includes(current)) ids.push(current);
-  return ids;
+  /* New business má výhradne fázy z DMIS. Žiadny cudzí stav sa sem nedostane —
+     ani ten, ktorý si záznam priniesol z Customer care. Inak v zozname zostane
+     visieť napríklad „Lead oslovený" a obchodníka nič netlačí posunúť sa ďalej. */
+  return [...(segment==="zelena" ? STATUS_SETS.nbZelena : STATUS_SETS.nbOstatne)];
+}
+/* Prevedie akýkoľvek stav na platný stav New business. */
+function nbStav(status, segment){
+  const ids = segment==="zelena" ? STATUS_SETS.nbZelena : STATUS_SETS.nbOstatne;
+  if(ids.includes(status)) return status;
+  // prehratý obchod zostáva prehratý, všetko ostatné sa vracia na začiatok
+  return ["nechce","zrusene"].includes(status) ? "nb_odmietnutie" : "nb_oslovenie";
 }
 let modalEntry=null;   // záznam otvorený v okne — potrebný pri prekreslení ponuky stavov
 /* Nový New business záznam má stav zamknutý na prvej fáze. Vedenie ho vie
@@ -3655,7 +3669,7 @@ function syncStatusList(){
      hodnota z výberu — pri novom zázname teda "Prebieha jednanie" z Customer
      care, ktoré sa potom ponúkalo aj v New business ako pôvodný stav. */
   const zachovaj = modalEntry?.status || (isNBnow ? "nb_oslovenie" : "jednanie");
-  fillStatusSelect(isNBnow, segNow, zachovaj);
+  fillStatusSelect(isNBnow, segNow, isNBnow ? nbStav(zachovaj, segNow) : zachovaj);
   window.__syncLossField?.();
 }
 function fillStatusSelect(isNB, segment, current){
@@ -4575,10 +4589,6 @@ function myTakenLeadsCount(){
 }
 async function claimLead(l){
   if(l.ownerKey && l.ownerKey!==state.user.key){ toast("Tento záznam už má prevzatý "+(l.ownerName||"iný kolega")+"."); return; }
-  if(myTakenLeadsCount()>=LEAD_CAP){
-    toast(`Máš prevzatých ${LEAD_CAP} firiem — to je maximum. Najprv niektorý uzavri alebo uvoľni.`);
-    return;
-  }
   try{
     await backend.saveLead({...l,
       ownerKey:state.user.key, ownerName:state.user.name, takenAt:Date.now(), lastTouchAt:Date.now()});
@@ -4947,9 +4957,9 @@ function viewLeads(){
   wrap.appendChild(el("div","page-h",`<div>
     <div class="eyebrow">Leady</div>
     <h1>Databázy</h1>
-    <div class="sub">Prevezmi si firmu, pracuj s ňou a zapíš aktivitu do týždenného reportu. Naraz môžeš mať prevzatých najviac ${LEAD_CAP} firiem.</div></div><div></div>`));
+    <div class="sub">Prevezmi si firmu, pracuj s ňou a zapíš aktivitu do týždenného reportu.</div></div><div></div>`));
   const actions=el("div","seg-actions");
-  const capChip=el("button","lead-cap"+(mine>=LEAD_CAP?" full":""),`Prevzaté: ${mine}/${LEAD_CAP}`);
+  const capChip=el("button","lead-cap",`Prevzaté: ${mine}`);
   capChip.type="button";
   capChip.title="Zobraziť prevzaté firmy v sekcii Moje záznamy";
   capChip.onclick=()=>{
@@ -5626,38 +5636,79 @@ function renderEntryContacts(){
     row.innerHTML=`<div class="lc-top">
         <b>${esc(name)}</b>
         ${c.position?`<span class="lc-pos">${esc(c.position)}</span>`:""}
-        <span class="lc-src man">Doplnil ${esc(c.addedByName||state.user.name||"—")}</span>
+        <span class="lc-src man">${c.editedByName
+          ? `Upravil ${esc(c.editedByName)}`
+          : `Doplnil ${esc(c.addedByName||state.user.name||"—")}`}</span>
       </div>
       <div class="lc-lines">
         ${phones.map(p=>`<a href="tel:${esc(p.replace(/\s/g,""))}" class="lc-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>${esc(p)}</a>`).join("")}
         ${mails.map(m=>`<a href="mailto:${esc(m)}" class="lc-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>${esc(m)}</a>`).join("")}
         ${!phones.length && !mails.length?`<span class="lc-none">Bez telefónu a e-mailu</span>`:""}
       </div>`;
+    const akcie=el("span","lc-akcie");
+    const ed=el("button","lc-edit"); ed.type="button"; ed.title="Upraviť kontakt";
+    ed.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`;
+    ed.onclick=()=>upravKontakt(c.id);
     const del=el("button","lc-del","✕"); del.title="Odstrániť kontakt"; del.type="button";
-    del.onclick=()=>{ entryContacts=entryContacts.filter(x=>x.id!==c.id); renderEntryContacts(); };
-    row.appendChild(del);
+    del.onclick=()=>{
+      if(!confirm(`Odstrániť kontakt ${name}?`)) return;
+      entryContacts=entryContacts.filter(x=>x.id!==c.id); renderEntryContacts();
+    };
+    akcie.appendChild(ed); akcie.appendChild(del);
+    row.appendChild(akcie);
     box.appendChild(row);
   });
 }
+/* Ktorý kontakt sa práve upravuje. Prázdne = pridáva sa nový. */
+let upravovanyKontakt=null;
+function upravKontakt(id){
+  const c=entryContacts.find(x=>x.id===id);
+  if(!c) return;
+  upravovanyKontakt=id;
+  $("#ecfFirst").value=c.firstName||"";
+  $("#ecfLast").value=c.lastName||"";
+  $("#ecfPos").value=c.position||"";
+  $("#ecfPhone").value=c.phone||"";
+  $("#ecfMail").value=c.email||"";
+  $("#eContactForm").style.display="";
+  $("#ecfSave").textContent="Uložiť zmeny";
+  $("#eAddContactBtn").style.display="none";
+  $("#ecfFirst").focus();
+}
 function wireEntryContacts(){
   const form=$("#eContactForm");
+  const zavri=()=>{
+    form.style.display="none";
+    upravovanyKontakt=null;
+    $("#ecfSave").textContent="Uložiť kontakt";
+    $("#eAddContactBtn").style.display="";
+  };
   $("#eAddContactBtn").onclick=()=>{
+    upravovanyKontakt=null;
     form.style.display="";
     ["ecfFirst","ecfLast","ecfPos","ecfPhone","ecfMail"].forEach(id=>$("#"+id).value="");
+    $("#ecfSave").textContent="Uložiť kontakt";
     $("#ecfFirst").focus();
   };
-  $("#ecfCancel").onclick=()=>{ form.style.display="none"; };
+  $("#ecfCancel").onclick=zavri;
   $("#ecfSave").onclick=()=>{
-    const c={
-      id:"c_"+Math.random().toString(36).slice(2,9),
+    const udaje={
       firstName:$("#ecfFirst").value.trim(), lastName:$("#ecfLast").value.trim(),
       position:$("#ecfPos").value.trim(), phone:$("#ecfPhone").value.trim(),
       email:$("#ecfMail").value.trim(),
-      source:"manual", addedAt:Date.now(), addedByName:state.user.name,
     };
-    if(!c.firstName && !c.lastName && !c.phone && !c.email){ toast("Vyplň aspoň meno alebo kontakt."); return; }
-    entryContacts=[...entryContacts, c];
-    form.style.display="none";
+    if(!udaje.firstName && !udaje.lastName && !udaje.phone && !udaje.email){
+      toast("Vyplň aspoň meno alebo kontakt."); return;
+    }
+    if(upravovanyKontakt){
+      // úprava — kto kontakt pôvodne doplnil zostáva, dopíše sa kto ho opravil
+      entryContacts=entryContacts.map(x=>x.id===upravovanyKontakt
+        ? { ...x, ...udaje, editedAt:Date.now(), editedByName:state.user.name } : x);
+    } else {
+      entryContacts=[...entryContacts, { id:"c_"+Math.random().toString(36).slice(2,9), ...udaje,
+        source:"manual", addedAt:Date.now(), addedByName:state.user.name }];
+    }
+    zavri();
     renderEntryContacts();
   };
 }
@@ -5797,7 +5848,7 @@ function viewMine(){
   box.innerHTML=`<div class="taken-head">
       <div>
         <b>Prevzaté firmy z databáz</b>
-        <div class="taken-sub">${taken.length}/${LEAD_CAP} prevzatých${noAct.length?` · <span class="taken-warn">${noAct.length} ${plural(noAct.length,"čaká","čakajú","čaká")} na prvú aktivitu</span>`:" · ku všetkým je zapísaná aktivita"}</div>
+        <div class="taken-sub">${taken.length} ${plural(taken.length,"prevzatá","prevzaté","prevzatých")}${noAct.length?` · <span class="taken-warn">${noAct.length} ${plural(noAct.length,"čaká","čakajú","čaká")} na prvú aktivitu</span>`:" · ku všetkým je zapísaná aktivita"}</div>
       </div>
     </div>`;
   const list=el("div","taken-list");
@@ -12429,7 +12480,7 @@ function openModal(entry,presetSeg){
       ? $("#fKind").querySelector("input:checked")?.value==="nb"
       : !!entry?.isNewBusiness;
     const predvolene = entry?.status || (isNBnow ? "nb_oslovenie" : "jednanie");
-    fillStatusSelect(isNBnow, segNow, predvolene);
+    fillStatusSelect(isNBnow, segNow, isNBnow ? nbStav(predvolene, segNow) : predvolene);
   }
   // firma field
   const segId2=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
@@ -12606,7 +12657,15 @@ async function saveFromModalInner(){
     segment:segId, weekId: targetWeek, client,
     events:eventsText,
     salesperson: selectedName,
-    status: ($("#fKind").querySelector("input:checked")?.value==="int") ? "bezi" : $("#fStatus").value,
+    status: (()=>{
+      const kind=$("#fKind").querySelector("input:checked")?.value;
+      if(kind==="int") return "bezi";
+      const v=$("#fStatus").value;
+      const nb = ($("#fKindField").style.display!=="none")
+        ? kind==="nb" : !!modalEntry?.isNewBusiness;
+      // poistka: do New business sa nesmie dostať stav z Customer care
+      return nb ? nbStav(v, segId) : v;
+    })(),
     produkt: selectedProdukt(),
     weekId: $("#fWeek").value || state.week,
     web: vnutorne ? null : (normalizujWeb($("#fWeb").value) || null),
