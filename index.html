@@ -8681,8 +8681,39 @@ function snapshotPravidla(opp, obdobie){
 }
 /* Výpočet odmeny za jeden mesiac.
    Vracia aj dôvod, prečo odmena nevznikla — nula bez vysvetlenia je nebezpečná. */
-function odmenaZaVysledok(opp, res){
+/* Cross-sell: firma, ktorá s nami už beží v inej službe. Vtedy nejde
+   o získanie nového klienta a platí polovičná sadzba. Vyhodnocuje sa
+   priebežne z dát, nie z hodnoty uloženej pri vzniku prípadu — inak by
+   prípady založené skôr počítali navždy podľa starého stavu. */
+function typKlientaPre(opp){
+  if(!opp) return "nove";
+  if(opp.typKlientaZdroj==="rucne") return opp.typKlienta || "nove";
+  const ic=icoKey(opp.ico);
+  const k=clientKey(opp.client);
+  const inde=(state.opportunities||[]).some(o=>{
+    if(o.id===opp.id) return false;
+    const sedi = ic ? icoKey(o.ico)===ic : clientKey(o.client)===k;
+    if(!sedi) return false;
+    // iná služba = cross-sell; tá istá služba len ak je to starší obchod
+    return o.segment!==opp.segment
+        || String(o.otvoreneOd||"") < String(opp.otvoreneOd||"");
+  });
+  return inde ? "existujuce" : (opp.typKlienta || "nove");
+}
+/* Pravidlo prípadu so sadzbou podľa aktuálneho typu klienta. */
+function pravidloPrePripad(opp){
   const p = opp?.pravidlo || snapshotPravidla(opp, opp?.nbOd) || null;
+  if(!p) return null;
+  const typ=typKlientaPre(opp);
+  if(typ===(p.typKlienta||"nove")) return p;
+  const r=pravidloPre(opp.segment, opp.produkt, opp.nbOd);
+  if(!r) return p;
+  return { ...p, typKlienta:typ,
+    sadzba: typ==="nove" ? r.sadzbaNove : r.sadzbaExistujuce };
+}
+
+function odmenaZaVysledok(opp, res){
+  const p = pravidloPrePripad(opp);
   if(!p) return { suma:null, dovod:"Pre túto službu nie je pravidlo odmeňovania." };
   if(p.bezNaroku) return { suma:0, dovod:"Táto služba nemá nárok na odmenu." };
   if(oslovenieBezNaroku(opp.sposobOslovenia)) return { suma:0, dovod:"Pasívny dopyt — bez nároku na odmenu." };
@@ -8932,7 +8963,7 @@ function openResultsModal(opp){
   const mesiace=mesiaceNaVyplnenie(opp);
   const periodicke=new Set(mesiacePodlaPeriodicity(opp));
   const kusy=evidujeKusy(opp.segment);
-  const scrim=el("div","scrim open"); scrim.style.zIndex="92";
+  const scrim=el("div","scrim open res-scrim"); scrim.style.zIndex="92";
   scrim.innerHTML=`<div class="modal" style="max-width:720px">
     <div class="modal-h"><h2>Mesačné výsledky</h2>
       <button class="ghost" data-act="cancel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
@@ -10476,6 +10507,13 @@ function openOdmenaEdit(r, anchor){
         odmenaRucneKto: suma==null ? null : (state.user.name||null),
         odmenaRucneKedy: suma==null ? null : Date.now() });
       toast(suma==null ? "Odmena sa počíta znova podľa pravidla" : `Odmena nastavená na ${eur(suma)}`);
+      /* Okno výsledkov sa prekreslí hneď. Zmena prichádza z Firestore až
+         o chvíľu a dovtedy by tam visela stará suma. */
+      if(r.opp){
+        const sc=document.querySelector(".res-scrim");
+        if(sc){ sc.remove(); setTimeout(()=>{ const o=oppById(r.opp.id); if(o) openResultsModal(o); }, 150); }
+      }
+      render();
     }catch(err){
       console.error("ručná odmena:", err);
       toast("⚠ Nepodarilo sa uložiť: "+(err?.message||err?.code||"neznáma chyba"));
