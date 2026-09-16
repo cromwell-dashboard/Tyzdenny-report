@@ -111,12 +111,16 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .user .meta span{display:block; font-size:11px; color:var(--muted)}
 
 /* ============================================================ GLOBÁLNE HĽADANIE */
+/* Hľadanie má byť vidieť stále, nie až po kliknutí — je to najrýchlejšia
+   cesta ku klientovi a schované pole nikto nehľadá. */
 .gs-wrap{position:relative; display:flex; align-items:center; gap:8px; height:46px; padding:0 13px;
-  background:#fff; border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow-sm);
-  transition:border-color .12s, box-shadow .12s}
-.gs-wrap.on{border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-soft)}
+  background:#fff; border:1.5px solid var(--brand); border-radius:11px;
+  box-shadow:0 0 0 3px var(--brand-soft); transition:box-shadow .12s}
+
+.gs-wrap.on{box-shadow:0 0 0 4px var(--brand-soft)}
 .gs-ic{display:grid; place-items:center; flex:0 0 auto; color:var(--muted)}
 .gs-ic svg{width:16px; height:16px}
+.gs-ic{color:var(--brand)}
 .gs-wrap.on .gs-ic{color:var(--brand)}
 .gs-input{flex:1 1 auto; min-width:0; border:none; outline:none; background:none;
   font-family:inherit; font-size:13.5px; color:var(--ink)}
@@ -127,10 +131,11 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .gs-wrap.has .gs-clear{display:grid}
 .gs-clear:hover{background:var(--line-2); color:var(--ink)}
 .gs-clear svg{width:13px; height:13px}
-/* Rovnaká výška ako položky menu (9px odsadenie + riadok) a ako tlačidlo
-   „Nový záznam", aby pole v bočnom paneli nevytŕčalo. */
-#gsWrapRail{margin:0 2px 10px; height:36px; padding:0 10px; border-radius:var(--r-sm); gap:10px}
-#gsWrapRail .gs-input{font-size:13.5px}
+/* Presne taká výška ako položky menu: 9px + 9px odsadenie a riadok textu
+   13.5px × 1.35 ≈ 18px, teda 36px. Rámik 1.5px sa počíta dovnútra. */
+#gsWrapRail{margin:0 2px 12px; height:36px; padding:0 10px; border-radius:var(--r-sm);
+  gap:10px; box-sizing:border-box}
+#gsWrapRail .gs-input{font-size:13.5px; line-height:1.35}
 #gsWrapRail .gs-ic svg{width:15px; height:15px}
 .gs-mobile{display:none; padding:10px 14px 0}
 .gs-mobile-btn{display:none; width:34px; height:34px; border-radius:9px; border:1px solid var(--line);
@@ -170,7 +175,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
 /* Mriežka — hlavička aj riadky používajú rovnaké rozloženie stĺpcov, preto sedia pod sebou. */
 /* Oslovenie a Oslovenie — info zdieľajú jeden stĺpec a sú pod sebou.
    Ušetrený stĺpec dostanú názvy firiem, aby sa neorezávali. */
-.gl-list{--gl-cols:22px minmax(150px,1.6fr) 22px minmax(100px,140px) 24px minmax(0,1fr) 26px 62px 36px 82px 82px 74px;
+.gl-list{--gl-cols:22px minmax(140px,1.5fr) 22px minmax(96px,132px) 24px minmax(0,1fr) 26px 58px 34px 56px 78px 78px 70px;
   background:var(--card); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
 .link-toggle{display:inline-flex;align-items:center;gap:7px;border:1px dashed var(--line);
   background:#fff;border-radius:20px;padding:7px 14px;font-family:inherit;font-size:12.5px;
@@ -213,8 +218,12 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .lnk-box{border:1px solid var(--line); border-radius:var(--r); background:var(--card);
   box-shadow:var(--shadow-sm); overflow:hidden; transition:box-shadow .2s}
 .lnk-box.zvyraznene{box-shadow:0 0 0 2px var(--stav,var(--brand))}
-.lnk-box .entry{border:none; border-radius:0; box-shadow:none; overflow:visible; position:relative}
-.lnk-box .entry + .entry{border-top:1px dashed var(--line)}
+.lnk-box .entry,.lnk-box .tl-card{border:none; border-radius:0; box-shadow:none; overflow:visible; position:relative}
+.lnk-box .entry + .entry,.lnk-box .tl-card + .tl-card{border-top:1px dashed var(--line)}
+/* to isté v rozbalenom klientovi — položky sú menšie, tak aj rámik */
+.lnk-box.v-polozkach{border-radius:10px; box-shadow:none; background:var(--bg)}
+.lnk-box .gl-item{position:relative; border-radius:0; margin:0}
+.lnk-box .gl-item + .gl-item{border-top:1px dashed var(--line)}
 .lnk-chain{position:absolute; left:50%; top:-12px; transform:translateX(-50%); z-index:3;
   width:24px; height:24px; border-radius:50%; display:grid; place-items:center;
   background:var(--card); border:1px solid var(--line); color:var(--stav,var(--muted));
@@ -255,9 +264,17 @@ input,select,textarea{font-family:inherit; font-size:14px}
 .gl-headrow>span:nth-child(8),.gl-head>span:nth-child(8){grid-column:7}
 .gl-headrow>span:nth-child(9),.gl-head>span:nth-child(9){grid-column:8}
 .gl-headrow>span:nth-child(10),.gl-head>span:nth-child(10){grid-column:9}
-.gl-headrow>span:nth-child(12),.gl-head>span:nth-child(12){grid-column:10}
+.gl-headrow>span:nth-child(12),.gl-head>span:nth-child(12),
+.gl-headrow>button:nth-child(12),.gl-head>button:nth-child(12){grid-column:10}
 .gl-headrow>span:nth-child(13),.gl-head>span:nth-child(13){grid-column:11}
-.gl-headrow>span:nth-child(11),.gl-head>span:nth-child(11){grid-column:12}
+.gl-headrow>span:nth-child(14),.gl-head>span:nth-child(14){grid-column:12}
+.gl-headrow>span:nth-child(11),.gl-head>span:nth-child(11){grid-column:13}
+.gl-head>button{grid-row:1 / span 2}
+.gl-nb-mes{font-family:var(--mono); font-size:11.5px; color:var(--muted); text-align:right;
+  border:none; background:none; padding:0; cursor:default}
+button.gl-nb-mes{cursor:pointer; color:var(--brand); font-weight:700}
+button.gl-nb-mes.chyba{color:#B45F0C}
+button.gl-nb-mes:hover{text-decoration:underline}
 .gl-money{font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); text-align:right}
 .gl-money.marza{color:var(--nb); font-weight:600}
 .st-ic{display:inline-flex; align-items:center; justify-content:center}
@@ -344,23 +361,27 @@ input,select,textarea{font-family:inherit; font-size:14px}
 /* Užšie obrazovky — postupne ubúdajú stĺpce, ktoré sa dajú dočítať po rozbalení */
 @media (max-width:1280px){
   /* vypadne vlastník DMIS — sumy majú prednosť */
-  .gl-list{--gl-cols:22px minmax(140px,1.6fr) 22px minmax(96px,132px) 24px minmax(0,1fr) 26px 36px 80px 80px 72px}
+  .gl-list{--gl-cols:22px minmax(140px,1.5fr) 22px minmax(96px,128px) 24px minmax(0,1fr) 26px 34px 54px 76px 76px 70px}
   .gl-headrow>span:nth-child(9),.gl-head>span:nth-child(9){display:none}
   .gl-headrow>span:nth-child(10),.gl-head>span:nth-child(10){grid-column:8}
-  .gl-headrow>span:nth-child(12),.gl-head>span:nth-child(12){grid-column:9}
+  .gl-headrow>span:nth-child(12),.gl-head>span:nth-child(12),
+  .gl-headrow>button:nth-child(12),.gl-head>button:nth-child(12){grid-column:9}
   .gl-headrow>span:nth-child(13),.gl-head>span:nth-child(13){grid-column:10}
-  .gl-headrow>span:nth-child(11),.gl-head>span:nth-child(11){grid-column:11}
+  .gl-headrow>span:nth-child(14),.gl-head>span:nth-child(14){grid-column:11}
+  .gl-headrow>span:nth-child(11),.gl-head>span:nth-child(11){grid-column:12}
 }
 @media (max-width:1080px){
   /* vypadne oslovenie aj počet aktivít */
-  .gl-list{--gl-cols:22px minmax(130px,1.6fr) 22px minmax(92px,124px) 24px 26px 80px 80px 70px}
+  .gl-list{--gl-cols:22px minmax(130px,1.5fr) 22px minmax(92px,120px) 24px 26px 54px 76px 76px 68px}
   .gl-headrow>span:nth-child(6),.gl-head>span:nth-child(6),
   .gl-headrow>span:nth-child(7),.gl-head>span:nth-child(7),
   .gl-headrow>span:nth-child(10),.gl-head>span:nth-child(10){display:none}
   .gl-headrow>span:nth-child(8),.gl-head>span:nth-child(8){grid-column:6}
-  .gl-headrow>span:nth-child(12),.gl-head>span:nth-child(12){grid-column:7}
+  .gl-headrow>span:nth-child(12),.gl-head>span:nth-child(12),
+  .gl-headrow>button:nth-child(12),.gl-head>button:nth-child(12){grid-column:7}
   .gl-headrow>span:nth-child(13),.gl-head>span:nth-child(13){grid-column:8}
-  .gl-headrow>span:nth-child(11),.gl-head>span:nth-child(11){grid-column:9}
+  .gl-headrow>span:nth-child(14),.gl-head>span:nth-child(14){grid-column:9}
+  .gl-headrow>span:nth-child(11),.gl-head>span:nth-child(11){grid-column:10}
 }
 @media (max-width:768px){
   .gl-headrow{display:none}
@@ -674,7 +695,6 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .ft-firma{display:inline-flex; align-items:center}
 .ft-firma img{height:11px; width:auto; opacity:.8; display:block}
 .ft-chip.res-chip.chyba{color:#B45F0C; border-color:#F0DFBE; background:#FFFBF2}
-.ft-chip.res-chip.zavrety{color:var(--line)}
 .ft-chip.offer-badge{color:#7A4A08; background:#FFF4E2; border-color:#F2D9AD}
 .e-foot .ctx-chip{font-size:10.5px}
 .entry .e-meta .mt-link{border:none; background:none; padding:0; font:inherit; color:var(--muted);
@@ -837,11 +857,10 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .fakrem-card .btn{width:100%;justify-content:center;padding:6px}
 .fakrem-more{margin-top:10px;border:none;background:none;color:var(--brand);font-family:inherit;
   font-size:12.5px;font-weight:600;cursor:pointer;padding:0}
-.res-chip{font-weight:600}
-.res-chip.chyba{color:#B45F0C; text-decoration-color:#B45F0C}
-.res-chip.zavrety{color:var(--line); text-decoration-color:var(--line)}
-.res-chip.zavrety:hover{color:var(--muted)}
-.res-chip.chyba:hover{color:#8A4708}
+/* Odznak Výsledkov je teraz v zápätí, štýl si berie z .ft-chip.
+   Staré pravidlá mu dávali farbu var(--line) — na bielom bol neviditeľný. */
+.ft-chip.res-chip{font-weight:600}
+.ft-chip.res-chip.zavrety{color:var(--muted); opacity:.7}
 .res-head{display:flex;flex-direction:column;gap:3px;padding:11px 13px;background:var(--bg);
   border-radius:10px;margin-bottom:14px;font-size:12px;color:var(--muted)}
 .res-head b{font-size:14px;color:var(--ink)}
@@ -883,6 +902,10 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .res-obd-edit label{font-size:11.5px;color:var(--muted)}
 .res-obd-edit input{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-family:inherit;font-size:12.5px}
 .res-obd-edit .hint{flex:1 1 100%;margin:0}
+.res-start{display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+  padding:18px;background:var(--bg);border:1px solid var(--line);border-radius:12px}
+.res-start b{font-size:14px}
+.res-start span{font-size:12.5px;color:var(--muted);line-height:1.6}
 .res-grid{display:flex;flex-direction:column;gap:5px}
 .res-row{display:grid;grid-template-columns:minmax(100px,1fr) .9fr .9fr .9fr .9fr 100px 86px;gap:7px;align-items:center}
 .res-grid.bez-kusov .res-row{grid-template-columns:minmax(100px,1fr) .9fr .9fr .9fr 100px 86px}
@@ -1022,6 +1045,7 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .tl-items{display:flex; flex-direction:column; gap:8px; margin:10px 0 22px}
 .tl-card{border:1px solid var(--line); border-radius:12px; background:#fff; box-shadow:var(--shadow-sm); display:grid; grid-template-columns:4px 1fr; overflow:hidden}
 .tl-card .tc-body{padding:12px 14px}
+.tl-card .tc-foot .ft-chip{margin-left:auto}
 .tl-card .tc-top{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
 .tl-card .tc-events{color:var(--ink-soft); font-size:13px; margin-top:6px; white-space:pre-wrap; line-height:1.55}
 .tl-card .tc-foot{font-size:12px; color:var(--muted); margin-top:9px; padding-top:8px;
@@ -1234,6 +1258,28 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .cd-ico{font-family:var(--mono); font-size:11px; font-weight:600; color:var(--ink-soft);
   background:var(--line-2); border-radius:20px; padding:2px 9px}
 .cd-ico.missing{color:#B45F0C; background:#FFF6EC}
+.cd-opps{background:var(--card); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+.cd-opp{display:grid; grid-template-columns:24px minmax(130px,1.4fr) 170px 64px 96px 118px;
+  gap:10px; align-items:center; padding:10px 14px}
+.cd-opp+.cd-opp{border-top:1px solid var(--line-2)}
+.cd-opp.chyba{background:#FFFBF4}
+.cd-opp.zavrety{opacity:.65}
+.cd-opp.nebezi .cd-opp-obd{color:var(--muted)}
+.cd-opp>span{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.cd-opp-ic{display:grid; place-items:center}
+.cd-opp-n b{display:block; font-size:13px; color:var(--ink)}
+.cd-opp-n span{display:block; font-size:11px; color:#5B3FB0; font-weight:600}
+.cd-opp-obd{font-size:11.5px; color:var(--muted)}
+.cd-opp-m{font-family:var(--mono); font-size:12px; font-weight:700; color:var(--brand); text-align:right}
+.cd-opp-sum{font-family:var(--mono); font-size:12px; color:var(--ink-soft); text-align:right}
+.cd-opp-act{display:flex; justify-content:flex-end}
+.cd-opp-act .btn{padding:5px 12px; font-size:12px}
+@media (max-width:820px){
+  .cd-opp{grid-template-columns:24px minmax(0,1fr) auto; gap:5px 10px}
+  .cd-opp-obd{grid-column:2}
+  .cd-opp-m,.cd-opp-sum{grid-column:3; text-align:right}
+  .cd-opp-act{grid-column:1/-1; justify-content:flex-start; margin-top:4px}
+}
 .cd-web{display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600;
   color:var(--brand); background:var(--brand-soft); border-radius:20px; padding:2px 9px; text-decoration:none}
 .cd-web:hover{text-decoration:underline}
@@ -3837,7 +3883,7 @@ const state = {
   clientProfiles:{},       // clients/{key} — údaje klienta nad rámec záznamov (IČO, obchodník, poznámka)
   opportunities:[],        // obchodné prípady (New business) — firma × služba × priebeh obchodu
   results:[],              // mesačné výsledky prípadov (tržba, marža, kusy)
-  resQ:"", resOnlyChyba:false,   // filtre v sekcii Výsledky
+  resQ:"", resOnlyChyba:false, resObchodnik:"",   // filtre v sekcii Výsledky NB
   rewardRules:[],          // meta/rewardRules — sadzby a dĺžka obdobia podľa služby
   rewards:[],              // schválené odmeny — jeden dokument na jeden mesačný výsledok
   odmObdobie:"",           // zvolený mesiac v sekcii Moje odmeny
@@ -3872,6 +3918,13 @@ const el=(t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=
 const esc=s=>(s??"").toString().replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 const initials=n=>(n||"?").trim().split(/[\s/]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 const clientKey=n=>(n||"").trim().toLowerCase().replace(/\s+/g," ");
+/* ID dokumentu pre profil klienta. Názov firmy môže obsahovať lomku
+   („Agro SK / PoleNova“) a tá vo Firestore rozdelí cestu na viac úrovní —
+   dokument sa potom nedá uložiť. Nahradíme ju aj ostatné nepovolené znaky. */
+const clientDocId = key => String(key||"")
+  .replace(/[\/\\]/g, "~")
+  .replace(/^\.+$/, "_")
+  .slice(0, 1400) || "_";
 // "Okná" — špeciálne pseudo-klienti pre iný typ záznamov než konkrétny klient.
 // Rovnaká farba a ikona platí naprieč všetkými službami, každé okno má svoju vlastnú farbu.
 // "keys" = aké názvy klienta (aj staršie/rôzne varianty) sa majú rozpoznať; "label" = ako sa to zobrazí.
@@ -5374,7 +5427,7 @@ function oznacPrepojene(){
     box.remove();
   });
   const skupiny=[];
-  ["entry","gl-row"].forEach(cls=>{
+  ["entry","tl-card","gl-row","gl-item"].forEach(cls=>{
     document.querySelectorAll("."+cls+"[data-lnk]").forEach(node=>{
       const k=node.dataset.lnk;
       if(!k) return;
@@ -5384,7 +5437,7 @@ function oznacPrepojene(){
       const jeZa   = za?.dataset?.lnk===k;
       if(!jePred && !jeZa) return;                  // súrodenec nie je na obrazovke
       node.classList.add(!jePred ? "lnk-first" : (jeZa ? "lnk-mid" : "lnk-last"));
-      if(cls==="entry" && !jePred && jeZa) skupiny.push(node);
+      if(cls!=="gl-row" && !jePred && jeZa) skupiny.push(node);
     });
   });
   /* Prepojené karty zlepíme do jednej dlaždice — spoločný rámik, medzi nimi
@@ -5395,6 +5448,7 @@ function oznacPrepojene(){
     const box=el("div","lnk-box");
     box.style.setProperty("--stav", prva.style.getPropertyValue("--stav") || "");
     prva.before(box);
+    box.classList.toggle("v-polozkach", prva.classList.contains("gl-item"));
     let n=prva;
     while(n && n.dataset?.lnk===k){
       const dalsi=n.nextElementSibling;
@@ -5852,6 +5906,16 @@ function statusTag(id){ const st=ST[id]||STATUSES[0];
   return `<span class="tag" style="background:${hexA(st.color,.13)};color:${st.color}">${statusIcon(id,13)}${esc(st.label)}</span>`; }
 /* Rovnaký odznak, ale klikateľný — otvorí rýchlu zmenu stavu bez okna záznamu. */
 let _quickStatusTipShown=false;   // odznak NOVÉ len pri prvej karte, nie pri každej
+/* Zmena stavu kliknutím na odznak. Obsluha je jedna pre celý dokument —
+   predtým sa napájala pri každom type karty zvlášť a niekde chýbala. */
+document.addEventListener("click", ev=>{
+  const b=ev.target?.closest?.("[data-qstatus]");
+  if(!b) return;
+  ev.stopPropagation(); ev.preventDefault();
+  const e=state.all.find(x=>x.id===b.dataset.qstatus);
+  if(e) openStatusQuickPick(e, b);
+});
+
 function statusTagBtn(e){
   const st=ST[e.status]||STATUSES[0];
   let tip="";
@@ -6183,10 +6247,21 @@ async function firebaseBackend(){
         snap=>{ state.results=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
         err=>{ console.warn("Mesačné výsledky sa nepodarilo načítať:", err); });
       const u14=onSnapshot(collection(db,"opportunities"),
-        snap=>{ state.opportunities=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
+        snap=>{
+          state.opportunities=snap.docs.map(d=>({id:d.id,...d.data()}));
+          // dočasné kópie už netreba, skutočné dáta dorazili
+          state.opportunities.forEach(o=>_cerstvePripady.delete(o.id));
+          render();
+        },
         err=>{ console.warn("Obchodné prípady sa nepodarilo načítať:", err); });
       const u13=onSnapshot(collection(db,"clients"),
-        snap=>{ const m={}; snap.forEach(d=>m[d.id]={id:d.id,...d.data()}); state.clientProfiles=m; _ciCache=null; gsInvalidate(); render(); },
+        snap=>{
+          const m={};
+          // kľúčom je meno klienta; ID dokumentu sa od neho môže líšiť,
+          // ak názov obsahoval lomku
+          snap.forEach(d=>{ const x={id:d.id,...d.data()}; m[x.clientKey || d.id]=x; });
+          state.clientProfiles=m; _ciCache=null; gsInvalidate(); render();
+        },
         err=>{ console.warn("Profily klientov sa nepodarilo načítať:", err); });
       const u12=onSnapshot(collection(db,"users"),
         snap=>{ state.users=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },
@@ -6258,7 +6333,9 @@ async function firebaseBackend(){
     // Po zápise si prečítame dokument späť — ak sa zmena neuložila (najčastejšie
     // pravidlá Firestore), vieme to používateľovi povedať namiesto tichého zlyhania.
     async getTask(id){ const sn=await getDoc(doc(db,"tasks",id)); return sn.exists()?{id:sn.id,...sn.data()}:null; },
-    async saveClientProfile(key, data){ await setDoc(doc(db,"clients",key), data, {merge:true}); },
+    async saveClientProfile(key, data){
+      await setDoc(doc(db,"clients",clientDocId(key)), { ...data, clientKey:key }, {merge:true});
+    },
     async saveUserPref(data){ if(state.user?.uid) await setDoc(doc(db,"users",state.user.uid), data, {merge:true}); },
     async saveRewardRules(items){ await setDoc(doc(db,"meta","rewardRules"), {items, updatedBy:state.user.name, updatedAt:Date.now()}, {merge:true}); },
     /* Schválenie odmien — zapisuje sa v dávkach, ID je totožné s ID výsledku,
@@ -8142,10 +8219,11 @@ async function zosuladPripad(e){
   if(!opp.fakturovaneOd){
     const prva=zaznamy.slice().reverse().find(x=>jeVyfakturovane(x.status));
     if(prva){
-      // Rozhoduje mesiac, v ktorom obchodník stav prepol — nie týždeň záznamu.
-      // Spätne nahodená aktivita by inak spustila obdobie v minulosti.
-      // Ak by sa naozaj fakturovalo skôr, opraví sa to ceruzkou v okne Výsledky.
-      const od=terajsiMesiac();
+      /* Obdobie začína mesiacom TÝŽDŇA, do ktorého záznam patrí. Týždeň si
+         obchodník volí priamo v okne, takže je to jeho vedomé rozhodnutie —
+         a spätne nahodený obchod tak dostane správny začiatok. Opraviť sa to
+         dá ceruzkou v okne Výsledky. */
+      const od=mesiacZTyzdna(prva.weekId) || terajsiMesiac();
       zmeny.fakturovaneOd=od;
       Object.assign(zmeny, nbObdobie(opp, od));
       zmeny.nbZamknute=false;
@@ -8158,6 +8236,7 @@ async function zosuladPripad(e){
   try{
     await backend.saveOpportunity({ id:opp.id, ...zmeny,
       updatedBy:state.user?.name||null, updatedAt:Date.now() });
+    if(_cerstvePripady.has(opp.id)) _cerstvePripady.set(opp.id, { ...opp, ...zmeny });
   }catch(err){ console.error("zosuladPripad:", err); }
 }
 
@@ -8170,9 +8249,43 @@ function oppMatchKey(e){
        + (e.zakazka  ? "|z:"+clientKey(e.zakazka)  : "")
        + (e.material ? "|m:"+clientKey(e.material) : "");
 }
-const oppById = id => id ? (state.opportunities||[]).find(o=>o.id===id) || null : null;
+/* Práve založené prípady. Firestore ich pošle späť cez onSnapshot až o chvíľu,
+   takže kým dorazia, pracujeme s vlastnou kópiou — inak by sa hneď po uložení
+   záznamu nenašiel prípad, ktorému sa má nastaviť NB obdobie, a obchod by
+   v sekcii Výsledky NB vôbec nepribudol. */
+const _cerstvePripady = new Map();
+const oppById = id => !id ? null
+  : ((state.opportunities||[]).find(o=>o.id===id) || _cerstvePripady.get(id) || null);
 const oppsForKey = mk => (state.opportunities||[]).filter(o=>o.matchKey===mk);
 const openOppForKey = mk => oppsForKey(mk).find(o=>OPP_OPEN_STATES.includes(o.stav)) || null;
+
+/* Má sa pri zázname ponúkať odznak mesačných výsledkov?
+   Áno pri každom vyfakturovanom New business zázname — aj keď prípad ešte
+   neexistuje alebo mu nebeží obdobie. Kliknutie to dorieši. */
+function ukazVysledky(e){
+  if(!e || !e.isNewBusiness) return null;
+  const opp=oppForEntry(e);
+  if(opp?.nbOd) return { opp, text:uplynuleMesiace(opp),
+    chyba:stavVyplnenia(opp).chyba, uzavrety:pripadUzavrety(opp) };
+  if(!jeVyfakturovane(e.status)) return null;
+  const dlzka = opp?.nbMesiacov || nbDlzkaMesiacov(e.segment, e.produkt);
+  return { opp:opp||null, text:`0/${dlzka}`, chyba:0, uzavrety:false, bezObdobia:true };
+}
+/* Otvorí výsledky. Keď prípad ešte nie je, najprv ho založí. */
+async function otvorVysledkyPreZaznam(e){
+  let opp=oppForEntry(e);
+  if(!opp){
+    try{
+      const id=await zabezpecPripad(e, false);
+      if(id){
+        if(!e.opportunityId) await backend.save({ ...e, opportunityId:id });
+        opp=oppById(id);
+      }
+    }catch(err){ console.error("založenie prípadu:", err); }
+  }
+  if(!opp){ toast("⚠ Obchodný prípad sa nepodarilo nájsť ani založiť."); return; }
+  openResultsModal(opp);
+}
 
 /* Prípad, do ktorého záznam patrí. Najprv uložená väzba, potom dohľadanie cez kľúč —
    vďaka tomu model funguje aj pred migráciou starých záznamov. */
@@ -8333,7 +8446,10 @@ async function zabezpecPripad(e, naNovy){
       }
     }
     const seq = oppsForKey(mk).length + 1;
-    return await backend.saveOpportunity(novyPripad(e, seq));
+    const novy = novyPripad(e, seq);
+    const id = await backend.saveOpportunity(novy);
+    if(id) _cerstvePripady.set(id, { ...novy, id });
+    return id;
   }catch(err){ console.error("saveOpportunity:", err); return null; }
 }
 
@@ -8574,12 +8690,19 @@ function stavVyplnenia(opp){
 /* Koľký mesiac obdobia práve beží — napríklad "4/12" alebo "1/36".
    Po skončení obdobia ukazuje jeho plnú dĺžku. */
 function uplynuleMesiace(opp){
-  const spolu=opp?.nbMesiacov || 12;
-  if(!opp?.nbOd) return `0/${spolu}`;
+  /* Počíta sa v obdobiach podľa periodicity, nie v kalendárnych mesiacoch.
+     Pri jednorazovej zákazke je to 1/1, pri polročnej 1/2 — inak by odznak
+     tvrdil, že čakáme dvanásť tržieb, hoci príde jedna. */
+  if(!opp?.nbOd){
+    const p=periodicitaPodla(opp?.periodicita);
+    const dlzka=opp?.nbMesiacov || nbDlzkaMesiacov(opp?.segment, opp?.produkt);
+    const spolu = p.krok ? Math.floor((dlzka-1)/p.krok)+1 : 1;
+    return `0/${spolu}`;
+  }
+  const obdobia=mesiacePodlaPeriodicity(opp);
+  const spolu=obdobia.length || 1;
   const teraz=terajsiMesiac();
-  const koniec = opp.nbDo && opp.nbDo<teraz ? opp.nbDo : teraz;
-  let n=0, m=opp.nbOd;
-  while(m<=koniec && n<spolu){ n++; m=pridajMesiace(m,1); }
+  const n=obdobia.filter(m=>m<=teraz).length;
   return `${n}/${spolu}`;
 }
 
@@ -9070,7 +9193,7 @@ function renderGroupedList(container, list, opts={}){
   head.innerHTML=`<span></span><span>Firma</span><span></span><span>Obchodník</span><span></span>
     <span>Oslovenie a info</span><span></span><span></span>
     <span>Vlastník DMIS</span><span class="r">Aktivít</span><span class="r">Posledná</span>
-    <span class="r">Tržby</span><span class="r">Marža</span>`;
+    <span class="r">NB</span><span class="r">Tržby</span><span class="r">Marža</span>`;
   box.appendChild(head);
 
   const rows=el("div","gl-rows");
@@ -9113,11 +9236,21 @@ function renderGroupedList(container, list, opts={}){
       <span class="gl-ct">${g.entries.length}</span>
       <span class="gl-date">${esc(groupLastDate(g))}</span>
       ${(()=>{ const su=groupSumy(g);
-        return `<span class="gl-money">${su?esc(eurKratko(su.trzba)):"—"}</span>
+        const rv=ukazVysledky(g.last);
+        const nbCell = !rv ? `<span class="gl-nb-mes">—</span>`
+          : `<button type="button" class="gl-nb-mes bt${rv.chyba?" chyba":""}" data-results-g="${esc(g.last.id||"")}"
+              title="${rv.bezObdobia?"Obdobie ešte nebeží — klikni a spusti ho":`Mesačné výsledky · ${esc(menoMesiaca(rv.opp.nbOd))} – ${esc(menoMesiaca(rv.opp.nbDo))}`}">${esc(rv.text)}</button>`;
+        return `${nbCell}
+                <span class="gl-money">${su?esc(eurKratko(su.trzba)):"—"}</span>
                 <span class="gl-money marza">${su?esc(eurKratko(su.marza)):"—"}</span>`;
       })()}`;
     {
       // zmena fázy priamo zo zoznamu, rovnako ako na karte v týždennom zobrazení
+      hd.querySelectorAll("[data-results-g]").forEach(rb=>{
+        rb.onclick=(ev)=>{ ev.stopPropagation();
+          const z=state.all.find(x=>x.id===rb.dataset.resultsG) || g.last;
+          otvorVysledkyPreZaznam(z); };
+      });
       const b=hd.querySelector("[data-qstatus-g]");
       if(b) b.onclick=(ev)=>{
         ev.stopPropagation();
@@ -9135,8 +9268,14 @@ function renderGroupedList(container, list, opts={}){
       const det=el("button","gl-detail","Otvoriť detail klienta ↗"); det.type="button";
       det.onclick=(ev)=>{ ev.stopPropagation(); goClient(clientKey(g.name)); };
       body.appendChild(det);
-      g.entries.forEach(e=>{
+      zoradPrepojene([...g.entries], e=>e.linkId).forEach(e=>{
         const it=el("div","gl-item"+(e.sleeping?" sleeping":""));
+        it.dataset.lnk = e.linkId || "";
+        if(e.linkId){
+          const st=e.isNewBusiness ? (ST[e.status]?.color||"#12915A")
+                                   : (SEG[e.segment]?.color||"#9AA1AC");
+          it.style.setProperty("--stav", st);
+        }
         const {week}=parseWeekId(e.weekId);
         const d=entryTs(e)?new Date(entryTs(e)):null;
         const dtxt=d?` · ${d.getDate()}. ${d.getMonth()+1}. ${d.getFullYear()}`:"";
@@ -10350,6 +10489,18 @@ function viewResults(){
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg><span class="fm-lbl">Len nedoplnené${chybaSpolu?` (${chybaSpolu})`:""}</span>`);
   only.type="button";
   only.onclick=()=>{ state.resOnlyChyba=!state.resOnlyChyba; render(); };
+  /* Vedenie môže dopĺňať čísla aj za kolegov — bez filtra by ich prípady
+     hľadalo v celom zozname. */
+  if(["admin","sef","lider"].includes(state.user?.role)){
+    const mena=[...new Set(pripady.flatMap(o=>(o.vlastnici||[]).map(v=>v.meno)).filter(Boolean))]
+      .sort((a,b)=>a.localeCompare(b,"sk"));
+    if(mena.length>1){
+      bar.appendChild(fpill(ICO_USER, state.resObchodnik || "Všetci obchodníci", !state.resObchodnik,
+        [["","Všetci obchodníci", !state.resObchodnik],
+         ...mena.map(m=>[m, m, state.resObchodnik===m])],
+        v=>{ state.resObchodnik=v; render(); }, "Obchodník"));
+    }
+  }
   bar.appendChild(only);
   wrap.appendChild(bar);
 
@@ -10359,6 +10510,8 @@ function viewResults(){
   function paint(){
     const q=(state.resQ||"").trim().toLowerCase();
     let rows=pripady.filter(o=>!q || (o.client||"").toLowerCase().includes(q));
+    if(state.resObchodnik)
+      rows=rows.filter(o=>(o.vlastnici||[]).some(v=>normalizeForCompare(v.meno)===normalizeForCompare(state.resObchodnik)));
     if(state.resOnlyChyba) rows=rows.filter(o=>stavVyplnenia(o).chyba>0);
     rows.sort((a,b)=>stavVyplnenia(b).chyba-stavVyplnenia(a).chyba
       || (a.client||"").localeCompare(b.client||"","sk"));
@@ -10609,6 +10762,62 @@ function viewClientDetail(){
   wrap.appendChild(head);
   { const b=head.querySelector("#cdEdit"); if(b) b.onclick=()=>openClientProfile(c); }
 
+  /* Obchodné prípady klienta — odtiaľto sa dá rovno doplniť mesačná
+     fakturácia. Doteraz sa k nej dalo dostať len cez kartu záznamu alebo
+     sekciu Výsledky NB, čo pri otvorenom klientovi pôsobilo ako obchádzka. */
+  {
+    const ids=new Set();
+    c.entries.forEach(e=>{ const o=oppForEntry(e); if(o) ids.add(o.id); });
+    const pripady=[...ids].map(oppById).filter(Boolean)
+      .sort((a,b)=>String(a.nbOd||"9999").localeCompare(String(b.nbOd||"9999")));
+    if(pripady.length){
+      wrap.appendChild(el("div","section-title","Obchodné prípady"));
+      const box=el("div","cd-opps");
+      pripady.forEach(o=>{
+        const bezi=!!o.nbOd;
+        const v=bezi?stavVyplnenia(o):{chyba:0};
+        const uz=bezi&&pripadUzavrety(o);
+        const row=el("div","cd-opp"+(uz?" zavrety":"")+(v.chyba?" chyba":"")+(bezi?"":" nebezi"));
+        row.innerHTML=`<span class="cd-opp-ic">${segIcon(o.segment,18)}</span>
+          <span class="cd-opp-n"><b>${esc(segLabel(o.segment,o.produkt,true))}</b>${
+            o.zakazka?`<span>${esc(o.zakazka)}</span>`:(o.material?`<span>${esc(o.material)}</span>`:"")}</span>
+          <span class="cd-opp-obd">${bezi
+            ? `${esc(menoMesiaca(o.nbOd))} – ${esc(menoMesiaca(o.nbDo))}`
+            : `<i>obdobie ešte nebeží</i>`}</span>
+          <span class="cd-opp-m">${bezi?esc(uplynuleMesiace(o)):"—"}</span>
+          <span class="cd-opp-sum">${bezi?eurKratko(sumaTrzieb(o.id)):"—"}</span>
+          <span class="cd-opp-act"></span>`;
+        const b=el("button","btn"+((v.chyba||!bezi)?" solid":""),
+          !bezi ? "Spustiť obdobie" : (uz?"Otvoriť":(v.chyba?`Doplniť ${v.chyba}`:"Výsledky")));
+        b.type="button";
+        b.onclick=async(ev)=>{
+          ev.stopPropagation();
+          if(bezi){ openResultsModal(o); return; }
+          // obdobie sa spustí od mesiaca najstaršieho vyfakturovaného záznamu
+          const zazn=state.all.filter(x=>x.opportunityId===o.id && jeVyfakturovane(x.status))
+            .sort((a,b)=>String(a.weekId).localeCompare(String(b.weekId)));
+          const od = zazn.length ? mesiacZTyzdna(zazn[0].weekId) : terajsiMesiac();
+          b.disabled=true; b.textContent="Spúšťam…";
+          try{
+            await backend.saveOpportunity({ id:o.id,
+              fakturovaneOd:od, ...nbObdobie(o, od), nbZamknute:false,
+              pravidlo:(o.pravidlo || snapshotPravidla(o, od) || null),
+              updatedBy:state.user.name, updatedAt:Date.now() });
+            toast(`Obdobie spustené od ${menoMesiaca(od)}`);
+            setTimeout(()=>{ const n=oppById(o.id); if(n) openResultsModal(n); }, 200);
+          }catch(err){
+            console.error("spustenie obdobia:", err);
+            toast("⚠ Nepodarilo sa spustiť: "+(err?.message||err?.code||"neznáma chyba"));
+            b.disabled=false; b.textContent="Spustiť obdobie";
+          }
+        };
+        row.querySelector(".cd-opp-act").appendChild(b);
+        box.appendChild(row);
+      });
+      wrap.appendChild(box);
+    }
+  }
+
   // timeline
   wrap.appendChild(el("div","section-title","História"));
   const tl=el("div","tl");
@@ -10617,11 +10826,15 @@ function viewClientDetail(){
     const {week}=parseWeekId(wk);
     wkBlock.innerHTML=`<div class="tl-dot"></div><div class="tl-wlabel">Týždeň ${week} <small>${esc(weekRangeLabel(wk))}</small></div>`;
     const items=el("div","tl-items");
-    c.entries.filter(e=>e.weekId===wk).sort((a,b)=>a.segment.localeCompare(b.segment)).forEach(e=>{
+    zoradPrepojene(
+      c.entries.filter(e=>e.weekId===wk).sort((a,b)=>a.segment.localeCompare(b.segment)),
+      e=>e.linkId
+    ).forEach(e=>{
       const s=SEG[e.segment];
       const canEditCard=canEdit(e);
       const special = specialClientInfo(e);
       const card=el("div","tl-card"+(e.isNewBusiness?" nb":"")); card.style.gridTemplateColumns="4px 1fr";
+      card.dataset.lnk = e.linkId || "";
       if(special && !e.isNewBusiness){ card.style.border=`1.5px solid ${hexA(special.color,.35)}`; }
       const stripColor2 = e.isNewBusiness ? (ST[e.status]?.color || "#12915A")
         : isInternal(e) ? REC_KINDS.int.color : special ? special.color : s.color;
@@ -10631,7 +10844,7 @@ function viewClientDetail(){
         : "";
       card.style.setProperty("--stav", stripColor2);
       card.innerHTML=`<div style="background:${stripColor2}"></div><div class="tc-body">
-        <div class="tc-top">${(e.isNewBusiness && e.status==="lead") ? "" : statusTag(e.status)}${e.riskFlag?` <span class="risk-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Problém / sťažnosť</span>`:""}${approachBadges(e)}</div>
+        <div class="tc-top">${(e.isNewBusiness && e.status==="lead") ? "" : statusTagBtn(e)}${e.riskFlag?` <span class="risk-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Problém / sťažnosť</span>`:""}${approachBadges(e)}</div>
         <div class="e-meta">${[
           e.isNewBusiness?`<span class="mt-nb${e.entrySource==="app"?" app":""}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>New business</span>`
             : isInternal(e)?`<span class="mt-int">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V8l6-4 6 4v13M10 12h4M10 16h4"/></svg>'}Interné / projekt</span>`:"",
@@ -10649,6 +10862,20 @@ function viewClientDetail(){
         }
         const dm=dmisOwnersLine(e);
         if(dm){ card.querySelector(".tc-foot .obch-info").after(dm); }
+        // mesačné výsledky — rovnaká podmienka ako na karte v týždňoch:
+        // odznak sa objaví hneď po vyfakturovaní, aj keď obdobie ešte nebeží
+        {
+          const rv=ukazVysledky(e);
+          if(rv){
+            const rb=el("button","ft-chip res-chip"+(rv.chyba?" chyba":""));
+            rb.type="button";
+            rb.title=rv.bezObdobia ? "Obdobie ešte nebeží — klikni a spusti ho"
+              : `Mesačné výsledky · NB obdobie ${menoMesiaca(rv.opp.nbOd)} – ${menoMesiaca(rv.opp.nbDo)}`;
+            rb.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>${esc(rv.text)}`;
+            rb.onclick=(ev)=>{ ev.stopPropagation(); otvorVysledkyPreZaznam(e); };
+            card.querySelector(".tc-foot .e-actions")?.before(rb);
+          }
+        }
         card.querySelector(".tc-foot .e-actions").appendChild(notesToggle(e));
       }
       if(canEditCard){ const ed=el("button","ghost",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`);
@@ -11082,17 +11309,11 @@ function entryCard(e,clients,opts={}){
     ? `<span class="ft-chip" title="Záznam pridaný v Zappise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>apka</span>`
     : `<span class="ft-chip" title="Záznam prišiel importom z DMIS"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>DMIS</span>`);
   {
-    // výsledky sa ponúkajú len keď prípadu už beží NB obdobie
-    const opp=oppForEntry(e);
-    if(opp?.nbOd){
-      const uzavrety=pripadUzavrety(opp);
-      /* Na karte ukazujeme, koľký mesiac obdobia beží z celkovej dĺžky —
-         teda 4/12 alebo 9/36. Predtým tu bol pomer vyplnených k očakávaným,
-         čo pri periodicite dávalo čísla ako 4/5 a mýlilo. */
-      const v=stavVyplnenia(opp);
-      footBits.push(`<button type="button" class="ft-chip res-chip${v.chyba?" chyba":""}${uzavrety?" zavrety":""}" data-results="${esc(opp.id)}"
-        title="Mesačné výsledky · NB obdobie ${esc(menoMesiaca(opp.nbOd))} – ${esc(menoMesiaca(opp.nbDo))}${
-          v.chyba?` · ${v.chyba} ${plural(v.chyba,"mesiac chýba","mesiace chýbajú","mesiacov chýba")}`:""}${uzavrety?" · uzavretý":""}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>${esc(uplynuleMesiace(opp))}${uzavrety?" · uzavretý":""}</button>`);
+    const rv=ukazVysledky(e);
+    if(rv){
+      footBits.push(`<button type="button" class="ft-chip res-chip${rv.chyba?" chyba":""}${rv.uzavrety?" zavrety":""}" data-results-e="1"
+        title="${rv.bezObdobia?"Obdobie ešte nebeží — klikni a spusti ho":`Mesačné výsledky · NB obdobie ${esc(menoMesiaca(rv.opp.nbOd))} – ${esc(menoMesiaca(rv.opp.nbDo))}`}${
+          rv.chyba?` · ${rv.chyba} ${plural(rv.chyba,"mesiac chýba","mesiace chýbajú","mesiacov chýba")}`:""}${rv.uzavrety?" · uzavretý":""}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>${esc(rv.text)}${rv.uzavrety?" · uzavretý":""}</button>`);
     }
   }
   if(e.weekId!==state.week) metaBits.push(`<span title="Záznam z týždňa ${esc(weekRangeLabel(e.weekId))}">${esc(weekRangeLabel(e.weekId))}</span>`);
@@ -11136,11 +11357,8 @@ function entryCard(e,clients,opts={}){
       if(ciel) gsOpenEntry(ciel);
     };
   });
-  card.querySelectorAll("[data-results]").forEach(btn=>{
-    btn.onclick=(ev)=>{ ev.stopPropagation(); const o=oppById(btn.dataset.results); if(o) openResultsModal(o); };
-  });
-  card.querySelectorAll("[data-qstatus]").forEach(btn=>{
-    btn.onclick=(ev)=>{ ev.stopPropagation(); openStatusQuickPick(e, btn); };
+  card.querySelectorAll("[data-results-e]").forEach(btn=>{
+    btn.onclick=(ev)=>{ ev.stopPropagation(); otvorVysledkyPreZaznam(e); };
   });
   card.querySelectorAll(".offer-badge").forEach(btn=>{
     btn.onclick=(ev)=>{ ev.stopPropagation(); openKolosOfferModal(btn.dataset.ico, e.client); };
