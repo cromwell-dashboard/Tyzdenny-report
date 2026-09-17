@@ -952,6 +952,8 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .res-obd-edit .hint{flex:1 1 100%;margin:0}
 .res-start{display:flex;flex-direction:column;align-items:flex-start;gap:8px;
   padding:18px;background:var(--bg);border:1px solid var(--line);border-radius:12px}
+.btn.danger{color:#B3261E;border-color:#F2CFCB}
+.btn.danger:hover{background:#FFF6F5;border-color:#E39B94}
 .res-start b{font-size:14px}
 .res-start span{font-size:12.5px;color:var(--muted);line-height:1.6}
 .res-grid{display:flex;flex-direction:column;gap:5px}
@@ -8496,7 +8498,7 @@ const _cerstvePripady = new Map();
 const oppById = id => !id ? null
   : ((state.opportunities||[]).find(o=>o.id===id) || _cerstvePripady.get(id) || null);
 const oppsForKey = mk => (state.opportunities||[]).filter(o=>o.matchKey===mk);
-const openOppForKey = mk => oppsForKey(mk).find(o=>OPP_OPEN_STATES.includes(o.stav)) || null;
+const openOppForKey = mk => oppsForKey(mk).find(o=>OPP_OPEN_STATES.includes(o.stav) && o.stav!=="zruseny") || null;
 
 /* Má sa pri zázname ponúkať odznak mesačných výsledkov?
    Áno pri každom vyfakturovanom New business zázname — aj keď prípad ešte
@@ -8855,7 +8857,7 @@ function pripravOdmenu(opp, res){
 function odmenyZaMesiac(obdobie, lenMoje){
   const out=[];
   (state.opportunities||[]).forEach(opp=>{
-    if(!opp.nbOd || !opp.jeNewBusiness) return;
+    if(!opp.nbOd || !opp.jeNewBusiness || pripadZruseny(opp)) return;
     if(obdobie < opp.nbOd || (opp.nbDo && obdobie > opp.nbDo)) return;
     const res=resultFor(opp.id, obdobie);
     if(!res) return;
@@ -9140,6 +9142,7 @@ function openResultsModal(opp){
     </div>
     <div class="modal-f" style="justify-content:flex-end;flex-wrap:wrap">
       ${pripadUzavrety(opp) ? "" : `<button class="btn" data-act="uzavriet" style="margin-right:auto">Uzavrieť prípad</button>`}
+      ${smieMenitOdmenu() ? `<button class="btn danger" data-act="zrusit"${pripadUzavrety(opp)?` style="margin-right:auto"`:""}>Odstrániť prípad</button>` : ""}
       <button class="btn" data-act="cancel">Zavrieť</button>
       ${mesiace.length?`<button class="btn solid" data-act="save">Uložiť zmeny</button>`:""}
     </div></div>`;
@@ -9432,6 +9435,27 @@ function openResultsModal(opp){
     };
   }
   {
+    const zr=scrim.querySelector('[data-act="zrusit"]');
+    if(zr) zr.onclick=async()=>{
+      /* Prípad nemažeme, len ho označíme za zrušený — zadané čísla, revízie
+         aj schválené odmeny tak zostanú dohľadateľné. Z prehľadov zmizne. */
+      const dovod=prompt(`Odstrániť obchodný prípad ${opp.client} — ${segLabel(opp.segment,opp.produkt,true)}?\n\nZmizne z Výsledkov NB, z odmien aj z pripomienok. Zadané čísla zostanú uložené v databáze.\n\nNapíš dôvod (napr. duplicita, nesprávne zadané):`, "duplicita");
+      if(dovod===null) return;
+      zr.disabled=true; zr.textContent="Odstraňujem…";
+      try{
+        await backend.saveOpportunity({ id:opp.id, stav:"zruseny",
+          zruseneKedy:Date.now(), zruseneKym:state.user.name, zruseneDovod:(dovod||"").trim()||null,
+          updatedBy:state.user.name, updatedAt:Date.now() });
+        toast("Prípad odstránený z Výsledkov NB");
+        close();
+      }catch(e5){
+        console.error("zrušenie prípadu:", e5);
+        const err=scrim.querySelector("#resErr");
+        err.textContent="⚠ "+(e5?.message||e5?.code||"Nepodarilo sa odstrániť.");
+        err.classList.add("on");
+        zr.disabled=false; zr.textContent="Odstrániť prípad";
+      }
+    };
     const uz=scrim.querySelector('[data-act="uzavriet"]');
     if(uz) uz.onclick=async()=>{
       if(!confirm(`Uzavrieť obchodný prípad ${opp.client}?\n\nPrestane sa zobrazovať v sekcii Výsledky aj v pripomienkach. Zadané čísla zostanú uložené.`)) return;
@@ -10660,8 +10684,9 @@ function fakturaciaReminder(){
 }
 
 /* Prípady, ktoré daný používateľ vidí. Obchodník svoje, vedenie všetky. */
+const pripadZruseny = o => o?.stav==="zruseny";
 function viditelnePripady(){
-  const bezi=(state.opportunities||[]).filter(o=>o.nbOd && !pripadUzavrety(o));
+  const bezi=(state.opportunities||[]).filter(o=>o.nbOd && !pripadUzavrety(o) && !pripadZruseny(o));
   if(["admin","sef","lider"].includes(state.user?.role)) return bezi;
   const uid=state.user?.uid, meno=state.user?.name||"";
   return bezi.filter(o=>(o.ownerUids||[]).includes(uid)
@@ -11196,7 +11221,7 @@ function viewClientDetail(){
   {
     const ids=new Set();
     c.entries.forEach(e=>{ const o=oppForEntry(e); if(o) ids.add(o.id); });
-    const pripady=[...ids].map(oppById).filter(Boolean)
+    const pripady=[...ids].map(oppById).filter(o=>o && !pripadZruseny(o))
       .sort((a,b)=>String(a.nbOd||"9999").localeCompare(String(b.nbOd||"9999")));
     if(pripady.length){
       wrap.appendChild(el("div","section-title","Obchodné prípady"));
@@ -13480,7 +13505,7 @@ gsWireSearch();
 
 /* Značka verzie. Keď sa niečo „nezobrazuje", najprv treba vedieť, či je
    nasadený ten súbor, o ktorom hovoríme. */
-const BUILD = "2026-09-16 · obchodníci 28";
+const BUILD = "2026-09-17 · spojená zákazka pri úprave";
 (function znackaVerzie(){
   const b=document.getElementById("buildStamp");
   if(b) b.textContent = BUILD;
