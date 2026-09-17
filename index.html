@@ -3668,7 +3668,10 @@ function fillLinkPick(){
   const jeNB=$("#fKindField").style.display!=="none"
     ? $("#fKind").querySelector("input:checked")?.value==="nb"
     : !!modalEntry?.isNewBusiness;
-  if(modalEntry || !jeNB){ field.style.display="none"; box.innerHTML=""; return; }
+  /* Ponúkame aj pri úprave — napríklad keď sa záznam omylom zapísal ako
+     Customer care a teraz sa mení na New business. Skryjeme to len vtedy,
+     keď záznam už do nejakej spojenej zákazky patrí. */
+  if(!jeNB || modalEntry?.linkId){ field.style.display="none"; box.innerHTML=""; return; }
   field.style.display="";
   const zvolene=new Set([...box.querySelectorAll("input:checked")].map(i=>i.value));
   box.innerHTML=SEGMENTS.filter(sg=>sg.id!==hlavna).map(sg=>
@@ -13074,7 +13077,7 @@ async function saveFromModalInner(){
      prípadu — prípad si `linkId` kopíruje zo záznamu a inak by mu zostalo
      prázdne práve pri tom hlavnom. */
   const suvisiace = vybraneSuvisiace();
-  if(suvisiace.length && entry.isNewBusiness && !wasEditing){
+  if(suvisiace.length && entry.isNewBusiness && !entry.linkId){
     entry.linkId = "lnk_" + Math.random().toString(36).slice(2,10);
   }
 
