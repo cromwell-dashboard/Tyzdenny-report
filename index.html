@@ -8985,15 +8985,15 @@ function pocetFakturacii(opp){
   if(!p.krok) return 1;                       // jednorazová
   return Math.max(1, Math.ceil(dlzka / p.krok));
 }
+/* Koľko mesiacov je VYPLNENÝCH z celkového počtu fakturácií za obdobie.
+   Zámerne nie „koľko mesiacov uplynulo" — čísla sa dopĺňajú spätne a obchodník
+   by inak videl 3/12, hoci vyplnil jediný mesiac a k ostatným ešte nemá dáta. */
 function uplynuleMesiace(opp){
   const spolu=pocetFakturacii(opp);
   if(!opp?.nbOd) return `0/${spolu}`;
-  const p=periodicitaPodla(opp.periodicita);
-  if(!p.krok) return `1/1`;                   // jednorazová — hneď ako obdobie beží
-  const teraz=terajsiMesiac();
-  let n=0, m=opp.nbOd;
-  while(m<=teraz && n<spolu){ n++; m=pridajMesiace(m, p.krok); }
-  return `${n}/${spolu}`;
+  const n=(state.results||[]).filter(r=>
+    r.opportunityId===opp.id && (r.trzba!=null || r.bezFakturacie)).length;
+  return `${Math.min(n, spolu)}/${spolu}`;
 }
 
 /* Zmeškané mesiace prípadu — očakávané, nevyplnené a po termíne. */
@@ -9057,7 +9057,7 @@ function openResultsModal(opp){
             <b class="res-sluzba-n">${esc(segLabel(opp.segment, opp.produkt, true))}</b>
             <div class="res-sluzba-k"><span class="kl-link" data-klient="${esc(opp.client||"")}" title="Otvoriť detail klienta">${esc(opp.client||"—")}</span>${opp.zakazka?` · ${esc(opp.zakazka)}`:""}${opp.material?` · ${esc(opp.material)}`:""}</div>
           </div>
-          <span class="res-uplynulo" title="Koľký mesiac obdobia práve beží">${esc(uplynuleMesiace(opp))}</span>
+          <span class="res-uplynulo" title="Vyplnené mesiace z celkového počtu fakturácií za obdobie">${esc(uplynuleMesiace(opp))}</span>
         </div>
         <span>
           <button type="button" class="tk-btn" data-act="typklienta" title="Ovplyvňuje sadzbu odmeny">${
@@ -9137,7 +9137,19 @@ function openResultsModal(opp){
         Termín je <b>20. deň nasledujúceho mesiaca</b>.
         Ak sa v mesiaci nefakturovalo, označ <b>bez fakturácie</b>.
         Bledé mesiace sa podľa periodicity nepýtajú — doplniť sa do nich dá vždy.</div>`
-      : `<div class="empty" style="padding:28px 16px"><b>Zatiaľ niet čo vypĺňať</b>NB obdobie sa spustí, keď prípad prepneš na Vyfakturované.</div>`}
+      : (opp.nbOd
+        ? `<div class="res-start">
+            <b>Obdobie začína až ${esc(menoMesiaca(opp.nbOd))}</b>
+            <span>Preto tu zatiaľ nie je žiadny mesiac na vyplnenie. Ak sa fakturovalo skôr,
+              oprav začiatok obdobia — mesiace sa potom doplnia samy.</span>
+            <button type="button" class="btn solid" data-act="obdobie">Opraviť začiatok obdobia</button>
+          </div>`
+        : `<div class="res-start">
+            <b>Obdobie odmeny ešte nebeží</b>
+            <span>Spusti ho a môžeš začať dopĺňať mesačnú fakturáciu. Začiatok sa určí podľa
+              najstaršieho vyfakturovaného záznamu — neskôr sa dá opraviť ceruzkou.</span>
+            <button type="button" class="btn solid" data-act="spustit">Spustiť obdobie</button>
+          </div>`)}
       <div class="task-err" id="resErr"></div>
     </div>
     <div class="modal-f" style="justify-content:flex-end;flex-wrap:wrap">
@@ -9199,7 +9211,7 @@ function openResultsModal(opp){
       }
     };
     // klikať sa dá na ceruzku aj na samotný text obdobia
-    scrim.querySelector('[data-act="obdobie"]')?.addEventListener("click", otvor);
+    scrim.querySelectorAll('[data-act="obdobie"]').forEach(b=>b.addEventListener("click", otvor));
     scrim.querySelector(".res-obd")?.addEventListener("click", ev=>{
       if(ev.target.closest("button")) return;      // tlačidlá majú vlastnú obsluhu
       otvor(ev);
@@ -9432,6 +9444,32 @@ function openResultsModal(opp){
         const zavri=(e7)=>{ if(!box.contains(e7.target)){ box.remove(); document.removeEventListener("mousedown",zavri); } };
         document.addEventListener("mousedown",zavri);
       },0);
+    };
+  }
+  {
+    const sp=scrim.querySelector('[data-act="spustit"]');
+    if(sp) sp.onclick=async()=>{
+      // obdobie začne mesiacom najstaršieho vyfakturovaného záznamu prípadu
+      const zazn=state.all.filter(x=>x.opportunityId===opp.id && jeVyfakturovane(x.status))
+        .sort((a,b)=>String(a.weekId).localeCompare(String(b.weekId)));
+      let od = zazn.length ? mesiacZTyzdna(zazn[0].weekId) : terajsiMesiac();
+      if(!od || od>terajsiMesiac()) od=terajsiMesiac();
+      sp.disabled=true; sp.textContent="Spúšťam…";
+      try{
+        await backend.saveOpportunity({ id:opp.id,
+          fakturovaneOd:od, ...nbObdobie(opp, od), nbZamknute:false,
+          pravidlo:(opp.pravidlo || snapshotPravidla(opp, od) || null),
+          updatedBy:state.user.name, updatedAt:Date.now() });
+        toast(`Obdobie spustené od ${menoMesiaca(od)}`);
+        scrim.remove();
+        setTimeout(()=>{ const o=oppById(opp.id); if(o) openResultsModal(o); }, 180);
+      }catch(err){
+        console.error("spustenie obdobia:", err);
+        const e9=scrim.querySelector("#resErr");
+        e9.textContent="⚠ "+(err?.message||err?.code||"Nepodarilo sa spustiť.");
+        e9.classList.add("on");
+        sp.disabled=false; sp.textContent="Spustiť obdobie";
+      }
     };
   }
   {
@@ -10986,7 +11024,7 @@ function viewResults(){
         <span class="gl-seg" title="${esc(segLabel(o.segment,o.produkt))}">${seg?segIcon(o.segment,16):""}</span>
         <span class="rs-own">${esc((o.vlastnici||[]).map(x=>x.meno).join(", ")||"—")}</span>
         <span class="rs-obd">${esc(menoMesiaca(o.nbOd))} – ${esc(menoMesiaca(o.nbDo))}</span>
-        <span class="rs-cnt" title="Koľká fakturácia z celého obdobia práve beží">${esc(uplynuleMesiace(o))}${
+        <span class="rs-cnt" title="Vyplnené mesiace z celkového počtu fakturácií za obdobie">${esc(uplynuleMesiace(o))}${
           v.chyba?`<span class="rs-chyba">chýba ${v.chyba}</span>`:""}</span>
         <span class="rs-sum">${sumaTrzieb(o.id).toLocaleString("sk-SK",{maximumFractionDigits:0})} €</span>
         <span class="rs-act"></span>`;
