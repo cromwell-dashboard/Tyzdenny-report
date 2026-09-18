@@ -311,6 +311,7 @@ button.gl-nb-mes:hover{text-decoration:underline}
 .gl-zak{flex:0 0 auto; font-size:10px; font-weight:700; color:#5B3FB0; background:#F3EFFE;
   border-radius:20px; padding:1px 7px; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .entry .e-meta .mt-zak,.tl-card .e-meta .mt-zak{color:#5B3FB0; font-weight:600}
+.mt-fo{color:#5B3FB0; font-weight:600}
 /* Meno klienta ako odkaz — jemné podčiarknutie, výraznejšie po nabehnutí. */
 .kl-link{cursor:pointer; text-decoration:underline; text-decoration-color:var(--line);
   text-underline-offset:2px; text-decoration-thickness:1px}
@@ -759,8 +760,46 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .tag-btn{border:none;cursor:pointer;font-family:inherit;gap:5px;transition:filter .12s}
 .tag-btn svg{width:10px;height:10px;opacity:.6;margin-left:1px}
 .tag-btn:hover{filter:brightness(.94)}
-.rs-head,.rs-row{display:grid;grid-template-columns:minmax(150px,1.6fr) 22px minmax(120px,1fr) 150px 74px 104px 108px;
-  gap:10px;align-items:center;padding:9px 14px}
+.rs-head,.rs-row{display:grid;
+  grid-template-columns:minmax(118px,1.35fr) 20px minmax(90px,0.75fr) 120px 50px 72px 72px 52px 60px 90px minmax(84px,0.75fr) 82px 86px;
+  gap:8px;align-items:center;padding:8px 12px}
+.rs-odm{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--brand);text-align:right}
+.rs-pm{display:block;font-family:var(--mono);font-size:12.5px;color:var(--ink)}
+.rs-pm.ziadny{color:var(--line)}
+.rs-obd-p{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:1px}
+/* Skupiny podľa fázy práce */
+.rs-group{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:18px 2px 8px}
+.rs-group:first-child{margin-top:4px}
+.rs-group b{font-size:13.5px;color:var(--ink)}
+.rs-group-n{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);
+  background:var(--bg);border-radius:20px;padding:1px 9px}
+.rs-group-p{flex:1 1 100%;font-size:11.5px;color:var(--muted)}
+.rs-group.naKontrolu b{color:#B45F0C}
+.rs-group.skontrolovane b{color:#12915A}
+.rs-ico.ok:hover{background:#F2F9F5;color:#12915A}
+.rs-cell{min-width:0}
+.rs-inline{width:100%;border:1px solid transparent;background:none;border-radius:7px;padding:3px 7px;
+  font-family:inherit;font-size:11.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;
+  text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rs-inline:hover{border-color:var(--line);background:#fff}
+.rs-inline.rucna{color:#B45F0C}
+.rs-inline.bez{color:#B3261E}
+.rs-sum.marza{color:var(--nb)}
+.rs-sum.ks{color:var(--muted)}
+.rs-ico{border:none;background:none;padding:4px;border-radius:7px;cursor:pointer;color:var(--muted);line-height:0}
+.rs-ico svg{width:15px;height:15px}
+.rs-ico:hover{background:var(--bg);color:var(--brand)}
+.rs-ico.del:hover{background:#FFF6F5;color:#B3261E}
+.rs-act{display:flex;justify-content:flex-end;gap:2px}
+@media (max-width:1400px){
+  .rs-head,.rs-row{grid-template-columns:minmax(120px,1.4fr) 20px minmax(90px,0.8fr) 118px 52px 74px 74px 62px 92px minmax(88px,0.8fr) 62px}
+  .rs-head>span:nth-child(8),.rs-row>span:nth-child(8){display:none}
+}
+@media (max-width:1150px){
+  .rs-head,.rs-row{grid-template-columns:minmax(110px,1.3fr) 20px 112px 50px 72px 72px 60px 88px 58px}
+  .rs-head>span:nth-child(3),.rs-row>span:nth-child(3),
+  .rs-head>span:nth-child(11),.rs-row>span:nth-child(11){display:none}
+}
 .rs-head{background:#F7F8FB;border-bottom:1px solid var(--line);font-size:10.5px;font-weight:700;
   letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .rs-head .r,.rs-cnt,.rs-sum{text-align:right}
@@ -785,7 +824,10 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
   .rs-own{grid-area:2/2}
   .rs-obd{grid-area:3/2}
   .rs-cnt{grid-area:2/3;text-align:right}
-  .rs-sum{grid-area:3/3;text-align:right}
+  .rs-row>.rs-sum:nth-of-type(1){grid-area:3/3;text-align:right}
+  .rs-row .rs-sum.marza,.rs-row .rs-sum.ks{display:none}
+  .rs-cell{grid-column:2/4}
+  .rs-inline{display:inline-block;width:auto;border-color:var(--line);background:#fff;margin-right:5px}
 }
 .odm-sum{display:flex;flex-direction:column;gap:4px;background:#F2F9F5;border:1px solid #CFE8DA;
   border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
@@ -795,8 +837,10 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .odm-sum-meta{font-size:11.5px;color:var(--muted)}
 .odm-sum-meta .nes{color:#B3261E}
 .odm-akcia{margin-bottom:12px}
-.odm-head,.odm-row{display:grid;grid-template-columns:minmax(120px,1.3fr) 22px 104px 62px 96px minmax(92px,.9fr) 214px;
-  gap:10px;align-items:center;padding:9px 14px}
+.odm-head,.odm-row{display:grid;
+  grid-template-columns:minmax(110px,1.2fr) 22px 78px 96px 58px 92px minmax(88px,.85fr) 200px;
+  gap:9px;align-items:center;padding:9px 14px}
+.odm-mes{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 .odm-head{background:#F7F8FB;border-bottom:1px solid var(--line);font-size:10.5px;font-weight:700;
   letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .odm-head .r{text-align:right}
@@ -1690,6 +1734,9 @@ select:disabled{cursor:default; opacity:.65}
   white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis}
 /* Agentúra — zaškrtnutie priamo pri popiske Klient, rovnaké písmo, žiadne miesto navyše */
 .field label.lbl-row{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.pill-group{display:inline-flex;align-items:center;gap:6px;margin-left:auto;flex:0 0 auto}
+.fo-pill{color:#5B3FB0}
+.fo-pill.on{background:#F3EFFE;border-color:#DCD3F5;color:#5B3FB0}
 .ag-pill{display:inline-flex; align-items:center; gap:5px; flex:0 0 auto; cursor:pointer;
   padding:2px 9px 2px 7px; border-radius:20px; border:1px solid var(--line); background:#fff;
   font-size:10.5px; font-weight:700; letter-spacing:.02em; color:var(--muted); user-select:none}
@@ -2898,27 +2945,35 @@ select:disabled{cursor:default; opacity:.65}
       </div>
       <div class="field">
         <label class="lbl-row"><span id="fClientLabel">Klient</span>
+          <span class="pill-group">
           <span class="ag-pill" id="fAgencyPill" role="button" tabindex="0">
             <input type="checkbox" id="fAgency">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>Agentúra
           </span>
+          <span class="ag-pill fo-pill" id="fOsobaPill" role="button" tabindex="0"
+            title="Súkromná osoba bez IČO. Živnostník IČO má — tam ho vyplň.">
+            <input type="checkbox" id="fOsoba">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Fyzická osoba
+            <span class="new-slot" data-new="fyzickaOsoba"></span>
+          </span>
+          </span>
         </label>
-        <input id="fClient" list="clientNames" placeholder="napr. Tesco, Generali, Červený nos…">
+        <input id="fClient" list="clientNames">
         <datalist id="clientNames"></datalist>
         <div class="addr-line" id="fAddrLine" style="display:none"></div>
         <div class="field" id="fSluzbaInaField" style="display:none">
         <label>Aká služba <span class="req">povinné</span><span class="new-slot" data-new="sluzbaIna"></span></label>
-        <input id="fSluzbaIna" list="sluzbaInaList" autocomplete="off" placeholder="napr. konzultácia, grafika">
+        <input id="fSluzbaIna" list="sluzbaInaList" autocomplete="off">
         <datalist id="sluzbaInaList"></datalist>
       </div>
       <div class="field zak-field" id="fZakazkaField">
           <label>Názov zákazky <span class="opt">nepovinné</span></label>
-          <input id="fZakazka" list="zakazkaNames" autocomplete="off" placeholder="napr. DOVE DEO, jarná kampaň">
+          <input id="fZakazka" list="zakazkaNames" autocomplete="off">
           <datalist id="zakazkaNames"></datalist>
         </div>
         <div class="field web-field" id="fWebField">
           <label>Web klienta <span class="opt">nepovinné</span></label>
-          <input id="fWeb" type="text" inputmode="url" autocomplete="off" placeholder="napr. tesco.sk">
+          <input id="fWeb" type="text" inputmode="url" autocomplete="off">
           <div class="hint">Ak web vieš, doplň ho — pomôže nám klienta lepšie identifikovať.</div>
         </div>
         <div class="addr-edit" id="fAddrEdit" style="display:none">
@@ -2928,7 +2983,7 @@ select:disabled{cursor:default; opacity:.65}
       </div>
       <div class="field" id="fMaterialField" style="display:none">
         <label>Materiál <span class="req">povinné</span></label>
-        <input id="fMaterial" list="materialNames" placeholder="napr. Tesco, Osmodry">
+        <input id="fMaterial" list="materialNames">
         <datalist id="materialNames"></datalist>
         <div class="hint">Každý materiál sa vedie ako samostatný obchodný prípad s vlastným obdobím aj odmenou.</div>
       </div>
@@ -2985,7 +3040,7 @@ select:disabled{cursor:default; opacity:.65}
           </div>
           <div class="field">
             <label>Predpoklad tržba €/mes. <span class="req">povinné</span></label>
-            <input id="fRevenue" type="number" min="0" step="10" placeholder="napr. 800" inputmode="numeric">
+            <input id="fRevenue" type="number" min="0" step="10" inputmode="numeric">
             <div class="hint">Odhad za zvolenú službu.</div>
           </div>
           <div class="field">
@@ -3032,7 +3087,7 @@ select:disabled{cursor:default; opacity:.65}
         </button>
         <div id="warningInputWrap" style="display:none">
           <label>⚠ Upozornenie — zobrazí sa výrazne pri zázname</label>
-          <textarea id="fWarning" placeholder="napr. Klient hrozí odchodom ku konkurencii, treba urgentne riešiť…" style="min-height:80px"></textarea>
+          <textarea id="fWarning" style="min-height:80px"></textarea>
           <button type="button" class="remove-warning-btn" id="removeWarningBtn">✕ Odstrániť upozornenie</button>
         </div>
       </div>
@@ -3043,7 +3098,7 @@ select:disabled{cursor:default; opacity:.65}
         </button>
         <div id="taskInputWrap" style="display:none">
           <label>Úloha — čo treba urobiť</label>
-          <input id="fTaskTitle" placeholder="napr. Zavolať klientovi a dohodnúť stretnutie">
+          <input id="fTaskTitle">
           <div class="row" style="margin-top:10px">
             <div class="field">
               <label>Termín</label>
@@ -3169,7 +3224,7 @@ select:disabled{cursor:default; opacity:.65}
     <div class="modal-b">
       <div class="field">
         <label>Úloha</label>
-        <input id="tTitle" placeholder="napr. Doplniť doklady z colného úradu">
+        <input id="tTitle">
       </div>
       <div class="row">
         <div class="field"><label>Komu (obchodník)</label><input id="tAssignee" placeholder="meno obchodníka"></div>
@@ -3422,6 +3477,7 @@ const PRODUKTY = {
   ]},
   tlac:   { base:null, items:[
     { id:"externa", label:"Externá" },
+    { id:"letaky-nd", label:"Letáky ND" },
   ]},
 };
 const produktyPre = segId => PRODUKTY[segId]?.items || [];
@@ -4018,7 +4074,10 @@ const state = {
   rewardRules:[],          // meta/rewardRules — sadzby a dĺžka obdobia podľa služby
   rewards:[],              // schválené odmeny — jeden dokument na jeden mesačný výsledok
   odmObdobie:"",           // zvolený mesiac v sekcii Moje odmeny
-  odmVsetci:false,         // vedenie — zobraziť všetkých obchodníkov
+  /* Vedenie vidí po otvorení všetkých obchodníkov — prázdna obrazovka
+     pri prihlásení pôsobila, akoby odmeny neexistovali. Prepnúť na svoje
+     sa dá kedykoľvek v lište. */
+  odmVsetci:true,          // vedenie — zobraziť všetkých obchodníkov
   dmisOwners:[],           // register vlastníkov z DMIS (IČO/klient → obchodníci)
   calculators:[],          // odkazy na kalkulačky (spravuje admin)
   groupBy:"clientSeg",     // "clientSeg" | "client" — zoskupenie riadkov v zozname
@@ -5796,6 +5855,7 @@ const NEW_UNTIL = {
   stavy:       NOVINKY_DO,     // nové stavy podľa DMIS a ich ikony
   klientProfil:NOVINKY_DO,     // úprava údajov klienta ceruzkou
   produkt:     NOVINKY_DO,     // upresnenie typu
+  fyzickaOsoba:NOVINKY_DO,     // klient bez IČO
   spojena:     NOVINKY_DO,     // prepojené záznamy — jedna zákazka, viac služieb
   sluzbaIna:   NOVINKY_DO,     // upresnenie pri službe „Iné" služby (Zelená pošta ad hoc, Tlač Externá)
   quickStatus: "2026-09-25",   // zmena fázy kliknutím na odznak stavu
@@ -8711,6 +8771,7 @@ const REWARD_RULES_DEFAULT = [
   { segment:"baliky", produkt:null,      zaklad:"marza", sadzbaNove:0.15, sadzbaExistujuce:0.075, roky:1, bezNaroku:false, platnostOd:"2026-01", platnostDo:null },
   { segment:"tlac",   produkt:null,      zaklad:"marza", sadzbaNove:0.15, sadzbaExistujuce:0.075, roky:1, bezNaroku:false, platnostOd:"2026-01", platnostDo:null },
   { segment:"tlac",   produkt:"externa", zaklad:"marza", sadzbaNove:0.15, sadzbaExistujuce:0.075, roky:1, bezNaroku:false, platnostOd:"2026-01", platnostDo:null },
+  { segment:"tlac",   produkt:"letaky-nd", zaklad:"marza", sadzbaNove:0.15, sadzbaExistujuce:0.075, roky:1, bezNaroku:false, platnostOd:"2026-01", platnostDo:null },
   { segment:"digital",produkt:null,      zaklad:"marza", sadzbaNove:0.15, sadzbaExistujuce:0.075, roky:1, bezNaroku:false, platnostOd:"2026-01", platnostDo:null },
   { segment:"ine",    produkt:null,      zaklad:"marza", sadzbaNove:0.15, sadzbaExistujuce:0.075, roky:1, bezNaroku:false, platnostOd:"2026-01", platnostDo:null },
   { segment:"ad",     produkt:null,      zaklad:"marza", sadzbaNove:0,    sadzbaExistujuce:0,     roky:0, bezNaroku:true,  platnostOd:"2026-01", platnostDo:null },
@@ -8810,6 +8871,7 @@ function odmenaZaVysledok(opp, res){
 function rozdelOdmenu(opp, suma){
   const v=(opp?.vlastnici||[]).filter(x=>x.meno);
   if(!v.length || suma==null) return [];
+  // pri nulových podieloch by delenie vyšlo na nulu — hlavný vlastník berie všetko
   const sucet=v.reduce((a,x)=>a+(x.podiel||0),0) || 1;
   return v.map(x=>({ meno:x.meno, uid:x.uid||null,
     podiel:(x.podiel||0)/sucet,
@@ -8858,22 +8920,29 @@ function pripravOdmenu(opp, res){
 function odmenyZaMesiac(obdobie, lenMoje){
   const out=[];
   (state.opportunities||[]).forEach(opp=>{
-    if(!opp.nbOd || !opp.jeNewBusiness || pripadZruseny(opp)) return;
-    if(obdobie < opp.nbOd || (opp.nbDo && obdobie > opp.nbDo)) return;
+    if(!opp.jeNewBusiness || pripadZruseny(opp)) return;
     const res=resultFor(opp.id, obdobie);
+    /* Rozhoduje existencia výsledku za daný mesiac, nie hranice NB obdobia.
+       Keď niekto mesiac vyplnil, patrí do prehľadu — inak záznam zmizne
+       a nikto sa nedozvie prečo. */
     if(!res) return;
     const st=stavOdmeny(opp, res);
     const podiely=rozdelOdmenu(opp, st.suma);
     if(lenMoje){
       const uid=state.user?.uid, meno=state.user?.name||"";
+      const patriMi = podiely.some(p=>(p.uid&&p.uid===uid) || normalizeForCompare(p.meno)===normalizeForCompare(meno))
+        // aj keď sa suma nedá vypočítať, vlastník má riadok vidieť
+        || (opp.ownerUids||[]).includes(uid)
+        || (opp.vlastnici||[]).some(v=>normalizeForCompare(v.meno||"")===normalizeForCompare(meno));
+      if(!patriMi) return;
       const moj=podiely.find(p=>(p.uid&&p.uid===uid) || normalizeForCompare(p.meno)===normalizeForCompare(meno));
-      if(!moj) return;
-      out.push({ opp, res, ...st, podiely, mojaSuma:moj.suma, mojPodiel:moj.podiel });
+      out.push({ opp, res, ...st, podiely,
+        mojaSuma: moj ? moj.suma : null, mojPodiel: moj ? moj.podiel : null });
     } else {
       out.push({ opp, res, ...st, podiely, mojaSuma:st.suma, mojPodiel:1 });
     }
   });
-  return out.sort((a,b)=>(b.suma||0)-(a.suma||0));
+  return out.sort((a,b)=>(b.suma??-1)-(a.suma??-1));
 }
 /* Mesiace, za ktoré vôbec existujú výsledky — ponuka v prepínači. */
 function mesiaceSOdmenami(){
@@ -8925,7 +8994,8 @@ function terminText(obdobie){
    a nezobrazuje sa v sekcii Výsledky ani v pripomienkach. */
 function pripadUzavrety(opp){
   if(!opp) return true;
-  if(opp.stav==="uzavrety" || opp.stav==="prehraty") return true;
+  // zrušený prípad sa už na nič nepýta — inak visí v pripomienkach navždy
+  if(opp.stav==="uzavrety" || opp.stav==="prehraty" || opp.stav==="zruseny") return true;
   return !!opp.nbDo && opp.nbDo < terajsiMesiac();
 }
 
@@ -9036,6 +9106,11 @@ const cisloAleboNull = v => {
   const n=Number(t); return Number.isFinite(n) ? n : null; };
 const formatCislo = v => v==null ? "" : String(v);
 const MESIACE_SK=["január","február","marec","apríl","máj","jún","júl","august","september","október","november","december"];
+/* Krátky zápis mesiaca do tabuliek — „08/2026". */
+const kratkyMesiac = obd => {
+  const [r,m]=String(obd||"").split("-");
+  return (r&&m) ? `${m}/${r}` : "—";
+};
 function menoMesiaca(obdobie){
   const [r,m]=String(obdobie||"").split("-").map(Number);
   return (r&&m) ? `${MESIACE_SK[m-1]} ${r}` : obdobie;
@@ -10453,7 +10528,7 @@ function openQuickTask(e){
     <div class="modal-h"><h2>Nová úloha</h2><div class="sub">${esc(e.client||"—")}${SEG[e.segment]?` · ${esc(SEG[e.segment].short)}`:""}</div></div>
     <div class="modal-b">
       <div class="field"><label>Čo treba urobiť <span class="req">povinné</span></label>
-        <input id="qtTitle" placeholder="napr. Zavolať a dohodnúť stretnutie"></div>
+        <input id="qtTitle"></div>
       <div class="row qt-row">
         <div class="field"><label>Termín</label>
           <input id="qtDue" type="date" value="${d.toISOString().slice(0,10)}"></div>
@@ -10684,7 +10759,9 @@ Doplň v sekcii Výsledky. Termín je ${terminText(obdobie)}.`,
 /* Pripomienka chýbajúcej fakturácie na Prehľade.
    Ukazuje sa len tomu, kto má zmeškané alebo blížiace sa mesiace. */
 function fakturaciaReminder(){
-  const moje=viditelnePripady().filter(o=>stavVyplnenia(o).chyba>0);
+  /* Berieme len prípady, ktoré naozaj niečo pýtajú. Uzavreté, prehraté aj
+     zrušené sú mimo — tie sa predtým vedeli zaseknúť v pripomienke navždy. */
+  const moje=viditelnePripady().filter(o=>!pripadUzavrety(o) && stavVyplnenia(o).chyba>0);
   if(!moje.length) return null;
   const zmeskane=moje.filter(o=>zmeskaneMesiace(o).length);
   const mesiacovSpolu=moje.reduce((a,o)=>a+stavVyplnenia(o).chyba,0);
@@ -10834,9 +10911,14 @@ function viewRewards(){
   const wrap=el("div");
   const veduci=["admin","sef","lider"].includes(state.user?.role);
   const mesiace=mesiaceSOdmenami();
-  const obdobie = state.odmObdobie && mesiace.includes(state.odmObdobie)
-    ? state.odmObdobie : (mesiace[0] || pridajMesiace(terajsiMesiac(),-1));
   const vsetci = veduci && state.odmVsetci;
+  /* Ak si mesiac nikto nezvolil, otvoríme najnovší, v ktorom sú nejaké odmeny.
+     Inak by sa po prihlásení otvoril prázdny mesiac a vyzeralo by to,
+     že odmeny neexistujú. */
+  /* Prázdne = všetky mesiace naraz. Je to predvoľba — odmeny sa dopĺňajú
+     spätne a filtrovať mesiac po mesiaci je pri kontrole nepraktické. */
+  const obdobie = mesiace.includes(state.odmObdobie) ? state.odmObdobie : "";
+  const vsetkyMesiace = !obdobie;
 
   wrap.appendChild(el("div","page-h",`<div>
     <div class="eyebrow">Odmeny za New business</div>
@@ -10849,8 +10931,8 @@ function viewRewards(){
   }
 
   const bar=el("div","fbar");
-  bar.appendChild(fpill(ICO_SORT, menoMesiaca(obdobie), false,
-    mesiace.map(m=>[m, menoMesiaca(m), m===obdobie]),
+  bar.appendChild(fpill(ICO_SORT, vsetkyMesiace ? "Všetky mesiace" : menoMesiaca(obdobie), vsetkyMesiace,
+    [["", "Všetky mesiace", vsetkyMesiace], ...mesiace.map(m=>[m, menoMesiaca(m), m===obdobie])],
     v=>{ state.odmObdobie=v; render(); }, "Mesiac"));
   if(veduci){
     const t=el("button","fbar-mine"+(vsetci?" on":""),
@@ -10861,14 +10943,19 @@ function viewRewards(){
   }
   wrap.appendChild(bar);
 
-  const riadky=odmenyZaMesiac(obdobie, !vsetci);
+  const riadky = vsetkyMesiace
+    ? mesiace.flatMap(m=>odmenyZaMesiac(m, !vsetci))
+        .sort((a,b)=>String(b.res?.obdobie||"").localeCompare(String(a.res?.obdobie||""))
+          || (b.suma??-1)-(a.suma??-1))
+    : odmenyZaMesiac(obdobie, !vsetci);
   const spolu=riadky.reduce((a,r)=>a+(r.mojaSuma||0),0);
   const caka=riadky.filter(r=>r.stav==="caka" && r.suma!=null);
   const nesulad=riadky.filter(r=>r.stav==="nesulad");
 
   const suhrn=el("div","odm-sum");
   suhrn.innerHTML=`<div>
-      <div class="odm-sum-l">${vsetci?"Odmeny spolu":"Moja odmena"} za ${esc(menoMesiaca(obdobie))}</div>
+      <div class="odm-sum-l">${vsetci?"Odmeny spolu":"Moja odmena"} ${
+        vsetkyMesiace ? `za ${mesiace.length} ${plural(mesiace.length,"mesiac","mesiace","mesiacov")}` : `za ${esc(menoMesiaca(obdobie))}`}</div>
       <div class="odm-sum-r">${eur(spolu)}</div>
     </div>
     <div class="odm-sum-meta">${riadky.length} ${plural(riadky.length,"položka","položky","položiek")}
@@ -10881,7 +10968,8 @@ function viewRewards(){
     const b=el("button","btn solid",`Schváliť všetkých ${caka.length} ${plural(caka.length,"nespracovanú položku","nespracované položky","nespracovaných položiek")} naraz`);
     b.type="button";
     b.onclick=async()=>{
-      if(!confirm(`Schváliť odmeny za ${menoMesiaca(obdobie)}?\n\nSumy sa zmrazia. Neskoršia oprava výsledku ich už nezmení — označí sa nesúlad.`)) return;
+      if(!confirm(`Schváliť ${caka.length} ${plural(caka.length,"odmenu","odmeny","odmien")}${
+        vsetkyMesiace?" naprieč všetkými mesiacmi":` za ${menoMesiaca(obdobie)}`}?\n\nSumy sa zmrazia. Neskoršia oprava výsledku ich už nezmení — označí sa nesúlad.`)) return;
       b.disabled=true; b.textContent="Schvaľujem…";
       try{
         const zoznam=caka.map(r=>pripravOdmenu(r.opp, r.res)).filter(Boolean);
@@ -10897,13 +10985,16 @@ function viewRewards(){
   }
 
   if(!riadky.length){
-    wrap.appendChild(el("div","empty","<b>Za tento mesiac nič</b>Buď nie sú vyplnené výsledky, alebo sa v tomto mesiaci nefakturovalo."));
+    wrap.appendChild(el("div","empty", vsetkyMesiace
+      ? "<b>Zatiaľ žiadne odmeny</b>Objavia sa, keď sa vyplní prvá mesačná fakturácia."
+      : "<b>Za tento mesiac nič</b>Buď nie sú vyplnené výsledky, alebo sa v tomto mesiaci nefakturovalo."));
     return wrap;
   }
 
   const box=el("div","gl-list");
   const head=el("div","odm-head");
-  head.innerHTML=`<span>Firma</span><span></span><span>Základ</span><span class="r">Sadzba</span><span class="r">Odmena</span>${vsetci?`<span>Obchodníci</span>`:`<span class="r">Môj podiel</span>`}<span>Stav</span>`;
+  head.innerHTML=`<span>Firma</span><span></span><span>Mesiac</span><span>Základ</span><span class="r">Sadzba</span><span class="r">Odmena</span>${
+    vsetci?`<span>Obchodníci</span>`:`<span class="r">Môj podiel</span>`}<span>Stav</span>`;
   box.appendChild(head);
   riadky.forEach(r=>{
     const seg=SEG[r.opp.segment];
@@ -10915,6 +11006,7 @@ function viewRewards(){
       : `<span class="odm-st">čaká</span>`;
     row.innerHTML=`<span class="odm-cl"><span class="kl-link" data-klient="${esc(r.opp.client||"")}" title="${esc(r.opp.client||"")} — otvoriť detail klienta">${esc(r.opp.client||"—")}</span>${r.opp.zakazka?`<span class="rs-zak">${esc(r.opp.zakazka)}</span>`:""}</span>
       <span class="gl-seg" title="${esc(segLabel(r.opp.segment,r.opp.produkt))}">${seg?segIcon(r.opp.segment,16):""}</span>
+      <span class="odm-mes" title="Mesiac fakturácie">${esc(kratkyMesiac(r.res?.obdobie))}</span>
       <span class="odm-zk">${r.vypocet?.zaklad!=null?eur(r.vypocet.zaklad):"—"}<span>${r.opp.pravidlo?.zaklad==="obrat"?"obrat":"marža"}</span></span>
       <span class="odm-sd">${r.vypocet?.sadzba!=null?Math.round(r.vypocet.sadzba*1000)/10+" %":"—"}</span>
       <span class="odm-su${r.vypocet?.rucne?" rucne":""}">${veduci
@@ -11004,37 +11096,101 @@ function viewResults(){
     if(state.resObchodnik)
       rows=rows.filter(o=>(o.vlastnici||[]).some(v=>normalizeForCompare(v.meno)===normalizeForCompare(state.resObchodnik)));
     if(state.resOnlyChyba) rows=rows.filter(o=>stavVyplnenia(o).chyba>0);
-    rows.sort((a,b)=>stavVyplnenia(b).chyba-stavVyplnenia(a).chyba
+    /* Najnovšie navrch — podľa posledného vyplneného mesiaca, pri zhode
+       podľa začiatku NB obdobia. Abecedne až nakoniec. */
+    rows.sort((a,b)=>
+      String(poslednyMesiac(b)||"").localeCompare(String(poslednyMesiac(a)||""))
+      || String(b.nbOd||"").localeCompare(String(a.nbOd||""))
       || (a.client||"").localeCompare(b.client||"","sk"));
 
-    info.textContent=`${rows.length} ${plural(rows.length,"prípad","prípady","prípadov")} · ${chybaSpolu} ${plural(chybaSpolu,"chýbajúci mesiac","chýbajúce mesiace","chýbajúcich mesiacov")}`;
+    info.textContent=`${rows.length} ${plural(rows.length,"prípad","prípady","prípadov")}${
+      chybaSpolu?` · ${chybaSpolu} ${plural(chybaSpolu,"mesiac bez čísel","mesiace bez čísel","mesiacov bez čísel")}`:""}`;
     listWrap.innerHTML="";
     if(!rows.length){
       listWrap.appendChild(el("div","empty","<b>Nič nevyhovuje</b>Skús iný výraz alebo vypni filter."));
       return;
     }
+    /* Zoznam je rozdelený podľa toho, v akej fáze práce prípad je —
+       inak je to len kopa, v ktorej sa nedá rozoznať, čo treba riešiť. */
+    const skupiny={};
+    rows.forEach(o=>{ const k=stavKontroly(o); (skupiny[k]=skupiny[k]||[]).push(o); });
+    ["naKontrolu","nove","bezi","skontrolovane"].forEach(kluc=>{
+      const zoznam=skupiny[kluc]; if(!zoznam?.length) return;
+      const h=el("div","rs-group "+kluc);
+      h.innerHTML=`<b>${esc(KONTROLA[kluc].l)}</b><span class="rs-group-n">${zoznam.length}</span>
+        <span class="rs-group-p">${esc(KONTROLA[kluc].p)}</span>`;
+      listWrap.appendChild(h);
+      listWrap.appendChild(tabulka(zoznam));
+    });
+    return;
+
+    function tabulka(zoznam){
     const box=el("div","gl-list");
     const head=el("div","rs-head");
-    head.innerHTML=`<span>Firma</span><span></span><span>Obchodník</span><span>NB obdobie</span><span class="r">Fakturácie</span><span class="r">Tržby spolu</span><span></span>`;
+    head.innerHTML=`<span>Firma</span><span></span><span>Obchodník</span><span>Posl. mesiac</span>
+      <span class="r">Fakt.</span><span class="r">Tržby</span><span class="r">Marža</span><span class="r">Kusy</span>
+      <span class="r">Sadzba</span><span>Periodicita</span><span>Oslovenie</span><span class="r">Odmena</span><span></span>`;
     box.appendChild(head);
-    rows.forEach(o=>{
-      const v=stavVyplnenia(o);
+    zoznam.forEach(o=>{
       const seg=SEG[o.segment];
-      const r=el("div","rs-row"+(v.chyba?" chyba":""));
+      const pr=pravidloPrePripad(o);
+      const sad=pr ? Math.round((pr.sadzba||0)*1000)/10 : null;
+      const kusy=evidujeKusy(o.segment);
+      const r=el("div","rs-row");
       r.innerHTML=`<span class="rs-name"><span class="kl-link" data-klient="${esc(o.client||"")}" title="${esc(o.client||"")} — otvoriť detail klienta">${esc(o.client||"—")}</span>${o.zakazka?`<span class="rs-zak">${esc(o.zakazka)}</span>`:""}</span>
         <span class="gl-seg" title="${esc(segLabel(o.segment,o.produkt))}">${seg?segIcon(o.segment,16):""}</span>
         <span class="rs-own">${esc((o.vlastnici||[]).map(x=>x.meno).join(", ")||"—")}</span>
-        <span class="rs-obd">${esc(menoMesiaca(o.nbOd))} – ${esc(menoMesiaca(o.nbDo))}</span>
-        <span class="rs-cnt" title="Vyplnené mesiace z celkového počtu fakturácií za obdobie">${esc(uplynuleMesiace(o))}${
-          v.chyba?`<span class="rs-chyba">chýba ${v.chyba}</span>`:""}</span>
-        <span class="rs-sum">${sumaTrzieb(o.id).toLocaleString("sk-SK",{maximumFractionDigits:0})} €</span>
+        <span class="rs-obd">${(()=>{ const pm=poslednyMesiac(o);
+          return `<b class="rs-pm${pm?"":" ziadny"}">${pm?esc(kratkyMesiac(pm)):"—"}</b>
+            <span class="rs-obd-p">${esc(kratkyMesiac(o.nbOd))} – ${esc(kratkyMesiac(o.nbDo))}</span>`;
+        })()}</span>
+        <span class="rs-cnt" title="Vyplnené mesiace z celkového počtu fakturácií za obdobie">${esc(uplynuleMesiace(o))}</span>
+        <span class="rs-sum">${eurKratko(sumaTrzieb(o.id))}</span>
+        <span class="rs-sum marza">${eurKratko(sumaMarze(o.id))}</span>
+        <span class="rs-sum ks">${kusy ? formatCislo(sumaKusov(o.id)) : "—"}</span>
+        <span class="rs-cell"><button type="button" class="rs-inline${pr?.sadzbaRucne?" rucna":""}" data-ed="sadzba"
+          title="Sadzba odmeny${pr?.sadzbaRucne?" — nastavená ručne":""}">${sad==null?"—":String(sad).replace(".",",")+" %"}</button></span>
+        <span class="rs-cell"><button type="button" class="rs-inline" data-ed="periodicita"
+          title="Ako často sa fakturuje">${esc(periodicitaPodla(o.periodicita).label)}</button></span>
+        <span class="rs-cell"><button type="button" class="rs-inline${oslovenieBezNaroku(o.sposobOslovenia)?" bez":""}" data-ed="oslovenie"
+          title="Spôsob oslovenia — pri pasívnom dopyte odmena nevzniká">${esc(cleanApproachText(o.sposobOslovenia||"") || "—")}</button></span>
+        <span class="rs-odm" title="Odmena za všetky vyplnené mesiace">${(()=>{const x=odmenaSpolu(o); return x==null?"—":eur(x);})()}</span>
         <span class="rs-act"></span>`;
-      const b=el("button","btn"+(v.chyba?" solid":""), v.chyba?`Doplniť ${v.chyba}`:"Otvoriť");
-      b.type="button"; b.onclick=()=>openResultsModal(o);
-      r.querySelector(".rs-act").appendChild(b);
+
+      const akcie=r.querySelector(".rs-act");
+      const st=stavKontroly(o);
+      if(st!=="skontrolovane" && smieOznacit(o) && (st!=="naKontrolu" || smieMenitOdmenu())){
+        const hb=el("button","rs-ico ok"); hb.type="button";
+        hb.title = st==="naKontrolu" ? "Potvrdiť ako skontrolované" : "Označiť za hotové — pôjde lídrovi na kontrolu";
+        hb.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        hb.onclick=()=>zmenStavKontroly(o, (st==="naKontrolu" && smieMenitOdmenu()) ? "skontrolovane" : "naKontrolu");
+        akcie.appendChild(hb);
+      }
+      if((st==="naKontrolu" || st==="skontrolovane") && smieOznacit(o)){
+        const vb=el("button","rs-ico"); vb.type="button"; vb.title="Vrátiť na dopracovanie";
+        vb.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>`;
+        vb.onclick=()=>zmenStavKontroly(o, null);
+        akcie.appendChild(vb);
+      }
+      const ob=el("button","rs-ico"); ob.type="button"; ob.title="Otvoriť mesačné výsledky";
+      ob.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>`;
+      ob.onclick=()=>openResultsModal(o);
+      akcie.appendChild(ob);
+      if(smieMenitOdmenu()){
+        const db=el("button","rs-ico del"); db.type="button"; db.title="Odstrániť prípad";
+        db.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>`;
+        db.onclick=()=>zrusPripadRychlo(o);
+        akcie.appendChild(db);
+      }
+
+      // úpravy priamo v riadku — netreba vchádzať do záznamu
+      r.querySelectorAll("[data-ed]").forEach(b=>{
+        b.onclick=(ev)=>{ ev.stopPropagation(); otvorRychluUpravu(b.dataset.ed, o, b); };
+      });
       box.appendChild(r);
     });
-    listWrap.appendChild(box);
+    return box;
+    }
   }
   paint();
   return wrap;
@@ -11795,6 +11951,7 @@ function entryCard(e,clients,opts={}){
   else if(isInternal(e)) metaBits.push(`<span class="mt-int">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V8l6-4 6 4v13M10 12h4M10 16h4"/></svg>'}Interné / projekt</span>`);
   if(opts.showSegChip) metaBits.push(`<span class="mt-seg" style="color:${SEG[e.segment].color}">${esc(segLabelZaznam(e, true))}</span>`);
   if(e.zakazka) metaBits.push(`<span class="mt-zak" title="Názov zákazky">${esc(e.zakazka)}</span>`);
+  if(e.fyzickaOsoba) metaBits.push(`<span class="mt-fo" title="Súkromná osoba — nemá IČO">fyzická osoba</span>`);
   if(e.firma) footBits.push(`<span class="ft-firma" title="${esc(e.firma)}"><img src="${firmaLogoSrc}" alt="${esc(e.firma)}"></span>`);
   if(kolosOfferFor(e)) footBits.push(`<button type="button" class="ft-chip offer-badge" data-ico="${esc(ico8(e.leadIco||e.ico))}" title="Detail ponuky z Kolos kalkulačky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>ponuka zaslaná</button>`);
   if(e.isNewBusiness) footBits.push(e.entrySource==="app"
@@ -12707,8 +12864,29 @@ function openModal(entry,presetSeg){
     };
     ag.onchange=syncAg; syncAg();
     const pill=$("#fAgencyPill");
-    pill.onclick=()=>{ ag.checked=!ag.checked; syncAg(); };
+    pill.onclick=()=>{ ag.checked=!ag.checked; syncAg(); pill.classList.toggle("on", ag.checked); };
+    pill.classList.toggle("on", ag.checked);
     pill.onkeydown=ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); pill.onclick(); } };
+
+    /* Fyzická osoba — klient bez IČO. Pole IČO sa skryje a prestane byť
+       povinné, klient sa páruje podľa mena. Agentúra a fyzická osoba sa
+       vylučujú: agentúra je firma a IČO mať musí. */
+    {
+      const fo=$("#fOsoba"), fpill=$("#fOsobaPill");
+      fo.checked=!!entry?.fyzickaOsoba;
+      const syncFo=()=>{
+        fpill.classList.toggle("on", fo.checked);
+        $("#fIcoField").style.display = fo.checked ? "none" : "";
+        $("#fClientLabel").textContent = fo.checked ? "Meno a priezvisko" : "Klient";
+        if(fo.checked && ag.checked){ ag.checked=false; syncAg(); pill.classList.remove("on"); }
+        pill.style.display = fo.checked ? "none" : "";
+        syncIcoField();
+      };
+      fo.onchange=syncFo;
+      fpill.onclick=()=>{ fo.checked=!fo.checked; syncFo(); };
+      fpill.onkeydown=ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); fpill.onclick(); } };
+      syncFo();
+    }
     // ponuka už použitých materiálov danej agentúry
     const dl=$("#materialNames");
     const k=clientKey($("#fClient").value||entry?.client||"");
@@ -12812,6 +12990,15 @@ function openModal(entry,presetSeg){
     $("#fWeb").value = entry?.web || zLeadu || webKlienta(entry) || "";
   }
   $("#fZakazka").value = entry?.zakazka || "";
+  { /* pri fyzickej osobe ponúkame mená, ktoré už v Zappise sú — bez IČO
+       je meno jediné, čo klienta drží pokope */
+    const dl=$("#clientNames");
+    if(dl && entry?.fyzickaOsoba){
+      const mena=[...new Set(state.all.filter(x=>x.fyzickaOsoba && x.client).map(x=>x.client))]
+        .sort((a,b)=>a.localeCompare(b,"sk"));
+      if(mena.length) dl.innerHTML=mena.map(v=>`<option value="${esc(v)}">`).join("");
+    }
+  }
   fillZakazkaList($("#fClient").value);
   $("#fEvents").value=entry?.events||"";
   const warningVal=entry?.warning||"";
@@ -12943,7 +13130,8 @@ async function saveFromModalInner(){
      nie je dôkaz, že ide o tú istú firmu. Musí byť načítané alebo napísané. */
   const icoVal = vnutorne ? "" : (pendingLeadOrigin ? poleIco : (alreadyKnown || poleIco));
   const icoPrazdne = !icoVal || icoVal.length < 6 || !icoKey(icoVal);
-  if(!vnutorne && icoPrazdne){
+  const jeOsoba = $("#fOsoba")?.checked;
+  if(!vnutorne && !jeOsoba && icoPrazdne){
     $("#fIcoField").style.display="";
     $("#fIco").focus(); $("#fIco").style.borderColor="var(--red)";
     $("#fIcoHint").innerHTML = poleIco && !icoKey(poleIco)
@@ -12970,7 +13158,7 @@ async function saveFromModalInner(){
     /* Overenie netreba, keď IČO už poznáme z iných záznamov toho istého
        klienta — appka ho tam doplnila sama a raz overené už bolo. */
     const znameKlienta = !!alreadyKnown && icoKey(alreadyKnown)===icoKey(icoVal);
-    const overene = !!pendingFinstat || kraj!=="SK" || znameKlienta || (!zmenene && !!povodne);
+    const overene = jeOsoba || !!pendingFinstat || kraj!=="SK" || znameKlienta || (!zmenene && !!povodne);
     if(!overene){
       $("#fIcoField").style.display="";
       $("#fIco").focus(); $("#fIco").style.borderColor="var(--red)";
@@ -13065,6 +13253,7 @@ async function saveFromModalInner(){
     weekId: $("#fWeek").value || state.week,
     web: vnutorne ? null : (normalizujWeb($("#fWeb").value) || null),
     zakazka: (vnutorne || $("#fAgency").checked) ? null : ($("#fZakazka").value.trim() || null),
+    fyzickaOsoba: (!vnutorne && $("#fOsoba").checked) ? true : false,
     sluzbaIna: (segId==="ine") ? ($("#fSluzbaIna").value.trim() || null) : null,
     firma,
     ownerKey:newOwnerKey, ownerName:newOwnerName, ownerUid:newOwnerUid,
@@ -13544,7 +13733,7 @@ gsWireSearch();
 
 /* Značka verzie. Keď sa niečo „nezobrazuje", najprv treba vedieť, či je
    nasadený ten súbor, o ktorom hovoríme. */
-const BUILD = "2026-09-17b · Dominik Sedlář, počítadlo vyplnených";
+const BUILD = "2026-09-18c · fyzická osoba bez IČO";
 (function znackaVerzie(){
   const b=document.getElementById("buildStamp");
   if(b) b.textContent = BUILD;
@@ -13562,7 +13751,11 @@ const IMP_SLUZBY = {
   "digitalne":         { segment:"digital", produkt:null },
   "tlac":              { segment:"tlac",    produkt:null },
   "tlac externa":      { segment:"tlac",    produkt:"externa" },
-  "tlac nd":           { segment:"tlac",    produkt:"externa" },   // premenované v exporte
+  // „Tlač letákov" z reportu Nemesis je v Zappise Tlač – Letáky ND
+  "tlac letaky nd":    { segment:"tlac",    produkt:"letaky-nd" },
+  "tlac letaky":       { segment:"tlac",    produkt:"letaky-nd" },
+  "tlac letakov":      { segment:"tlac",    produkt:"letaky-nd" },
+  "tlac nd":           { segment:"tlac",    produkt:"letaky-nd" },
   "externa tlac":      { segment:"tlac",    produkt:"externa" },
   "adresne":           { segment:"ad",      produkt:null },
   "adresne dorucovanie":{ segment:"ad",     produkt:null },
@@ -13594,12 +13787,25 @@ const impMesiac = v => {
 };
 const impAno = v => ["ano","áno","1","true","x","y","yes"].includes(String(v||"").trim().toLowerCase());
 
-/* Nájde obchodný prípad pre riadok. Najprv podľa IČO, potom podľa mena. */
+/* Názov firmy zbavený právnej formy a interpunkcie — „Dropick, s.r.o." a
+   „Dropick s. r. o." je tá istá firma a párovanie podľa mena na tom padalo. */
+function firmaKluc(nazov){
+  return normalizeForCompare(nazov)
+    .replace(/[.,]/g," ")
+    .replace(/\b(s\s*r\s*o|spol\s+s\s+r\s+o|a\s+s|akciova\s+spolocnost|k\s+s|v\s+o\s+s|s\s+p|n\s+o|o\s+z|gmbh|ag|sp\s+z\s+o\s+o|sa|ltd|llc|bv|kft|zrt)\b/g," ")
+    .replace(/\s+/g," ").trim();
+}
+
+/* Nájde obchodný prípad pre riadok. Hľadá naprieč celým Zappisom — nie len
+   v mesiaci importu. Najprv podľa IČO, potom podľa názvu firmy. */
 function impNajdiPripad(r){
+  const klucRiadku=firmaKluc(r.klient);
   const kandidati=(state.opportunities||[]).filter(o=>{
     if(o.segment!==r.segment) return false;
     if((o.produkt||null)!==(r.produkt||null)) return false;
-    return r.ico ? icoKey(o.ico)===r.ico : clientKey(o.client)===clientKey(r.klient);
+    if(pripadZruseny(o)) return false;
+    if(r.ico && icoKey(o.ico)) return icoKey(o.ico)===r.ico;
+    return firmaKluc(o.client)===klucRiadku;
   });
   if(!kandidati.length) return null;
   if(kandidati.length===1) return kandidati[0];
@@ -13696,7 +13902,7 @@ async function impZalozPripad(r, vsetky){
   if(!o.hlavny) throw new Error(`Obchodník „${r.obchodnik||"—"}“ nie je v zozname Zappisu.`);
   // obdobie začne najstarším mesiacom, ktorý je pre tohto klienta a službu v súbore
   const rovnake=vsetky.filter(x=>x.segment===r.segment && (x.produkt||null)===(r.produkt||null)
-    && (r.ico ? x.ico===r.ico : clientKey(x.klient)===clientKey(r.klient)));
+    && (r.ico ? x.ico===r.ico : firmaKluc(x.klient)===firmaKluc(r.klient)));
   const prvy=rovnake.map(x=>x.mesiac).filter(Boolean).sort()[0] || r.mesiac;
   const tyzden=prvyTyzdenMesiaca(prvy);
 
@@ -13730,6 +13936,175 @@ function prvyTyzdenMesiaca(obdobie){
   if(!r||!m) return state.week;
   const d=new Date(Date.UTC(r, m-1, 4));    // 4. deň mesiaca padne vždy do jeho prvého týždňa
   return weekId(d);
+}
+
+/* ---------------------------------------------------------- STAV KONTROLY
+   Obchodník doplní čísla, označí prípad za hotový a líder ho skontroluje.
+   Prvé dva stavy sa odvodzujú z dát, ďalšie dva si prípad nesie. */
+const KONTROLA = {
+  nove:          { l:"Nové",           p:"Obdobie beží, ale čísla ešte nikto nedoplnil." },
+  bezi:          { l:"Rozpracované",   p:"Časť mesiacov je vyplnená, prípad sa priebežne dopĺňa." },
+  naKontrolu:    { l:"Na kontrolu",    p:"Obchodník označil za hotové — čaká na lídra." },
+  skontrolovane: { l:"Skontrolované",  p:"Líder čísla potvrdil." },
+};
+function stavKontroly(opp){
+  if(opp?.kontrola==="skontrolovane") return "skontrolovane";
+  if(opp?.kontrola==="naKontrolu") return "naKontrolu";
+  const maCisla=(state.results||[]).some(r=>
+    r.opportunityId===opp?.id && (r.trzba!=null || r.bezFakturacie));
+  return maCisla ? "bezi" : "nove";
+}
+/* Posledný mesiac, za ktorý má prípad vyplnené čísla. Podľa neho sa zoznam
+   radí — najnovšia práca patrí navrch. */
+function poslednyMesiac(opp){
+  const m=resultsPre(opp?.id)
+    .filter(r=>r.trzba!=null || r.bezFakturacie)
+    .map(r=>r.obdobie).filter(Boolean).sort();
+  return m.length ? m[m.length-1] : null;
+}
+/* Odmena za celý prípad — súčet cez všetky vyplnené mesiace. */
+function odmenaSpolu(opp){
+  let suma=null;
+  resultsPre(opp.id).forEach(r=>{
+    const v=odmenaZaVysledok(opp, r);
+    if(v.suma!=null) suma=(suma||0)+v.suma;
+  });
+  return suma;
+}
+/* Smie prípad označiť za hotový? Vlastník alebo vedenie. */
+function smieOznacit(opp){
+  if(smieMenitOdmenu()) return true;
+  const uid=state.user?.uid, meno=state.user?.name||"";
+  return (opp.ownerUids||[]).includes(uid)
+      || (opp.vlastnici||[]).some(v=>normalizeForCompare(v.meno||"")===normalizeForCompare(meno));
+}
+async function zmenStavKontroly(opp, novy){
+  const zmeny={ kontrola:novy, updatedBy:state.user.name, updatedAt:Date.now() };
+  if(novy==="naKontrolu"){ zmeny.hotovoKym=state.user.name; zmeny.hotovoKedy=Date.now(); }
+  if(novy==="skontrolovane"){ zmeny.skontrolovalKym=state.user.name; zmeny.skontrolovalKedy=Date.now(); }
+  if(novy===null){ zmeny.kontrola=null; zmeny.hotovoKym=null; zmeny.hotovoKedy=null;
+                   zmeny.skontrolovalKym=null; zmeny.skontrolovalKedy=null; }
+  try{
+    await backend.saveOpportunity({ id:opp.id, ...zmeny });
+    toast(novy===null ? "Vrátené na dopracovanie"
+      : novy==="naKontrolu" ? "Označené ako hotové — čaká na lídra"
+      : "Označené ako skontrolované");
+  }catch(err){
+    console.error("stav kontroly:", err);
+    toast("⚠ Nepodarilo sa uložiť: "+(err?.message||err?.code||"neznáma chyba"));
+  }
+}
+
+/* ---------------------------------------------------------------- RÝCHLE ÚPRAVY
+   Sadzba, periodicita a spôsob oslovenia sa dajú meniť priamo v zozname
+   Výsledkov NB — bez vstupovania do záznamu. */
+function otvorRychluUpravu(co, opp, anchor){
+  if(!smieMenitOdmenu() && co==="sadzba"){ toast("Sadzbu môže meniť len vedenie."); return; }
+  document.querySelector(".qsp")?.remove();
+  const box=el("div","qsp qsp-scroll");
+  const uloz=async(zmeny, hlaska)=>{
+    box.remove();
+    try{
+      await backend.saveOpportunity({ id:opp.id, ...zmeny,
+        updatedBy:state.user.name, updatedAt:Date.now() });
+      toast(hlaska);
+    }catch(err){
+      console.error("rýchla úprava:", err);
+      toast("⚠ Nepodarilo sa uložiť: "+(err?.message||err?.code||"neznáma chyba"));
+    }
+  };
+
+  if(co==="periodicita"){
+    box.innerHTML=`<div class="qsp-h">Ako často sa fakturuje</div>`;
+    PERIODICITY.forEach(p=>{
+      const b=el("button","qsp-item"+((opp.periodicita||"nevieme")===p.id?" on":""));
+      b.type="button";
+      b.innerHTML=`<span><b>${esc(p.label)}</b></span>`;
+      b.onclick=(e)=>{ e.stopPropagation();
+        if((opp.periodicita||"nevieme")===p.id){ box.remove(); return; }
+        uloz({periodicita:p.id}, `Periodicita: ${p.label}`); };
+      box.appendChild(b);
+    });
+  }
+
+  if(co==="oslovenie"){
+    box.innerHTML=`<div class="qsp-h">Spôsob oslovenia</div>`;
+    const teraz=normalizeForCompare(cleanApproachText(opp.sposobOslovenia||""));
+    APPROACH_OPTIONS.forEach(v=>{
+      const b=el("button","qsp-item"+(normalizeForCompare(v)===teraz?" on":""));
+      b.type="button";
+      b.innerHTML=`<span><b>${esc(v)}</b>${oslovenieBezNaroku(v)?`<span class="tk-pop">bez nároku na odmenu</span>`:""}</span>`;
+      b.onclick=(e)=>{ e.stopPropagation();
+        if(normalizeForCompare(v)===teraz){ box.remove(); return; }
+        uloz({sposobOslovenia:v}, `Spôsob oslovenia: ${v}`); };
+      box.appendChild(b);
+    });
+  }
+
+  if(co==="sadzba"){
+    const pr=pravidloPrePripad(opp);
+    const zPravidla=snapshotPravidla(opp, opp.nbOd);
+    box.classList.add("odm-pop");
+    box.innerHTML=`<div class="qsp-h">Sadzba pre celé obdobie</div>
+      <div class="odm-pop-b">
+        <label>Sadzba v %</label>
+        <input id="rsSad" inputmode="decimal" value="${esc(String(Math.round((pr?.sadzba||0)*1000)/10).replace(".",","))}">
+        <label>Dôvod</label>
+        <input id="rsDov" placeholder="napr. dohoda s vedením" value="${esc(opp.sadzbaRucneDovod||"")}">
+        <div class="hint">Podľa pravidla by to bolo ${esc(String(Math.round((zPravidla?.sadzba||0)*1000)/10).replace(".",","))} %.</div>
+      </div>
+      <div class="odm-pop-f">
+        ${opp.sadzbaRucne!=null?`<button type="button" class="btn" data-act="reset">Vrátiť pravidlo</button>`:""}
+        <button type="button" class="btn solid" data-act="ok">Uložiť</button>
+      </div>`;
+    box.querySelector('[data-act="ok"]').onclick=(e)=>{
+      e.stopPropagation();
+      const v=cisloAleboNull(box.querySelector("#rsSad").value);
+      if(v==null || v<0 || v>100){ box.querySelector("#rsSad").focus(); return; }
+      uloz({ sadzbaRucne:Math.round(v*10)/1000, sadzbaRucneDovod:box.querySelector("#rsDov").value.trim()||null,
+        sadzbaRucneKto:state.user.name, sadzbaRucneKedy:Date.now() },
+        `Sadzba ${String(v).replace(".",",")} %`);
+    };
+    box.querySelector('[data-act="reset"]')?.addEventListener("click", e=>{ e.stopPropagation();
+      uloz({sadzbaRucne:null, sadzbaRucneDovod:null, sadzbaRucneKto:null, sadzbaRucneKedy:null},
+        "Sadzba sa riadi pravidlom"); });
+  }
+
+  document.body.appendChild(box);
+  const rc=anchor.getBoundingClientRect();
+  const w=Math.min(co==="sadzba"?280:300, window.innerWidth-20);
+  box.style.width=w+"px";
+  box.style.left=Math.max(10, Math.min(rc.left, window.innerWidth-10-w))+"px";
+  const pod=rc.bottom+6, h=box.offsetHeight;
+  box.style.top=(pod+h>window.innerHeight-10 ? Math.max(10, rc.top-h-6) : pod)+"px";
+  setTimeout(()=>{
+    box.querySelector("#rsSad")?.focus();
+    const zavri=(e)=>{ if(!box.contains(e.target)){ box.remove(); document.removeEventListener("mousedown",zavri); } };
+    document.addEventListener("mousedown",zavri);
+  },0);
+}
+
+/* Odstránenie prípadu priamo zo zoznamu. */
+async function zrusPripadRychlo(opp){
+  const dovod=prompt(`Odstrániť obchodný prípad ${opp.client} — ${segLabel(opp.segment,opp.produkt,true)}?\n\nZmizne z Výsledkov NB, z odmien aj z pripomienok. Zadané čísla zostanú uložené.\n\nNapíš dôvod:`, "duplicita");
+  if(dovod===null) return;
+  try{
+    await backend.saveOpportunity({ id:opp.id, stav:"zruseny",
+      zruseneKedy:Date.now(), zruseneKym:state.user.name, zruseneDovod:(dovod||"").trim()||null,
+      updatedBy:state.user.name, updatedAt:Date.now() });
+    toast("Prípad odstránený");
+  }catch(err){
+    console.error("zrušenie prípadu:", err);
+    toast("⚠ Nepodarilo sa odstrániť: "+(err?.message||err?.code||"neznáma chyba"));
+  }
+}
+
+/* Súčty marže a kusov za prípad — do zoznamu Výsledkov NB. */
+function sumaMarze(oppId){
+  return resultsPre(oppId).reduce((a,r)=>a+(r.marza||0),0);
+}
+function sumaKusov(oppId){
+  return resultsPre(oppId).reduce((a,r)=>a+(r.mnozstvo||0),0);
 }
 
 /* Načítanie súboru a okno s náhľadom. */
