@@ -3928,11 +3928,28 @@ function fmtDateTime(ts){
   const d=new Date(ts);
   return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 }
-const CURRENT_WEEK = weekId(new Date());
+/* Aktuálny týždeň sa počíta priebežne, nie raz pri načítaní stránky.
+   Appka býva otvorená aj niekoľko dní a po prelome týždňa sa inak držala
+   toho starého — záznam zapísaný v pondelok potom padol do minulého týždňa. */
+const aktualnyTyzden = () => weekId(new Date());
+let CURRENT_WEEK = aktualnyTyzden();
 /* Appka vždy ukazuje skutočný kalendárny týždeň. Od pondelka teda ten nový
-   a aktivity v ňom pribúdajú priebežne. Pôvodné prepínanie až vo štvrtok
-   spôsobovalo, že sa práve zapísaná aktivita tri dni nikde neukázala. */
+   a aktivity v ňom pribúdajú priebežne. */
 const DEFAULT_WEEK = CURRENT_WEEK;
+
+/* Kontrola každú minútu. Keď sa medzitým prelomil týždeň a používateľ stojí
+   na tom, ktorý bol dovtedy aktuálny, posunieme ho automaticky. */
+setInterval(()=>{
+  const novy=aktualnyTyzden();
+  if(novy===CURRENT_WEEK) return;
+  const bolNaAktualnom = state.week===CURRENT_WEEK;
+  CURRENT_WEEK=novy;
+  if(bolNaAktualnom){
+    state.week=novy; state.suggestions=[]; state.nbCopyPreview=null;
+    toast(`Začal sa nový týždeň — ${weekRangeLabel(novy)}`);
+  }
+  render();
+}, 60000);
 
 /* ============================================================================
    DEMO DÁTA — bez čísel, s cross-sell a históriou
@@ -13861,7 +13878,7 @@ gsWireSearch();
 
 /* Značka verzie. Keď sa niečo „nezobrazuje", najprv treba vedieť, či je
    nasadený ten súbor, o ktorom hovoríme. */
-const BUILD = "2026-09-20 · nové logo Cromwell Group";
+const BUILD = "2026-09-21 · priebežný prepočet týždňa";
 (function znackaVerzie(){
   const b=document.getElementById("buildStamp");
   if(b) b.textContent = BUILD;
