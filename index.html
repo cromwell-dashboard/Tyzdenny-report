@@ -1804,6 +1804,8 @@ select:disabled{cursor:default; opacity:.65}
 .hint.warn{color:#B45F0C; font-weight:600}
 /* Obchodník a spolupracujúci vedľa seba — tlačidlo má výšku výberu. */
 .obch-row .add-coobch-btn{width:100%; justify-content:center; height:38px; margin:0}
+.add-coobch-btn .co-lbl{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.add-coobch-btn.on{border-color:var(--brand); background:var(--brand-soft); color:var(--brand)}
 @media (max-width:560px){ .obch-row{grid-template-columns:1fr} }
 /* Web je nepovinný, ale chceme, aby ho obchodník videl a doplnil. */
 .web-field{margin-top:9px;padding:9px 11px;background:#F4F8FF;border:1px solid #D6E4FA;border-radius:10px}
@@ -3137,7 +3139,7 @@ select:disabled{cursor:default; opacity:.65}
           <label>Spolupracujúci <span class="opt">nepovinné</span></label>
           <button type="button" class="add-coobch-btn" id="addCoObchBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
-            Pridať ďalších obchodníkov
+            <span class="co-lbl">Pridať ďalších obchodníkov</span>
           </button>
           <div id="coObchWrap" style="display:none">
             <div class="co-obch-pick" id="coObchPick"></div>
@@ -3410,6 +3412,7 @@ const OBCHODNIK_EMAILS = {
   "zuzana.dvorakova@zelenaposta.sk":   { name:"Zuzana Dvořáková",     firma:"Zelená pošta",  segments:["zelena","tlac","ad"] },
   "henrieta.kriskova@zelenaposta.sk":  { name:"Henrieta Krišková",    firma:"Zelená pošta",  segments:["zelena"] },
   "katarina.chmelova@cromwell.sk":     { name:"Katarína Chmelová",    firma:"Cromwell Post", segments:["ad","nad"] },
+  "michal.svec@cromwell.sk":           { name:"Michal Švec",          firma:"Cromwell Post", segments:["tlac"] },
   // Balíky — KOLOS
   "felix.krause@kolos.sk":             { name:"Felix Krause",         firma:"KOLOS",         segments:["baliky"] },
   "peleskova@kolos.sk":                { name:"Alexandra Pelešková",  firma:"KOLOS",         segments:["baliky"] },
@@ -7004,10 +7007,32 @@ function buildStatic(){
       return b; };
     q.appendChild(mk("zajtra",1)); q.appendChild(mk("o týždeň",7)); q.appendChild(mk("o 2 týždne",14)); q.appendChild(mk("o mesiac",30));
   }
+  /* Zoznam spolupracujúcich sa po výbere zbalí — ostane len tlačidlo
+     s vybranými menami. Rozbalený zoznam zbytočne zaberal pol okna. */
+  function zbalSpolupracujucich(){
+    const vyber=$("#coObchPick");
+    const mena=[...(vyber?.querySelectorAll("input:checked")||[])].map(i=>i.value);
+    $("#coObchWrap").style.display="none";
+    const btn=$("#addCoObchBtn");
+    btn.style.display="";
+    btn.classList.toggle("on", mena.length>0);
+    const lbl=btn.querySelector(".co-lbl");
+    if(lbl) lbl.textContent = mena.length ? mena.join(", ") : "Pridať ďalších obchodníkov";
+    btn.title = mena.length ? "Klikni pre úpravu výberu" : "";
+  }
+  window.__zbalSpolupracujucich=zbalSpolupracujucich;
+
   $("#addCoObchBtn").onclick=()=>{
     $("#coObchWrap").style.display="";
     $("#addCoObchBtn").style.display="none";
   };
+  /* Kliknutie mimo zoznamu ho zbalí. */
+  document.addEventListener("mousedown", ev=>{
+    const wrap=$("#coObchWrap");
+    if(!wrap || wrap.style.display==="none") return;
+    if(wrap.contains(ev.target) || $("#addCoObchBtn")?.contains(ev.target)) return;
+    zbalSpolupracujucich();
+  });
   $("#fClient").addEventListener("input",updateLastWeekHint);
   $("#fSegment").addEventListener("change",updateLastWeekHint);
   $("#lwHintCopy").onclick=()=>{
@@ -13173,8 +13198,10 @@ function openModal(entry,presetSeg){
       lab.querySelector("input").onchange=e=>lab.classList.toggle("on",e.target.checked);
       pick.appendChild(lab);
     });
-    $("#coObchWrap").style.display = coList.length ? "" : "none";
-    $("#addCoObchBtn").style.display = coList.length ? "none" : "";
+    // zoznam je vždy zbalený — vybraní kolegovia sú napísaní na tlačidle
+    $("#coObchWrap").style.display="none";
+    $("#addCoObchBtn").style.display="";
+    window.__zbalSpolupracujucich?.();
   }
   {
     // stav sa ponúka podľa typu záznamu a služby
@@ -13878,7 +13905,7 @@ gsWireSearch();
 
 /* Značka verzie. Keď sa niečo „nezobrazuje", najprv treba vedieť, či je
    nasadený ten súbor, o ktorom hovoríme. */
-const BUILD = "2026-09-21 · priebežný prepočet týždňa";
+const BUILD = "2026-09-24 · Michal Švec, zbalený výber kolegov";
 (function znackaVerzie(){
   const b=document.getElementById("buildStamp");
   if(b) b.textContent = BUILD;
