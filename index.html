@@ -766,6 +766,8 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .rs-odm{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--brand);text-align:right}
 .res-row.ciel input{border-color:var(--brand)}
 .res-row.ciel{background:var(--brand-soft);border-radius:8px}
+/* Práve uložený záznam — krátke zvýraznenie, nech je hneď vidieť. */
+.entry.prave-ulozene{box-shadow:0 0 0 2px var(--brand), var(--shadow-sm)}
 .rs-row.klik{cursor:pointer}
 .rs-row.klik:hover{background:var(--bg)}
 .rs-sum.nic{color:var(--line)}
@@ -1957,6 +1959,8 @@ select:disabled{cursor:default; opacity:.65}
 .cd-name-row .new-slot{display:inline-flex}
 .scope-switch .new-slot{display:inline-flex;margin-left:6px;vertical-align:1px}
 .link-toggle .new-slot{display:inline-flex;margin-left:2px}
+.lnk-uz{font-size:10.5px;font-weight:500;color:#C6A24A;margin-left:4px}
+.lnk-uz:empty{display:none}
 .link-toggle .new-slot:empty{display:none}
 .scope-switch .new-badge{margin-left:0;cursor:help}
 .navitem .new-slot .new-badge{margin-left:0}
@@ -2943,6 +2947,7 @@ select:disabled{cursor:default; opacity:.65}
           title="Jedna zákazka, viac služieb — napríklad tlač letákov a ich roznos. Vznikne samostatný záznam pre každú službu, ale píšeš ho raz.">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
           <span id="fLinkToggleLbl">Pridať súvisiacu službu</span>
+          <span class="lnk-uz" id="fLinkUz"></span>
           <span class="new-slot" data-new="spojena"></span>
         </button>
         <div id="fLinkWrap" class="link-wrap" style="display:none">
@@ -3036,7 +3041,7 @@ select:disabled{cursor:default; opacity:.65}
               </div>
               <input id="ecfPos" placeholder="Pozícia (napr. konateľ, nákupca)">
               <div class="lead-cform-row">
-                <input id="ecfPhone" placeholder="Telefón">
+                <input id="ecfPhone" type="tel" inputmode="tel" placeholder="Telefón">
                 <input id="ecfMail" placeholder="E-mail">
               </div>
               <div class="lead-cform-actions">
@@ -3065,7 +3070,7 @@ select:disabled{cursor:default; opacity:.65}
             <div class="hint">Sídlo klienta.</div>
           </div>
           <div class="field">
-            <label>Predpoklad tržba €/mes. <span class="req">povinné</span></label>
+            <label>Predpoklad tržba €/mes. <span class="opt">nepovinné</span></label>
             <input id="fRevenue" type="number" min="0" step="10" inputmode="numeric">
             <div class="hint">Odhad za zvolenú službu.</div>
           </div>
@@ -3754,13 +3759,16 @@ function fillLinkPick(){
   const jeNB=$("#fKindField").style.display!=="none"
     ? $("#fKind").querySelector("input:checked")?.value==="nb"
     : !!modalEntry?.isNewBusiness;
-  /* Ponúkame aj pri úprave — napríklad keď sa záznam omylom zapísal ako
-     Customer care a teraz sa mení na New business. Skryjeme to len vtedy,
-     keď záznam už do nejakej spojenej zákazky patrí. */
-  if(!jeNB || modalEntry?.linkId){ field.style.display="none"; box.innerHTML=""; return; }
+  /* Ponúkame vždy pri New business — aj pri úprave a aj vtedy, keď záznam
+     už do spojenej zákazky patrí. Pridať tretiu službu k existujúcej dvojici
+     je bežná potreba, napríklad leták k tlači a roznosu. */
+  if(!jeNB){ field.style.display="none"; box.innerHTML=""; return; }
   field.style.display="";
+  // služby, ktoré v spojenej zákazke už sú, sa znova neponúkajú
+  const uzVSkupine=new Set(
+    (modalEntry?.linkId ? linkSurodenci(modalEntry) : []).map(x=>x.segment));
   const zvolene=new Set([...box.querySelectorAll("input:checked")].map(i=>i.value));
-  box.innerHTML=SEGMENTS.filter(sg=>sg.id!==hlavna).map(sg=>
+  box.innerHTML=SEGMENTS.filter(sg=>sg.id!==hlavna && !uzVSkupine.has(sg.id)).map(sg=>
     `<label class="${zvolene.has(sg.id)?"on":""}"><input type="checkbox" value="${sg.id}"${zvolene.has(sg.id)?" checked":""}>${segIcon(sg.id,14)}${esc(sg.short)}</label>`
   ).join("");
   const prepis=()=>{
@@ -3768,6 +3776,13 @@ function fillLinkPick(){
     const lbl=$("#fLinkToggleLbl");
     if(lbl) lbl.textContent = n ? `Súvisiace služby (${n})` : "Pridať súvisiacu službu";
     $("#fLinkToggle")?.classList.toggle("on", n>0);
+    // pri už spojenej zákazke napíšeme, čo v nej je
+    const uz=$("#fLinkUz");
+    if(uz){
+      const su=modalEntry?.linkId ? linkSurodenci(modalEntry) : [];
+      uz.textContent = su.length
+        ? "už spojené s: "+su.map(x=>segLabel(x.segment,x.produkt,true)).join(", ") : "";
+    }
   };
   box.querySelectorAll("input").forEach(i=>{
     i.onchange=()=>{
@@ -5829,6 +5844,12 @@ function renderEntryContacts(){
     box.appendChild(row);
   });
 }
+/* Telefón — ak zostala len predvoľba, berieme to ako nevyplnené. */
+const cisteCislo = v => {
+  const t=String(v||"").trim();
+  return (!t || t.replace(/[\s\-()]/g,"")==="+421") ? "" : t;
+};
+
 /* Ktorý kontakt sa práve upravuje. Prázdne = pridáva sa nový. */
 let upravovanyKontakt=null;
 function upravKontakt(id){
@@ -5838,7 +5859,7 @@ function upravKontakt(id){
   $("#ecfFirst").value=c.firstName||"";
   $("#ecfLast").value=c.lastName||"";
   $("#ecfPos").value=c.position||"";
-  $("#ecfPhone").value=c.phone||"";
+  $("#ecfPhone").value=c.phone||"+421 ";
   $("#ecfMail").value=c.email||"";
   $("#eContactForm").style.display="";
   $("#ecfSave").textContent="Uložiť zmeny";
@@ -5857,6 +5878,7 @@ function wireEntryContacts(){
     upravovanyKontakt=null;
     form.style.display="";
     ["ecfFirst","ecfLast","ecfPos","ecfPhone","ecfMail"].forEach(id=>$("#"+id).value="");
+    $("#ecfPhone").value="+421 ";   // predvoľba, nech ju nikto nemusí písať
     $("#ecfSave").textContent="Uložiť kontakt";
     $("#ecfFirst").focus();
   };
@@ -5864,7 +5886,7 @@ function wireEntryContacts(){
   $("#ecfSave").onclick=()=>{
     const udaje={
       firstName:$("#ecfFirst").value.trim(), lastName:$("#ecfLast").value.trim(),
-      position:$("#ecfPos").value.trim(), phone:$("#ecfPhone").value.trim(),
+      position:$("#ecfPos").value.trim(), phone:cisteCislo($("#ecfPhone").value),
       email:$("#ecfMail").value.trim(),
     };
     if(!udaje.firstName && !udaje.lastName && !udaje.phone && !udaje.email){
@@ -7278,6 +7300,19 @@ function renderNow(){
   if(state.openColFilter) document.onclick=()=>{ if(state.openColFilter){ state.openColFilter=null; document.onclick=null; render(); } };
   _quickStatusTipShown=false;                          // tip o zmene stavu sa ukáže raz za obrazovku
   setTimeout(oznacPrepojene, 0);                       // spojka pri prepojených záznamoch
+  /* Práve uložený záznam zvýrazníme a posunieme naň obrazovku. Bez toho ho
+     človek po zápise z pripomienky hľadá medzi desiatkami ostatných. */
+  if(state.poslednyZapis){
+    const id=state.poslednyZapis;
+    setTimeout(()=>{
+      const k=document.querySelector(`.entry[data-zid="${CSS.escape(id)}"]`);
+      if(!k) return;
+      state.poslednyZapis=null;
+      k.classList.add("prave-ulozene");
+      k.scrollIntoView({block:"center", behavior:"smooth"});
+      setTimeout(()=>k.classList.remove("prave-ulozene"), 2600);
+    }, 60);
+  }
   // úlohu na fakturáciu riešime až keď sú dáta načítané, mimo vykresľovania
   setTimeout(skontrolujFakturacnuUlohu, 3000);
   setTimeout(novinkyPopup, 700);                       // uvítacie okno, každému raz
@@ -10004,7 +10039,10 @@ function fpill(icon,label,active,opts,onPick,title){
   w.appendChild(sel); return w;
 }
 
-const entryTs = e => e.updatedAt || e.nbImportedAt || 0;
+/* Čas záznamu na zoradenie. Berieme to novšie z uloženia a vytvorenia —
+   pri zázname zapísanom z pripomienky bolo `updatedAt` niekedy staršie
+   a nový zápis padol doprostred zoznamu, kde ho nikto nenašiel. */
+const entryTs = e => Math.max(e.updatedAt||0, e.createdAt||0, e.nbImportedAt||0);
 
 /* Použije filtre na zoznam záznamov. `lock` vynúti kontext sekcie (napr. New Business). */
 function applyEntryFilters(list, lock){
@@ -12204,6 +12242,7 @@ function entryCard(e,clients,opts={}){
   if(e.weekId!==state.week) metaBits.push(`<span title="Záznam z týždňa ${esc(weekRangeLabel(e.weekId))}">${esc(weekRangeLabel(e.weekId))}</span>`);
 
 
+  card.dataset.zid = e.id || "";
   card.style.setProperty("--stav", stripColor);
   card.innerHTML=`<div style="background:${stripColor}"></div><div class="ebody">
     <div class="e-top"><div class="e-client">${clientLabel}${e.material?`<span class="mat-badge" title="Materiál agentúry ${esc(e.client||"")}">${esc(e.material)}</span>`:""}
@@ -13568,6 +13607,7 @@ async function saveFromModalInner(){
      prípadu — prípad si `linkId` kopíruje zo záznamu a inak by mu zostalo
      prázdne práve pri tom hlavnom. */
   const suvisiace = vybraneSuvisiace();
+  // nová spojená zákazka dostane vlastné linkId; k existujúcej sa len pridáva
   if(suvisiace.length && entry.isNewBusiness && !entry.linkId){
     entry.linkId = "lnk_" + Math.random().toString(36).slice(2,10);
   }
@@ -13589,6 +13629,7 @@ async function saveFromModalInner(){
     if(oppId) entry.opportunityId=oppId;
   }
 
+  state.poslednyZapis = entry.id || null;   // po uložení naň skočíme
   await backend.save(entry);
   // stav prípadu ide za stavom záznamu — "Vyfakturované" prípad označí ako vyhraný
   if(entry.isNewBusiness && entry.opportunityId) await zosuladPripad(entry);
@@ -13971,7 +14012,7 @@ gsWireSearch();
 
 /* Značka verzie. Keď sa niečo „nezobrazuje", najprv treba vedieť, či je
    nasadený ten súbor, o ktorom hovoríme. */
-const BUILD = "2026-09-24c · riadok otvára okno, bez fakt. priamo";
+const BUILD = "2026-09-24f · pridanie služby k spojenej zákazke";
 (function znackaVerzie(){
   const b=document.getElementById("buildStamp");
   if(b) b.textContent = BUILD;
