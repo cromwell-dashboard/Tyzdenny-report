@@ -764,6 +764,19 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
   grid-template-columns:minmax(118px,1.35fr) 20px minmax(90px,0.75fr) 120px 50px 72px 72px 52px 60px 90px minmax(84px,0.75fr) 82px 86px;
   gap:8px;align-items:center;padding:8px 12px}
 .rs-odm{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--brand);text-align:right}
+.res-row.ciel input{border-color:var(--brand)}
+.res-row.ciel{background:var(--brand-soft);border-radius:8px}
+.rs-row.klik{cursor:pointer}
+.rs-row.klik:hover{background:var(--bg)}
+.rs-sum.nic{color:var(--line)}
+.rs-bez{display:flex;justify-content:center}
+.rs-bez input{width:16px;height:16px;accent-color:var(--brand);cursor:pointer}
+.rs-fajka{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;
+  margin-right:5px;vertical-align:-2px;color:#fff}
+.rs-fajka svg{width:9px;height:9px}
+.rs-fajka.naKontrolu{background:#B45F0C}
+.rs-fajka.skontrolovane{background:#12915A}
+.rs-row.uklada{opacity:.6}
 .res-tabs{margin-bottom:10px}
 .res-tabs .tab-n{margin-left:7px;font-family:var(--mono);font-size:11px;font-weight:700;opacity:.65}
 /* Obchodník sadzbu ani odmenu v zozname nevidí — o dva stĺpce menej. */
@@ -4102,7 +4115,7 @@ const state = {
   opportunities:[],        // obchodné prípady (New business) — firma × služba × priebeh obchodu
   results:[],              // mesačné výsledky prípadov (tržba, marža, kusy)
   resQ:"", resOnlyChyba:false, resObchodnik:"", resMesiac:null,   // filtre v sekcii Výsledky NB
-  resTab:"nevybavene",     // Výsledky NB — nevybavené / vybavené
+  resTab:"vsetko",         // Výsledky NB — všetko / čaká na doplnenie / vybavené
   rewardRules:[],          // meta/rewardRules — sadzby a dĺžka obdobia podľa služby
   rewards:[],              // schválené odmeny — jeden dokument na jeden mesačný výsledok
   odmObdobie:"",           // zvolený mesiac v sekcii Moje odmeny
@@ -9182,7 +9195,7 @@ function menoMesiaca(obdobie){
 }
 
 /* Okno na zadanie mesačných výsledkov obchodného prípadu. */
-function openResultsModal(opp){
+function openResultsModal(opp, zameraj){
   const mesiace=mesiaceNaVyplnenie(opp);
   const periodicke=new Set(mesiacePodlaPeriodicity(opp));
   const kusy=evidujeKusy(opp.segment);
@@ -9751,6 +9764,17 @@ function openResultsModal(opp){
     }
   };
   document.body.appendChild(scrim);
+  /* Prichádzame zo zoznamu filtrovaného na mesiac — skočíme rovno naň,
+     nech človek nehľadá riadok medzi dvanástimi. */
+  {
+    const ciel = zameraj || state.resMesiac;
+    const riadok = ciel ? scrim.querySelector(`.res-row[data-m="${CSS.escape(ciel)}"]`) : null;
+    if(riadok){
+      riadok.classList.add("ciel");
+      riadok.scrollIntoView({block:"center"});
+      setTimeout(()=>riadok.querySelector('input[data-f="trzba"]:not([disabled])')?.focus(), 90);
+    }
+  }
 }
 
 /* ---------------------------------------------------------------- ZOBRAZENIE "VŠETKO" — ZOSKUPENÝ ZOZNAM
@@ -11217,7 +11241,8 @@ function viewResults(){
      už riešiť netreba. */
   const prep=el("div","scope-switch res-tabs");
   prep.innerHTML=`
-    <button data-tab="nevybavene"${state.resTab!=="vybavene"?' class="on"':""}>Čaká na doplnenie<span class="tab-n"></span></button>
+    <button data-tab="vsetko"${state.resTab==="vsetko"?' class="on"':""}>Všetko<span class="tab-n"></span></button>
+    <button data-tab="nevybavene"${state.resTab==="nevybavene"?' class="on"':""}>Čaká na doplnenie<span class="tab-n"></span></button>
     <button data-tab="vybavene"${state.resTab==="vybavene"?' class="on"':""}>Vybavené<span class="tab-n"></span></button>`;
   prep.querySelectorAll("button").forEach(b=>{
     b.onclick=()=>{ state.resTab=b.dataset.tab; render(); };
@@ -11252,9 +11277,11 @@ function viewResults(){
     const caka=rows.filter(o=>!jeVybavene(o));
     /* Počítadlá hľadáme v samotnom prepínači, nie v dokumente — sekcia sa
        vykresľuje ešte pred vložením do stránky a $("#tabN") by bolo null. */
+    prep.querySelector('[data-tab="vsetko"] .tab-n').textContent=rows.length;
     prep.querySelector('[data-tab="nevybavene"] .tab-n').textContent=caka.length;
     prep.querySelector('[data-tab="vybavene"] .tab-n').textContent=vybavene.length;
-    rows = state.resTab==="vybavene" ? vybavene : caka;
+    if(state.resTab==="vybavene") rows=vybavene;
+    else if(state.resTab==="nevybavene") rows=caka;
     /* Najnovšie navrch — podľa posledného vyplneného mesiaca, pri zhode
        podľa začiatku NB obdobia. Abecedne až nakoniec. */
     rows.sort((a,b)=>
@@ -11265,6 +11292,11 @@ function viewResults(){
     info.textContent=`${rows.length} ${plural(rows.length,"prípad","prípady","prípadov")}${
       chybaSpolu?` · ${chybaSpolu} ${plural(chybaSpolu,"mesiac bez čísel","mesiace bez čísel","mesiacov bez čísel")}`:""}`;
     listWrap.innerHTML="";
+    if(!rows.length && state.resTab==="vsetko"){
+      listWrap.appendChild(el("div","empty",
+        `<b>Za ${esc(state.resMesiac?menoMesiaca(state.resMesiac):"toto obdobie")} tu nič nie je</b>Vyber iný mesiac v lište hore, alebo prepni na Všetky mesiace.`));
+      return;
+    }
     if(!rows.length){
       listWrap.appendChild(el("div","empty", state.resTab==="vybavene"
         ? `<b>Zatiaľ nič vybavené</b>${state.resMesiac?`Za ${esc(menoMesiaca(state.resMesiac))} ešte nikto nedoplnil čísla.`:"Doplň čísla a prípady sa sem presunú."}`
@@ -11278,7 +11310,7 @@ function viewResults(){
     /* Zoznam je rozdelený podľa toho, v akej fáze práce prípad je —
        inak je to len kopa, v ktorej sa nedá rozoznať, čo treba riešiť. */
     if(state.resTab!=="vybavene"){
-      // všetko tu čaká na to isté — delenie podľa fáz by len pridalo hluk
+      // v prehľade aj v čakajúcich je jeden zoznam — delenie by pridalo hluk
       listWrap.appendChild(tabulka(rows));
       return;
     }
@@ -11298,7 +11330,7 @@ function viewResults(){
     const box=el("div","gl-list"+(vidiOdmenu()?"":" bez-odmeny"));
     const head=el("div","rs-head");
     head.innerHTML=`<span>Firma</span><span></span><span>Obchodník</span><span>Posl. mesiac</span>
-      <span class="r">Fakt.</span><span class="r">Tržby</span><span class="r">Marža</span><span class="r">Kusy</span>
+      ${state.resMesiac?`<span class="r" title="Bez fakturácie">Bez f.</span>`:`<span class="r">Fakt.</span>`}<span class="r">Tržby</span><span class="r">Marža</span><span class="r">Kusy</span>
       ${vidiOdmenu()?`<span class="r">Sadzba</span>`:""}<span>Periodicita</span><span>Oslovenie</span>${vidiOdmenu()?`<span class="r">Odmena</span>`:""}<span></span>`;
     box.appendChild(head);
     zoznam.forEach(o=>{
@@ -11307,17 +11339,31 @@ function viewResults(){
       const sad=pr ? Math.round((pr.sadzba||0)*1000)/10 : null;
       const kusy=evidujeKusy(o.segment);
       const r=el("div","rs-row");
-      r.innerHTML=`<span class="rs-name"><span class="kl-link" data-klient="${esc(o.client||"")}" title="${esc(o.client||"")} — otvoriť detail klienta">${esc(o.client||"—")}</span>${o.zakazka?`<span class="rs-zak">${esc(o.zakazka)}</span>`:""}</span>
+      const stk=stavKontroly(o);
+      r.innerHTML=`<span class="rs-name">${stk==="naKontrolu"||stk==="skontrolovane"
+          ? `<span class="rs-fajka ${stk}" title="${stk==="skontrolovane"?`Skontroloval ${esc(o.skontrolovalKym||"—")}`:`Označil za hotové ${esc(o.hotovoKym||"—")}`}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>` : ""}<span class="kl-link" data-klient="${esc(o.client||"")}" title="${esc(o.client||"")} — otvoriť detail klienta">${esc(o.client||"—")}</span>${o.zakazka?`<span class="rs-zak">${esc(o.zakazka)}</span>`:""}</span>
         <span class="gl-seg" title="${esc(segLabel(o.segment,o.produkt))}">${seg?segIcon(o.segment,16):""}</span>
         <span class="rs-own">${esc((o.vlastnici||[]).map(x=>x.meno).join(", ")||"—")}</span>
         <span class="rs-obd">${(()=>{ const pm=poslednyMesiac(o);
           return `<b class="rs-pm${pm?"":" ziadny"}">${pm?esc(kratkyMesiac(pm)):"—"}</b>
             <span class="rs-obd-p">${esc(kratkyMesiac(o.nbOd))} – ${esc(kratkyMesiac(o.nbDo))}</span>`;
         })()}</span>
-        <span class="rs-cnt" title="Vyplnené mesiace z celkového počtu fakturácií za obdobie">${esc(uplynuleMesiace(o))}</span>
-        <span class="rs-sum">${eurKratko(sumaTrzieb(o.id))}</span>
-        <span class="rs-sum marza">${eurKratko(sumaMarze(o.id))}</span>
-        <span class="rs-sum ks">${kusy ? formatCislo(sumaKusov(o.id)) : "—"}</span>
+        ${(()=>{
+          const c=cislaPreZoznam(o);
+          const m=state.resMesiac;
+          if(!m) return `<span class="rs-cnt" title="Vyplnené mesiace z celkového počtu fakturácií za obdobie">${esc(uplynuleMesiace(o))}</span>
+            <span class="rs-sum">${eurKratko(c.trzba)}</span>
+            <span class="rs-sum marza">${eurKratko(c.marza)}</span>
+            <span class="rs-sum ks">${kusy ? formatCislo(c.mnozstvo) : "—"}</span>`;
+          /* Priamo v riadku ostáva len „bez fakturácie" — jeden klik pre
+             najčastejší prípad. Čísla sa zadávajú v okne, ktoré sa otvorí
+             kliknutím na riadok. Štyri políčka v riadku boli neprehľadné. */
+          return `<span class="rs-bez"><label title="V tomto mesiaci sa nefakturovalo">
+              <input type="checkbox" data-f="bez"${c.bez?" checked":""}></label></span>
+            <span class="rs-sum${c.bez?" nic":""}">${c.bez?"—":eurKratko(c.trzba)}</span>
+            <span class="rs-sum marza${c.bez?" nic":""}">${c.bez?"—":eurKratko(c.marza)}</span>
+            <span class="rs-sum ks">${(kusy && !c.bez) ? formatCislo(c.mnozstvo) : "—"}</span>`;
+        })()}
         ${vidiOdmenu() ? `<span class="rs-cell"><button type="button" class="rs-inline${pr?.sadzbaRucne?" rucna":""}" data-ed="sadzba"
           title="Sadzba odmeny${pr?.sadzbaRucne?" — nastavená ručne":""}">${sad==null?"—":String(sad).replace(".",",")+" %"}</button></span>` : ""}
         <span class="rs-cell"><button type="button" class="rs-inline" data-ed="periodicita"
@@ -11353,6 +11399,26 @@ function viewResults(){
         akcie.appendChild(db);
       }
 
+      // bez fakturácie sa dá zaškrtnúť priamo z riadku
+      {
+        const bez=r.querySelector('input[data-f="bez"]');
+        if(bez) bez.onchange=async()=>{
+          r.classList.add("uklada");
+          try{ await ulozZRiadku(o, state.resMesiac, {bezFakturacie:bez.checked}); }
+          catch(err){
+            console.error("bez fakturácie:", err);
+            toast("⚠ Nepodarilo sa uložiť: "+(err?.message||err?.code||"neznáma chyba"));
+          }
+          r.classList.remove("uklada");
+        };
+      }
+      /* Kliknutie kdekoľvek do riadku otvorí okno na doplnenie čísel.
+         Tlačidlá, odkazy a políčka si svoje kliknutie ponechajú. */
+      r.classList.add("klik");
+      r.onclick=(ev)=>{
+        if(ev.target.closest("button, a, input, label, .kl-link")) return;
+        openResultsModal(o);
+      };
       // úpravy priamo v riadku — netreba vchádzať do záznamu
       r.querySelectorAll("[data-ed]").forEach(b=>{
         b.onclick=(ev)=>{ ev.stopPropagation(); otvorRychluUpravu(b.dataset.ed, o, b); };
@@ -13905,7 +13971,7 @@ gsWireSearch();
 
 /* Značka verzie. Keď sa niečo „nezobrazuje", najprv treba vedieť, či je
    nasadený ten súbor, o ktorom hovoríme. */
-const BUILD = "2026-09-24 · Michal Švec, zbalený výber kolegov";
+const BUILD = "2026-09-24c · riadok otvára okno, bez fakt. priamo";
 (function znackaVerzie(){
   const b=document.getElementById("buildStamp");
   if(b) b.textContent = BUILD;
@@ -14277,6 +14343,44 @@ function sumaMarze(oppId){
 }
 function sumaKusov(oppId){
   return resultsPre(oppId).reduce((a,r)=>a+(r.mnozstvo||0),0);
+}
+/* Čísla do zoznamu Výsledkov NB. Keď je zvolený mesiac, ukazujeme len jeho
+   hodnoty — pri filtri na august má stĺpec Tržby hovoriť o auguste, nie
+   o súčte za celé obdobie. Bez filtra sa sčíta všetko. */
+function cislaPreZoznam(opp){
+  if(state.resMesiac){
+    const r=resultFor(opp.id, state.resMesiac);
+    return { trzba:r?.trzba ?? null, marza:r?.marza ?? null,
+             mnozstvo:r?.mnozstvo ?? null, bez:!!r?.bezFakturacie, res:r||null };
+  }
+  return { trzba:sumaTrzieb(opp.id), marza:sumaMarze(opp.id),
+           mnozstvo:sumaKusov(opp.id), bez:false, res:null, kumul:true };
+}
+/* Zápis čísel priamo z riadku zoznamu. */
+async function ulozZRiadku(opp, mesiac, zmeny){
+  const [rok,mes]=mesiac.split("-").map(Number);
+  const star=resultFor(opp.id, mesiac);
+  const nove={ trzba:star?.trzba ?? null, marza:star?.marza ?? null,
+    mnozstvo:star?.mnozstvo ?? null, bezFakturacie:!!star?.bezFakturacie, ...zmeny };
+  if(nove.bezFakturacie){ nove.trzba=null; nove.marza=null; nove.mnozstvo=null; }
+  const naklad=(nove.trzba!=null && nove.marza!=null)
+    ? Math.round((nove.trzba-nove.marza)*100)/100 : null;
+  await backend.saveResult({
+    id: resultId(opp.id, mesiac), opportunityId: opp.id,
+    obdobie:mesiac, rok, mesiac:mes,
+    trzba:nove.trzba, naklad, marza:nove.marza, mnozstvo:nove.mnozstvo,
+    bezFakturacie:nove.bezFakturacie,
+    mena:"EUR", ico:opp.ico||null, segment:opp.segment||null, produkt:opp.produkt||null,
+    ownerUids:opp.ownerUids||[],
+    zdroj: star?.zdroj || "rucne", upraveneRucne: !!star,
+    stav: star?.stav || "zadane",
+    zadalUid: star?.zadalUid || state.user.uid || null,
+    zadalMeno: star?.zadalMeno || state.user.name,
+    zadalKedy: star?.zadalKedy || Date.now(),
+    upravilUid: star ? (state.user.uid||null) : null,
+    upravilMeno: star ? state.user.name : null,
+    upravilKedy: star ? Date.now() : null,
+  });
 }
 
 /* Načítanie súboru a okno s náhľadom. */
