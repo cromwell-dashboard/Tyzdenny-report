@@ -480,6 +480,7 @@ button.gl-nb-mes:hover{text-decoration:underline}
 .navitem .seg-logo2{height:14px;width:auto;flex:0 0 auto;object-fit:contain;opacity:.75}
 .navitem.active .seg-logo,.navitem.active .seg-logo2{filter:brightness(10)}
 .navitem .lbl{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.navitem .ct.prazdny{display:none}
 .navitem .ct{font-family:var(--mono); font-size:11.5px; font-weight:600; color:var(--muted); background:#e9ebf0; border-radius:20px; padding:1px 8px; min-width:24px; text-align:center}
 .rail hr{border:none; border-top:1px solid var(--line); margin:14px 6px}
 .rail-foot{margin-top:auto}
@@ -6588,7 +6589,12 @@ async function firebaseBackend(){
         snap=>{ state.rewardRules=snap.exists()?(snap.data().items||[]):[]; render(); },
         err=>{ console.warn("Pravidlá odmeňovania sa nepodarilo načítať:", err); });
       const u15=onSnapshot(collection(db,"results"),
-        snap=>{ state.results=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
+        snap=>{
+          state.results=snap.docs.map(d=>({id:d.id,...d.data()}));
+          render();
+          // po doplnení posledného prípadu sa pripomienka zruší sama
+          setTimeout(skontrolujFakturacnuUlohu, 300);
+        },
         err=>{ console.warn("Mesačné výsledky sa nepodarilo načítať:", err); });
       const u14=onSnapshot(collection(db,"opportunities"),
         snap=>{
@@ -10875,12 +10881,14 @@ function novinkyOznam(){
    ID je odvodené od používateľa a obdobia, takže sa nemôže zdvojiť.
    Vzniká len pre prihláseného človeka a len za mesiac, ktorý je práve na rade.
    Keď všetko doplní, úloha sa sama uzavrie. Ak ju uzavrel sám, už ju nekriesime. */
-let _fakturaciaSkontrolovana=false;
+/* Kontrola nebeží len raz po načítaní — inak by úloha po doplnení posledného
+   prípadu visela až do ďalšieho otvorenia appky. Beží pri každej zmene
+   výsledkov, ale zasiahne len vtedy, keď sa naozaj niečo zmenilo. */
+let _fakturaciaBezi=false, _fakturaciaStav="";
 async function skontrolujFakturacnuUlohu(){
-  if(_fakturaciaSkontrolovana) return;
+  if(_fakturaciaBezi) return;
   if(!state.user || !backend?.saveTask) return;
   if(!state.opportunities?.length) return;      // dáta ešte nedorazili
-  _fakturaciaSkontrolovana=true;
 
   const obdobie=pridajMesiace(terajsiMesiac(), -1);
   const chybajuce=viditelnePripady().filter(o=>
@@ -10889,6 +10897,12 @@ async function skontrolujFakturacnuUlohu(){
   const id=`fakt_${state.user.uid || clientKey(state.user.key||state.user.name)}_${obdobie}`;
   const uloha=(state.tasks||[]).find(t=>t.id===id);
 
+  // ak sa od minula nič nezmenilo, netreba nič robiť
+  const podpis=`${obdobie}|${chybajuce.length}|${uloha?uloha.status:"-"}`;
+  if(podpis===_fakturaciaStav) return;
+  _fakturaciaStav=podpis;
+
+  _fakturaciaBezi=true;
   try{
     if(chybajuce.length){
       if(uloha) return;                          // už existuje alebo ju človek uzavrel
@@ -10909,11 +10923,14 @@ Doplň v sekcii Výsledky. Termín je ${terminText(obdobie)}.`,
         autoFakturacia: obdobie,
         createdBy:"Zappis", createdAt:Date.now(),
       });
-    } else if(uloha && uloha.status!=="done"){
-      // všetko doplnené — úloha sa uzavrie sama
-      await backend.saveTask({ ...uloha, status:"done" });
+    } else if(uloha){
+      /* Všetko doplnené — automatickú úlohu rovno zmažeme. Nechať ju ako
+         vybavenú nemá zmysel, nikto ju nezadal a len zavadzia v zozname. */
+      if(backend.removeTask) await backend.removeTask(uloha.id);
+      else if(uloha.status!=="done") await backend.saveTask({ ...uloha, status:"done" });
     }
-  }catch(err){ console.warn("Úlohu na fakturáciu sa nepodarilo založiť:", err); }
+  }catch(err){ console.warn("Úlohu na fakturáciu sa nepodarilo upraviť:", err); }
+  finally{ _fakturaciaBezi=false; }
 }
 
 /* Pripomienka chýbajúcej fakturácie na Prehľade.
@@ -14012,7 +14029,7 @@ gsWireSearch();
 
 /* Značka verzie. Keď sa niečo „nezobrazuje", najprv treba vedieť, či je
    nasadený ten súbor, o ktorom hovoríme. */
-const BUILD = "2026-09-24f · pridanie služby k spojenej zákazke";
+const BUILD = "2026-09-24h · pripomienka sa maže sama";
 (function znackaVerzie(){
   const b=document.getElementById("buildStamp");
   if(b) b.textContent = BUILD;
