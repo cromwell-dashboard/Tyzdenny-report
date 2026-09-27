@@ -1006,6 +1006,8 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
   grid-template-columns:minmax(118px,1.35fr) 20px minmax(90px,0.75fr) 120px 50px 72px 72px 52px 90px minmax(84px,0.75fr) 86px}
 .rs-pm{display:block;font-family:var(--mono);font-size:12.5px;color:var(--ink)}
 .rs-pm.ziadny{color:var(--line)}
+.rs-pm.rs-chyba{display:inline-block;font-family:inherit;font-size:11px;font-weight:600;color:#B45F0C;
+  background:#FFF4E2;border:1px solid #F2D9AD;border-radius:6px;padding:1px 6px;white-space:nowrap}
 .rs-obd-p{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:1px}
 /* Skupiny podľa fázy práce */
 .rs-group{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:18px 2px 8px}
@@ -2105,7 +2107,8 @@ select:disabled{cursor:default; opacity:.65}
 .ag-pill:has(input:checked){background:var(--brand); border-color:var(--brand); color:#fff}
 .week-chip{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--line-2);color:var(--muted);white-space:nowrap}
 .nb-badge svg{width:11px;height:11px;flex:0 0 auto}
-.entry.nb,.tl-card.nb{border:1.5px solid var(--nb-border)}
+/* New business karty (aj importy z DMIS) — bežné sivé orámovanie, nie zelené */
+.entry.nb,.tl-card.nb{border:1px solid var(--line)}
 .lk.special-client{display:inline-flex; align-items:center; gap:6px; font-weight:700}
 .lk.special-client .sc-icon{width:15px; height:15px; flex:0 0 auto}
 .reg-list{display:flex; flex-direction:column; gap:8px}
@@ -2198,7 +2201,6 @@ select:disabled{cursor:default; opacity:.65}
 /* Postreh — plná zelená vedľa modrého kalendára. */
 .ta-btn.fb{background:#12915A; border-color:#12915A; color:#fff}
 .ta-btn.fb:hover{background:#0E7A4B; border-color:#0E7A4B}
-.ta-btn.fb:hover{background:#F1FAF5; border-color:#8FCDB0}
 /* Postupné stláčanie hornej lišty. Šírka v CSS pixeloch klesá aj pri priblížení
    prehliadača (Ctrl +) a pri škálovaní Windowsu na 125/150 %, takže tieto pravidlá
    platia rovnako pre malý monitor ako pre veľký monitor s priblížením. */
@@ -2208,7 +2210,10 @@ select:disabled{cursor:default; opacity:.65}
 }
 @media(min-width:769px) and (max-width:1360px){
   .ta-btn.fb .ta-lbl{display:none}               /* Postreh — už len ikona */
-  .ta-btn.fb{padding:0 9px}
+  /* Len ikona → pravidelný krúžok (predtým úzky ovál 33 × 38 px) */
+  /* rovnako veľký krúžok ako iniciálky vedľa (32 × 32 px) */
+  .ta-btn.fb{width:32px; min-width:32px; height:32px; min-height:32px; max-height:32px; padding:0; border-radius:50%}
+  .ta-btn.fb svg{width:14px; height:14px}
   .topbar{gap:12px}
 }
 @media(min-width:769px) and (max-width:1220px){
@@ -2217,7 +2222,8 @@ select:disabled{cursor:default; opacity:.65}
 }
 @media(min-width:769px) and (max-width:1080px){
   .ta-btn.add .ta-lbl{display:none}              /* Pridať záznam — už len ikona */
-  .ta-btn.add{padding:0 9px}
+  .ta-btn.add{width:32px; min-width:32px; height:32px; min-height:32px; max-height:32px; padding:0; border-radius:50%}
+  .ta-btn.add svg{width:14px; height:14px}
   .today-link{display:none}
   .scope-switch button{padding:6px 11px}
 }
@@ -3417,6 +3423,310 @@ select:disabled{cursor:default; opacity:.65}
 .tag.s-dovodom::after,.lead-act.s-dovodom::after,.st-ic-btn.s-dovodom::after{
   content:"";position:absolute;top:-2px;right:-2px;width:6px;height:6px;border-radius:50%;
   background:currentColor;opacity:.85;box-shadow:0 0 0 1.5px #fff}
+
+/* ===================================== OKNO ZÁZNAMU — rozloženie a rámiky */
+/* Typ záznamu a dátum v jednom riadku. Výber týždňa sme zrušili, dátum ho
+   nahrádza a uvoľnené miesto využijeme. */
+.riadok-typ{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.riadok-typ .kindpick{flex:1 1 auto;min-width:0}
+.datum-box{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;
+  background:#fff;border:1.5px solid var(--line-2);border-radius:var(--r-sm);box-sizing:border-box;
+  line-height:1.45;font-size:14px}
+.datum-box:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.datum-box svg{width:16px;height:16px;color:var(--brand);flex:0 0 auto}
+.datum-box input{border:none;outline:none;background:none;font-family:inherit;font-size:13px;
+  color:var(--ink);padding:0}
+/* Sekcia Firma stojí na existujúcom vzore .row — ten už v appke drží dva
+   stĺpce zarovnané (popisy majú pevnú výšku 17 px). Tu len doplníme, čo je
+   pre túto sekciu navyše: polia cez obe osi a ikonky typu klienta. */
+.firma-grid > .cele{grid-column:1 / -1}
+.firma-grid .ico-load{width:100%}
+/* Riadok bez popisu musí mať rovnakú medzeru ako tie s popisom. */
+.firma-grid .bez-popisu{padding-top:22px}
+/* Agentúra a fyzická osoba — len ikonky, vysvetlenie je v bubline. */
+.typ-klienta{display:flex;gap:7px}
+.ag-pill.ikona{width:38px;height:38px;padding:0;display:inline-grid;place-items:center;flex:0 0 auto}
+.ag-pill.ikona svg{width:17px;height:17px;margin:0}
+@media (max-width:640px){
+  .firma-grid{grid-template-columns:1fr}
+  .firma-grid .bez-popisu{padding-top:0}
+}
+/* Výraznejšie orámovanie polí — pôvodné sa na jemných displejoch strácalo. */
+.modal-b .field input,.modal-b .field select,.modal-b .field textarea,
+.modal-b .lead-cform input,.modal-b .addr-edit input{
+  border:1.5px solid var(--line-2)}
+.modal-b .field input:hover,.modal-b .field select:hover,.modal-b .field textarea:hover{
+  border-color:var(--muted)}
+.modal-b .field input:focus,.modal-b .field select:focus,.modal-b .field textarea:focus{
+  border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.modal-b .msec{border:1.5px solid #D9DCE4;background:#EDEDED}
+.modal-b .msec-h{color:var(--ink);font-weight:700}
+.modal-b .msec .field input,.modal-b .msec .field select,
+.modal-b .msec .field textarea,.modal-b .msec .lead-cform input{background:#fff}
+/* Pridať súvisiacu službu — obchodníci to prehliadali. */
+.link-toggle{border:1.5px solid var(--brand) !important;background:var(--brand-soft) !important;
+  color:var(--brand) !important;font-weight:700}
+.link-toggle:hover{background:#DFE5FA !important}
+.link-toggle svg{color:var(--brand)}
+/* === Sekcia Firma — rozloženie podľa návrhu A ===
+   Prvý riadok má rovnaké dve polovice ako riadok Klient | Názov zákazky:
+   tlačidlo Finstat končí tam, kde pole Klient, ikonky začínajú tam, kde Názov zákazky.
+   Výška prvkov (--fh) = výška tlačidiel v poli Služba. */
+#fFirmaSection{--fh:30px;--fborder:#D5D9E0}
+#fFirmaSection .firma-r1{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:8px 14px;align-items:end;margin-top:11px}
+#fFirmaSection .r1-pol{display:flex;gap:8px;align-items:flex-end;min-width:0}
+#fFirmaSection .r1-pol>.field{margin:0;min-width:0}
+#fFirmaSection #fIcoField,#fFirmaSection #fWebField{flex:1 1 auto}
+#fFirmaSection .r1-btn,#fFirmaSection .r1-ikony{flex:0 0 auto}
+#fFirmaSection .r1-pol>.field>label{height:17px;line-height:17px;margin-bottom:5px;white-space:nowrap}
+/* Web — bez modrého rámčeka, rovnaké pole ako ostatné */
+#fFirmaSection .web-field{margin:0;padding:0;background:none;border:0;border-radius:0}
+/* Jednotná, nižšia výška polí */
+#fFirmaSection .field input,#fFirmaSection .ico-row input{height:var(--fh);line-height:normal;
+  padding:0 10px;font-size:13px}
+#fFirmaSection .ico-row{height:var(--fh);gap:6px}
+#fFirmaSection .ico-row .flag-btn{width:38px;height:var(--fh);align-self:auto;
+  border:1px solid var(--fborder);border-radius:var(--r-sm);background:#fff}
+#fFirmaSection .flag-btn svg{width:20px;height:14px}
+#fFirmaSection .ico-locked{min-height:var(--fh);box-sizing:border-box;padding:3px 10px}
+/* Načítať z Finstat — zelené tlačidlo */
+#fFirmaSection .ico-load{height:var(--fh);min-height:0;margin:0;padding:0 14px;box-sizing:border-box;
+  background:var(--nb);border:1px solid var(--nb);color:#fff;font-weight:600;font-size:12.5px;
+  border-radius:var(--r-sm);white-space:nowrap}
+#fFirmaSection .ico-load:hover{background:#0E7C4C;border-color:#0E7C4C;color:#fff}
+#fFirmaSection .ico-load:disabled{opacity:.65}
+/* Ikonky agentúra / fyzická osoba */
+#fFirmaSection .typ-klienta{display:flex;gap:6px}
+#fFirmaSection .ag-pill.ikona{width:var(--fh);height:var(--fh);padding:0;box-sizing:border-box;
+  border:1px solid var(--fborder);border-radius:var(--r-sm);background:#fff;color:var(--ink-soft)}
+#fFirmaSection .ag-pill.ikona:hover{border-color:var(--brand);color:var(--brand)}
+#fFirmaSection .ag-pill.ikona:has(input:checked){background:var(--brand);border-color:var(--brand);color:#fff}
+#fFirmaSection .ag-pill.ikona svg{width:15px;height:15px}
+#fFirmaSection .firma-hint{grid-column:1 / -1;margin:-3px 0 0;font-size:11.5px;color:var(--muted)}
+#fFirmaSection .firma-hint:empty{display:none}
+/* Druhý riadok — Názov zákazky na rovnakej výške ako Klient */
+#fFirmaSection .firma-grid{margin-top:10px;gap:10px 14px}
+#fFirmaSection .firma-grid .zak-field{margin-top:0}
+#fFirmaSection .firma-grid .lead-contacts-box{margin-top:0}
+/* Kontaktné osoby — biela karta, akcia ako odkaz */
+#fFirmaSection .lead-contacts-box{border:1px solid var(--fborder);border-radius:var(--r-sm);padding:0}
+#fFirmaSection .lead-contacts-head{background:#fff;border-bottom:0;padding:9px 14px 3px}
+#fFirmaSection .lead-contacts-head b{color:var(--ink);font-size:13px;font-weight:600}
+#fFirmaSection .lead-contacts-head b svg{display:none}
+#fFirmaSection .lead-contacts-head .btn{background:none;border:0;padding:0;color:var(--brand);
+  font-size:12.5px;font-weight:600;min-height:0}
+#fFirmaSection .lead-contacts-head .btn:hover{background:none;border:0;text-decoration:underline}
+#fFirmaSection .lead-contacts-inner{padding:4px 14px 10px}
+/* Jemné sivé orámovanie všetkých polí v okne záznamu */
+.modal-zaznam .field input,.modal-zaznam .field select,.modal-zaznam .field textarea,
+.modal-zaznam .lead-cform input,.modal-zaznam .addr-edit input{border:1px solid #D5D9E0}
+.modal-zaznam .field input:hover,.modal-zaznam .field select:hover,.modal-zaznam .field textarea:hover{border-color:#B9BEC8}
+.modal-zaznam .field input:focus,.modal-zaznam .field select:focus,.modal-zaznam .field textarea:focus{border-color:var(--brand)}
+/* Pridať kontakt — modrý odznak */
+#fFirmaSection .lead-contacts-head .btn{background:var(--brand-soft);color:var(--brand);border:0;
+  border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;min-height:0;height:auto;line-height:1.4}
+#fFirmaSection .lead-contacts-head .btn:hover{background:#DFE5FA;text-decoration:none}
+/* Formulár kontaktu — nižšie polia a tlačidlá Zrušiť / Uložiť */
+#fFirmaSection .lead-cform input{height:var(--fh);padding:0 10px;font-size:13px}
+#fFirmaSection .lead-cform-actions .btn{height:30px;min-height:0;padding:0 14px;font-size:12.5px;line-height:1}
+/* Telefón v kontakte — tlačidlo s predvoľbou vedľa čísla */
+.tel-wrap{display:flex;gap:6px;flex:1 1 0;min-width:0}
+.tel-wrap input{flex:1 1 auto;min-width:0}
+.tel-pred{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:var(--fh,30px);
+  padding:0 8px;box-sizing:border-box;border:1px solid #D5D9E0;border-radius:var(--r-sm);background:#fff;
+  font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+.tel-pred:hover{border-color:var(--brand)}
+.tel-pred .kr-fl svg{width:20px;height:14px}
+.tel-pred .tel-ch{width:12px;height:12px;color:var(--muted)}
+/* Fyzická osoba — IČO, Finstat a agentúra zostávajú na mieste, len sivé a neaktívne */
+#fFirmaSection .neaktivne{opacity:.45;pointer-events:none;filter:grayscale(1)}
+#fFirmaSection .neaktivne input{background:#F2F3F5 !important}
+/* Uložený kontakt — jeden riadok textu, stĺpce rovnako široké pri všetkých kontaktoch,
+   zvislé oddeľovače, bez odznakov */
+.lead-contact.lc-jeden{padding:8px 54px 8px 12px}
+.lc-jeden .lc-akcie{top:50%;transform:translateY(-50%)}
+.lc-riadok{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.9fr) 168px minmax(0,1.4fr) minmax(0,.8fr);
+  align-items:center;font-size:12.5px;color:var(--ink-soft);line-height:1.4}
+.lc-riadok .lc-c{display:flex;flex-direction:column;gap:2px;min-width:0;padding:0 10px;white-space:nowrap;
+  border-left:1px solid #D5D9E0;overflow:hidden}
+.lc-riadok .lc-c:first-child{padding-left:0;border-left:0}
+.lc-riadok .lc-c>*{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lc-riadok .lc-meno{font-size:13px;font-weight:600;color:var(--ink)}
+.lc-riadok .lc-a{display:flex;align-items:center;gap:5px;color:var(--ink-soft);text-decoration:none}
+.lc-riadok .lc-a:hover{color:var(--brand);text-decoration:underline}
+.lc-riadok .lc-a svg{width:13px;height:13px;flex:0 0 auto;color:var(--muted)}
+.lc-riadok .lc-a:hover svg{color:var(--brand)}
+.lc-riadok .lc-kto{color:var(--muted);font-size:11.5px}
+.lc-riadok .lc-none{font-style:italic;color:var(--muted)}
+@media (max-width:640px){
+  .lc-riadok{grid-template-columns:minmax(0,1fr) minmax(0,1fr);row-gap:4px}
+  .lc-riadok .lc-c:nth-child(odd){padding-left:0;border-left:0}
+}
+/* Formulár kontaktu — dva rovnako široké stĺpce v každom riadku */
+#fFirmaSection .lead-cform-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+#fFirmaSection .lead-cform-row>input,#fFirmaSection .lead-cform-row>.tel-wrap{width:100%;min-width:0;box-sizing:border-box}
+@media (max-width:520px){ #fFirmaSection .lead-cform-row{grid-template-columns:minmax(0,1fr)} }
+/* Služba a Produkt — jeden riadok, sedem rovnako širokých tlačidiel (verzia A).
+   Produkt má rovnakú mriežku, takže jeho tlačidlá sedia pod službami. */
+.modal-zaznam #fSegment,.modal-zaznam #fProdukt{grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.modal-zaznam #fSegment label,.modal-zaznam #fProdukt label{justify-content:center;padding:0 6px;min-width:0}
+@media (max-width:640px){
+  .modal-zaznam #fSegment,.modal-zaznam #fProdukt{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+  .modal-zaznam #fSegment label,.modal-zaznam #fProdukt label{padding:0 3px;gap:4px}
+}
+/* ==== Okno Nový záznam — jednotné tlačidlá ====
+   Všetky tlačidlá a výbery: výška 30 px a rovnaké zaoblenie (7 px) ako tlačidlá Služby.
+   Farby a správanie tlačidiel sa nemenia, len tvar a výška. */
+.modal-zaznam{--bh:30px;--br:7px}
+.modal-zaznam .btn,.modal-zaznam .kindpick label,.modal-zaznam .firma-pick label,
+.modal-zaznam .segpick label,.modal-zaznam .add-warning-btn,.modal-zaznam .add-task-btn,
+.modal-zaznam .add-coobch-btn,.modal-zaznam .remove-warning-btn,.modal-zaznam .lw-hint-btn,
+.modal-zaznam .link-toggle,.modal-zaznam .ico-unlock,.modal-zaznam .tel-pred,
+.modal-zaznam .sp-fix,.modal-zaznam .sp-trigger,
+.modal-zaznam #fFirmaSection .ico-load,.modal-zaznam #fFirmaSection .lead-contacts-head .btn{
+  height:var(--bh);min-height:0;border-radius:var(--br);padding-top:0;padding-bottom:0;
+  box-sizing:border-box;line-height:1.1}
+.modal-zaznam .btn{padding-left:14px;padding-right:14px;font-size:13px;display:inline-flex;align-items:center;justify-content:center}
+.modal-zaznam .datum-box{height:var(--bh);padding:0 10px;border-radius:var(--br);box-sizing:border-box}
+.modal-zaznam .datum-box input{height:auto;padding:0}
+.modal-zaznam #modalClose{width:var(--bh);height:var(--bh);min-height:0;padding:0;border-radius:var(--br);
+  display:inline-flex;align-items:center;justify-content:center}
+.modal-zaznam #modalClose svg{width:16px;height:16px}
+.modal-zaznam .ag-pill.ikona,.modal-zaznam .flag-btn{border-radius:var(--br)}
+.modal-zaznam .remove-warning-btn{padding-left:12px;padding-right:12px;display:inline-flex;align-items:center}
+/* Výbery a jednoriadkové polia v okne — rovnaká výška ako tlačidlá */
+.modal-zaznam .field select,
+.modal-zaznam .field input:not([type=checkbox]):not([type=radio]):not(#fDatum){
+  height:var(--bh);min-height:0;padding-top:0;padding-bottom:0;border-radius:var(--br);font-size:13px}
+
+/* ==== Popis + upozornenie ==== */
+#fPopisField .field-label-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#fPopisField .add-warning-btn{height:26px;padding:0 10px;font-size:12px;border-radius:var(--br)}
+#fPopisField #warningInputWrap{margin-top:8px}
+#fPopisField #warningInputWrap .remove-warning-btn{margin-top:6px}
+
+/* ==== Obchodník | Spolupracujúci, pod tým Úloha | Stav ==== */
+.modal-zaznam .obch-row,.modal-zaznam .uloha-stav-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px;align-items:start}
+.modal-zaznam .obch-row>.field,.modal-zaznam .uloha-stav-row>.field{margin-bottom:12px;min-width:0}
+.modal-zaznam .obch-row .add-coobch-btn{width:100%;justify-content:center;margin:0;
+  background:#fff;border:1px solid #D5D9E0;color:var(--ink);font-weight:500;font-size:12.5px}
+.modal-zaznam .obch-row .add-coobch-btn:hover{background:#fff;border-color:#B9BEC8}
+.modal-zaznam .obch-row .add-coobch-btn.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
+.modal-zaznam .obch-row .add-coobch-btn svg{color:var(--muted)}
+.modal-zaznam .uloha-stav-row .add-task-btn{width:100%;justify-content:center;margin:0;font-size:12.5px}
+/* Otvorená úloha potrebuje celú šírku — Stav sa vtedy presunie pod ňu */
+.modal-zaznam .uloha-stav-row>#taskField:has(#taskInputWrap:not([style*="none"])){grid-column:1/-1}
+/* Stav — pole s aktuálnym stavom, ponuka sa otvára pod ním */
+.sp-trigger{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+  padding:0 10px;border:1px solid #D5D9E0;background:#fff;cursor:pointer;font-family:inherit;
+  font-size:13px;font-weight:600;color:var(--ink);text-align:left}
+.sp-trigger:hover{filter:brightness(.98)}
+.sp-trigger .sp-v{display:flex;align-items:center;gap:7px;min-width:0}
+.sp-trigger .sp-tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-trigger .st-ic,.sp-trigger svg:not(.sp-ch){flex:0 0 auto}
+.sp-trigger .sp-ch{width:13px;height:13px;flex:0 0 auto;color:var(--muted);transition:transform .15s}
+.sp-trigger.open .sp-ch{transform:rotate(180deg)}
+.modal-zaznam .sp-fix{padding:0 10px}
+.modal-zaznam .sp-fix+.hint{margin-top:4px}
+.sp-menu{padding:5px}
+.sp-menu .qsp-it{min-height:30px;border-radius:7px;font-size:12.5px;padding:5px 9px}
+.sp-menu .sp-pov{color:var(--muted);font-weight:400;font-size:11.5px}
+@media (max-width:640px){
+  .modal-zaznam{--bh:34px}
+  .modal-zaznam .field select,.modal-zaznam .field input:not([type=checkbox]):not([type=radio]):not(#fDatum){font-size:16px}
+  .modal-zaznam .btn,.modal-zaznam .btn.solid{min-height:0;font-size:13.5px}
+  .modal-zaznam .obch-row,.modal-zaznam .uloha-stav-row{grid-template-columns:minmax(0,1fr)}
+}
+/* Súvisiace služby — rovnaká logika ako Služba: jeden riadok, sedem rovnako
+   širokých stĺpcov, produkty v tej istej mriežke. */
+.modal-zaznam #fLinkSeg,.modal-zaznam #fLinkProd .segpick{grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.modal-zaznam #fLinkSeg label,.modal-zaznam #fLinkProd .segpick label{justify-content:center;padding:0 6px;min-width:0}
+.modal-zaznam .link-wrap{padding:10px 12px}
+.modal-zaznam .link-wrap .link-h{margin-bottom:6px}
+.modal-zaznam .link-prod{margin-top:8px;padding-top:8px}
+.modal-zaznam .link-prod-l{margin-bottom:5px}
+.modal-zaznam .link-wrap .hint{margin-top:8px}
+@media (max-width:640px){
+  .modal-zaznam #fLinkSeg,.modal-zaznam #fLinkProd .segpick{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+  .modal-zaznam #fLinkSeg label,.modal-zaznam #fLinkProd .segpick label{padding:0 3px;gap:4px}
+}
+/* Agentúra — Klient | Materiál | Názov zákazky v troch rovnakých stĺpcoch */
+#fFirmaSection .firma-grid:has(#fMaterialField:not([style*="none"])){grid-template-columns:repeat(3,minmax(0,1fr))}
+#fFirmaSection .firma-grid .mat-field{margin:0}
+#fFirmaSection .firma-grid .mat-field>.hint{height:auto;white-space:normal;overflow:visible}
+/* Údaje pre DMIS — bledý rozbaľovací riadok, predvolene zatvorený */
+.dmis-fold{margin:0 0 12px;border:1px solid #E8EAEE;border-radius:7px;background:#FAFBFC}
+.dmis-fold summary{display:flex;align-items:center;gap:7px;height:30px;padding:0 10px;cursor:pointer;
+  list-style:none;font-size:12px;font-weight:500;color:#9AA1AD;user-select:none}
+.dmis-fold summary::-webkit-details-marker{display:none}
+.dmis-fold summary:hover{color:var(--ink-soft)}
+.dmis-fold summary .opt{font-weight:500}
+.dmis-fold .dmis-ch{width:12px;height:12px;flex:0 0 auto;transition:transform .15s}
+.dmis-fold details[open] .dmis-ch{transform:rotate(90deg)}
+.dmis-fold details>.row{padding:4px 12px 10px}
+/* Firma — len logá */
+.modal-zaznam .firma-pick label{justify-content:center;min-width:90px;padding:0 14px}
+@media (max-width:640px){
+  #fFirmaSection .firma-grid:has(#fMaterialField:not([style*="none"])){grid-template-columns:minmax(0,1fr)}
+}
+/* Dátum — len jedna (modrá) ikonka kalendára, klikateľná; zarovnaný s tlačidlami */
+.modal-zaznam .riadok-typ{align-items:stretch}
+.modal-zaznam .riadok-typ .kindpick{align-items:stretch}
+.modal-zaznam .datum-box{height:var(--bh);margin:0;border:1px solid #D5D9E0;align-self:flex-start;gap:7px;cursor:pointer}
+.modal-zaznam .datum-box #fDatumIc{cursor:pointer}
+.modal-zaznam .datum-box input#fDatum{border:0;padding:0;margin:0;height:auto;min-height:0;background:none;
+  box-shadow:none;font-size:13px;line-height:1;cursor:pointer}
+.modal-zaznam .datum-box input#fDatum::-webkit-calendar-picker-indicator{display:none}
+/* Pridať súvisiacu službu — sýta modrá Cromwell */
+.modal-zaznam .link-toggle{background:var(--brand) !important;border:1px solid var(--brand) !important;color:#fff !important;font-weight:600;padding:0 14px}
+.modal-zaznam .link-toggle:hover,.modal-zaznam .link-toggle.on{background:var(--brand-dark) !important;border-color:var(--brand-dark) !important;color:#fff !important}
+.modal-zaznam .link-toggle svg{color:#fff}
+.modal-zaznam .link-toggle .lnk-uz{color:#DDE3FF}
+/* Okno „Vylepšenie podľa vašich pripomienok" */
+.akt-scrim{display:flex;align-items:center;justify-content:center;padding:20px}
+.akt-modal{background:#fff;border-radius:22px;max-width:560px;width:100%;max-height:calc(100vh - 40px);overflow-y:auto;
+  padding:30px 34px 26px;box-sizing:border-box;box-shadow:0 24px 60px rgba(16,24,40,.25)}
+.akt-kick{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin-bottom:8px}
+.akt-modal h2{margin:0 0 12px;font-size:24px;font-weight:600;color:var(--ink);line-height:1.25}
+.akt-lead{margin:0 0 20px;font-size:14.5px;line-height:1.65;color:var(--ink-soft)}
+.akt-lead b{color:var(--ink)}
+.akt-list{display:flex;flex-direction:column;gap:14px;margin-bottom:20px}
+.akt-it{display:flex;gap:14px;align-items:flex-start}
+.akt-ic{flex:0 0 auto;width:36px;height:36px;border-radius:10px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center}
+.akt-ic svg{width:18px;height:18px}
+.akt-it b{display:block;font-size:14.5px;font-weight:600;color:var(--ink);margin:1px 0 3px}
+.akt-it>div>span{display:block;font-size:13px;line-height:1.5;color:var(--ink-soft)}
+.akt-foot{margin:0 0 20px;padding-top:16px;border-top:1px solid var(--line);font-size:13.5px;line-height:1.6;color:var(--ink-soft)}
+.akt-foot b{color:var(--ink)}
+.akt-acts{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.akt-btn{height:40px;padding:0 20px;border-radius:10px;border:1px solid #D5D9E0;background:#fff;color:var(--ink);
+  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.akt-btn:hover{border-color:#B9BEC8}
+.akt-btn.solid{background:var(--brand);border-color:var(--brand);color:#fff}
+.akt-btn.solid:hover{background:var(--brand-dark);border-color:var(--brand-dark)}
+.akt-once{margin-left:auto;font-size:12px;color:var(--muted)}
+@media (max-width:640px){
+  .akt-modal{padding:24px 20px 20px;border-radius:18px}
+  .akt-modal h2{font-size:20px}
+  .akt-btn{flex:1 1 auto;height:44px}
+  .akt-once{margin-left:0;width:100%;text-align:center}
+}
+@media (max-width:640px){
+  #fFirmaSection{--fh:34px}
+  #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
+  #fFirmaSection .firma-r1{grid-template-columns:minmax(0,1fr)}
+  #fFirmaSection .r1-l{flex-wrap:wrap}
+  #fFirmaSection .r1-l>#fIcoField{flex:1 1 100%}
+  #fFirmaSection .r1-l>.r1-btn{flex:1 1 100%}
+  #fFirmaSection .r1-btn .ico-load{width:100%}
+  #fFirmaSection .firma-hint{order:1}
+  #fFirmaSection .r1-p{order:2}
+  #fFirmaSection .lead-cform input{font-size:16px;flex:0 0 auto}
+  #fFirmaSection .tel-wrap{flex:0 0 auto}
+  #fFirmaSection .tel-wrap input{flex:1 1 auto}
+  #fFirmaSection .lead-cform-actions .btn{height:34px}
+}
 </style>
 </head>
 <body>
@@ -3621,18 +3931,143 @@ select:disabled{cursor:default; opacity:.65}
       <button class="ghost" id="modalClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-b">
-      <div class="field" id="fKindField" style="display:none">
+      <div class="field riadok-typ" id="fKindField" style="display:none">
         <div class="kindpick" id="fKind">
           <label><input type="radio" name="ekind" value="cc" checked><span>Customer care</span></label>
           <label><input type="radio" name="ekind" value="nb"><span>✦ New business</span></label>
           <label><input type="radio" name="ekind" value="int"><span>Interné / projekty</span></label>
         </div>
+        <div class="datum-box">
+          <svg id="fDatumIc" role="button" tabindex="0" aria-label="Otvoriť kalendár" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="17" rx="2.5"/><path d="M3 10h18M8 2.5v4M16 2.5v4"/></svg>
+          <input type="date" id="fDatum" title="Dátum aktivity — podľa neho sa záznam zaradí do týždňa">
+        </div>
       </div>
 
-      <div class="field">
+      <div class="field" id="fWeekField" style="display:none">
         <label>Týždeň záznamu</label>
         <select id="fWeek"></select>
         <div class="hint" id="fWeekHint"></div>
+      </div>
+
+      <div class="msec" id="fFirmaSection">
+        <div class="msec-h">Firma</div>
+      <!-- Sekcia Firma, prvý riadok: IČO | Načítať z Finstat | ikonky | Web klienta.
+           Všetky ovládacie prvky majú rovnakú výšku a sedia na spoločnej spodnej osi. -->
+      <div class="firma-r1">
+
+        <!-- Ľavá polovica: IČO + Načítať z Finstat (končí na úrovni poľa Klient) -->
+        <div class="r1-pol r1-l">
+          <div class="field" id="fIcoField">
+            <label>IČO <span class="req">povinné</span></label>
+            <div class="ico-locked" id="fIcoLocked" style="display:none">
+              <span class="ico-locked-v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><b id="fIcoLockedNum"></b><span id="fIcoLockedName"></span></span>
+              <button type="button" class="ico-unlock" id="fIcoUnlock">Zmeniť</button>
+            </div>
+            <div class="ico-row" id="fIcoRow">
+              <button type="button" class="flag-btn" id="fFlagBtn" title="Krajina sídla klienta"></button>
+              <input id="fIco" inputmode="numeric" autocomplete="off" placeholder="Zadaj IČO firmy">
+            </div>
+          </div>
+
+          <div class="field r1-btn">
+            <button type="button" class="btn ico-load" id="fIcoLookup">Načítať z Finstat</button>
+          </div>
+        </div>
+
+        <!-- Pravá polovica: ikonky + Web (začína na úrovni poľa Názov zákazky) -->
+        <div class="r1-pol r1-p">
+          <div class="field r1-ikony">
+            <div class="typ-klienta">
+              <span class="ag-pill ikona" id="fAgencyPill" role="button" tabindex="0" title="Agentúra — objednáva pre svojho klienta">
+                <input type="checkbox" id="fAgency">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>
+              </span>
+              <span class="ag-pill fo-pill ikona" id="fOsobaPill" role="button" tabindex="0" title="Fyzická osoba — súkromná osoba bez IČO">
+                <input type="checkbox" id="fOsoba">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="field web-field" id="fWebField">
+            <label>Web klienta <span class="opt">nepovinné</span></label>
+            <input id="fWeb" type="text" inputmode="url" autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Výsledok načítania z Finstatu — cez celú šírku, aby sa dlhšie správy neorezávali. -->
+        <div class="hint firma-hint" id="fIcoHint">Načíta názov a adresu firmy.</div>
+
+      </div>
+
+      <!-- Druhý riadok: Klient | Názov zákazky, pod tým Kontaktné osoby cez celú šírku. -->
+      <div class="row firma-grid">
+
+        <div class="field">
+          <label><span id="fClientLabel">Klient</span></label>
+          <input id="fClient" list="clientNames">
+          <datalist id="clientNames"></datalist>
+          <div class="addr-line" id="fAddrLine" style="display:none"></div>
+        </div>
+
+        <!-- Materiál — len pri agentúre; Klient | Materiál | Názov zákazky v jednom riadku -->
+        <div class="field mat-field" id="fMaterialField" style="display:none">
+          <label>Materiál <span class="req">povinné</span></label>
+          <input id="fMaterial" list="materialNames">
+          <datalist id="materialNames"></datalist>
+          <div class="hint" title="Každý materiál sa vedie ako samostatný obchodný prípad s vlastným obdobím aj odmenou.">Každý materiál je samostatný obchod.</div>
+        </div>
+
+        <div class="field zak-field" id="fZakazkaField">
+          <label>Názov zákazky <span class="opt">nepovinné</span></label>
+          <input id="fZakazka" list="zakazkaNames" autocomplete="off">
+          <datalist id="zakazkaNames"></datalist>
+        </div>
+
+        <div class="field cele" id="fSluzbaInaField" style="display:none">
+          <label>Aká služba <span class="req">povinné</span></label>
+          <input id="fSluzbaIna" list="sluzbaInaList" autocomplete="off">
+          <datalist id="sluzbaInaList"></datalist>
+        </div>
+
+        <div class="addr-edit cele" id="fAddrEdit" style="display:none">
+          <input id="fAddrStreet" placeholder="Ulica a číslo" autocomplete="off">
+          <input id="fAddrCity" placeholder="PSČ a mesto" autocomplete="off">
+        </div>
+
+        <div class="field cele" id="fContactsField" style="display:none">
+          <div class="lead-contacts-box">
+            <div class="lead-contacts-head">
+              <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Kontaktné osoby</b>
+              <button type="button" class="btn btn-sm" id="eAddContactBtn">+ Pridať kontakt</button>
+            </div>
+            <div class="lead-contacts-inner">
+              <div id="eContacts"></div>
+              <div id="eContactForm" class="lead-cform" style="display:none">
+                <!-- Meno a priezvisko v jednom poli, vedľa pozícia.
+                     Pri uložení sa rozdelí: posledné slovo = priezvisko (ako pri importe). -->
+                <div class="lead-cform-row">
+                  <input id="ecfName" placeholder="Meno a priezvisko" autocomplete="off">
+                  <input id="ecfPos" placeholder="Pozícia (napr. konateľ, nákupca)">
+                </div>
+                <div class="lead-cform-row">
+                  <!-- Telefón: predvoľba (klikateľná, predvolene +421) + samotné číslo -->
+                  <div class="tel-wrap">
+                    <button type="button" class="tel-pred" id="ecfPredBtn" title="Predvoľba krajiny — klikni pre zmenu"></button>
+                    <input id="ecfPhone" type="tel" inputmode="tel" placeholder="Telefón" autocomplete="off">
+                  </div>
+                  <input id="ecfMail" placeholder="E-mail">
+                </div>
+                <div class="lead-cform-actions">
+                  <button type="button" class="btn" id="ecfCancel">Zrušiť</button>
+                  <button type="button" class="btn solid" id="ecfSave">Pridať</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
       </div>
 
       <div class="field">
@@ -3661,64 +4096,6 @@ select:disabled{cursor:default; opacity:.65}
         </div>
       </div>
 
-      <div class="msec" id="fFirmaSection">
-        <div class="msec-h">Firma</div>
-      <div class="field" id="fIcoField">
-        <label>IČO <span class="req">povinné</span></label>
-        <div class="ico-locked" id="fIcoLocked" style="display:none">
-          <span class="ico-locked-v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><b id="fIcoLockedNum"></b><span id="fIcoLockedName"></span></span>
-          <button type="button" class="ico-unlock" id="fIcoUnlock">Zmeniť</button>
-        </div>
-        <div class="ico-row" id="fIcoRow">
-          <button type="button" class="flag-btn" id="fFlagBtn" title="Krajina sídla klienta"></button>
-          <input id="fIco" inputmode="numeric" autocomplete="off">
-          <button type="button" class="btn ico-load" id="fIcoLookup">Načítať</button>
-        </div>
-        <div class="hint" id="fIcoHint">Načíta názov a adresu firmy.</div>
-      </div>
-      <div class="field">
-        <label class="lbl-row"><span id="fClientLabel">Klient</span>
-          <span class="pill-group">
-          <span class="ag-pill" id="fAgencyPill" role="button" tabindex="0">
-            <input type="checkbox" id="fAgency">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>Agentúra
-          </span>
-          <span class="ag-pill fo-pill" id="fOsobaPill" role="button" tabindex="0"
-            title="Súkromná osoba bez IČO. Živnostník IČO má — tam ho vyplň.">
-            <input type="checkbox" id="fOsoba">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Fyzická osoba
-          </span>
-          </span>
-        </label>
-        <input id="fClient" list="clientNames">
-        <datalist id="clientNames"></datalist>
-        <div class="addr-line" id="fAddrLine" style="display:none"></div>
-        <div class="field" id="fSluzbaInaField" style="display:none">
-        <label>Aká služba <span class="req">povinné</span></label>
-        <input id="fSluzbaIna" list="sluzbaInaList" autocomplete="off">
-        <datalist id="sluzbaInaList"></datalist>
-      </div>
-      <div class="field zak-field" id="fZakazkaField">
-          <label>Názov zákazky <span class="opt">nepovinné</span></label>
-          <input id="fZakazka" list="zakazkaNames" autocomplete="off">
-          <datalist id="zakazkaNames"></datalist>
-        </div>
-        <div class="field web-field" id="fWebField">
-          <label>Web klienta <span class="opt">nepovinné</span></label>
-          <input id="fWeb" type="text" inputmode="url" autocomplete="off">
-          <div class="hint">Ak web vieš, doplň ho — pomôže nám klienta lepšie identifikovať.</div>
-        </div>
-        <div class="addr-edit" id="fAddrEdit" style="display:none">
-          <input id="fAddrStreet" placeholder="Ulica a číslo" autocomplete="off">
-          <input id="fAddrCity" placeholder="PSČ a mesto" autocomplete="off">
-        </div>
-      </div>
-      <div class="field" id="fMaterialField" style="display:none">
-        <label>Materiál <span class="req">povinné</span></label>
-        <input id="fMaterial" list="materialNames">
-        <datalist id="materialNames"></datalist>
-        <div class="hint">Každý materiál sa vedie ako samostatný obchodný prípad s vlastným obdobím aj odmenou.</div>
-      </div>
       <div class="lw-hint" id="lwHint" style="display:none">
         <div class="lw-hint-head">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
@@ -3727,36 +4104,14 @@ select:disabled{cursor:default; opacity:.65}
         <div class="lw-hint-text" id="lwHintText"></div>
         <button type="button" class="lw-hint-btn" id="lwHintCopy">⧉ Skopírovať text do záznamu</button>
       </div>
-      <div class="field" id="fContactsField" style="display:none">
-        <div class="lead-contacts-box">
-          <div class="lead-contacts-head">
-            <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Kontaktné osoby</b>
-            <button type="button" class="btn btn-sm" id="eAddContactBtn">+ Pridať kontakt</button>
-          </div>
-          <div class="lead-contacts-inner">
-            <div id="eContacts"></div>
-            <div id="eContactForm" class="lead-cform" style="display:none">
-              <div class="lead-cform-row">
-                <input id="ecfFirst" placeholder="Meno">
-                <input id="ecfLast" placeholder="Priezvisko">
-              </div>
-              <input id="ecfPos" placeholder="Pozícia (napr. konateľ, nákupca)">
-              <div class="lead-cform-row">
-                <input id="ecfPhone" type="tel" inputmode="tel" placeholder="Telefón">
-                <input id="ecfMail" placeholder="E-mail">
-              </div>
-              <div class="lead-cform-actions">
-                <button type="button" class="btn" id="ecfCancel">Zrušiť</button>
-                <button type="button" class="btn solid" id="ecfSave">Pridať</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-      </div>
-      <div class="msec" id="fDmisSection" style="display:none">
-        <div class="msec-h">Obchodné údaje</div>
+      <!-- Údaje pre export do DMIS. Obchodníci ich nevypĺňajú, ale stĺpce v exporte
+           musia zostať — preto sú schované v bledom rozbaľovacom riadku. -->
+      <div class="dmis-fold" id="fDmisSection" style="display:none">
+        <details id="fDmisDetails">
+        <summary>
+          <svg class="dmis-ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          Predpokladaná tržba a Typ aktivity <span class="opt">nepovinné</span>
+        </summary>
         <div class="row">
           <div class="field">
             <label>Krajina <span class="req">povinné</span></label>
@@ -3782,12 +4137,13 @@ select:disabled{cursor:default; opacity:.65}
           </div>
         </div>
 
+        </details>
       </div>
       <div class="msec" id="fApproachSection" style="display:none">
-        <div class="msec-h">Spôsob oslovenia</div>
+        <div class="msec-h">Oslovenie</div>
         <div class="row" id="fApproachRow">
         <div class="field">
-        <label>Spôsob oslovenia</label>
+        <label>Spôsob oslovenia <span class="req">povinné</span></label>
         <select id="fApproach"></select>
         <div class="hint">Vyber z číselníka.</div>
         </div>
@@ -3800,30 +4156,44 @@ select:disabled{cursor:default; opacity:.65}
         </div>
 
       </div>
-      <div class="field">
+      <!-- Popis — upozornenie sa pridáva priamo tu a zobrazí sa pod textom. -->
+      <div class="field" id="fPopisField">
         <div class="field-label-row">
-          <label>Udalosti — čo sa za týždeň udialo</label>
-          <button type="button" class="ai-fix-btn" id="aiFixBtn">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>
-            Upraviť s AI
+          <label>Popis</label>
+          <button type="button" class="add-warning-btn" id="addWarningBtn" title="Pridať upozornenie — zobrazí sa výrazne pri zázname">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Upozornenie
           </button>
         </div>
         <textarea id="fEvents" placeholder="Stručný prehľad udalostí, stavu jednania, dohodnutých krokov…"></textarea>
         <div class="hint">Každú novú myšlienku daj na nový riadok — zobrazí sa pekne pod sebou.</div>
-      </div>
-      <div class="extra-row">
-        <div class="field" id="warningField">
-        <button type="button" class="add-warning-btn" id="addWarningBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Pridať upozornenie
-        </button>
+        <div id="warningField">
         <div id="warningInputWrap" style="display:none">
           <label>⚠ Upozornenie — zobrazí sa výrazne pri zázname</label>
           <textarea id="fWarning" style="min-height:80px"></textarea>
           <button type="button" class="remove-warning-btn" id="removeWarningBtn">✕ Odstrániť upozornenie</button>
         </div>
+        </div>
       </div>
+
+      <div class="row obch-row">
+        <div class="field"><label>Obchodník</label><select id="fObch"></select></div>
+        <div class="field" id="coObchField">
+          <label>Spolupracujúci <span class="opt">nepovinné</span></label>
+          <button type="button" class="add-coobch-btn" id="addCoObchBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+            <span class="co-lbl">Pridať ďalších obchodníkov</span>
+          </button>
+          <div id="coObchWrap" style="display:none">
+            <div class="co-obch-pick" id="coObchPick"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Úloha pod obchodníkom, stav (rozbaľovací zoznam) pod spolupracujúcimi -->
+      <div class="row uloha-stav-row">
         <div class="field" id="taskField">
+          <label>Úloha</label>
         <button type="button" class="add-task-btn" id="addTaskFromEntryBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
           Pridať úlohu s termínom
@@ -3845,38 +4215,25 @@ select:disabled{cursor:default; opacity:.65}
           </div>
           <button type="button" class="remove-warning-btn" id="removeTaskBtn">✕ Nepridávať úlohu</button>
         </div>
-      </div>
+        </div>
+        <div class="field" id="fStatusField">
+          <label>Stav</label>
+          <div class="statuspick" id="fStatusPick"></div>
+          <select id="fStatus" style="display:none"></select>
+        </div>
       </div>
       <div class="field" id="fLossField" style="display:none">
         <label>Dôvod straty <span class="req">povinné</span></label>
         <select id="fLossReason"></select>
         <div class="hint">Uvidíme, na čom prípady strácame.</div>
       </div>
-      <div class="row obch-row">
-        <div class="field"><label>Obchodník</label><select id="fObch"></select></div>
-        <div class="field" id="coObchField">
-          <label>Spolupracujúci <span class="opt">nepovinné</span></label>
-          <button type="button" class="add-coobch-btn" id="addCoObchBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
-            <span class="co-lbl">Pridať ďalších obchodníkov</span>
-          </button>
-          <div id="coObchWrap" style="display:none">
-            <div class="co-obch-pick" id="coObchPick"></div>
-          </div>
-        </div>
-      </div>
-      <div class="field" id="fStatusField">
-        <label>Stav</label>
-        <div class="statuspick" id="fStatusPick"></div>
-        <select id="fStatus" style="display:none"></select>
-      </div>
       <div class="field" id="firmaField" style="display:none">
         <label>Firma</label>
         <div class="firma-pick" id="fFirma">
-          <label><input type="radio" name="firma" value="Cromwell Post" checked>
-            <img src="" id="fFirmaLogo1" style="height:16px;width:auto"> Cromwell Post</label>
-          <label><input type="radio" name="firma" value="KOLOS">
-            <img src="" id="fFirmaLogo2" style="height:16px;width:auto"> KOLOS</label>
+          <label title="Cromwell Post"><input type="radio" name="firma" value="Cromwell Post" checked>
+            <img src="" id="fFirmaLogo1" alt="Cromwell Post" style="height:18px;width:auto"></label>
+          <label title="KOLOS"><input type="radio" name="firma" value="KOLOS">
+            <img src="" id="fFirmaLogo2" alt="KOLOS" style="height:18px;width:auto"></label>
         </div>
       </div>
     </div>
@@ -4208,7 +4565,7 @@ const PRODUKTY = {
     { id:"ad-hoc", label:"Ad-hoc" },
     { id:"baliky", label:"Balíky" },
   ]},
-  tlac:   { base:null, items:[
+  tlac:   { base:"Interná", items:[
     { id:"externa", label:"Externá" },
     { id:"letaky-nd", label:"Letáky ND" },
   ]},
@@ -4462,13 +4819,13 @@ function fillLinkPick(){
   const box=$("#fLinkSeg"), field=$("#fLinkField"), wrap=$("#fLinkWrap");
   if(!box||!field) return;
   const hlavna=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
-  const jeNB=$("#fKindField").style.display!=="none"
-    ? $("#fKind").querySelector("input:checked")?.value==="nb"
-    : !!modalEntry?.isNewBusiness;
-  /* Ponúkame vždy pri New business — aj pri úprave a aj vtedy, keď záznam
-     už do spojenej zákazky patrí. Pridať tretiu službu k existujúcej dvojici
-     je bežná potreba, napríklad leták k tlači a roznosu. */
-  if(!jeNB){ field.style.display="none"; box.innerHTML=""; return; }
+  /* Spojená zákazka nie je len vec New business — aj pri Customer care sa
+     stane, že jedna zákazka beží cez dve služby (tlač letákov a ich roznos).
+     Neponúkame ju len pri interných záznamoch, tam klient nie je. */
+  const jeInterne=$("#fKindField").style.display!=="none"
+    ? $("#fKind").querySelector("input:checked")?.value==="int"
+    : kindOf(modalEntry||{})==="int";
+  if(jeInterne){ field.style.display="none"; box.innerHTML=""; return; }
   field.style.display="";
   // služby, ktoré v spojenej zákazke už sú, sa znova neponúkajú
   const uzVSkupine=new Set(
@@ -4585,17 +4942,54 @@ function renderStatusPick(){
     return;
   }
 
-  const ids=[...sel.options].map(o=>o.value);
+  /* Stav ako rozbaľovací zoznam: v poli je aktuálny stav s ikonkou a farbou,
+     po kliknutí sa otvorí ponuka všetkých stavov (rovnaké ikonky a farby).
+     Stále zapisuje do skrytého <select>, zvyšok kódu sa nemení. */
+  const ids=[...sel.options].map(o=>o.value).filter(id=>ST[id]);
   box.innerHTML="";
+  const cur=ST[sel.value] ? sel.value : null;
+  const st=cur ? ST[cur] : null;
+  const t=el("button","sp-trigger"); t.type="button"; t.id="spTrigger";
+  t.innerHTML=`<span class="sp-v">${cur?statusIcon(cur,16):""}<span class="sp-tx">${st?esc(st.label):"Vyber stav"}</span></span>`
+    +`<svg class="sp-ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
+  if(st){ t.style.borderColor=hexA(st.color,.55); t.querySelector(".sp-v").style.color=st.color; t.title=st.label; }
+  t.onclick=ev=>{ ev.stopPropagation(); openStatusMenu(t, ids, sel); };
+  box.appendChild(t);
+}
+function openStatusMenu(anchor, ids, sel){
+  const bolo=document.querySelector(".qsp.sp-menu");
+  document.querySelector(".qsp")?.remove();
+  if(bolo) return;                       // druhé kliknutie ponuku zatvorí
+  const box=el("div","qsp sp-menu");
+  const zoz=el("div","qsp-list qsp-scroll");
+  const pov=[...sel.options].reduce((m,o)=>(m[o.value]=/pôvodný stav/.test(o.textContent),m),{});
   ids.forEach(id=>{
-    const st=ST[id]; if(!st) return;
-    const b=el("button","sp-item"+(sel.value===id?" on":""));
+    const st=ST[id];
+    const b=el("button","qsp-it"+(sel.value===id?" on":""));
     b.type="button";
-    b.innerHTML=`${statusIcon(id,16)}<span>${esc(st.label)}</span>`;
-    if(sel.value===id) b.style.cssText=`background:${hexA(st.color,.12)};border-color:${hexA(st.color,.45)};color:${st.color}`;
-    b.onclick=()=>{ sel.value=id; sel.dispatchEvent(new Event("change",{bubbles:true})); renderStatusPick(); };
-    box.appendChild(b);
+    b.innerHTML=`${statusIcon(id,16)}<span class="qsp-tx" style="white-space:normal">${esc(st.label)}${pov[id]?' <span class="sp-pov">· pôvodný stav</span>':""}</span>`
+      +(sel.value===id?`<span class="qsp-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>`:"");
+    b.onclick=ev=>{ ev.stopPropagation(); zavri(); sel.value=id; sel.dispatchEvent(new Event("change",{bubbles:true})); renderStatusPick(); };
+    zoz.appendChild(b);
   });
+  box.appendChild(zoz);
+  document.body.appendChild(box);
+  const r=anchor.getBoundingClientRect();
+  const w=Math.min(Math.max(r.width, 260), 380, window.innerWidth-20);
+  box.style.width=w+"px";
+  box.style.left=Math.max(10, Math.min(r.left, window.innerWidth-10-w))+"px";
+  const pod=r.bottom+5, v=box.offsetHeight;
+  box.style.top=(pod+v>window.innerHeight-10 ? Math.max(10, r.top-v-5) : pod)+"px";
+  anchor.classList.add("open");
+  const mb=anchor.closest(".modal-b");
+  function zavri(){
+    box.remove(); anchor.classList.remove("open");
+    document.removeEventListener("mousedown",von); document.removeEventListener("keydown",esc_,true);
+    mb?.removeEventListener("scroll",zavri);
+  }
+  function von(ev){ if(!box.contains(ev.target) && !anchor.contains(ev.target)) zavri(); }
+  function esc_(ev){ if(ev.key==="Escape"){ ev.stopPropagation(); zavri(); } }
+  setTimeout(()=>{ document.addEventListener("mousedown",von); document.addEventListener("keydown",esc_,true); mb?.addEventListener("scroll",zavri,{passive:true}); },0);
 }
 
 /* ============================================================================
@@ -6544,33 +6938,73 @@ function wireAddrInputs(){
   st.onblur=()=>{ zapis(); showAddr(); };
   ci.onblur=()=>{ zapis(); showAddr(); };
 }
-/* --- Kontaktné osoby priamo v zázname (New business) --- */
+/* --- Kontaktné osoby priamo v zázname --- */
 let entryContacts=[];
+/* Kontakty, ktoré na klienta už niekto zapísal — v záznamoch aj v databázach.
+   Obchodník ich tak nemusí nahadzovať druhýkrát. */
+function znameKontakty(meno, ico){
+  const k=clientKey(meno), ic=icoKey(ico);
+  const sedi=(m,i)=>(ic && icoKey(i)===ic) || (k && clientKey(m)===k);
+  const von=new Map();
+  const pridaj=(c, zdroj)=>{
+    if(!c) return;
+    const kluc=normalizeForCompare(`${c.firstName||""} ${c.lastName||""} ${c.email||""} ${c.phone||""}`);
+    if(!kluc.trim() || von.has(kluc)) return;
+    von.set(kluc, { ...c, id:c.id || "z_"+Math.random().toString(36).slice(2,9), zdroj });
+  };
+  (state.all||[]).forEach(e=>{
+    if(sedi(e.client, e.leadIco||e.ico)) (e.contacts||[]).forEach(c=>pridaj(c,"zaznam"));
+  });
+  (state.leads||[]).forEach(l=>{
+    if(sedi(l.company||l.name, l.ico)) (l.contacts||[]).forEach(c=>pridaj(c,"databaza"));
+  });
+  return [...von.values()];
+}
+/* Doplní známe kontakty ku klientovi, ktorého obchodník práve napísal.
+   Už zapísané kontakty zostávajú, nové sa pridajú pod ne. */
+function doplnZnameKontakty(){
+  const meno=$("#fClient")?.value?.trim();
+  if(!meno) return;
+  const ico=$("#fIco")?.value?.trim();
+  const uz=new Set(entryContacts.map(c=>
+    normalizeForCompare(`${c.firstName||""} ${c.lastName||""} ${c.email||""} ${c.phone||""}`)));
+  const nove=znameKontakty(meno, ico).filter(c=>
+    !uz.has(normalizeForCompare(`${c.firstName||""} ${c.lastName||""} ${c.email||""} ${c.phone||""}`)));
+  if(!nove.length) return;
+  entryContacts=[...entryContacts, ...nove];
+  renderEntryContacts();
+}
 function renderEntryContacts(){
   const box=$("#eContacts");
   if(!box) return;
   if(!entryContacts.length){
-    box.innerHTML=`<div class="lead-hint">Zatiaľ žiadna kontaktná osoba. Pridaj ju tlačidlom vyššie.</div>`;
+    box.innerHTML=`<div class="lead-hint">Zatiaľ žiadna kontaktná osoba. Keď zadáš klienta,
+      doplnia sa tie, ktoré naň už poznáme — alebo pridaj novú tlačidlom vyššie.</div>`;
     return;
   }
   box.innerHTML="";
   entryContacts.forEach(c=>{
     const name=[c.firstName,c.lastName].filter(Boolean).join(" ")||"(bez mena)";
-    const row=el("div","lead-contact");
+    /* Uložený kontakt v jednom riadku — len text, údaje oddelené zvislou čiarkou,
+       ikonky pri telefóne a e-maile. Bez odznakov. */
+    const row=el("div","lead-contact lc-jeden");
     const mails=(c.email||"").split(/[,;]/).map(x=>x.trim()).filter(Boolean);
     const phones=(c.phone||"").split(/·|,|;/).map(x=>x.trim()).filter(Boolean);
-    row.innerHTML=`<div class="lc-top">
-        <b>${esc(name)}</b>
-        ${c.position?`<span class="lc-pos">${esc(c.position)}</span>`:""}
-        <span class="lc-src man">${c.editedByName
-          ? `Upravil ${esc(c.editedByName)}`
-          : `Doplnil ${esc(c.addedByName||state.user.name||"—")}`}</span>
-      </div>
-      <div class="lc-lines">
-        ${phones.map(p=>`<a href="tel:${esc(p.replace(/\s/g,""))}" class="lc-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>${esc(p)}</a>`).join("")}
-        ${mails.map(m=>`<a href="mailto:${esc(m)}" class="lc-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>${esc(m)}</a>`).join("")}
-        ${!phones.length && !mails.length?`<span class="lc-none">Bez telefónu a e-mailu</span>`:""}
-      </div>`;
+    const kto = c.zdroj==="databaza" ? "Z databázy"
+      : c.zdroj==="zaznam" ? "Z iného záznamu"
+      : c.editedByName ? `Upravil ${esc(c.editedByName)}`
+      : `Doplnil ${esc(c.addedByName||state.user.name||"—")}`;
+    /* Stĺpce majú pri všetkých kontaktoch rovnakú šírku, aby oddeľovače
+       sedeli pod sebou. Prázdny údaj nechá prázdnu bunku. */
+    const bunka=(obsah,cls="")=>`<span class="lc-c ${cls}">${obsah||""}</span>`;
+    row.innerHTML=`<div class="lc-riadok">`
+      + bunka(`<b class="lc-meno" title="${esc(name)}">${esc(name)}</b>`)
+      + bunka(c.position?`<span title="${esc(c.position)}">${esc(c.position)}</span>`:"")
+      + bunka(phones.map(p=>`<a href="tel:${esc(p.replace(/\s/g,""))}" class="lc-a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>${esc(p)}</a>`).join(""))
+      + bunka(mails.map(m=>`<a href="mailto:${esc(m)}" class="lc-a" title="${esc(m)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>${esc(m)}</a>`).join("")
+          || (!phones.length ? `<span class="lc-none">Bez telefónu a e-mailu</span>` : ""))
+      + bunka(`<span>${kto}</span>`,"lc-kto")
+      + `</div>`;
     const akcie=el("span","lc-akcie");
     const ed=el("button","lc-edit"); ed.type="button"; ed.title="Upraviť kontakt";
     ed.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`;
@@ -6591,21 +7025,89 @@ const cisteCislo = v => {
   return (!t || t.replace(/[\s\-()]/g,"")==="+421") ? "" : t;
 };
 
+/* Telefón kontaktu — predvoľba sa vyberá tlačidlom (rovnaké krajiny ako pri IČO),
+   do poľa sa píše len samotné číslo. Uloží sa spolu, napr. "+421 905 123 456". */
+const PREDVOLBY = { SK:"+421", CZ:"+420", AT:"+43", HU:"+36", PL:"+48", DE:"+49",
+  UA:"+380", RO:"+40", HR:"+385", SI:"+386", IT:"+39", NL:"+31", BE:"+32", FR:"+33",
+  ES:"+34", CH:"+41", GB:"+44", US:"+1" };
+let ecfPredvolba="SK";
+function syncPredBtn(){
+  const b=$("#ecfPredBtn"); if(!b) return;
+  const k=krajinaPodla(ecfPredvolba);
+  b.innerHTML=`<span class="kr-fl">${vlajkaSvg(k.kod)}</span><span>${PREDVOLBY[k.kod]}</span>`
+    +`<svg class="tel-ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
+  b.title=`Predvoľba: ${k.nazov} (${PREDVOLBY[k.kod]}). Klikni pre zmenu.`;
+}
+/* Rozloží uložené číslo na predvoľbu a zvyšok (najdlhšia zhoda vyhráva, +421 pred +42…). */
+function nastavTelefon(cislo){
+  const t=String(cislo||"").trim();
+  ecfPredvolba="SK";
+  let zvysok=t;
+  if(t.startsWith("+")){
+    const hit=Object.entries(PREDVOLBY).sort((a,b)=>b[1].length-a[1].length)
+      .find(([,p])=>t.replace(/\s/g,"").startsWith(p));
+    if(hit){ ecfPredvolba=hit[0]; zvysok=t.slice(t.indexOf(hit[1])+hit[1].length).trim(); }
+  }
+  $("#ecfPhone").value=zvysok;
+  syncPredBtn();
+}
+/* Spojí predvoľbu a číslo. Ak niekto napíše celé číslo s "+", necháme ho tak;
+   úvodnú nulu (0905…) pri predvoľbe vynecháme — okrem Talianska, kde patrí k číslu. */
+function zlozTelefon(){
+  let n=$("#ecfPhone").value.trim();
+  if(!n) return "";
+  if(n.startsWith("+")) return cisteCislo(n);
+  if(n.startsWith("00")) return cisteCislo("+"+n.slice(2));
+  if(ecfPredvolba!=="IT") n=n.replace(/^0/,"");
+  return cisteCislo(`${PREDVOLBY[ecfPredvolba]} ${n}`);
+}
+function openPredvolbaPicker(anchor){
+  document.querySelector(".qsp")?.remove();
+  const box=el("div","qsp krajiny");
+  box.innerHTML=`<div class="qsp-h">Predvoľba krajiny</div>`;
+  const pridaj=(zoznam, kam)=>zoznam.forEach(k=>{
+    const b=el("button","qsp-item"+(ecfPredvolba===k.kod?" on":""));
+    b.type="button";
+    b.innerHTML=`<span class="kr-fl">${vlajkaSvg(k.kod)}</span><span>${esc(k.nazov)}</span><span class="kr-kod">${PREDVOLBY[k.kod]}</span>`;
+    b.onclick=(ev)=>{ ev.stopPropagation(); ecfPredvolba=k.kod; syncPredBtn(); box.remove(); $("#ecfPhone").focus(); };
+    kam.appendChild(b);
+  });
+  pridaj(KRAJINY, box);
+  const viac=el("button","qsp-more","Ďalšie krajiny");
+  viac.type="button";
+  const dalsie=el("div"); dalsie.style.display="none";
+  pridaj(KRAJINY_DALSIE, dalsie);
+  viac.onclick=(ev)=>{ ev.stopPropagation(); dalsie.style.display=""; viac.remove(); };
+  if(KRAJINY_DALSIE.some(k=>k.kod===ecfPredvolba)) dalsie.style.display="";
+  else box.appendChild(viac);
+  box.appendChild(dalsie);
+  document.body.appendChild(box);
+  const r=anchor.getBoundingClientRect();
+  const w=Math.min(250, window.innerWidth-20);
+  box.style.width=w+"px";
+  box.style.left=Math.max(10, Math.min(r.left, window.innerWidth-10-w))+"px";
+  const pod=r.bottom+6, v=box.offsetHeight;
+  box.style.top=(pod+v>window.innerHeight-10 ? Math.max(10, r.top-v-6) : pod)+"px";
+  setTimeout(()=>{
+    const zavri=(ev)=>{ if(!box.contains(ev.target) && !anchor.contains(ev.target)){ box.remove(); document.removeEventListener("mousedown",zavri); } };
+    document.addEventListener("mousedown",zavri);
+  },0);
+}
+
 /* Ktorý kontakt sa práve upravuje. Prázdne = pridáva sa nový. */
 let upravovanyKontakt=null;
 function upravKontakt(id){
   const c=entryContacts.find(x=>x.id===id);
   if(!c) return;
   upravovanyKontakt=id;
-  $("#ecfFirst").value=c.firstName||"";
-  $("#ecfLast").value=c.lastName||"";
+  $("#ecfName").value=[c.firstName,c.lastName].filter(Boolean).join(" ");
   $("#ecfPos").value=c.position||"";
-  $("#ecfPhone").value=c.phone||"+421 ";
+  nastavTelefon(c.phone);
   $("#ecfMail").value=c.email||"";
   $("#eContactForm").style.display="";
   $("#ecfSave").textContent="Uložiť zmeny";
   $("#eAddContactBtn").style.display="none";
-  $("#ecfFirst").focus();
+  $("#ecfName").focus();
 }
 function wireEntryContacts(){
   const form=$("#eContactForm");
@@ -6618,16 +7120,19 @@ function wireEntryContacts(){
   $("#eAddContactBtn").onclick=()=>{
     upravovanyKontakt=null;
     form.style.display="";
-    ["ecfFirst","ecfLast","ecfPos","ecfPhone","ecfMail"].forEach(id=>$("#"+id).value="");
-    $("#ecfPhone").value="+421 ";   // predvoľba, nech ju nikto nemusí písať
+    ["ecfName","ecfPos","ecfPhone","ecfMail"].forEach(id=>$("#"+id).value="");
+    nastavTelefon("");   // predvoľba +421, nech ju nikto nemusí písať
     $("#ecfSave").textContent="Uložiť kontakt";
-    $("#ecfFirst").focus();
+    $("#ecfName").focus();
   };
   $("#ecfCancel").onclick=zavri;
+  $("#ecfPredBtn").onclick=ev=>{ ev.stopPropagation(); openPredvolbaPicker(ev.currentTarget); };
+  syncPredBtn();
   $("#ecfSave").onclick=()=>{
+    const meno=splitPersonName($("#ecfName").value);
     const udaje={
-      firstName:$("#ecfFirst").value.trim(), lastName:$("#ecfLast").value.trim(),
-      position:$("#ecfPos").value.trim(), phone:cisteCislo($("#ecfPhone").value),
+      firstName:meno.firstName, lastName:meno.lastName,
+      position:$("#ecfPos").value.trim(), phone:zlozTelefon(),
       email:$("#ecfMail").value.trim(),
     };
     if(!udaje.firstName && !udaje.lastName && !udaje.phone && !udaje.email){
@@ -7488,7 +7993,8 @@ async function firebaseBackend(){
     }
     return { name:data.name, email:u.email, key:email, role:data.role||autoRole,
              segments:data.segments||autoSegs, firma:data.firma||autoFirma, uid:u.uid,
-             novinkySkryte:data.novinkySkryte||null, novinkyVidene:data.novinkyVidene||null };
+             novinkySkryte:data.novinkySkryte||null, novinkyVidene:data.novinkyVidene||null,
+             aktualizaciaVidena:data.aktualizaciaVidena||null, aktualizaciaOdlozena:data.aktualizaciaOdlozena||null };
   }
   return {
     mode:"firebase", auth,
@@ -7946,7 +8452,15 @@ function buildStatic(){
   };
   $("#nbFileInput").onchange=(e)=>{ const f=e.target.files[0]; handleNbFile(f); e.target.value=""; };
   $("#modalClose").onclick=$("#cancelBtn").onclick=closeModal;
-  $("#aiFixBtn").onclick=improveTextWithAI;
+  /* Dátum — celý rámik aj modrá ikonka otvoria kalendár (natívna ikonka je skrytá). */
+  {
+    const d=$("#fDatum"), ic=$("#fDatumIc"), box=d?.closest(".datum-box");
+    const otvor=ev=>{ if(ev && ev.target===d) return; try{ d.showPicker(); }catch(_){ d.focus(); d.click(); } };
+    if(box) box.addEventListener("click", otvor);
+    if(ic) ic.addEventListener("keydown", ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); otvor(); } });
+    if(d) d.addEventListener("click", ()=>{ try{ d.showPicker(); }catch(_){} });
+  }
+  { const b=$("#aiFixBtn"); if(b) b.onclick=improveTextWithAI; }   // tlačidlo AI je z okna odstránené
   $("#addWarningBtn").onclick=()=>{
     $("#warningInputWrap").style.display="";
     $("#addWarningBtn").style.display="none";
@@ -8289,6 +8803,7 @@ function renderNow(){
   // úlohu na fakturáciu riešime až keď sú dáta načítané, mimo vykresľovania
   setTimeout(skontrolujFakturacnuUlohu, 3000);
   setTimeout(novinkyPopup, 700);                       // uvítacie okno, každému raz
+  setTimeout(aktualizaciaPopup, 900);                  // okno „Vylepšenie podľa vašich pripomienok"
   if(state.view==="meetings") state.view="dashboard";   // sekcia porád už v UI nie je
   if(state.activeClient) c.appendChild(viewClientDetail());
   else if(state.view==="dashboard") c.appendChild(viewDashboard());
@@ -11294,8 +11809,10 @@ function otvorOverenie(){
 
 /* Odkiaľ pochádzajú čísla prípadu — ikonka pri názve firmy. Šípka do krabice
    znamená import, ceruzka ručné zadanie; keď je oboje, ukážu sa obe. */
-function povodCisel(opp){
-  const z=resultsPre(opp?.id).filter(r=>r.trzba!=null || r.bezFakturacie);
+function povodCisel(opp, lenMesiace){
+  // pri zvolených mesiacoch len ich čísla — inak by riadok bez augusta ukazoval zdroj z iného mesiaca
+  const z=resultsPre(opp?.id).filter(r=>(r.trzba!=null || r.bezFakturacie)
+    && (!lenMesiace || lenMesiace.includes(r.obdobie)));
   if(!z.length) return "";
   const jeImport=z.some(r=>r.zdroj==="import" && !r.upraveneRucne);
   const jeRucne =z.some(r=>r.zdroj!=="import" || r.upraveneRucne);
@@ -12491,6 +13008,78 @@ function novinkyOznam(){
   return box;
 }
 
+/* ============================================================================
+   OKNO „VYLEPŠENIE PODĽA VAŠICH PRIPOMIENOK"
+   Vyskočí raz po otvorení Zappisu. „Idem sa pozrieť" ho zavrie natrvalo,
+   „Pripomenúť neskôr" ho ukáže ešte raz v iný deň — potom už nikdy.
+   Pamätá sa v profile používateľa (Firestore), takže nevyskočí znova ani
+   na inom počítači či mobile. Pre ďalšiu aktualizáciu stačí zmeniť
+   AKTUALIZACIA_VERZIA, dátum a zoznam položiek.
+   ============================================================================ */
+const AKTUALIZACIA_VERZIA = "podnety-2026-09";
+/* Po tomto dátume sa okno už neukazuje nikomu (ani novým používateľom). */
+const AKTUALIZACIA_DO = "2026-10-31";
+const AKTUALIZACIA_POLOZKY = [
+  ["sidebar", "Prehľadnejšie menu", "Filtre, hľadanie aj služby máte na jednom mieste vľavo."],
+  ["search",  "Je klient voľný?", "Než oslovíte firmu, overíte si, či na nej niekto nerobí."],
+  ["id",      "Nová karta klienta", "Komu patrí, aké služby u neho bežia a kto ich rieši."],
+  ["chart",   "Výsledky NB po mesiacoch", "Vyberiete si obdobie a doplníte len to, čo treba."],
+  ["offer",   "Nové cenové ponuky — Tlač a poštové služby Cromwell", "Ponuku pripravíte rýchlo a stiahnete ako PDF, vaše kontaktné údaje sa doplnia samé."],
+  ["leaf",    "Nové cenové ponuky — Zelená pošta", "V dizajne Zelenej pošty, s novou titulnou stranou."],
+];
+const AKT_IKONY = {
+  sidebar:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
+  search:'<circle cx="10" cy="8" r="4"/><path d="M4 20c0-3.3 2.7-6 6-6"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.8-1.8"/>',
+  id:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h2M15 12h2M7 16h10"/>',
+  chart:'<path d="M3 3v18h18"/><path d="M8 17v-5M13 17V8M18 17v-9"/>',
+  offer:'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 13h6M9 17h4"/>',
+  leaf:'<path d="M5 21c.5-4.5 2.5-8 7-10"/><path d="M9 18c6.2 0 10.5-3.3 11-12V4h-4.1C7 4 4 8 4 12c0 2 0 4 2 6h3z"/>',
+};
+const dnesISO = () => new Date().toISOString().slice(0,10);
+async function zapamatajAktualizaciu(data){
+  try{
+    Object.assign(state.user, data);
+    await backend.saveUserPref?.(data);
+  }catch(err){ console.warn("Voľbu o aktualizácii sa nepodarilo uložiť:", err); }
+}
+let _aktZobrazene=false;
+function aktualizaciaPopup(){
+  if(_aktZobrazene || !state.user) return;
+  if(Date.now() > Date.parse(AKTUALIZACIA_DO+"T23:59:59")) return;
+  if(state.user.aktualizaciaVidena === AKTUALIZACIA_VERZIA) return;
+  const odlozene = state.user.aktualizaciaOdlozena || "";
+  const druhyRaz = odlozene.startsWith(AKTUALIZACIA_VERZIA+"|");
+  if(druhyRaz && odlozene.split("|")[1] >= dnesISO()) return;   // odložené — ukáže sa až v iný deň
+  if(document.querySelector(".scrim.open")){                    // neprekrývame iné okno, skúsime o chvíľu
+    setTimeout(aktualizaciaPopup, 4000); return;
+  }
+  _aktZobrazene=true;
+
+  const zoznam=AKTUALIZACIA_POLOZKY.map(([ic,t,p])=>`<div class="akt-it">
+      <span class="akt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${AKT_IKONY[ic]||""}</svg></span>
+      <div><b>${esc(t)}</b><span>${esc(p)}</span></div></div>`).join("");
+  const scrim=el("div","scrim open akt-scrim"); scrim.style.zIndex="97";
+  scrim.innerHTML=`<div class="akt-modal" role="dialog" aria-modal="true" aria-labelledby="aktNadpis">
+    <div class="akt-kick">Zappis · aktualizácia</div>
+    <h2 id="aktNadpis">Vylepšenie podľa vašich pripomienok</h2>
+    <p class="akt-lead">Väčšina zmien v tejto aktualizácii vznikla <b>z vašich podnetov</b> — z toho, čo vám pri práci prekážalo alebo chýbalo.</p>
+    <div class="akt-list">${zoznam}</div>
+    <p class="akt-foot">Ak vám niečo chýba alebo zavadzia, napíšte mi to cez <b>Pridať postreh</b> hore vpravo.</p>
+    <div class="akt-acts">
+      <button type="button" class="akt-btn solid" data-act="ok">Idem sa pozrieť</button>
+      ${druhyRaz ? "" : `<button type="button" class="akt-btn" data-act="later">Pripomenúť neskôr</button>
+      <span class="akt-once">Zobrazí sa raz</span>`}
+    </div></div>`;
+  const hotovo=()=>{ scrim.remove(); document.removeEventListener("keydown",esc_); zapamatajAktualizaciu({ aktualizaciaVidena:AKTUALIZACIA_VERZIA }); };
+  const neskor=()=>{ scrim.remove(); document.removeEventListener("keydown",esc_); zapamatajAktualizaciu({ aktualizaciaOdlozena:`${AKTUALIZACIA_VERZIA}|${dnesISO()}` }); };
+  function esc_(ev){ if(ev.key==="Escape") (druhyRaz?hotovo:neskor)(); }
+  scrim.querySelector('[data-act="ok"]').onclick=hotovo;
+  scrim.querySelector('[data-act="later"]')?.addEventListener("click", neskor);
+  document.addEventListener("keydown", esc_);
+  document.body.appendChild(scrim);
+  setTimeout(()=>scrim.querySelector('[data-act="ok"]')?.focus(), 40);
+}
+
 /* Automatická úloha na doplnenie fakturácie.
    ID je odvodené od používateľa a obdobia, takže sa nemôže zdvojiť.
    Vzniká len pre prihláseného človeka a len za mesiac, ktorý je práve na rade.
@@ -12858,6 +13447,27 @@ function viewRewards(){
 }
 
 /* Výsledky — prehľad obchodných prípadov s bežiacim NB obdobím. */
+/* Patrí mesiac k prípadu? Áno, ak sú zaň čísla (alebo „bez fakturácie"),
+   alebo ak je to fakturačný mesiac podľa začiatku, dĺžky a periodicity
+   obdobia. Predtým stačilo, že mesiac spadal do NB obdobia — pri kvartálnej,
+   polročnej či jednorazovej fakturácii sa tak v auguste ukazovali aj prípady,
+   ktoré za august nič fakturovať nemajú. */
+function mesiacFakturacnyPripadu(o, m){
+  if(!o?.nbOd || !m || m<o.nbOd) return false;
+  if(mesiacVyplneny(o.id, m)) return true;
+  const dlzka = o.nbMesiacov || nbDlzkaMesiacov(o.segment, o.produkt) || 12;
+  const koniec = o.nbDo || pridajMesiace(o.nbOd, dlzka-1);
+  if(m>koniec) return false;
+  const p=periodicitaPodla(o.periodicita);
+  if(!p.krok) return m===o.nbOd;                       // jednorazová
+  const diff=(Number(m.slice(0,4))-Number(o.nbOd.slice(0,4)))*12
+    + Number(m.slice(5,7))-Number(o.nbOd.slice(5,7));
+  return diff % p.krok === 0;
+}
+/* Zvolené mesiace, za ktoré prípad čísla mať má, ale ešte ich nemá. */
+const chybajuceVybrane = o => (resVybrane()||[])
+  .filter(m=>mesiacFakturacnyPripadu(o,m) && !mesiacVyplneny(o.id,m));
+
 function viewResults(){
   const wrap=el("div");
   const pripady=viditelnePripady();
@@ -12971,7 +13581,7 @@ function viewResults(){
     const vyb=resVybrane();
     if(vyb){
       // vybavený = všetky zvolené mesiace, ktoré spadajú do obdobia, sú doplnené
-      const vObdobi=vyb.filter(m=>o.nbOd && m>=o.nbOd && (!o.nbDo || m<=o.nbDo));
+      const vObdobi=vyb.filter(m=>mesiacFakturacnyPripadu(o,m));
       if(!vObdobi.length) return true;
       return vObdobi.every(m=>{ const r=resultFor(o.id,m);
         return !!(r && (r.trzba!=null || r.bezFakturacie)); });
@@ -12990,10 +13600,9 @@ function viewResults(){
       if(!vyb || !vyb.length) return;
       rows=rows.filter(o=>stlpecHodnoty(o,k).some(h=>vyb.includes(h)));
     });
-    // mesiac musí spadať do NB obdobia prípadu
+    // zvolený mesiac musí byť fakturačným mesiacom prípadu (alebo musí mať čísla)
     { const vyb=resVybrane();
-      if(vyb) rows=rows.filter(o=>o.nbOd &&
-        vyb.some(m=>m>=o.nbOd && (!o.nbDo || m<=o.nbDo))); }
+      if(vyb) rows=rows.filter(o=>vyb.some(m=>mesiacFakturacnyPripadu(o,m))); }
 
     const vybavene=rows.filter(jeVybavene);
     const caka=rows.filter(o=>!jeVybavene(o));
@@ -13076,6 +13685,9 @@ function viewResults(){
             : "—"}</span>
         <span class="rs-obd">${(()=>{ const pm=poslednyMesiac(o);
           const vyb=resVybrane();
+          const chyba=vyb ? chybajuceVybrane(o) : [];
+          if(chyba.length) return `<b class="rs-pm rs-chyba" title="Za ${esc(chyba.map(menoMesiaca).join(", "))} ešte nie sú čísla">chýba ${esc(chyba.map(kratkyMesiac).join(", "))}</b>
+            <span class="rs-obd-p">${esc(kratkyMesiac(o.nbOd))} – ${esc(kratkyMesiac(o.nbDo))}</span>`;
           return `<b class="rs-pm${pm?"":" ziadny"}"${vyb?' title="Posledný vyplnený zo zvolených mesiacov"':""}>${pm?esc(kratkyMesiac(pm)):"—"}</b>
             <span class="rs-obd-p">${esc(kratkyMesiac(o.nbOd))} – ${esc(kratkyMesiac(o.nbDo))}</span>`;
         })()}</span>
@@ -13095,7 +13707,7 @@ function viewResults(){
             <span class="rs-sum marza${c.bez?" nic":""}">${c.bez?"—":eurKratko(c.marza)}</span>
             <span class="rs-sum ks">${(kusy && !c.bez) ? formatCislo(c.mnozstvo) : "—"}</span>`;
         })()}
-        <span class="rs-pov-cell">${povodCisel(o)}</span>
+        <span class="rs-pov-cell">${povodCisel(o, resVybrane())}</span>
         <span class="rs-cell"><button type="button" class="rs-inline${oslovenieBezNaroku(o.sposobOslovenia)?" bez":""}" data-ed="oslovenie"
           title="Spôsob oslovenia — pri pasívnom dopyte odmena nevzniká">${esc(cleanApproachText(o.sposobOslovenia||"") || "—")}</button></span>
         <span class="rs-act"></span>`;
@@ -14986,17 +15598,18 @@ function openModal(entry,presetSeg){
     const ag=$("#fAgency"), mf=$("#fMaterialField");
     ag.checked=!!entry?.isAgency;
     $("#fMaterial").value=entry?.material||"";
-    /* Materiál a názov zákazky robia to isté — rozlišujú viac obchodov tej istej
-       firmy v tej istej službe. Preto sa nikdy nezobrazia naraz: pri agentúre
-       je to Materiál (zaužívaný pojem, existujúce dáta), inak Názov zákazky. */
+    /* Pri agentúre sa zobrazí Materiál (povinný) a Názov zákazky zostáva
+       viditeľný tiež — agentúra môže mať pod jedným materiálom viac zákaziek. */
     const syncAg=()=>{
       mf.style.display = ag.checked ? "" : "none";
+      // Názov zákazky zostáva viditeľný aj pri agentúre (vedľa Materiálu).
       const zf=$("#fZakazkaField");
-      if(zf) zf.style.display = ag.checked ? "none" : "";
+      if(zf) zf.style.display = "";
     };
     ag.onchange=syncAg; syncAg();
     const pill=$("#fAgencyPill");
-    pill.onclick=()=>{ ag.checked=!ag.checked; syncAg(); pill.classList.toggle("on", ag.checked); };
+    pill.onclick=()=>{ if($("#fOsoba").checked) return;   // pri fyzickej osobe je agentúra neaktívna
+      ag.checked=!ag.checked; syncAg(); pill.classList.toggle("on", ag.checked); };
     pill.classList.toggle("on", ag.checked);
     pill.onkeydown=ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); pill.onclick(); } };
 
@@ -15008,11 +15621,19 @@ function openModal(entry,presetSeg){
       fo.checked=!!entry?.fyzickaOsoba;
       const syncFo=()=>{
         fpill.classList.toggle("on", fo.checked);
-        $("#fIcoField").style.display = fo.checked ? "none" : "";
-        $("#fClientLabel").textContent = fo.checked ? "Meno a priezvisko" : "Klient";
-        if(fo.checked && ag.checked){ ag.checked=false; syncAg(); pill.classList.remove("on"); }
-        pill.style.display = fo.checked ? "none" : "";
+        /* Rozloženie sekcie sa nemení — IČO, Finstat aj agentúra zostávajú
+           na mieste, len sú sivé a neaktívne. */
+        const vyp=fo.checked;
+        $("#fIcoField").classList.toggle("neaktivne", vyp);
+        $("#fIcoLookup").closest(".field").classList.toggle("neaktivne", vyp);
+        ["fIco","fFlagBtn","fIcoLookup","fIcoUnlock"].forEach(id=>{ const x=$("#"+id); if(x) x.disabled=vyp; });
+        $("#fClientLabel").textContent = vyp ? "Klient (meno a priezvisko)" : "Klient";
+        if(vyp && ag.checked){ ag.checked=false; syncAg(); pill.classList.remove("on"); }
+        pill.classList.toggle("neaktivne", vyp);
+        pill.tabIndex = vyp ? -1 : 0;
+        pill.setAttribute("aria-disabled", vyp ? "true" : "false");
         syncIcoField();
+        if(vyp) $("#fIcoHint").textContent = "Fyzická osoba — IČO sa nevypĺňa.";
       };
       fo.onchange=syncFo;
       fpill.onclick=()=>{ fo.checked=!fo.checked; syncFo(); };
@@ -15030,6 +15651,9 @@ function openModal(entry,presetSeg){
     dl.innerHTML=[...vlastne, ...ostatne].map(m=>`<option value="${esc(m)}">`).join("");
   }
   $("#fClient").oninput=()=>{ syncIcoField(); fillZakazkaList($("#fClient").value); };   // len počas písania, nie po vyhľadaní
+  /* Po dopísaní mena klienta doplníme kontakty, ktoré naň už niekto zapísal. */
+  $("#fClient").onchange=()=>doplnZnameKontakty();
+  $("#fClient").onblur=()=>doplnZnameKontakty();
   pendingFinstat = entry?.companyInfo || null;
   // úloha s termínom — vždy prázdna, pridáva sa k práve ukladanému záznamu
   $("#taskInputWrap").style.display="none";
@@ -15052,6 +15676,7 @@ function openModal(entry,presetSeg){
     at.value=entry?.dmisActType||"";
     $("#fCountry").value=entry?.dmisCountry||"SK";
     $("#fRevenue").value=entry?.dmisRevenue??"";
+    { const d=$("#fDmisDetails"); if(d) d.open=false; }   // údaje pre DMIS sú predvolene zbalené
   }
   {
     addrStreet = entry?.dmisStreet || (entry?.companyInfo?.address?.split(",")[0] || "");
@@ -15081,7 +15706,9 @@ function openModal(entry,presetSeg){
     // Interný záznam sa nikdy neviaže na firmu — celá sekcia Firma zmizne.
     $("#fFirmaSection").style.display = vnutorne ? "none" : "";
     $("#fIcoField").style.display = "";
-    $("#fContactsField").style.display = (canPickKind && nb) ? "" : "none";
+    // Kontaktné osoby patria ku klientovi, nie k typu záznamu — pri internom
+    // zázname klient nie je, inde má zmysel vždy.
+    $("#fContactsField").style.display = vnutorne ? "none" : "";
     $("#fApproachSection").style.display = (canPickKind && nb) ? "" : "none";
     $("#fDmisSection").style.display = (canPickKind && nb) ? "" : "none";
     // stav pri internom zázname nedáva zmysel — ukladá sa natvrdo "Realizuje sa"
@@ -15113,6 +15740,33 @@ function openModal(entry,presetSeg){
       hint.classList.toggle("warn", sel.value!==state.week);
     };
     sel.onchange=syncW; syncW();
+
+    /* Dátum je to, čo obchodník vidí — týždeň sa z neho dopočíta.
+       Skrytý výber týždňa zostáva ako zdroj hodnoty pri ukladaní. */
+    {
+      const dd=$("#fDatum");
+      const pondelok = id => { const {year,week}=parseWeekId(id);
+        return (year&&week) ? mondayOf(year,week) : null; };
+      const naDatum = id => {
+        const m=pondelok(id); if(!m) return "";
+        // predvolene dnešok, keď zvolený týždeň je ten aktuálny
+        if(id===CURRENT_WEEK) return new Date().toISOString().slice(0,10);
+        return m.toISOString().slice(0,10);
+      };
+      dd.value = entry?.datum || naDatum(zvoleny);
+      dd.onchange=()=>{
+        const d=dd.value ? new Date(dd.value+"T12:00:00Z") : null;
+        if(!d || isNaN(d)) return;
+        const id=weekId(d);
+        if(![...sel.options].some(o=>o.value===id)){
+          const o=document.createElement("option");
+          o.value=id; o.textContent=weekRangeLabel(id);
+          sel.insertBefore(o, sel.firstChild);
+        }
+        sel.value=id;
+        syncW();
+      };
+    }
   }
   $("#fClient").value=entry?.client||"";
   syncIcoField();          // pole klienta je naplnené, zelený pruh môže ukázať správnu firmu
@@ -15255,6 +15909,13 @@ async function saveFromModalInner(){
     return;
   }
   $("#fMaterial").style.borderColor="";
+  // Pri New business je spôsob oslovenia povinný (sekcia Oslovenie je viditeľná len tam).
+  if($("#fApproachSection").style.display!=="none" && !$("#fApproach").value){
+    $("#fApproach").focus(); $("#fApproach").style.borderColor="var(--red)";
+    toast("Vyber prosím spôsob oslovenia.");
+    return;
+  }
+  $("#fApproach").style.borderColor="";
   // IČO je povinné len tam, kde je firma. Interný záznam sekciu Firma vôbec nemá,
   // takže by sa kontrola dožadovala poľa, ktoré používateľ ani nevidí —
   // uloženie by sa ticho prerušilo a nič by sa nestalo.
@@ -15385,8 +16046,9 @@ async function saveFromModalInner(){
     })(),
     produkt: selectedProdukt(),
     weekId: $("#fWeek").value || state.week,
+    datum: $("#fDatum").value || null,
     web: vnutorne ? null : (normalizujWeb($("#fWeb").value) || null),
-    zakazka: (vnutorne || $("#fAgency").checked) ? null : ($("#fZakazka").value.trim() || null),
+    zakazka: vnutorne ? null : ($("#fZakazka").value.trim() || null),   // aj pri agentúre
     fyzickaOsoba: (!vnutorne && $("#fOsoba").checked) ? true : false,
     sluzbaIna: (segId==="ine") ? ($("#fSluzbaIna").value.trim() || null) : null,
     firma,
@@ -15869,7 +16531,7 @@ gsWireSearch();
 
 /* Značka verzie. Keď sa niečo „nezobrazuje", najprv treba vedieť, či je
    nasadený ten súbor, o ktorom hovoríme. */
-const BUILD = "2026-09-26cw · dôvod len v bubline";
+const BUILD = "2026-09-26dd · sekcia Firma na vzore .row";
 (function znackaVerzie(){
   const b=document.getElementById("buildStamp");
   if(b) b.textContent = BUILD;
