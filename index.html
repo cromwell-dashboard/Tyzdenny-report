@@ -3712,6 +3712,29 @@ select:disabled{cursor:default; opacity:.65}
   .akt-btn{flex:1 1 auto;height:44px}
   .akt-once{margin-left:0;width:100%;text-align:center}
 }
+/* Detail klienta — počty v záložkách, kontaktné osoby, karta z databázy */
+.cd2-tab .cd2-ct{font-style:normal;font-size:11px;font-weight:600;margin-left:6px;opacity:.65}
+/* Kontaktné osoby v detaile klienta — vzhľad ako v karte z databázy */
+.cd2-kbox{margin:0}
+.cd2-kbox .lead-contact{padding-right:13px}
+.cd2-kbox .cd2-kzdroj{font-style:normal;margin-top:4px}
+.cd2-db-k{cursor:pointer;transition:border-color .12s, box-shadow .12s}
+.cd2-db-k:hover{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.cd2-db-go{font-size:22px;line-height:1;color:var(--muted)}
+.cd2-db{display:flex;flex-direction:column;gap:10px}
+.cd2-db-k{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.cd2-db-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.cd2-db-n{font-size:15px;font-weight:700;color:var(--ink)}
+.cd2-db-s{font-size:12px;color:var(--muted);margin-top:2px}
+.cd2-db-open{height:30px;min-height:0;padding:0 14px;border-radius:7px;font-size:12.5px;white-space:nowrap}
+.cd2-db-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px 18px;margin-top:12px}
+.cd2-db-g span{display:block;font-size:11px;color:var(--muted);margin-bottom:2px}
+.cd2-db-g b{font-size:13px;font-weight:600;color:var(--ink)}
+.cd2-db-volna{color:#12915A}
+.cd2-db-next{margin-top:12px;padding:9px 12px;background:var(--bg);border-radius:8px;font-size:12.5px;color:var(--ink-soft)}
+.cd2-db-next b{display:block;font-size:11px;color:var(--muted);margin-bottom:2px}
+@media (max-width:640px){
+}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -7746,7 +7769,8 @@ let clientAliasMap=new Map();
 const klientKluc = k => clientAliasMap.get(k) || k;
 function clientIndex(){
   const key=state.all.length+"|"+(state.all.length?(state.all[state.all.length-1].updatedAt||0):0)
-    +"|"+state.hiddenClientNames.length+"|"+Object.keys(state.clientProfiles||{}).length;
+    +"|"+state.hiddenClientNames.length+"|"+Object.keys(state.clientProfiles||{}).length
+    +"|"+(state.dmisOwners||[]).length;
   if(_ciCache && _ciKey===key) return _ciCache;
   _ciKey=key; _ciCache=clientIndexCompute();
   return _ciCache;
@@ -7764,6 +7788,26 @@ function clientIndexCompute(){
     if(e.salesperson) e.salesperson.split("/").forEach(p=>c.people.add(p.trim()));
     if(e.client.length>c.name.length) c.name=e.client; // dlhší/úplnejší názov
   });
+  /* Chýbajúce IČO doplníme z registra vlastníkov DMIS — pochádza z toho istého
+     exportu, takže názvy klientov sa zhodujú presne. Len keď má názov v registri
+     jediné IČO; pri dvoch rôznych firmách s rovnakým názvom nedopĺňame nič. */
+  {
+    const icoPodlaMena=new Map();
+    (state.dmisOwners||[]).forEach(d=>{
+      const ic=icoKey(d?.ico), k=clientKey(d?.name||"");
+      if(!ic || !k) return;
+      if(!icoPodlaMena.has(k)) icoPodlaMena.set(k,new Set());
+      icoPodlaMena.get(k).add(ic);
+    });
+    map.forEach(c=>{
+      if(c.ico) return;
+      const set=icoPodlaMena.get(c.key);
+      if(!set || set.size!==1) return;
+      const ic=[...set][0];
+      c.ico = ic.length<8 ? ic.padStart(8,"0") : ic;   // register ukladá IČO bez úvodných núl
+      c.icoZDmis = true;
+    });
+  }
   /* Zlúčenie podľa IČO. Klient sa zoskupuje podľa názvu, lenže ten istý
      klient býva zapísaný viacerými spôsobmi — „CEWE a. s.", „CEWE a.s.",
      „CEWE". Keď majú rovnaké IČO, ide o jednu firmu a patria k sebe.
@@ -7841,6 +7885,7 @@ function demoBackend(){
   return {
     mode:"demo",
     start(){ sync(); },
+    async doplnIco(id, ico){ all=all.map(e=>e.id===id?{...e, leadIco:ico}:e); sync(); },
     async save(entry){
       entry={...entry, updatedAt:Date.now()};
       if(entry.id && all.some(e=>e.id===entry.id)) all=all.map(e=>e.id===entry.id?{...entry}:e);
@@ -8090,6 +8135,8 @@ async function firebaseBackend(){
       unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); u13(); u14(); u15(); u16(); u17(); u18(); if(leadsUnsub) leadsUnsub(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
+    /* Doplní len chýbajúce IČO — bez zmeny času úpravy, aby sa záznam neposunul navrch zoznamu. */
+    async doplnIco(id, ico){ await setDoc(doc(db,"entries",id),{leadIco:ico},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
     async generateSuggestionsAI(payload){ const res=await generateSuggestionsCallable(payload); return res.data; },
     remove(id){ return deleteDoc(doc(db,"entries",id)); },
@@ -9427,7 +9474,14 @@ function parseNbDate(str){
 function slugName(name){ return (name||"?").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"."); }
 
 async function importNewBusinessRows(rows){
-  let added=0, updated=0, locked=0, skippedSeg=0, skippedDate=0, fazou=0, bezZmeny=0;
+  let added=0, updated=0, locked=0, skippedSeg=0, skippedDate=0, fazou=0, bezZmeny=0, icoDoplnene=0;
+  /* IČO z exportu DMIS. Ukladá sa do záznamu (leadIco), aby ho klient mal
+     v databáze klientov. Existujúce IČO sa nikdy neprepisuje. */
+  const doplnIco = async (e, ico) => {
+    if(backend.doplnIco) await backend.doplnIco(e.id, ico);
+    else await backend.save({...e, leadIco:ico});
+    icoDoplnene++;
+  };
   const unknownSegs=new Set();
   for(const row of rows){
     const csvId=(row["ID"]||"").toString().trim();
@@ -9439,6 +9493,8 @@ async function importNewBusinessRows(rows){
     const sluzbaRaw=(row["Služba"]||"").trim();
     const datumRaw=(row["Čas aktivity"]||"").trim();
     const popis=(row["Popis"]||"").trim();
+    const icoCsv=String(row["IČO"]||"").replace(/\D/g,"");
+    const icoPlatne = icoKey(icoCsv).length>=6 ? icoCsv : "";
 
     const segId=mapServiceToSegment(sluzbaRaw);
     if(!segId){ skippedSeg++; unknownSegs.add(sluzbaRaw||"(prázdne)"); continue; }
@@ -9454,8 +9510,12 @@ async function importNewBusinessRows(rows){
     const entryId="nb_"+(csvId||slugName(klient)+"_"+wId);
     const existing=state.all.find(e=>e.id===entryId);
 
-    // Ak niekto záznam reálne upravil cez formulár (nbLocked), ďalší import ho už neprepíše
-    if(existing?.nbLocked){ locked++; continue; }
+    // Ak niekto záznam reálne upravil cez formulár (nbLocked), ďalší import ho už neprepíše —
+    // doplní sa len chýbajúce IČO, nič iné.
+    if(existing?.nbLocked){
+      if(icoPlatne && !existing.leadIco) await doplnIco(existing, icoPlatne);
+      locked++; continue;
+    }
 
     const novyStav = fazaStav || existing?.status || "nb_oslovenie";
     const novaFaza = stlpec ? String(row[stlpec]??"").trim() || null : null;
@@ -9476,7 +9536,10 @@ async function importNewBusinessRows(rows){
       (existing.nbDovodOdmietnutia||null)!==dovodOdm,
     ].some(Boolean);
 
-    if(!zmenene){ bezZmeny++; continue; }
+    if(!zmenene){
+      if(icoPlatne && existing && !existing.leadIco) await doplnIco(existing, icoPlatne);
+      bezZmeny++; continue;
+    }
 
     const entry={
       id:entryId, segment:segId, weekId:wId,
@@ -9486,6 +9549,7 @@ async function importNewBusinessRows(rows){
       nbDovodOdmietnutia: dovodOdm,
       firma:null,
       isNewBusiness:true, nbSourceId:csvId,
+      leadIco: existing?.leadIco || icoPlatne || null,
       /* Dátum aktivity z DMIS. Keď tam obchodník posunie fázu, DMIS zapíše
          nový dátum — a ten patrí aj do Zappisu. Čas importu je len technický
          údaj, na zobrazenie ani zoradenie sa nepoužíva. */
@@ -9500,12 +9564,15 @@ async function importNewBusinessRows(rows){
     };
     if(fazaStav && existing && existing.status!==fazaStav) fazou++;
     await backend.save(entry);
+    if(existing && !existing.leadIco && icoPlatne) icoDoplnene++;
     existing ? updated++ : added++;
   }
+  _ciCache=null;                                   // databáza klientov si prepočíta IČO
   const parts=[`${added} pridaných`];
   if(updated) parts.push(`${updated} aktualizovaných`);
   if(fazou) parts.push(`${fazou} ${plural(fazou,"posunutý vo fáze","posunuté vo fáze","posunutých vo fáze")}`);
   if(bezZmeny) parts.push(`${bezZmeny} bez zmeny`);
+  if(icoDoplnene) parts.push(`${icoDoplnene} s doplneným IČO`);
   if(locked) parts.push(`${locked} preskočených (ručne upravené)`);
   if(skippedSeg) parts.push(`${skippedSeg} preskočených (neznáma služba${unknownSegs.size?": "+[...unknownSegs].join(", "):""})`);
   if(skippedDate) parts.push(`${skippedDate} preskočených (chybný dátum)`);
@@ -12147,8 +12214,10 @@ function renderGroupedList(container, list, opts={}){
         it.innerHTML=`<div class="gl-item-meta">${mode==="client"?`<b style="color:${SEG[e.segment]?SEG[e.segment].color:"#9AA1AC"}">${esc(SEG[e.segment]?SEG[e.segment].short:"—")}</b> · `:""}Týždeň ${week} · ${esc(weekRangeLabel(e.weekId))}${dtxt} · ${esc(resolveOwnerName(e))}${e.isNewBusiness?` · <span class="gl-nb${e.entrySource==="app"?" app":""}">New business</span>`:""}${e.sleeping?" · spiaci":""}</div>
           <div class="gl-item-text">${esc(e.events||"—")}</div>`;
         const opn=el("button","gl-item-open","Otvoriť ↗"); opn.type="button";
-        opn.title="Prejsť na tento týždeň a záznam";
-        opn.onclick=(ev)=>{ ev.stopPropagation(); gsOpenEntry(e); };
+        opn.title="Otvoriť detail klienta";
+        /* Predtým preskočilo na týždeň záznamu v zozname aktivít (na začiatok
+           zoznamu) — teraz otvorí detail klienta na záložke Aktivity. */
+        opn.onclick=(ev)=>{ ev.stopPropagation(); state.cdTab="aktivity"; goClient(clientKey(e.client), e.client); };
         it.appendChild(opn);
         body.appendChild(it);
       });
@@ -13990,7 +14059,15 @@ function viewClientDetail(){
   const mojeMeno=normalizeForCompare(state.user?.name||"");
   const jeMoj = e => normalizeForCompare(e.salesperson||"").includes(mojeMeno)
     || (e.coSalespeople||[]).some(x=>normalizeForCompare(x).includes(mojeMeno));
-  if(!["sluzby","aktivity","fakturovane"].includes(state.cdTab)) state.cdTab="sluzby";
+  /* Kontaktné osoby zo všetkých záznamov klienta aj z databáz a karty
+     z databáz (ak je klient aj tam). Databázy sa načítajú až na požiadanie. */
+  backend.ensureLeads?.();
+  const karty = kartyZDatabazy(c);
+  const kontakty = kontaktyKlienta(c, karty);
+  const zalozky=[["sluzby","Služby"],["aktivity","Aktivity"],["kontakty","Kontaktné osoby", kontakty.length]];
+  if(karty.length) zalozky.push(["databaza","Karta z databázy", karty.length>1?karty.length:0]);
+  zalozky.push(["fakturovane","Vyfakturované"]);
+  if(!zalozky.some(([k])=>k===state.cdTab)) state.cdTab="sluzby";
 
   const nav=el("div","cd2-tabs");
   const tl=el("button","cd2-moje"+(state.cdMine?" on":""));
@@ -14000,13 +14077,19 @@ function viewClientDetail(){
   tl.onclick=()=>{ state.cdMine=!state.cdMine; render(); };
   nav.appendChild(tl);
   nav.appendChild(el("span","cd2-sep"));
-  [["sluzby","Služby"],["aktivity","Aktivity"],["fakturovane","Vyfakturované"]].forEach(([k,l])=>{
-    const b=el("button","cd2-tab"+(state.cdTab===k?" on":""), esc(l));
+  zalozky.forEach(([k,l,pocet])=>{
+    const b=el("button","cd2-tab"+(state.cdTab===k?" on":""), esc(l)+(pocet?`<i class="cd2-ct">${pocet}</i>`:""));
     b.type="button";
-    b.onclick=()=>{ state.cdTab=k; render(); };
+    b.onclick = (k==="databaza" && karty.length===1)
+      ? ()=>{ state.openLead=karty[0].id; renderLeadModal(); }     // jedna karta → rovno ju otvorí
+      : ()=>{ state.cdTab=k; render(); };
     nav.appendChild(b);
   });
   wrap.appendChild(nav);
+
+  if(state.cdTab==="kontakty"){ wrap.appendChild(cdKontakty(kontakty)); return wrap; }
+  if(state.cdTab==="databaza" && karty.length>1){ wrap.appendChild(cdDatabaza(karty)); return wrap; }
+  if(state.cdTab==="databaza") state.cdTab="sluzby";
 
   const zaznamy = state.cdMine ? c.entries.filter(jeMoj) : c.entries;
   if(!zaznamy.length){
@@ -14020,6 +14103,105 @@ function viewClientDetail(){
   else if(state.cdTab==="aktivity")  wrap.appendChild(cdAktivity(zaznamy));
   else                               wrap.appendChild(cdFakturovane(zaznamy, c));
   return wrap;
+}
+
+/* Karty klienta v databázach firiem — podľa IČO, bez IČO podľa presného názvu. */
+function kartyZDatabazy(c){
+  const ic=icoKey(c.ico);
+  const mena=new Set([c.key, ...c.entries.map(e=>clientKey(e.client))].filter(Boolean));
+  return (state.leads||[]).filter(l=>{
+    const li=icoKey(l.ico);
+    if(ic && li) return li===ic;
+    return mena.has(clientKey(l.company||""));
+  });
+}
+/* Všetky kontaktné osoby klienta — zo záznamov v Zappise aj z databáz.
+   Rovnaký človek (e-mail, telefón alebo meno) sa ukáže raz. */
+function kontaktyKlienta(c, karty){
+  const out=[], videne=new Map();
+  const kluc=k=>{
+    const m=String(k.email||"").trim().toLowerCase();
+    const t=String(k.phone||"").replace(/\D/g,"").slice(-9);
+    const n=normalizeForCompare([k.firstName,k.lastName].filter(Boolean).join(" "));
+    return m ? "m:"+m : t ? "t:"+t : n ? "n:"+n : "";
+  };
+  const pridaj=(k, zdroj, ts)=>{
+    const kl=kluc(k); if(!kl) return;
+    const bolo=videne.get(kl);
+    if(bolo){ if(!bolo.zdroje.includes(zdroj)) bolo.zdroje.push(zdroj);
+      ["position","phone","email"].forEach(f=>{ if(!bolo[f] && k[f]) bolo[f]=k[f]; }); return; }
+    const z={...k, zdroje:[zdroj], ts:ts||0};
+    videne.set(kl,z); out.push(z);
+  };
+  c.entries.slice().sort((a,b)=>entryTs(b)-entryTs(a)).forEach(e=>
+    (e.contacts||[]).forEach(k=>pridaj(k, SEG[e.segment]?.short||"Zappis", entryTs(e))));
+  karty.forEach(l=>(l.contacts||[]).forEach(k=>pridaj(k, "Databáza "+leadDbName(l), l.lastTouchAt||l.importedAt)));
+  return out;
+}
+/* Kontaktné osoby v detaile klienta — rovnaký vzhľad ako v karte z databázy
+   (meno, pozícia, odznak pôvodu, telefóny a e-maily ako klikateľné štítky). */
+function cdKontakty(kontakty){
+  const box=el("div","lead-contacts-box cd2-kbox");
+  box.innerHTML=`<div class="lead-contacts-head">
+      <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Kontaktné osoby</b>
+    </div><div class="lead-contacts-inner"></div>`;
+  const inner=box.querySelector(".lead-contacts-inner");
+  if(!kontakty.length){
+    inner.innerHTML=`<div class="lead-hint">Zatiaľ žiadna kontaktná osoba. Pridáš ju v zázname klienta alebo v karte z databázy.</div>`;
+    return box;
+  }
+  const tel='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  const mail='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>';
+  kontakty.forEach(c=>{
+    const name=[c.firstName,c.lastName].filter(Boolean).join(" ")||"(bez mena)";
+    const imp = c.source==="import";
+    const row=el("div","lead-contact"+(imp?" imported":""));
+    const mails=String(c.email||"").split(/[,;]/).map(x=>x.trim()).filter(Boolean);
+    const phones=String(c.phone||"").split(/·|,|;/).map(x=>x.trim()).filter(Boolean);
+    const odznak = imp ? "Importovaný"
+      : c.zdroj==="databaza" ? "Z databázy"
+      : "Doplnil "+(c.editedByName||c.addedByName||"—");
+    row.innerHTML=`<div class="lc-top">
+        <b>${esc(name)}</b>
+        ${c.position?`<span class="lc-pos">${esc(c.position)}</span>`:""}
+        <span class="lc-src ${imp?"imp":"man"}">${esc(odznak)}</span>
+      </div>
+      <div class="lc-lines">
+        ${phones.map(p=>`<a href="tel:${esc(p.replace(/\s/g,""))}" class="lc-link">${tel}${esc(p)}</a>`).join("")}
+        ${mails.map(m=>`<a href="mailto:${esc(m)}" class="lc-link">${mail}${esc(m)}</a>`).join("")}
+        ${!phones.length && !mails.length?`<span class="lc-none">Bez telefónu a e-mailu.</span>`:""}
+      </div>
+      ${c.callStatus?`<div class="lc-call">Z call centra: ${esc(c.callStatus)}</div>`:""}
+      <div class="lc-call cd2-kzdroj">Zdroj: ${esc(c.zdroje.join(" · "))}</div>`;
+    inner.appendChild(row);
+  });
+  return box;
+}
+/* Karta z databázy — prehľad a tlačidlo na otvorenie celej karty firmy. */
+function cdDatabaza(karty){
+  const box=el("div","cd2-db");
+  karty.forEach(l=>{
+    const sv=SEG[leadService(l)];
+    const kto=l.ownerName ? esc(l.ownerName) : `<span class="cd2-db-volna">voľná</span>`;
+    const pole=(n,v)=>v?`<div><span>${esc(n)}</span><b>${esc(String(v))}</b></div>`:"";
+    const k=el("div","cd2-db-k");
+    k.innerHTML=`<div class="cd2-db-h">
+        <div><div class="cd2-db-n">${esc(l.company||"—")}</div>
+          <div class="cd2-db-s">Databáza ${esc(leadDbName(l))}${sv?` · ${esc(sv.name)}`:""}${l.ico?` · IČO ${esc(l.ico)}`:""}</div></div>
+        <span class="cd2-db-go" aria-hidden="true">›</span>
+      </div>
+      <div class="cd2-db-g">
+        <div><span>Obchodník</span><b>${kto}</b></div>
+        ${pole("Okres", l.district)}${pole("Odbor podnikania", l.nace)}
+        ${pole("Obratová kategória", l.revenueCat)}${pole("Právna forma", l.legalForm)}
+        ${l.score?pole("Skóre", l.score):""}
+      </div>
+      ${l.nextStep?`<div class="cd2-db-next"><b>Odporúčaný ďalší krok</b>${esc(l.nextStep)}</div>`:""}`;
+    k.title="Otvoriť kartu z databázy";
+    k.onclick=()=>{ state.openLead=l.id; renderLeadModal(); };
+    box.appendChild(k);
+  });
+  return box;
 }
 
 /* Tabuľka služieb — riadok sa rozbalí a až vtedy ukáže texty aktivít. */
