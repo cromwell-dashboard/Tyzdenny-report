@@ -1006,6 +1006,8 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
   grid-template-columns:minmax(118px,1.35fr) 20px minmax(90px,0.75fr) 120px 50px 72px 72px 52px 90px minmax(84px,0.75fr) 86px}
 .rs-pm{display:block;font-family:var(--mono);font-size:12.5px;color:var(--ink)}
 .rs-pm.ziadny{color:var(--line)}
+.rs-pm.rs-potv{display:inline-block;font-family:inherit;font-size:11px;font-weight:600;color:var(--brand);
+  background:var(--brand-soft);border:1px solid #C5CFF5;border-radius:6px;padding:1px 6px;white-space:nowrap}
 .rs-pm.rs-chyba{display:inline-block;font-family:inherit;font-size:11px;font-weight:600;color:#B45F0C;
   background:#FFF4E2;border:1px solid #F2D9AD;border-radius:6px;padding:1px 6px;white-space:nowrap}
 .rs-obd-p{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:1px}
@@ -10712,6 +10714,66 @@ function odmenyZaMesiac(obdobie, lenMoje){
   });
   return out.sort((a,b)=>(b.suma??-1)-(a.suma??-1));
 }
+/* ---------------------------------------------------------------- EXPORT ODMIEN DO XLS
+   Štruktúra podľa súboru Odmeny_NewBusiness_RRRR-MM.xlsx: nadpis, dátum vygenerovania,
+   tabuľka Obchodník … Výška odmeny a riadok „SPOLU na vyplatenie". Jeden riadok =
+   jeden obchodník na jednom prípade za mesiac (pri viacerých vlastníkoch podľa podielu).
+   Exportujú sa len SCHVÁLENÉ odmeny — tie sú na vyplatenie. Export je dostupný len
+   vymenovaným používateľom. */
+const EXPORT_ODMIEN_POUZIVATELIA = ["miroslava.stalmaskova@cromwell.sk", "michal.svec@cromwell.sk"];
+const smieExportOdmien = () => {
+  const k=String(state.user?.key||state.user?.email||"").toLowerCase();
+  return EXPORT_ODMIEN_POUZIVATELIA.includes(k);
+};
+function exportOdmienXls(mesiace){
+  if(typeof XLSX==="undefined"){ toast("Knižnica na Excel sa nenačítala. Skontroluj pripojenie."); return; }
+  const MES=["Január","Február","Marec","Apríl","Máj","Jún","Júl","August","September","Október","November","December"];
+  const nazovMes=m=>{ const [r,mm]=m.split("-"); return `${MES[Number(mm)-1]} ${r}`; };
+  const d=new Date(), dnes=`${d.getDate()}. ${d.getMonth()+1}. ${d.getFullYear()}`;
+  const wb=XLSX.utils.book_new();
+  let spoluRiadkov=0, cakaSpolu=0;
+  mesiace.slice().sort().forEach(m=>{
+    const polozky=odmenyZaMesiac(m, false);
+    cakaSpolu+=polozky.filter(r=>r.stav==="caka" && r.suma).length;
+    const riadky=[];
+    polozky.filter(r=>r.stav==="schvalene" || r.stav==="nesulad").forEach(r=>{
+      const opp=r.opp, res=r.res||{};
+      const schv=r.schvalene||{};
+      const pr=r.vypocet?.pravidlo || pravidloPrePripad(opp);
+      const zaklad = pr?.zaklad==="obrat" ? "Výnos" : "Marža";
+      const sadzba = schv.sadzba ?? r.vypocet?.sadzba ?? pr?.sadzba ?? null;
+      // podiely zmrazené pri schválení majú prednosť pred aktuálnymi
+      const podiely = (schv.podiely && schv.podiely.length) ? schv.podiely : rozdelOdmenu(opp, r.suma);
+      podiely.forEach(p=>riadky.push([
+        p.meno, "", opp.client||"", SEG[opp.segment]?.short||"",
+        res.trzba ?? null, res.marza ?? null, zaklad, p.podiel, sadzba, p.suma ]));
+    });
+    riadky.sort((a,b)=>a[0].localeCompare(b[0],"sk") || a[2].localeCompare(b[2],"sk"));
+    spoluRiadkov+=riadky.length;
+    const aoa=[[`Odmeny New Business — ${nazovMes(m)}`],[`Cromwell Group · vygenerované ${dnes}`],[],
+      ["Obchodník","Fakturant","Klient","Služba","Výnos","Marža","Základ odmeny","Podiel","Percento odmeny","Výška odmeny"],
+      ...riadky];
+    const spoluR=aoa.length+1;                                   // číslo riadku v Exceli
+    aoa.push(["SPOLU na vyplatenie:","","","","","","","","", riadky.reduce((a,x)=>a+(x[9]||0),0)]);
+    const ws=XLSX.utils.aoa_to_sheet(aoa);
+    // súčet ako vzorec, aby sa prepočítal pri ručnej úprave
+    const sc=XLSX.utils.encode_cell({r:spoluR-1,c:9});
+    ws[sc]={ t:"n", v:ws[sc]?.v||0, f: riadky.length?`SUM(J5:J${spoluR-1})`:"0", z:"#,##0.00" };
+    for(let i=0;i<riadky.length;i++){
+      const r=i+4;
+      [4,5,9].forEach(c=>{ const a=XLSX.utils.encode_cell({r,c}); if(ws[a]&&ws[a].t==="n") ws[a].z="#,##0.00"; });
+      [7,8].forEach(c=>{ const a=XLSX.utils.encode_cell({r,c}); if(ws[a]&&ws[a].t==="n") ws[a].z="0.0%"; });
+    }
+    ws["!merges"]=[{s:{r:0,c:0},e:{r:0,c:9}},{s:{r:1,c:0},e:{r:1,c:9}},{s:{r:spoluR-1,c:0},e:{r:spoluR-1,c:8}}];
+    ws["!cols"]=[{wch:24},{wch:10},{wch:42},{wch:14},{wch:12},{wch:12},{wch:14},{wch:9},{wch:15},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws, `Odmeny ${m}`);
+  });
+  const subor = mesiace.length===1 ? `Odmeny_NewBusiness_${mesiace[0]}.xlsx` : `Odmeny_NewBusiness_vsetky_mesiace.xlsx`;
+  XLSX.writeFile(wb, subor);
+  toast(`Export hotový · ${spoluRiadkov} ${plural(spoluRiadkov,"riadok","riadky","riadkov")}${
+    cakaSpolu?` · ${cakaSpolu} ${plural(cakaSpolu,"odmena ešte čaká","odmeny ešte čakajú","odmien ešte čaká")} na schválenie a nie je v exporte`:""}`);
+}
+
 /* Mesiace, za ktoré vôbec existujú výsledky — ponuka v prepínači. */
 function mesiaceSOdmenami(){
   const set=new Set((state.results||[]).map(r=>r.obdobie).filter(Boolean));
@@ -10814,7 +10876,10 @@ function mesiacePodlaPeriodicity(opp){
   const p=periodicitaPodla(opp.periodicita);
   const out=[opp.nbOd];
   if(!p.krok) return out;                  // jednorazová — len prvý mesiac
-  const koniec=opp.nbDo || opp.nbOd;
+  /* Bez dátumu konca sa koniec odvodí z dĺžky obdobia. Predtým sa bral len
+     prvý mesiac — pri takomto prípade sa ďalšie mesiace vôbec nepýtali. */
+  const dlzka=opp.nbMesiacov || nbDlzkaMesiacov(opp.segment, opp.produkt) || 12;
+  const koniec=opp.nbDo || pridajMesiace(opp.nbOd, dlzka-1);
   let m=pridajMesiace(opp.nbOd, p.krok);
   while(m<=koniec && out.length<60){ out.push(m); m=pridajMesiace(m, p.krok); }
   return out;
@@ -13388,6 +13453,15 @@ function viewRewards(){
   bar.appendChild(fpill(ICO_SORT, vsetkyMesiace ? "Všetky mesiace" : menoMesiaca(obdobie), vsetkyMesiace,
     [["", "Všetky mesiace", vsetkyMesiace], ...mesiace.map(m=>[m, menoMesiaca(m), m===obdobie])],
     v=>{ state.odmObdobie=v; render(); }, "Mesiac"));
+  if(smieExportOdmien()){
+    const ex=el("button","fbar-mine odm-export",
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span class="fm-lbl">Export do XLS</span>`);
+    ex.type="button";
+    ex.title = vsetkyMesiace ? "Exportovať schválené odmeny — každý mesiac na samostatnom hárku"
+                             : `Exportovať schválené odmeny za ${menoMesiaca(obdobie)}`;
+    ex.onclick=()=>exportOdmienXls(vsetkyMesiace ? mesiace : [obdobie]);
+    bar.appendChild(ex);
+  }
   if(veduci){
     const t=el("button","fbar-mine"+(vsetci?" on":""),
       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="fm-lbl">${vsetci?"Všetci obchodníci":"Len moje"}</span>`);
@@ -13524,18 +13598,18 @@ function viewRewards(){
 function mesiacFakturacnyPripadu(o, m){
   if(!o?.nbOd || !m || m<o.nbOd) return false;
   if(mesiacVyplneny(o.id, m)) return true;
-  const dlzka = o.nbMesiacov || nbDlzkaMesiacov(o.segment, o.produkt) || 12;
-  const koniec = o.nbDo || pridajMesiace(o.nbOd, dlzka-1);
-  if(m>koniec) return false;
-  const p=periodicitaPodla(o.periodicita);
-  if(!p.krok) return m===o.nbOd;                       // jednorazová
-  const diff=(Number(m.slice(0,4))-Number(o.nbOd.slice(0,4)))*12
-    + Number(m.slice(5,7))-Number(o.nbOd.slice(5,7));
-  return diff % p.krok === 0;
+  return mesiacePodlaPeriodicity(o).includes(m);     // rovnaký výpočet ako okno výsledkov
 }
 /* Zvolené mesiace, za ktoré prípad čísla mať má, ale ešte ich nemá. */
-const chybajuceVybrane = o => (resVybrane()||[])
-  .filter(m=>mesiacFakturacnyPripadu(o,m) && !mesiacVyplneny(o.id,m));
+/* „chýba" sa ukáže presne vtedy, keď si mesiac pýta aj okno výsledkov
+   (fakturačný mesiac, nie uzavretý prípad, od augusta 2026, už uplynulý). */
+const chybajuceVybrane = o => {
+  const ocak=new Set(mesiaceOcakavane(o));
+  return (resVybrane()||[]).filter(m=>ocak.has(m) && !mesiacVyplneny(o.id,m));
+};
+/* Čísla sú, ale obchodník ich ešte nepotvrdil — okno ho vyzve na potvrdenie. */
+const naPotvrdenieVybrane = o => (resVybrane()||[])
+  .filter(m=>naPotvrdenie(resultFor(o.id,m)));
 
 function viewResults(){
   const wrap=el("div");
@@ -13691,7 +13765,8 @@ function viewResults(){
 
     info.textContent=`${rows.length} ${plural(rows.length,"prípad","prípady","prípadov")}${
       chybaSpolu?` · ${chybaSpolu} ${plural(chybaSpolu,"mesiac bez čísel","mesiace bez čísel","mesiacov bez čísel")}`:""}${
-      (()=>{ const n=pripady.reduce((a,o)=>a+pocetNaPotvrdenie(o.id),0);
+      (()=>{ const vybM=resVybrane();   // pri filtri na mesiac len potvrdenia za tento mesiac
+        const n=pripady.reduce((a,o)=>a+resultsPre(o.id).filter(r=>naPotvrdenie(r) && (!vybM || vybM.includes(r.obdobie))).length,0);
         return n?` · ${n} ${plural(n,"mesiac čaká na potvrdenie","mesiace čakajú na potvrdenie","mesiacov čaká na potvrdenie")}`:""; })()}`;
     listWrap.innerHTML="";
     if(!rows.length && state.resTab==="vsetko"){
@@ -13717,7 +13792,7 @@ function viewResults(){
       return;
     }
     const skupiny={};
-    rows.forEach(o=>{ const k=stavKontroly(o); (skupiny[k]=skupiny[k]||[]).push(o); });
+    rows.forEach(o=>{ const k=stavKontroly(o, resVybrane()); (skupiny[k]=skupiny[k]||[]).push(o); });
     ["naKontrolu","bezi","nove","skontrolovane"].forEach(kluc=>{
       const zoznam=skupiny[kluc]; if(!zoznam?.length) return;
       const h=el("div","rs-group "+kluc);
@@ -13741,7 +13816,7 @@ function viewResults(){
       const sad=pr ? Math.round((pr.sadzba||0)*1000)/10 : null;
       const kusy=evidujeKusy(o.segment);
       const r=el("div","rs-row");
-      const stk=stavKontroly(o);
+      const stk=stavKontroly(o, resVybrane());
       /* Miesto pre fajku je vždy rovnaké — aj keď fajka nie je. Názvy firiem
          tak tvoria jeden zvislý stĺpec bez ohľadu na stav prípadu. */
       r.innerHTML=`<span class="rs-name"><span class="rs-fajka-box">${stk==="naKontrolu"||stk==="skontrolovane"
@@ -13755,7 +13830,10 @@ function viewResults(){
         <span class="rs-obd">${(()=>{ const pm=poslednyMesiac(o);
           const vyb=resVybrane();
           const chyba=vyb ? chybajuceVybrane(o) : [];
-          if(chyba.length) return `<b class="rs-pm rs-chyba" title="Za ${esc(chyba.map(menoMesiaca).join(", "))} ešte nie sú čísla">chýba ${esc(chyba.map(kratkyMesiac).join(", "))}</b>
+          if(chyba.length) return `<b class="rs-pm rs-chyba" title="Za ${esc(chyba.map(menoMesiaca).join(", "))} ešte nie sú čísla — treba ich doplniť">chýba ${esc(chyba.map(kratkyMesiac).join(", "))}</b>
+            <span class="rs-obd-p">${esc(kratkyMesiac(o.nbOd))} – ${esc(kratkyMesiac(o.nbDo))}</span>`;
+          const potv=vyb ? naPotvrdenieVybrane(o) : [];
+          if(potv.length) return `<b class="rs-pm rs-potv" title="Čísla za ${esc(potv.map(menoMesiaca).join(", "))} sú zadané, ale ešte nie sú potvrdené">potvrdiť ${esc(potv.map(kratkyMesiac).join(", "))}</b>
             <span class="rs-obd-p">${esc(kratkyMesiac(o.nbOd))} – ${esc(kratkyMesiac(o.nbDo))}</span>`;
           return `<b class="rs-pm${pm?"":" ziadny"}"${vyb?' title="Posledný vyplnený zo zvolených mesiacov"':""}>${pm?esc(kratkyMesiac(pm)):"—"}</b>
             <span class="rs-obd-p">${esc(kratkyMesiac(o.nbOd))} – ${esc(kratkyMesiac(o.nbDo))}</span>`;
@@ -13782,7 +13860,7 @@ function viewResults(){
         <span class="rs-act"></span>`;
 
       const akcie=r.querySelector(".rs-act");
-      const st=stavKontroly(o);
+      const st=stavKontroly(o, resVybrane());
       /* Jedno kliknutie = hotovo. Dvojstupňové potvrdzovanie sme zrušili —
          obchodník označí prácu za hotovú a fajka je rovno zelená. */
       if(st!=="skontrolovane" && smieOznacit(o)){
@@ -16946,7 +17024,16 @@ const KONTROLA = {
   naKontrolu:    { l:"Na kontrolu",    p:"Obchodník označil za hotové — čaká na lídra." },
   skontrolovane: { l:"Skontrolované",  p:"Líder čísla potvrdil." },
 };
-function stavKontroly(opp){
+function stavKontroly(opp, lenMesiace){
+  /* Pri filtri na konkrétne mesiace rozhodujú len čísla za tieto mesiace.
+     Kolegyňa môže zadávať september, kým sa kontroluje august — nepotvrdený
+     september nesmie augustu zobrať zelenú fajku. */
+  if(lenMesiace && lenMesiace.length){
+    const rs=resultsPre(opp?.id).filter(r=>lenMesiace.includes(r.obdobie) && (r.trzba!=null || r.bezFakturacie));
+    if(rs.length && rs.every(r=>r.potvrdene)) return "skontrolovane";
+    if(opp?.kontrola==="skontrolovane" || opp?.kontrola==="naKontrolu") return opp.kontrola;
+    return rs.length ? "bezi" : "nove";
+  }
   if(opp?.kontrola==="skontrolovane") return "skontrolovane";
   if(opp?.kontrola==="naKontrolu") return "naKontrolu";
   /* Prípad, ktorého importované čísla obchodník potvrdil a nič ďalšie
