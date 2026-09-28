@@ -7772,7 +7772,8 @@ const klientKluc = k => clientAliasMap.get(k) || k;
 function clientIndex(){
   const key=state.all.length+"|"+(state.all.length?(state.all[state.all.length-1].updatedAt||0):0)
     +"|"+state.hiddenClientNames.length+"|"+Object.keys(state.clientProfiles||{}).length
-    +"|"+(state.dmisOwners||[]).length;
+    +"|"+(state.dmisOwners||[]).length
+    +"|"+Object.values(state.clientProfiles||{}).map(p=>p?.ico||"").join(",");
   if(_ciCache && _ciKey===key) return _ciCache;
   _ciKey=key; _ciCache=clientIndexCompute();
   return _ciCache;
@@ -7789,6 +7790,13 @@ function clientIndexCompute(){
     if(!c.ico && (e.leadIco||e.ico)) c.ico=String(e.leadIco||e.ico);
     if(e.salesperson) e.salesperson.split("/").forEach(p=>c.people.add(p.trim()));
     if(e.client.length>c.name.length) c.name=e.client; // dlhší/úplnejší názov
+  });
+  /* IČO opravené ručne v karte klienta (ceruzka pri názve) má prednosť pred
+     IČO zo záznamov, z importu DMIS aj z databáz — je to vedomá oprava človeka.
+     Predtým sa uložilo, ale zobrazovalo sa ďalej IČO zo záznamov. */
+  map.forEach(c=>{
+    const prof=(state.clientProfiles||{})[c.key];
+    if(prof?.ico){ c.ico=String(prof.ico); c.icoRucne=true; }
   });
   /* Chýbajúce IČO doplníme z registra vlastníkov DMIS — pochádza z toho istého
      exportu, takže názvy klientov sa zhodujú presne. Len keď má názov v registri
@@ -7943,7 +7951,14 @@ function demoBackend(){
       const m=new Map(pairs);
       all=all.map(e=>m.has(e.id)?{...e,opportunityId:m.get(e.id)}:e); sync(); return pairs.length;
     },
-    async setIcoOnEntries(clientK,ico){ all=all.map(e=>clientKey(e.client)===clientK?{...e,ico}:e); sync(); return all.length; },
+    async renameClient(stareKluce, novyNazov){
+      const kl=new Set(stareKluce); let n=0;
+      all=all.map(e=>kl.has(clientKey(e.client))?(n++,{...e,client:novyNazov,klientPremenovany:true}):e);
+      tasks=tasks.map(t=>t.client&&kl.has(clientKey(t.client))?{...t,client:novyNazov}:t);
+      state.opportunities=(state.opportunities||[]).map(o=>kl.has(clientKey(o.client||""))?{...o,client:novyNazov}:o);
+      sync(); return n;
+    },
+    async setIcoOnEntries(clientK,ico){ let n=0; all=all.map(e=>clientKey(e.client)===clientK?(n++,{...e,ico,leadIco:ico}):e); sync(); return n; },
     async saveTask(task){
       if(task.id && tasks.some(t=>t.id===task.id)) tasks=tasks.map(t=>t.id===task.id?{...task}:t);
       else { task.id="t"+Math.random().toString(36).slice(2,9); tasks.push({...task}); }
@@ -8232,11 +8247,28 @@ async function firebaseBackend(){
       return pairs.length;
     },
     // Voliteľné doplnenie IČO do všetkých záznamov klienta — spúšťa sa len na požiadanie.
+    /* Premenovanie klienta — záznamy, obchodné prípady (Výsledky NB) aj úlohy.
+       Čas úpravy sa nemení, aby sa záznamy neposunuli navrch. */
+    async renameClient(stareKluce, novyNazov){
+      const kl=new Set(stareKluce);
+      const zapisy=[
+        ...state.all.filter(e=>kl.has(clientKey(e.client))).map(e=>["entries",e.id,{client:novyNazov, klientPremenovany:true}]),
+        ...(state.opportunities||[]).filter(o=>kl.has(clientKey(o.client||""))).map(o=>["opportunities",o.id,{client:novyNazov}]),
+        ...(state.tasks||[]).filter(t=>t.client && kl.has(clientKey(t.client))).map(t=>["tasks",t.id,{client:novyNazov}]),
+      ];
+      for(let i=0;i<zapisy.length;i+=400){
+        const b=writeBatch(db);
+        zapisy.slice(i,i+400).forEach(([col,id,data])=>b.set(doc(db,col,id),data,{merge:true}));
+        await b.commit();
+      }
+      return zapisy.filter(z=>z[0]==="entries").length;
+    },
     async setIcoOnEntries(clientK, ico){
       const ids=state.all.filter(e=>clientKey(e.client)===clientK).map(e=>e.id);
       for(let i=0;i<ids.length;i+=400){
         const b=writeBatch(db);
-        ids.slice(i,i+400).forEach(id=>b.set(doc(db,"entries",id),{ico},{merge:true}));
+        // leadIco má pri zobrazení prednosť — oprava ho musí prepísať tiež
+        ids.slice(i,i+400).forEach(id=>b.set(doc(db,"entries",id),{ico, leadIco:ico},{merge:true}));
         await b.commit();
       }
       return ids.length;
@@ -9527,7 +9559,8 @@ async function importNewBusinessRows(rows){
     const zmenene = !existing || [
       existing.status!==novyStav,
       (existing.events||"")!==popis,
-      (existing.client||"")!==(klient||"—"),
+      // klienta premenovaného v Zappise import nevracia na názov z DMIS
+      !existing?.klientPremenovany && (existing.client||"")!==(klient||"—"),
       (existing.salesperson||"")!==(obch||"—"),
       existing.segment!==segId,
       existing.weekId!==wId,
@@ -9545,7 +9578,8 @@ async function importNewBusinessRows(rows){
 
     const entry={
       id:entryId, segment:segId, weekId:wId,
-      client:klient||"—", events:popis, salesperson:obch||"—",
+      client: existing?.klientPremenovany ? existing.client : (klient||"—"),
+      events:popis, salesperson:obch||"—",
       status: novyStav,
       nbFaza: novaFaza,
       nbDovodOdmietnutia: dovodOdm,
@@ -14074,16 +14108,34 @@ function openClientProfile(c){
     if(ico && ico.length>8){ err.textContent="⚠ IČO má mať najviac 8 číslic."; err.classList.add("on"); return; }
     btn.disabled=true; btn.textContent="Ukladám…";
     try{
-      await backend.saveClientProfile(c.key,{
-        key:c.key,
-        name:(scrim.querySelector("#cpName").value||"").trim()||c.name,
+      /* Nový názov sa prepíše do všetkých záznamov, obchodných prípadov a úloh
+         klienta — inak by sa zmenil len tu a Výsledky NB by ukazovali starý. */
+      const novyNazov=(scrim.querySelector("#cpName").value||"").trim();
+      /* Porovnávame so skutočnými názvami v záznamoch a prípadoch, nie s názvom
+         v karte klienta — ten už môže byť nový (uložený skôr len do karty),
+         a vtedy by sa premenovanie nespustilo. */
+      const stareKluceKl=new Set([c.key, ...c.entries.map(e=>clientKey(e.client))]);
+      const staraMena=new Set([
+        ...c.entries.map(e=>e.client),
+        ...(state.opportunities||[]).filter(o=>stareKluceKl.has(clientKey(o.client||""))).map(o=>o.client),
+      ].filter(Boolean));
+      const treba = !!novyNazov && [...staraMena].some(n=>n!==novyNazov);
+      const kluc = treba ? clientKey(novyNazov) : c.key;
+      if(treba){
+        const stare=[...new Set([c.key, ...c.entries.map(e=>clientKey(e.client))])];
+        await backend.renameClient(stare, novyNazov);
+        state.activeClient=kluc; state.activeClientName=novyNazov;   // detail zostane na premenovanom klientovi
+      }
+      await backend.saveClientProfile(kluc,{
+        key:kluc,
+        name:novyNazov||c.name,
         ico: ico ? ico.padStart(8,"0") : null,
         obchodnik: scrim.querySelector("#cpObch").value || null,
         poznamka: (scrim.querySelector("#cpNote").value||"").trim() || null,
         updatedBy: state.user.name, updatedAt: Date.now(),
       });
       if(ico && scrim.querySelector("#cpPropagate").checked){
-        const n=await backend.setIcoOnEntries(c.key, ico.padStart(8,"0"));
+        const n=await backend.setIcoOnEntries(kluc, ico.padStart(8,"0"));
         toast(`Údaje uložené · IČO doplnené do ${n} ${plural(n,"záznamu","záznamov","záznamov")}`);
       } else toast("Údaje klienta uložené");
       close();
