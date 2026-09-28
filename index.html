@@ -1006,6 +1006,7 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
   grid-template-columns:minmax(118px,1.35fr) 20px minmax(90px,0.75fr) 120px 50px 72px 72px 52px 90px minmax(84px,0.75fr) 86px}
 .rs-pm{display:block;font-family:var(--mono);font-size:12.5px;color:var(--ink)}
 .rs-pm.ziadny{color:var(--line)}
+.res-mb.prazdny:not(.on){opacity:.5}
 .rs-pm.rs-potv{display:inline-block;font-family:inherit;font-size:11px;font-weight:600;color:var(--brand);
   background:var(--brand-soft);border:1px solid #C5CFF5;border-radius:6px;padding:1px 6px;white-space:nowrap}
 .rs-pm.rs-chyba{display:inline-block;font-family:inherit;font-size:11px;font-weight:600;color:#B45F0C;
@@ -1103,7 +1104,7 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .odm-sum-meta .nes{color:#B3261E}
 .odm-akcia{margin-bottom:12px}
 .odm-head,.odm-row{display:grid;
-  grid-template-columns:minmax(110px,1.2fr) 22px 78px 96px 58px 92px minmax(88px,.85fr) 200px;
+  grid-template-columns:minmax(110px,1.2fr) 22px 64px 92px 92px 96px 58px 92px minmax(88px,.85fr) 200px;
   gap:9px;align-items:center;padding:9px 14px}
 .odm-mes{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 .odm-head{background:#F7F8FB;border-bottom:1px solid var(--line);font-size:10.5px;font-weight:700;
@@ -1118,6 +1119,10 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .odm-zk{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 .odm-zk span{display:block;font-family:inherit;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
 .odm-sd{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:right}
+.odm-tm{font-family:var(--mono);font-size:12px;color:var(--ink-soft);text-align:right}
+.odm-tm.odm-mz{color:#12915A;font-weight:600}
+.odm-tm.odm-mz.zap{color:var(--red)}
+.odm-row .odm-zk{font-family:inherit;font-size:12px;color:var(--ink-soft)}
 .odm-su{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);text-align:right}
 .odm-su.moj{color:var(--nb)}
 .odm-su.rucne{color:#B45F0C}
@@ -1162,6 +1167,7 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
   .odm-cl{grid-area:1/2}
   .odm-su{grid-area:1/3}
   .odm-zk{grid-area:2/2}
+  .odm-tm{display:none}
   .odm-sd{grid-area:2/3}
   .odm-ob,.odm-su.moj{grid-area:3/2;text-align:left}
   .odm-row>span:last-child{grid-area:3/3;text-align:right}
@@ -3737,6 +3743,17 @@ select:disabled{cursor:default; opacity:.65}
 .cd2-db-next b{display:block;font-size:11px;color:var(--muted);margin-bottom:2px}
 @media (max-width:640px){
 }
+/* Klienti — prepínač obdobia nad zoznamom */
+.kl-obd{margin:0 0 12px;width:max-content;max-width:100%}
+/* Výsledky NB — súčtové karty */
+.res-karty{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:0 0 14px}
+.res-k{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px;box-shadow:var(--shadow-sm);min-width:0}
+.res-k span{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.res-k b{display:block;font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-k.mz b{color:#12915A}
+.res-k.mz.zap b{color:var(--red)}
+.res-k.sm b{font-family:inherit;font-size:14px;margin-top:3px}
+.res-k i{display:block;font-style:normal;font-size:12px;color:var(--muted);margin-top:2px}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -7479,7 +7496,7 @@ function vykresliRailFiltre(){
 function vykresliSvcBar(){
   const box=$("#svcBar");
   if(!box) return;
-  const vidno = ["activities","mine","clients","myclients","internal"].includes(state.view)
+  const vidno = ["activities","mine","clients","myclients","internal","rewards"].includes(state.view)
     && !state.activeClient;
   box.style.display = vidno ? "" : "none";
   if(!vidno){ box.innerHTML=""; return; }
@@ -10759,7 +10776,8 @@ const smieExportOdmien = () => {
   const k=String(state.user?.key||state.user?.email||"").toLowerCase();
   return EXPORT_ODMIEN_POUZIVATELIA.includes(k);
 };
-function exportOdmienXls(mesiace){
+function exportOdmienXls(mesiace, sluzby){
+  if(!mesiace.length){ toast("Za zvolené mesiace nie sú žiadne odmeny."); return; }
   if(typeof XLSX==="undefined"){ toast("Knižnica na Excel sa nenačítala. Skontroluj pripojenie."); return; }
   const MES=["Január","Február","Marec","Apríl","Máj","Jún","Júl","August","September","Október","November","December"];
   const nazovMes=m=>{ const [r,mm]=m.split("-"); return `${MES[Number(mm)-1]} ${r}`; };
@@ -10767,7 +10785,7 @@ function exportOdmienXls(mesiace){
   const wb=XLSX.utils.book_new();
   let spoluRiadkov=0, cakaSpolu=0;
   mesiace.slice().sort().forEach(m=>{
-    const polozky=odmenyZaMesiac(m, false);
+    const polozky=odmenyZaMesiac(m, false).filter(r=>!sluzby?.length || sluzby.includes(r.opp?.segment));
     cakaSpolu+=polozky.filter(r=>r.stav==="caka" && r.suma).length;
     const riadky=[];
     polozky.filter(r=>r.stav==="schvalene" || r.stav==="nesulad").forEach(r=>{
@@ -11814,6 +11832,7 @@ function obdobieRozsah(){
 /* Popis zvoleného obdobia do tlačidla. */
 function obdobiePopis(){
   const o=state.obdobie||{};
+  if(o.tyzdnov) return `Posledné ${o.tyzdnov} ${plural(o.tyzdnov,"týždeň","týždne","týždňov")}`;
   if(o.od || o.do){
     const f=d=>{ if(!d) return ""; const [r,m,dd]=d.split("-"); return `${+dd}. ${+m}. ${r}`; };
     return o.od && o.do ? `${f(o.od)} – ${f(o.do)}` : (o.od ? `od ${f(o.od)}` : `do ${f(o.do)}`);
@@ -13470,8 +13489,15 @@ function viewRewards(){
      že odmeny neexistujú. */
   /* Prázdne = všetky mesiace naraz. Je to predvoľba — odmeny sa dopĺňajú
      spätne a filtrovať mesiac po mesiaci je pri kontrole nepraktické. */
-  const obdobie = mesiace.includes(state.odmObdobie) ? state.odmObdobie : "";
-  const vsetkyMesiace = !obdobie;
+  /* Mesiace sa vyberajú rovnako ako vo Výsledkoch NB — rok a jednotlivé
+     mesiace, aj viac naraz. Prázdny výber = všetky mesiace. */
+  const vybrMes = (state.odmMesiace||[]);
+  const vsetkyMesiace = !vybrMes.length;
+  const zvoleneMes = vsetkyMesiace ? mesiace : vybrMes.slice().sort().reverse();
+  const obdobie = zvoleneMes.length===1 ? zvoleneMes[0] : "";
+  /* Filter služieb z hornej lišty. */
+  const sluzby = state.aktSluzby || [];
+  const podlaSluzby = r => !sluzby.length || sluzby.includes(r.opp?.segment);
 
   wrap.appendChild(el("div","page-h",`<div>
     <div class="eyebrow">Odmeny za New business</div>
@@ -13483,17 +13509,54 @@ function viewRewards(){
     return wrap;
   }
 
+  {
+    const teraz=terajsiMesiac();
+    const rokTeraz=Number(teraz.slice(0,4));
+    if(state.odmRok==null){
+      const prvy=vybrMes[0] || mesiace[0];
+      state.odmRok = prvy ? Number(prvy.slice(0,4)) : rokTeraz;
+    }
+    const roky=[...new Set([rokTeraz, rokTeraz-1, ...mesiace.map(m=>Number(m.slice(0,4)))])].sort((a,b)=>b-a);
+    const pas=el("div","res-mes");
+    const rr=el("div","res-mes-roky");
+    roky.forEach(r=>{
+      const b=el("button","res-rok"+(state.odmRok===r?" on":""), String(r));
+      b.type="button"; b.onclick=()=>{ state.odmRok=r; render(); };
+      rr.appendChild(b);
+    });
+    pas.appendChild(rr);
+    const mm=el("div","res-mes-mes");
+    const vs=el("button","res-mb"+(vsetkyMesiace?" on":""), "Všetko");
+    vs.type="button"; vs.title="Všetky mesiace";
+    vs.onclick=()=>{ state.odmMesiace=[]; render(); };
+    mm.appendChild(vs);
+    mm.appendChild(el("span","res-mb-sep"));
+    for(let i=1;i<=12;i++){
+      const kod=`${state.odmRok}-${String(i).padStart(2,"0")}`;
+      const zap=vybrMes.includes(kod);
+      const b=el("button","res-mb"+(zap?" on":"")+(kod>teraz?" buduci":"")+(mesiace.includes(kod)?"":" prazdny"),
+        MESIACE_SK[i-1].slice(0,3));
+      b.type="button";
+      b.title=menoMesiaca(kod)+(mesiace.includes(kod)?"":" — zatiaľ bez výsledkov")+(zap?" — kliknutím odoberieš":" — kliknutím pridáš");
+      b.onclick=()=>{
+        const n=new Set(state.odmMesiace||[]);
+        if(n.has(kod)) n.delete(kod); else n.add(kod);
+        state.odmMesiace=[...n].sort(); render();
+      };
+      mm.appendChild(b);
+    }
+    pas.appendChild(mm);
+    wrap.appendChild(pas);
+  }
+
   const bar=el("div","fbar fbar-sekcia");
-  bar.appendChild(fpill(ICO_SORT, vsetkyMesiace ? "Všetky mesiace" : menoMesiaca(obdobie), vsetkyMesiace,
-    [["", "Všetky mesiace", vsetkyMesiace], ...mesiace.map(m=>[m, menoMesiaca(m), m===obdobie])],
-    v=>{ state.odmObdobie=v; render(); }, "Mesiac"));
   if(smieExportOdmien()){
     const ex=el("button","fbar-mine odm-export",
       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span class="fm-lbl">Export do XLS</span>`);
     ex.type="button";
-    ex.title = vsetkyMesiace ? "Exportovať schválené odmeny — každý mesiac na samostatnom hárku"
-                             : `Exportovať schválené odmeny za ${menoMesiaca(obdobie)}`;
-    ex.onclick=()=>exportOdmienXls(vsetkyMesiace ? mesiace : [obdobie]);
+    ex.title = zvoleneMes.length>1 ? "Exportovať schválené odmeny — každý mesiac na samostatnom hárku"
+                                   : `Exportovať schválené odmeny za ${menoMesiaca(zvoleneMes[0]||"")}`;
+    ex.onclick=()=>exportOdmienXls(zvoleneMes.filter(m=>mesiace.includes(m)), sluzby);
     bar.appendChild(ex);
   }
   if(veduci){
@@ -13505,11 +13568,10 @@ function viewRewards(){
   }
   wrap.appendChild(bar);
 
-  const riadky = vsetkyMesiace
-    ? mesiace.flatMap(m=>odmenyZaMesiac(m, !vsetci))
-        .sort((a,b)=>String(b.res?.obdobie||"").localeCompare(String(a.res?.obdobie||""))
-          || (b.suma??-1)-(a.suma??-1))
-    : odmenyZaMesiac(obdobie, !vsetci);
+  const riadky = zvoleneMes.flatMap(m=>odmenyZaMesiac(m, !vsetci))
+    .filter(podlaSluzby)
+    .sort((a,b)=>String(b.res?.obdobie||"").localeCompare(String(a.res?.obdobie||""))
+      || (b.suma??-1)-(a.suma??-1));
   // obchodníkovi sčítavame len schválené — inak by súhrn sľuboval viac, než dostane
   const spolu=riadky.reduce((a,r)=>a+((veduci||r.stav==="schvalene")?(r.mojaSuma||0):0),0);
   const caka=riadky.filter(r=>r.stav==="caka" && r.suma!=null);
@@ -13526,7 +13588,8 @@ function viewRewards(){
   const suhrn=el("div","odm-sum");
   suhrn.innerHTML=`<div>
       <div class="odm-sum-l">${vsetci?"Odmeny spolu":"Moja odmena"} ${
-        vsetkyMesiace ? `za ${mesiace.length} ${plural(mesiace.length,"mesiac","mesiace","mesiacov")}` : `za ${esc(menoMesiaca(obdobie))}`}</div>
+        obdobie ? `za ${esc(menoMesiaca(obdobie))}` : `za ${zvoleneMes.length} ${plural(zvoleneMes.length,"mesiac","mesiace","mesiacov")}`}${
+        sluzby.length ? ` · ${esc(sluzby.map(x=>SEG[x]?.short||x).join(", "))}` : ""}</div>
       <div class="odm-sum-r">${eur(spolu)}</div>
     </div>
     <div class="odm-sum-meta">${riadky.length} ${plural(riadky.length,"položka","položky","položiek")}
@@ -13540,7 +13603,7 @@ function viewRewards(){
     b.type="button";
     b.onclick=async()=>{
       if(!confirm(`Schváliť ${caka.length} ${plural(caka.length,"odmenu","odmeny","odmien")}${
-        vsetkyMesiace?" naprieč všetkými mesiacmi":` za ${menoMesiaca(obdobie)}`}?\n\nSumy sa zmrazia. Neskoršia oprava výsledku ich už nezmení — označí sa nesúlad.`)) return;
+        obdobie?` za ${menoMesiaca(obdobie)}`:" naprieč zvolenými mesiacmi"}?\n\nSumy sa zmrazia. Neskoršia oprava výsledku ich už nezmení — označí sa nesúlad.`)) return;
       b.disabled=true; b.textContent="Schvaľujem…";
       try{
         const zoznam=caka.map(r=>pripravOdmenu(r.opp, r.res)).filter(Boolean);
@@ -13556,15 +13619,15 @@ function viewRewards(){
   }
 
   if(!riadky.length){
-    wrap.appendChild(el("div","empty", vsetkyMesiace
+    wrap.appendChild(el("div","empty", (vsetkyMesiace && !sluzby.length)
       ? "<b>Zatiaľ žiadne odmeny</b>Objavia sa, keď sa vyplní prvá mesačná fakturácia."
-      : "<b>Za tento mesiac nič</b>Buď nie sú vyplnené výsledky, alebo sa v tomto mesiaci nefakturovalo."));
+      : "<b>Za zvolené obdobie nič</b>Buď nie sú vyplnené výsledky, v týchto mesiacoch sa nefakturovalo, alebo nič nezodpovedá filtru služieb."));
     return wrap;
   }
 
   const box=el("div","gl-list");
   const head=el("div","odm-head");
-  head.innerHTML=`<span>Firma</span><span></span><span>Mesiac</span><span>Základ</span><span class="r">Sadzba</span><span class="r">Odmena</span>${
+  head.innerHTML=`<span>Firma</span><span></span><span>Mesiac</span><span class="r">Tržba</span><span class="r">Marža</span><span>Základ</span><span class="r">Sadzba</span><span class="r">Odmena</span>${
     vsetci?`<span>Obchodníci</span>`:`<span class="r">Môj podiel</span>`}<span>Stav</span>`;
   box.appendChild(head);
   riadky.forEach(r=>{
@@ -13578,7 +13641,9 @@ function viewRewards(){
     row.innerHTML=`<span class="odm-cl"><span class="kl-link" data-klient="${esc(r.opp.client||"")}" title="${esc(r.opp.client||"")} — otvoriť detail klienta">${esc(r.opp.client||"—")}</span>${r.opp.zakazka?`<span class="rs-zak">${esc(r.opp.zakazka)}</span>`:""}</span>
       <span class="gl-seg" title="${esc(segLabel(r.opp.segment,r.opp.produkt))}">${seg?segIcon(r.opp.segment,16):""}</span>
       <span class="odm-mes" title="Mesiac fakturácie">${esc(kratkyMesiac(r.res?.obdobie))}</span>
-      <span class="odm-zk">${r.vypocet?.zaklad!=null?eur(r.vypocet.zaklad):"—"}<span>${r.opp.pravidlo?.zaklad==="obrat"?"obrat":"marža"}</span></span>
+      <span class="odm-tm" title="Tržba za mesiac">${r.res?.bezFakturacie?"bez fakt.":(r.res?.trzba!=null?eur(r.res.trzba):"—")}</span>
+      <span class="odm-tm odm-mz${r.res?.marza<0?" zap":""}" title="Marža za mesiac">${r.res?.bezFakturacie?"":(r.res?.marza!=null?eur(r.res.marza):"—")}</span>
+      <span class="odm-zk">${(r.vypocet?.pravidlo||r.opp.pravidlo||pravidloPrePripad(r.opp))?.zaklad==="obrat"?"Tržba":"Marža"}</span>
       <span class="odm-sd">${r.vypocet?.sadzba!=null?Math.round(r.vypocet.sadzba*1000)/10+" %":"—"}</span>
       <span class="odm-su${r.vypocet?.rucne?" rucne":""}">${veduci
         ? `<button type="button" class="odm-edit" data-rucne="${esc(r.res?.id||"")}" title="Upraviť odmenu ručne">${eur(r.suma)}${r.vypocet?.rucne?`<span class="odm-rucne">ručne</span>`:""}</button>`
@@ -13749,6 +13814,9 @@ function viewResults(){
   wrap.appendChild(lista);
 
   const info=el("div","feed-count"); wrap.appendChild(info);
+  /* Súčtové karty nad zoznamom — sčítajú presne to, čo je v zozname pod nimi
+     (zvolené mesiace, záložka, hľadanie, obchodník aj filtre stĺpcov). */
+  const karty=el("div","res-karty"); wrap.appendChild(karty);
   const listWrap=el("div"); wrap.appendChild(listWrap);
 
   /* Vybavený = za zvolený mesiac má čísla (alebo je označený bez fakturácie).
@@ -13797,6 +13865,21 @@ function viewResults(){
       || String(b.nbOd||"").localeCompare(String(a.nbOd||""))
       || (a.client||"").localeCompare(b.client||"","sk"));
 
+    {
+      let t=0, m=0, ks=0, maT=false, maM=false, maK=false;
+      rows.forEach(o=>{ const c=cislaPreZoznam(o);
+        if(c.trzba!=null){ t+=c.trzba; maT=true; }
+        if(c.marza!=null){ m+=c.marza; maM=true; }
+        if(c.mnozstvo!=null){ ks+=c.mnozstvo; maK=true; } });
+      const pct = maT && t ? Math.round(m/t*1000)/10 : null;
+      const kus=n=>Math.round(n).toLocaleString("sk-SK");
+      karty.innerHTML=`
+        <div class="res-k"><span>Tržby NB</span><b>${maT?eur(t):"—"}</b></div>
+        <div class="res-k mz${m<0?" zap":""}"><span>Marža NB</span><b>${maM?eur(m):"—"}</b></div>
+        <div class="res-k"><span>Marža v %</span><b>${pct!=null?pct.toLocaleString("sk-SK")+" %":"—"}</b></div>
+        ${maK?`<div class="res-k"><span>Kusy</span><b>${kus(ks)}</b></div>`:""}
+        <div class="res-k sm"><span>Obdobie</span><b>${esc(resPopisObdobia())}</b><i>${rows.length} ${plural(rows.length,"prípad","prípady","prípadov")}</i></div>`;
+    }
     info.textContent=`${rows.length} ${plural(rows.length,"prípad","prípady","prípadov")}${
       chybaSpolu?` · ${chybaSpolu} ${plural(chybaSpolu,"mesiac bez čísel","mesiace bez čísel","mesiacov bez čísel")}`:""}${
       (()=>{ const vybM=resVybrane();   // pri filtri na mesiac len potvrdenia za tento mesiac
@@ -14006,6 +14089,32 @@ function viewClients(lenMoji){
   /* Rovnaký pás služieb ako v Aktivitách — filter je na tom istom mieste
      a funguje rovnako, nech je človek kdekoľvek. */
   list = list.filter(vSluzbach);
+  /* Predvolene len klienti s aktivitou za posledných 12 mesiacov — podľa
+     týždňa ich poslednej aktivity. Prepínačom sa dajú zobraziť všetci. */
+  const len12 = state.klientiObdobie!=="vsetko";
+  {
+    const prep=el("div","scope-switch kl-obd");
+    [["rok12","Posledných 12 mesiacov"],["vsetko","Všetci klienti"]].forEach(([k,l])=>{
+      const b=el("button", (k==="vsetko")!==len12?"on":"", l);
+      b.type="button"; b.onclick=()=>{ state.klientiObdobie=k; render(); };
+      prep.appendChild(b);
+    });
+    wrap.appendChild(prep);
+  }
+  if(len12){
+    const hr=new Date(); hr.setMonth(hr.getMonth()-12);
+    const hranica=hr.toISOString().slice(0,10);
+    const posledny=new Map();
+    list.forEach(e=>{ const k=clientKey(e.client); if(!posledny.has(k) || weekCmpDesc(e.weekId, posledny.get(k))<0) posledny.set(k, e.weekId); });
+    const aktivni=new Set();
+    posledny.forEach((w,k)=>{
+      const {year,week}=parseWeekId(w||"");
+      if(!year||!week) return;
+      const ned=mondayOf(year,week); ned.setUTCDate(ned.getUTCDate()+6);
+      if(ned.toISOString().slice(0,10)>=hranica) aktivni.add(k);
+    });
+    list = list.filter(e=>aktivni.has(clientKey(e.client)));
+  }
   const barWrap=el("div"); wrap.appendChild(barWrap);
   const countLine=el("div","feed-count"); wrap.appendChild(countLine);
   const listWrap=el("div"); wrap.appendChild(listWrap);
@@ -14861,6 +14970,8 @@ function viewList(list,title,sub,seg,logoHtml,opts){
        chronologické, ale je vidieť, čo je z ktorého týždňa. */
     if((seg || opts?.taby || opts?.tyzden) && state.segTab!=="klienti"){
       sortEntries(rows);
+      // týždne pod sebou od najnovšieho — v rámci týždňa zostáva zvolené zoradenie
+      rows.sort((a,b)=>weekCmpDesc(a.weekId,b.weekId));
       /* Vykresľujeme po týždňoch a len toľko, koľko treba — pri stovkách
          aktivít bolo vykreslenie všetkého naraz citeľne pomalé. Ďalší
          týždeň si človek rozbalí tlačidlom na konci. */
@@ -14908,6 +15019,25 @@ function viewList(list,title,sub,seg,logoHtml,opts){
         b.type="button";
         b.onclick=()=>{ state.tyzdneLimit=limit+1; render(); };
         listWrap.appendChild(b);
+      } else {
+        /* Na konci zoznamu (napr. pri „Tento týždeň") — posunieme začiatok
+           obdobia o týždeň dozadu, aby sa dal pozrieť aj predchádzajúci. */
+        const h=obdobieHranice();
+        if(h.od){
+          const [r0,m0,d0]=h.od.split("-").map(Number);
+          const od=new Date(Date.UTC(r0,m0-1,d0));
+          const dow=(od.getUTCDay()+6)%7;                  // pondelok = 0
+          od.setUTCDate(od.getUTCDate()-dow-7);            // pondelok predchádzajúceho týždňa
+          const novyOd=od.toISOString().slice(0,10);
+          const ned=new Date(od); ned.setUTCDate(od.getUTCDate()+6);
+          const f=d=>`${d.getUTCDate()}. ${d.getUTCMonth()+1}.`;
+          const b=el("button","wk-more",
+            `Zobraziť predchádzajúci týždeň <small>${f(od)} – ${f(ned)} ${ned.getUTCFullYear()}</small>`);
+          b.type="button";
+          const n=(state.obdobie?.tyzdnov || 1) + 1;
+          b.onclick=()=>{ state.obdobie={ od:novyOd, do:h.do||null, tyzdnov:n }; state.tyzdneLimit=limit+1; render(); };
+          listWrap.appendChild(b);
+        }
       }
       return;
     }
