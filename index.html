@@ -10783,13 +10783,15 @@ function pravidloPrePripad(opp){
 }
 
 function odmenaZaVysledok(opp, res){
+  /* Ručne zadaná suma má prednosť pred všetkým — aj pred službou alebo
+     oslovením bez nároku na odmenu. Predtým sa pri takej službe ukázalo 0 €,
+     hoci líder odmenu zadal ručne. */
+  if(res && res.odmenaRucne!=null)
+    return { suma:res.odmenaRucne, rucne:true, dovod:res.odmenaRucneDovod || "Odmena upravená ručne." };
   const p = pravidloPrePripad(opp);
   if(!p) return { suma:null, dovod:"Pre túto službu nie je pravidlo odmeňovania." };
   if(p.bezNaroku) return { suma:0, dovod:"Táto služba nemá nárok na odmenu." };
   if(oslovenieBezNaroku(opp.sposobOslovenia)) return { suma:0, dovod:"Pasívny dopyt — bez nároku na odmenu." };
-  // ručne prepísaná suma má prednosť pred výpočtom
-  if(res && res.odmenaRucne!=null)
-    return { suma:res.odmenaRucne, rucne:true, dovod:res.odmenaRucneDovod || "Odmena upravená ručne." };
   if(!res || res.bezFakturacie) return { suma:0, dovod:"V tomto mesiaci sa nefakturovalo." };
 
   const zaklad = p.zaklad==="obrat" ? res.trzba : res.marza;
