@@ -1104,7 +1104,9 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .odm-sum-meta .nes{color:#B3261E}
 .odm-akcia{margin-bottom:12px}
 .odm-head,.odm-row{display:grid;
-  grid-template-columns:minmax(110px,1.2fr) 22px 64px 92px 92px 96px 58px 92px minmax(88px,.85fr) 200px;
+  /* posledný stĺpec (Stav / Schváliť) sa prispôsobí obsahu — predtým pevných 200 px
+     spolu s ostatnými stĺpcami presahovalo šírku na 14" notebooku a tlačidlo sa odseklo */
+  grid-template-columns:minmax(100px,1.2fr) 22px 58px 86px 86px 58px 50px 86px minmax(80px,.8fr) max-content;
   gap:9px;align-items:center;padding:9px 14px}
 .odm-mes{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 .odm-head{background:#F7F8FB;border-bottom:1px solid var(--line);font-size:10.5px;font-weight:700;
@@ -1149,7 +1151,12 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
 .odm-st.nes{background:#FDF3F2;color:#B3261E}
 .odm-st.vrat{background:#FFF6EC;color:#B45F0C}
 .odm-st.chyba{background:#FFF6EC;color:#B45F0C;text-transform:none;font-weight:600}
-.odm-akc{display:flex;align-items:center;gap:7px;justify-content:flex-end;overflow:visible;min-width:0}
+.odm-akc{display:flex;align-items:center;gap:7px;justify-content:flex-end;overflow:visible;min-width:0;flex-wrap:wrap}
+/* Užšie obrazovky (14" notebook) — Základ a Sadzba ustúpia, aby sa zmestili Tržba, Marža aj Schváliť */
+@media (max-width:1440px) and (min-width:981px){
+  .odm-head,.odm-row{grid-template-columns:minmax(100px,1.2fr) 22px 56px 84px 84px 84px minmax(76px,.8fr) max-content;gap:8px;padding:9px 12px}
+  .odm-head .odm-zk,.odm-head .odm-sd,.odm-row .odm-zk,.odm-row .odm-sd{display:none}
+}
 .odm-akc>*{flex:0 0 auto}
 .odm-btn{border:1px solid var(--line);background:#fff;border-radius:20px;padding:4px 11px;
   font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap}
@@ -3754,6 +3761,19 @@ select:disabled{cursor:default; opacity:.65}
 .res-k.mz.zap b{color:var(--red)}
 .res-k.sm b{font-family:inherit;font-size:14px;margin-top:3px}
 .res-k i{display:block;font-style:normal;font-size:12px;color:var(--muted);margin-top:2px}
+/* Ľavé menu — šípky pre týždeň */
+.rail .rf-tyz{display:flex;align-items:center;gap:4px;margin:0 6px 6px;padding:3px;border-radius:9px;background:rgba(255,255,255,.6)}
+.rail .rf-tyz-s{flex:0 0 auto;width:26px;height:26px;display:grid;place-items:center;border:0;border-radius:7px;
+  background:none;color:var(--brand);cursor:pointer}
+.rail .rf-tyz-s svg{width:15px;height:15px}
+.rail .rf-tyz-s:hover:not(:disabled){background:var(--brand-soft)}
+.rail .rf-tyz-s:disabled{color:var(--line);cursor:default}
+.rail .rf-tyz-l{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;align-items:center;gap:0;border:0;background:none;
+  padding:2px 4px;border-radius:7px;cursor:pointer;font-family:inherit;line-height:1.25}
+.rail .rf-tyz-l b{font-size:12px;font-weight:700;color:var(--ink)}
+.rail .rf-tyz-l span{font-size:11px;color:var(--muted);white-space:nowrap}
+.rail .rf-tyz-l.posun b{color:var(--brand)}
+.rail .rf-tyz-l:hover{background:var(--brand-soft)}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -7409,6 +7429,30 @@ function vykresliRailFiltre(){
       "Iné obdobie");
     box.appendChild(rad);
 
+    /* Šípky na predchádzajúci / nasledujúci týždeň — pri filtri Týždeň. */
+    if(jeTyzden){
+      const posun=o.posun||0;
+      const w=zvolenyTyzden(), {week}=parseWeekId(w);
+      const tz=el("div","rf-tyz");
+      const sip=(smer, dis, titul)=>{
+        const x=el("button","rf-tyz-s", smer<0
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>');
+        x.type="button"; x.title=titul; x.disabled=dis;
+        x.onclick=()=>{ state.obdobie={preset:"tyzden", posun:posun+smer}; state.tyzdneLimit=2; render(); };
+        return x;
+      };
+      tz.appendChild(sip(-1,false,"Predchádzajúci týždeň"));
+      const lb=el("button","rf-tyz-l"+(posun?" posun":""),
+        `<b>${posun?`Týždeň ${week}`:"Tento týždeň"}</b><span>${esc(weekRangeLabel(w))}</span>`);
+      lb.type="button";
+      lb.title = posun ? "Späť na tento týždeň" : "Tento týždeň";
+      lb.onclick=()=>{ state.obdobie={preset:"tyzden"}; state.tyzdneLimit=2; render(); };
+      tz.appendChild(lb);
+      tz.appendChild(sip(1, posun>=0, posun>=0 ? "Budúce týždne ešte nie sú" : "Nasledujúci týždeň"));
+      box.appendChild(tz);
+    }
+
     zoz.style.display = otvoreneObd ? "" : "none";
     b.onclick=()=>{ zoz.style.display = zoz.style.display==="none" ? "" : "none"; };
 
@@ -7496,7 +7540,7 @@ function vykresliRailFiltre(){
 function vykresliSvcBar(){
   const box=$("#svcBar");
   if(!box) return;
-  const vidno = ["activities","mine","clients","myclients","internal","rewards"].includes(state.view)
+  const vidno = ["activities","mine","clients","myclients","internal","rewards","results"].includes(state.view)
     && !state.activeClient;
   box.style.display = vidno ? "" : "none";
   if(!vidno){ box.innerHTML=""; return; }
@@ -10765,6 +10809,29 @@ function odmenyZaMesiac(obdobie, lenMoje){
   });
   return out.sort((a,b)=>(b.suma??-1)-(a.suma??-1));
 }
+/* ---------------------------------------------------------------- FILTER PODĽA LÍDRA
+   Vo Výsledkoch NB a v Odmenách si líder vyberie seba a uvidí len prípady
+   služieb, za ktoré zodpovedá (LIDER_EMAILS) — tie potom schvaľuje. */
+const liderSegmenty = () => state.liderFilter ? (LIDER_EMAILS[state.liderFilter]||[]) : null;
+/* Filter lídra vidí vedenie — podľa roly aj podľa e-mailu (ak by rola v profile
+   nebola nastavená, napr. pri starom účte). */
+const vidiLiderFilter = () => {
+  const k=String(state.user?.key||"").toLowerCase();
+  return ["admin","sef","lider"].includes(state.user?.role)
+    || ADMIN_EMAILS.includes(k) || BOSS_EMAILS.includes(k) || !!LIDER_EMAILS[k];
+};
+function liderPill(){
+  const ja=String(state.user?.key||"").toLowerCase();
+  const lidri=Object.entries(LIDER_EMAILS).map(([em,segs])=>({ em, segs,
+    meno:(OBCHODNIK_EMAILS[em]?.name||em)+(em===ja?" (ja)":"") }))
+    .sort((a,b)=>(b.em===ja)-(a.em===ja) || a.meno.localeCompare(b.meno,"sk"));
+  const zvol=lidri.find(l=>l.em===state.liderFilter);
+  const sluzbyTxt=segs=>segs.map(x=>SEG[x]?.short||x).join(", ");
+  return fpill(ICO_USER, zvol ? `Líder: ${zvol.meno.replace(" (ja)","")}` : "Líder", !!zvol,
+    [["", "Všetci lídri", !zvol], ...lidri.map(l=>[l.em, `${l.meno} — ${sluzbyTxt(l.segs)}`, l.em===state.liderFilter])],
+    v=>{ state.liderFilter=v||""; render(); }, "Len služby, za ktoré líder zodpovedá");
+}
+
 /* ---------------------------------------------------------------- EXPORT ODMIEN DO XLS
    Štruktúra podľa súboru Odmeny_NewBusiness_RRRR-MM.xlsx: nadpis, dátum vygenerovania,
    tabuľka Obchodník … Výška odmeny a riadok „SPOLU na vyplatenie". Jeden riadok =
@@ -10776,7 +10843,7 @@ const smieExportOdmien = () => {
   const k=String(state.user?.key||state.user?.email||"").toLowerCase();
   return EXPORT_ODMIEN_POUZIVATELIA.includes(k);
 };
-function exportOdmienXls(mesiace, sluzby){
+function exportOdmienXls(mesiace, filtr){
   if(!mesiace.length){ toast("Za zvolené mesiace nie sú žiadne odmeny."); return; }
   if(typeof XLSX==="undefined"){ toast("Knižnica na Excel sa nenačítala. Skontroluj pripojenie."); return; }
   const MES=["Január","Február","Marec","Apríl","Máj","Jún","Júl","August","September","Október","November","December"];
@@ -10785,7 +10852,7 @@ function exportOdmienXls(mesiace, sluzby){
   const wb=XLSX.utils.book_new();
   let spoluRiadkov=0, cakaSpolu=0;
   mesiace.slice().sort().forEach(m=>{
-    const polozky=odmenyZaMesiac(m, false).filter(r=>!sluzby?.length || sluzby.includes(r.opp?.segment));
+    const polozky=odmenyZaMesiac(m, false).filter(r=>!filtr || filtr(r));
     cakaSpolu+=polozky.filter(r=>r.stav==="caka" && r.suma).length;
     const riadky=[];
     polozky.filter(r=>r.stav==="schvalene" || r.stav==="nesulad").forEach(r=>{
@@ -11787,6 +11854,11 @@ const OBD_PRESETY = [
   ["vsetko",  "Všetko"],
 ];
 /* Hranice obdobia ako dátumy (od, do). null = bez obmedzenia. */
+/* Týždeň zvolený šípkami v ľavom menu (posun 0 = tento týždeň, -1 = minulý…). */
+const zvolenyTyzden = () => {
+  const o=state.obdobie||{};
+  return (o.preset||"tyzden")==="tyzden" && !o.od && !o.do && o.posun ? shiftWeek(CURRENT_WEEK, o.posun) : CURRENT_WEEK;
+};
 function obdobieHranice(){
   const o=state.obdobie||{};
   if(o.od || o.do) return { od:o.od||null, do:o.do||null };
@@ -11796,8 +11868,11 @@ function obdobieHranice(){
     if(jed==="m") d.setMonth(d.getMonth()-n); else d.setDate(d.getDate()-n);
     return isoD(d); };
   switch(o.preset||"tyzden"){
-    case "tyzden": { const {year,week}=parseWeekId(CURRENT_WEEK);
-      return { od:isoD(mondayOf(year,week)), do:null }; }
+    case "tyzden": { const {year,week}=parseWeekId(zvolenyTyzden());
+      const pon=mondayOf(year,week);
+      if(!(o.posun<0)) return { od:isoD(pon), do:null };
+      const ned=new Date(pon); ned.setUTCDate(pon.getUTCDate()+6);   // starší týždeň — len on
+      return { od:isoD(pon), do:isoD(ned) }; }
     case "m1":     return { od:pred(1,"m"), do:null };
     case "m3":     return { od:pred(3,"m"), do:null };
     case "rok":    return { od:`${dnes.getFullYear()}-01-01`, do:null };
@@ -11824,7 +11899,7 @@ function obdobieRozsah(){
   const o=state.obdobie||{};
   const h=obdobieHranice();
   if(!h.od && !h.do) return "všetky týždne";
-  if((o.preset||"tyzden")==="tyzden" && !o.od && !o.do) return weekRangeLabel(CURRENT_WEEK);
+  if((o.preset||"tyzden")==="tyzden" && !o.od && !o.do) return weekRangeLabel(zvolenyTyzden());
   const f=d=>{ if(!d) return ""; const [r,m,dd]=d.split("-"); return `${+dd}. ${+m}. ${r}`; };
   if(h.od && h.do) return `${f(h.od)} – ${f(h.do)}`;
   return h.od ? `od ${f(h.od)}` : `do ${f(h.do)}`;
@@ -11833,6 +11908,8 @@ function obdobieRozsah(){
 function obdobiePopis(){
   const o=state.obdobie||{};
   if(o.tyzdnov) return `Posledné ${o.tyzdnov} ${plural(o.tyzdnov,"týždeň","týždne","týždňov")}`;
+  if(!o.od && !o.do && (o.preset||"tyzden")==="tyzden" && o.posun)
+    return o.posun===-1 ? "Minulý týždeň" : `Týždeň ${parseWeekId(zvolenyTyzden()).week}`;
   if(o.od || o.do){
     const f=d=>{ if(!d) return ""; const [r,m,dd]=d.split("-"); return `${+dd}. ${+m}. ${r}`; };
     return o.od && o.do ? `${f(o.od)} – ${f(o.do)}` : (o.od ? `od ${f(o.od)}` : `do ${f(o.do)}`);
@@ -13497,7 +13574,9 @@ function viewRewards(){
   const obdobie = zvoleneMes.length===1 ? zvoleneMes[0] : "";
   /* Filter služieb z hornej lišty. */
   const sluzby = state.aktSluzby || [];
-  const podlaSluzby = r => !sluzby.length || sluzby.includes(r.opp?.segment);
+  const lidrSeg = liderSegmenty();
+  const podlaSluzby = r => (!sluzby.length || sluzby.includes(r.opp?.segment))
+    && (!lidrSeg || lidrSeg.includes(r.opp?.segment));
 
   wrap.appendChild(el("div","page-h",`<div>
     <div class="eyebrow">Odmeny za New business</div>
@@ -13550,13 +13629,14 @@ function viewRewards(){
   }
 
   const bar=el("div","fbar fbar-sekcia");
+  if(vidiLiderFilter()) bar.appendChild(liderPill());
   if(smieExportOdmien()){
     const ex=el("button","fbar-mine odm-export",
       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span class="fm-lbl">Export do XLS</span>`);
     ex.type="button";
     ex.title = zvoleneMes.length>1 ? "Exportovať schválené odmeny — každý mesiac na samostatnom hárku"
                                    : `Exportovať schválené odmeny za ${menoMesiaca(zvoleneMes[0]||"")}`;
-    ex.onclick=()=>exportOdmienXls(zvoleneMes.filter(m=>mesiace.includes(m)), sluzby);
+    ex.onclick=()=>exportOdmienXls(zvoleneMes.filter(m=>mesiace.includes(m)), podlaSluzby);
     bar.appendChild(ex);
   }
   if(veduci){
@@ -13589,7 +13669,8 @@ function viewRewards(){
   suhrn.innerHTML=`<div>
       <div class="odm-sum-l">${vsetci?"Odmeny spolu":"Moja odmena"} ${
         obdobie ? `za ${esc(menoMesiaca(obdobie))}` : `za ${zvoleneMes.length} ${plural(zvoleneMes.length,"mesiac","mesiace","mesiacov")}`}${
-        sluzby.length ? ` · ${esc(sluzby.map(x=>SEG[x]?.short||x).join(", "))}` : ""}</div>
+        sluzby.length ? ` · ${esc(sluzby.map(x=>SEG[x]?.short||x).join(", "))}` : ""}${
+        lidrSeg ? ` · líder ${esc(OBCHODNIK_EMAILS[state.liderFilter]?.name||"")}` : ""}</div>
       <div class="odm-sum-r">${eur(spolu)}</div>
     </div>
     <div class="odm-sum-meta">${riadky.length} ${plural(riadky.length,"položka","položky","položiek")}
@@ -13627,7 +13708,7 @@ function viewRewards(){
 
   const box=el("div","gl-list");
   const head=el("div","odm-head");
-  head.innerHTML=`<span>Firma</span><span></span><span>Mesiac</span><span class="r">Tržba</span><span class="r">Marža</span><span>Základ</span><span class="r">Sadzba</span><span class="r">Odmena</span>${
+  head.innerHTML=`<span>Firma</span><span></span><span>Mesiac</span><span class="r">Tržba</span><span class="r">Marža</span><span class="odm-zk">Základ</span><span class="r odm-sd">Sadzba</span><span class="r">Odmena</span>${
     vsetci?`<span>Obchodníci</span>`:`<span class="r">Môj podiel</span>`}<span>Stav</span>`;
   box.appendChild(head);
   riadky.forEach(r=>{
@@ -13794,6 +13875,7 @@ function viewResults(){
      vedenie — obchodník vidí svoje prípady tak či tak. */
   const lista=el("div","res-lista");
   lista.appendChild(prep);
+  if(vidiLiderFilter()) lista.appendChild(liderPill());
   if(["admin","sef","lider"].includes(state.user?.role)){
     [["obchodnik","Obchodník"],["oslovenie","Oslovenie"]].forEach(([k,popis])=>{
       const hodnoty=[...new Set(pripady.flatMap(o=>stlpecHodnoty(o,k)))].filter(Boolean)
@@ -13837,6 +13919,10 @@ function viewResults(){
   function paint(){
     const q=(state.resQ||"").trim().toLowerCase();
     let rows=pripady.filter(o=>!q || (o.client||"").toLowerCase().includes(q));
+    // filter služieb z hornej lišty
+    { const sl=state.aktSluzby||[]; if(sl.length) rows=rows.filter(o=>sl.includes(o.segment)); }
+    // filter podľa lídra — služby, za ktoré zodpovedá
+    { const ls=liderSegmenty(); if(ls) rows=rows.filter(o=>ls.includes(o.segment)); }
     if(state.resObchodnik)
       rows=rows.filter(o=>(o.vlastnici||[]).some(v=>normalizeForCompare(v.meno)===normalizeForCompare(state.resObchodnik)));
     if(state.resOnlyChyba) rows=rows.filter(o=>stavVyplnenia(o).chyba>0);
