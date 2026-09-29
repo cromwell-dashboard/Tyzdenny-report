@@ -10788,10 +10788,16 @@ function odmenaZaVysledok(opp, res){
      hoci líder odmenu zadal ručne. */
   if(res && res.odmenaRucne!=null)
     return { suma:res.odmenaRucne, rucne:true, dovod:res.odmenaRucneDovod || "Odmena upravená ručne." };
-  const p = pravidloPrePripad(opp);
+  let p = pravidloPrePripad(opp);
+  // ručná sadzba platí aj tam, kde služba vlastné pravidlo nemá
+  if(!p && opp?.sadzbaRucne!=null)
+    p = { zaklad:"marza", sadzba:opp.sadzbaRucne, sadzbaRucne:true, dovodSadzby:opp.sadzbaRucneDovod||null };
   if(!p) return { suma:null, dovod:"Pre túto službu nie je pravidlo odmeňovania." };
-  if(p.bezNaroku) return { suma:0, dovod:"Táto služba nemá nárok na odmenu." };
-  if(oslovenieBezNaroku(opp.sposobOslovenia)) return { suma:0, dovod:"Pasívny dopyt — bez nároku na odmenu." };
+  /* Ručne nastavená nenulová sadzba je vedomé rozhodnutie lídra — prebije
+     „bez nároku na odmenu" (služba aj pasívny dopyt). */
+  const rucnaSadzba = p.sadzbaRucne && p.sadzba>0;
+  if(p.bezNaroku && !rucnaSadzba) return { suma:0, dovod:"Táto služba nemá nárok na odmenu." };
+  if(oslovenieBezNaroku(opp.sposobOslovenia) && !rucnaSadzba) return { suma:0, dovod:"Pasívny dopyt — bez nároku na odmenu." };
   if(!res || res.bezFakturacie) return { suma:0, dovod:"V tomto mesiaci sa nefakturovalo." };
 
   const zaklad = p.zaklad==="obrat" ? res.trzba : res.marza;
