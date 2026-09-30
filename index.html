@@ -1076,6 +1076,10 @@ button.ft-chip:hover{border-color:var(--brand); color:var(--brand)}
   display:grid;place-items:center}
 .rs-name > .kl-link{grid-column:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rs-name > .rs-zak{grid-column:2}
+.rs-name > .rs-obchm{grid-column:2;display:block;margin-top:2px;font-size:11px;font-weight:500;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rs-obchm .kr{display:none}
+@media (max-width:1249px){ .rs-obchm .dl{display:none} .rs-obchm .kr{display:inline} }
 .rs-own,.rs-obd{font-size:11.5px;color:var(--muted)}
 /* Namiesto celého mena stačí iniciála — celé meno je v bubline. */
 .rs-own{display:flex;gap:3px;flex-wrap:nowrap;overflow:hidden}
@@ -4026,6 +4030,10 @@ select:disabled{cursor:default; opacity:.65}
           Import výsledkov (XLSX)
         </button>
         <input type="file" id="resFileInput" accept=".xlsx,.xls,.csv" style="display:none">
+        <button class="navitem" id="opravMenaBtn" type="button" style="margin-top:8px; display:none" title="Doplní neúplné mená obchodníkov v záznamoch (napr. Csuba → Adrian Csuba)">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8l2 2-4 4-2-2z"/></svg></span>
+          <span class="lbl">Opraviť mená obchodníkov</span>
+        </button>
         <button class="navitem" data-view="clientRegistry" id="clientRegistryBtn" style="margin-top:8px; display:none">
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
           <span class="lbl">Číselník klientov</span>
@@ -4646,8 +4654,36 @@ const NAME_BY_EMAIL = {
 function resolveOwnerName(e){
   const key=(e?.ownerKey||"").toLowerCase().trim();
   if(key && NAME_BY_EMAIL[key]) return NAME_BY_EMAIL[key];
-  return e?.salesperson || "—";
+  return uplneMenaTextu(e?.salesperson) || "—";
 }
+/* Neúplné meno („Csuba", „Zuzana D.") → celé meno obchodníka zo zoznamu
+   používateľov („Adrian Csuba"). Doplní sa len pri jednoznačnej zhode;
+   inak meno zostane, ako je. */
+const _uplneMenoCache=new Map();
+function uplneMeno(n){
+  const t=String(n||"").trim(); if(!t || t==="—") return t;
+  if(_uplneMenoCache.has(t)) return _uplneMenoCache.get(t);
+  const plne=Object.keys(NAME_TO_EMAIL);
+  const nf=x=>normalizeForCompare(x);
+  const k=nf(t);
+  let v=t;
+  let kand=plne.filter(p=>nf(p)===k);
+  if(kand.length===1) v=kand[0];
+  else {
+    kand=plne.filter(p=>nf(p.split(/\s+/).slice(-1)[0])===k);          // len priezvisko
+    if(kand.length===1) v=kand[0];
+    else {
+      const m=t.match(/^(\S+)\s+(\S)\.?$/);                            // „Zuzana D."
+      if(m){
+        kand=plne.filter(p=>{ const w=p.split(/\s+/); return nf(w[0])===nf(m[1]) && nf(w[w.length-1]).startsWith(nf(m[2])); });
+        if(kand.length===1) v=kand[0];
+      }
+    }
+  }
+  _uplneMenoCache.set(t,v); return v;
+}
+/* „Bajúsová / Prištic" → každé meno zvlášť doplnené. */
+const uplneMenaTextu = s => String(s||"").split(/\s*\/\s*/).map(uplneMeno).filter(Boolean).join(" / ");
 function resolveEditedByName(e){
   const key=(e?.editedByKey||"").toLowerCase().trim();
   if(key && NAME_BY_EMAIL[key]) return NAME_BY_EMAIL[key];
@@ -5789,8 +5825,9 @@ const _owNames=(e, sDmis)=>{
     const k=normalizeForCompare(t); if(seen.has(k)) return;
     seen.add(k); out.push(t);
   };
-  add(resolveOwnerName(e));
-  (e.coSalespeople||[]).forEach(add);
+  // viac mien v jednom poli („A / B") = viac obchodníkov; každé doplnené na celé meno
+  String(resolveOwnerName(e)).split(/\s*\/\s*/).map(uplneMeno).forEach(add);
+  (e.coSalespeople||[]).map(uplneMeno).forEach(add);
   if(sDmis) dmisOwnersFor(e.leadIco||e.ico, e.client).forEach(n=>{ if(isAppPerson(n)) add(n); });
   return out;
 };
@@ -5806,6 +5843,7 @@ function coOwnerNames(e){ return entryOwnerNames(e).slice(1); }
 function entryHasOwner(e, name){
   if(!name) return true;
   const k=normalizeForCompare(name);
+  // „Bajúsová / Prištic" — záznam patrí každému z uvedených
   return entryOwnerNamesAll(e).some(n=>normalizeForCompare(n)===k);
 }
 /* ---------------------------------------------------------------- PONUKY Z KOLOS KALKULAČKY
@@ -7419,7 +7457,8 @@ function vykresliRailFiltre(){
   }
 
   const otvoreneObd = box.querySelector(".rf-obd-list")?.style.display === "";
-  const otvorene = box.querySelector(".rf-db-list:not(.rf-obd-list)")?.style.display === "";
+  const otvorene = box.querySelector(".rf-db-list:not(.rf-obd-list):not(.rf-obch-list)")?.style.display === "";
+  const otvoreneObch = box.querySelector(".rf-obch-list")?.style.display === "";
   box.innerHTML="";
 
   /* Výsledky NB majú vlastné filtre — hľadanie klienta, obchodník a
@@ -7582,9 +7621,36 @@ function vykresliRailFiltre(){
     box.appendChild(zoz);
   } else if(state.filterDb) state.filterDb="";
 
-  prepinac("Zobraziť moje", !!state.onlyMine,
-    ()=>{ state.onlyMine=!state.onlyMine; state.feedLimit=20; render(); },
-    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`);
+  /* Filter obchodníka — nahrádza „Zobraziť moje" (na vlastné záznamy sú
+     sekcie Moje aktivity a Moji klienti). Ktokoľvek si vyfiltruje ľubovoľného
+     obchodníka; platí pre aktivity aj klientov. */
+  {
+    if(state.onlyMine) state.onlyMine=false;
+    const ja=state.user?.name||"";
+    // len obchodníci, ktorí majú záznamy (každý zvlášť, aj spolupracujúci) + ja
+    const mena=[...new Set([
+      ...(state.all||[]).flatMap(e=>entryOwnerNamesAll(e)),
+      ja,
+    ].map(n=>String(n||"").trim()).filter(n=>n && n!=="—")
+      // len celé mená — meno aj priezvisko, bez skratiek („Zuzana D.", „Csuba")
+      .filter(n=>{ const w=n.split(/\s+/); return w.length>=2 && w.every(x=>x.length>2 && !x.endsWith(".")); }))]
+      .sort((a,b)=>(b===ja)-(a===ja) || a.localeCompare(b,"sk"));
+    const hlav=prepinac(state.filterSalesperson || "Filter obchodníka", !!state.filterSalesperson, null,
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`);
+    const zoz=el("div","rf-db-list rf-obch-list");
+    zoz.style.display = otvoreneObch ? "" : "none";
+    hlav.onclick=()=>{ zoz.style.display = zoz.style.display==="none" ? "" : "none"; };
+    const pridaj=(hodnota, popis)=>{
+      const b=el("button","navitem rf-db"+(state.filterSalesperson===hodnota?" active":""));
+      b.type="button";
+      b.innerHTML=`<span class="lbl">${esc(popis)}</span>`;
+      b.onclick=()=>{ state.filterSalesperson=hodnota; state.feedLimit=20; state.groupLimit=60; render(); };
+      zoz.appendChild(b);
+    };
+    pridaj("", "Každý obchodník");
+    mena.forEach(n=>pridaj(n, n===ja ? `${n} (ja)` : n));
+    box.appendChild(zoz);
+  }
 
   /* Ikonky všetkých služieb vedľa seba — rovnaký filter ako v hornej lište,
      nech si každý vyberie, odkiaľ mu to vyhovuje. */
@@ -8085,6 +8151,13 @@ function demoBackend(){
       const m=new Map(pairs);
       all=all.map(e=>m.has(e.id)?{...e,opportunityId:m.get(e.id)}:e); sync(); return pairs.length;
     },
+    async opravMena(zapisy){
+      zapisy.forEach(([col,id,data])=>{
+        if(col==="entries") all=all.map(e=>e.id===id?{...e,...data}:e);
+        if(col==="opportunities") state.opportunities=(state.opportunities||[]).map(o=>o.id===id?{...o,...data}:o);
+      });
+      sync();
+    },
     async renameClient(stareKluce, novyNazov){
       const kl=new Set(stareKluce); let n=0;
       all=all.map(e=>kl.has(clientKey(e.client))?(n++,{...e,client:novyNazov,klientPremenovany:true}):e);
@@ -8383,6 +8456,13 @@ async function firebaseBackend(){
     // Voliteľné doplnenie IČO do všetkých záznamov klienta — spúšťa sa len na požiadanie.
     /* Premenovanie klienta — záznamy, obchodné prípady (Výsledky NB) aj úlohy.
        Čas úpravy sa nemení, aby sa záznamy neposunuli navrch. */
+    async opravMena(zapisy){
+      for(let i=0;i<zapisy.length;i+=400){
+        const b=writeBatch(db);
+        zapisy.slice(i,i+400).forEach(([col,id,data])=>b.set(doc(db,col,id),data,{merge:true}));
+        await b.commit();
+      }
+    },
     async renameClient(stareKluce, novyNazov){
       const kl=new Set(stareKluce);
       const zapisy=[
@@ -8878,6 +8958,7 @@ function renderNow(){
   $("#importNbBtn").style.display=["admin","sef"].includes(state.user.role)?"":"none";
   $("#importResBtn").style.display=["admin","sef","lider"].includes(state.user.role)?"":"none";
   $("#clientRegistryBtn").style.display=["admin","sef"].includes(state.user.role)?"":"none";
+  { const b=$("#opravMenaBtn"); if(b){ b.style.display = state.user.role==="admin" ? "" : "none"; b.onclick=opravMenaVZaznamoch; } }
   // Sekcia "Zápisy z porád" bola z UI odstránená. Dáta v kolekcii `meetings`
   // aj úlohy vytvorené zo zápisov zostávajú nedotknuté.
 
@@ -10892,6 +10973,45 @@ function odmenyZaMesiac(obdobie, lenMoje){
   });
   return out.sort((a,b)=>(b.suma??-1)-(a.suma??-1));
 }
+/* ---------------------------------------------------------------- OPRAVA MIEN OBCHODNÍKOV
+   Jednorazovo prepíše neúplné mená v záznamoch a obchodných prípadoch na celé
+   mená („Csuba" → „Adrian Csuba"). Mená bez jednoznačnej zhody nechá a vypíše. */
+async function opravMenaVZaznamoch(){
+  const zapisy=[], nezname=new Set();
+  const oprav=t=>{ const v=uplneMenaTextu(t);
+    String(t||"").split(/\s*\/\s*/).forEach(x=>{ const x2=x.trim(); if(x2 && x2!=="—" && !NAME_TO_EMAIL[uplneMeno(x2)]) nezname.add(x2); });
+    return v; };
+  (state.all||[]).forEach(e=>{
+    const d={};
+    const sp=oprav(e.salesperson); if(e.salesperson && sp!==e.salesperson) d.salesperson=sp;
+    if(e.ownerName){ const on=oprav(e.ownerName); if(on!==e.ownerName) d.ownerName=on; }
+    if((e.coSalespeople||[]).length){
+      const co=[...new Set(e.coSalespeople.map(uplneMeno))];
+      if(JSON.stringify(co)!==JSON.stringify(e.coSalespeople)) d.coSalespeople=co;
+    }
+    if(Object.keys(d).length) zapisy.push(["entries",e.id,d]);
+  });
+  (state.opportunities||[]).forEach(o=>{
+    if(!(o.vlastnici||[]).length) return;
+    const v=o.vlastnici.map(x=>({ ...x, meno:uplneMeno(x.meno) }));
+    if(v.some((x,i)=>x.meno!==o.vlastnici[i].meno)) zapisy.push(["opportunities",o.id,{ vlastnici:v }]);
+  });
+  const nez=[...nezname].sort((a,b)=>a.localeCompare(b,"sk"));
+  if(!zapisy.length){
+    toast("Všetky mená sú úplné"+(nez.length?` · bez zhody zostali: ${nez.join(", ")}`:"")); return;
+  }
+  const ok=confirm(`Doplniť celé mená obchodníkov v ${zapisy.length} ${plural(zapisy.length,"zázname","záznamoch","záznamoch")}?`
+    +(nez.length?`\n\nTieto mená sa nedajú jednoznačne priradiť a zostanú, ako sú:\n${nez.join(", ")}`:""));
+  if(!ok) return;
+  try{
+    await backend.opravMena(zapisy);
+    toast(`Mená opravené v ${zapisy.length} ${plural(zapisy.length,"zázname","záznamoch","záznamoch")}`);
+  }catch(err){
+    console.error("oprava mien:", err);
+    toast("⚠ Nepodarilo sa uložiť: "+(err?.message||err?.code||"neznáma chyba"));
+  }
+}
+
 /* ---------------------------------------------------------------- FILTER PODĽA LÍDRA
    Vo Výsledkoch NB a v Odmenách si líder vyberie seba a uvidí len prípady
    služieb, za ktoré zodpovedá (LIDER_EMAILS) — tie potom schvaľuje. */
@@ -14173,7 +14293,15 @@ function viewResults(){
          tak tvoria jeden zvislý stĺpec bez ohľadu na stav prípadu. */
       r.innerHTML=`<span class="rs-name"><span class="rs-fajka-box">${stk==="naKontrolu"||stk==="skontrolovane"
           ? `<span class="rs-fajka ${stk}" title="${stk==="skontrolovane"?`Skontroloval ${esc(o.skontrolovalKym||"—")}`:`Označil za hotové ${esc(o.hotovoKym||"—")}`}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>` : ""}</span><span class="kl-link" data-klient="${esc(o.client||"")}" title="${esc(o.client||"")} — otvoriť detail klienta">${esc(o.client||"—")}</span>${
-          o.zakazka?`<span class="rs-zak">${esc(o.zakazka)}</span>`:""}</span>
+          o.zakazka?`<span class="rs-zak">${esc(o.zakazka)}</span>`:""}${(()=>{
+            /* Meno obchodníka pod firmou — celé; ak sa nezmestí, skráti sa
+               a celé mená sú v bublinke. */
+            const mena=[...new Set((o.vlastnici||[]).map(x=>uplneMeno(x.meno)).filter(Boolean))];
+            if(!mena.length) return "";
+            const cele=mena.join(", ");
+            const kratke=mena.map(m=>{ const w=m.split(/\s+/); return w.length>1 ? `${w[0][0]}. ${w.slice(1).join(" ")}` : m; }).join(", ");
+            return `<span class="rs-obchm" title="${esc(cele)}"><span class="dl">${esc(cele)}</span><span class="kr">${esc(kratke)}</span></span>`;
+          })()}</span>
         <span class="gl-seg" title="${esc(segLabel(o.segment,o.produkt))}">${seg?segIcon(o.segment,16):""}</span>
         <span class="rs-own" title="${esc((o.vlastnici||[]).map(x=>x.meno).join(", ")||"")}">${
           (o.vlastnici||[]).length
