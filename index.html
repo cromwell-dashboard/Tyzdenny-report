@@ -3840,19 +3840,27 @@ select:disabled{cursor:default; opacity:.65}
 .rs-head .rs-sort:hover{color:var(--ink)}
 .rs-head .rs-sort.on{color:var(--brand)}
 .rs-head .rs-sort i{font-style:normal;font-size:8px;margin-left:3px;vertical-align:1px}
-/* Filtrovacia lišta nad tabuľkou (Aktivity, Klienti) */
-.flista{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px;padding:8px 10px;
-  background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm)}
-.flista-chip{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 14px;border-radius:20px;
-  border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
-.flista-chip svg{width:15px;height:15px}
-.flista-chip:hover{border-color:#B9BEC8;color:var(--ink)}
-.flista-chip.nb.on{background:#E8F5EE;border-color:#9ED3B8;color:var(--nb)}
-.flista-chip.cc.on{background:var(--brand-soft);border-color:#C5CFF5;color:var(--brand)}
-.flista-sep{width:1px;height:22px;background:var(--line);margin:0 2px}
-.flista .fpill{height:32px;border-radius:20px}
-.flista-zrus{margin-left:auto;border:0;background:none;color:var(--muted);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:0 6px}
+/* Filtrovacia lišta nad tabuľkou (Aktivity, Klienti) — čistá, bledosivá,
+   bez rámikov; položky oddelené zvislou čiarou ako horná lišta služieb. */
+.flista{display:flex;align-items:center;gap:1px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+  margin:0 0 14px;padding:4px 8px;background:#F3F4F7;border:0;border-radius:12px;box-shadow:none}
+.flista::-webkit-scrollbar{display:none}
+.flista-sep{width:1px;height:18px;background:var(--line);flex:0 0 auto;margin:0 2px}
+.flista-chip,.flista .fpill{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;flex:0 0 auto;
+  border:1px solid transparent;background:none;border-radius:20px;box-shadow:none;
+  font-family:inherit;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.flista-chip svg,.flista .fpill svg{width:16px;height:16px;flex:0 0 auto}
+.flista .fpill .fpill-c{width:10px;height:10px}
+.flista-chip:hover,.flista .fpill:hover{color:var(--ink);background:none}
+.flista-chip.on,.flista .fpill.on{background:#fff;border-color:var(--line-2);color:var(--ink)}
+.flista-chip.nb svg{color:var(--nb)}
+.flista-chip.cc svg{color:var(--brand)}
+.flista-chip.nb.on{color:var(--nb)}
+.flista-chip.cc.on{color:var(--brand)}
+.flista-zrus{margin-left:auto;border:0;background:none;color:var(--muted);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:0 8px;flex:0 0 auto}
 .flista-zrus:hover{color:var(--red)}
+.flista .flista-kop{margin-left:auto;color:var(--brand)}
+.flista .flista-zrus+.flista-kop{margin-left:2px}
 /* Rozbaľovacie ponuky filtrov — zaoblené karty */
 .qsp.fpill-pop{border-radius:16px;padding:6px;border:1px solid var(--line);box-shadow:0 14px 36px rgba(16,24,40,.16)}
 .qsp.fpill-pop .qsp-h{padding:8px 10px 6px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
@@ -3901,8 +3909,32 @@ select:disabled{cursor:default; opacity:.65}
 .res-lista .fpill svg{width:13px;height:13px}
 .res-lista .fpill .fpill-c{width:10px;height:10px}
 .res-lista .fpill span{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.flista .flista-kop{margin-left:auto;background:var(--brand-soft);border-color:#C5CFF5;color:var(--brand)}
-.flista .flista-zrus+.flista-kop{margin-left:6px}
+/* Výsledky NB — lišta filtrov v rovnakom dizajne ako v Aktivitách */
+.res-flista{gap:1px;padding:4px 8px;margin:0 0 12px}
+.res-flista .scope-switch{background:none;padding:0;gap:1px;border-radius:0}
+.res-flista .scope-switch button{height:32px;padding:0 10px;border:1px solid transparent;border-radius:20px;background:none;
+  font-family:inherit;font-size:12px;font-weight:600;color:var(--muted);box-shadow:none}
+.res-flista .scope-switch button:hover{color:var(--ink)}
+.res-flista .scope-switch button.on{background:#fff;border-color:var(--line-2);color:var(--ink);box-shadow:none}
+.res-flista .scope-switch .tab-n{margin-left:6px;font-size:11px;opacity:.7}
+.res-flista .fpill{height:32px;padding:0 10px;gap:6px;font-size:12px;border-radius:20px}
+.res-flista .fpill svg{width:15px;height:15px}
+.res-flista .fpill span{max-width:170px}
+/* Výsledky NB pre obchodníka (bez stĺpca Odmena) — na užších obrazovkách sa
+   predtým skryl posledný stĺpec s fajkou „hotovo" a stĺpce sa rozišli.
+   Akcie (hotovo, výsledky) zostávajú vždy; ustupujú Kusy a obchodník. */
+@media (max-width:1200px) and (min-width:981px){
+  .gl-list.bez-odmeny .rs-head,.gl-list.bez-odmeny .rs-row{
+    grid-template-columns:minmax(118px,1.35fr) 20px minmax(80px,.7fr) 104px 48px 72px 72px 46px minmax(84px,.75fr) 86px}
+  .gl-list.bez-odmeny .rs-head>span:nth-child(8),.gl-list.bez-odmeny .rs-row>span:nth-child(8){display:none}
+}
+@media (max-width:1150px) and (min-width:981px){
+  .gl-list.bez-odmeny .rs-head,.gl-list.bez-odmeny .rs-row{
+    grid-template-columns:minmax(110px,1.3fr) 20px 100px 46px 70px 70px 42px minmax(80px,.7fr) 86px}
+  .gl-list.bez-odmeny .rs-head>span:nth-child(3),.gl-list.bez-odmeny .rs-row>span:nth-child(3){display:none}
+  .gl-list.bez-odmeny .rs-head>span:nth-child(11){display:block}
+  .gl-list.bez-odmeny .rs-row>span:nth-child(11){display:flex}
+}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -7538,22 +7570,29 @@ function filtrovaciaLista(opts){
      službe rovno otvorí výber týždňa, inak sa najprv vyberie služba. */
   if(opts?.kopirovat){
     const ICO_COPY=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
-    const sl=state.aktSluzby||[];
+    /* Služba sa berie podľa toho, kam obchodník patrí (jeho služby v profile),
+       ako to bolo pri pôvodnom tlačidle v sekcii služby. Vedenie bez vlastných
+       služieb si vyberie z ponuky. Potom nasleduje výber týždňa. */
+    const moje=(state.user?.segments||[]).filter(id=>SEG[id]);
+    const ponuka = moje.length ? moje : SEGMENTS.map(x=>x.id);
     let kb;
-    if(sl.length===1){
+    if(ponuka.length===1){
       kb=el("button","fpill flista-pill flista-kop", `${ICO_COPY}<span>Kopírovať záznamy</span>`);
-      kb.type="button"; kb.title=`Skopírovať záznamy služby ${SEG[sl[0]]?.short||""} z minulého týždňa`;
-      kb.onclick=()=>openCopyWeekPicker(sl[0]);
+      kb.type="button"; kb.title=`Skopírovať záznamy služby ${SEG[ponuka[0]]?.short||""} — vyber týždeň`;
+      kb.onclick=()=>openCopyWeekPicker(ponuka[0]);
     } else {
       const od=shiftWeek(state.week,-5);
-      const sluzby=SEGMENTS.map(sg=>({ sg, n:state.all.filter(e=>e.segment===sg.id && e.weekId<state.week && e.weekId>=od && !e.sleeping).length }))
-        .filter(x=>x.n);
+      const sluzby=ponuka.map(id=>({ id, n:state.all.filter(e=>e.segment===id && e.weekId<state.week && e.weekId>=od && !e.sleeping).length }));
       kb=fpill(ICO_COPY, "Kopírovať záznamy", false,
-        sluzby.length ? sluzby.map(x=>[x.sg.id, `${x.sg.short} · ${x.n} ${plural(x.n,"záznam","záznamy","záznamov")}`, false]) : [["", "Za posledných 5 týždňov nie je čo kopírovať", false]],
+        sluzby.map(x=>[x.id, `${SEG[x.id].short}${x.n?` · ${x.n} ${plural(x.n,"záznam","záznamy","záznamov")}`:" · bez záznamov"}`, false]),
         v=>{ if(v) openCopyWeekPicker(v); }, "Z ktorej služby?", "flista-pill flista-kop");
     }
     bar.appendChild(kb);
   }
+  // čistá lišta — položky oddelené zvislou čiarou ako horná lišta služieb
+  [...bar.querySelectorAll(":scope > .flista-sep")].forEach(x=>x.remove());
+  const deti=[...bar.children];
+  deti.slice(1).forEach(d=>{ if(!d.classList.contains("flista-zrus") && !d.classList.contains("flista-kop")) bar.insertBefore(el("span","flista-sep"), d); });
   return bar;
 }
 
@@ -14141,7 +14180,7 @@ function viditelnePripady(){
   if(["admin","sef","lider"].includes(state.user?.role)) return bezi;
   const uid=state.user?.uid, meno=state.user?.name||"";
   return bezi.filter(o=>(o.ownerUids||[]).includes(uid)
-    || (o.vlastnici||[]).some(v=>normalizeForCompare(v.meno||"")===normalizeForCompare(meno)));
+    || (o.vlastnici||[]).some(v=>normalizeForCompare(uplneMeno(v.meno||""))===normalizeForCompare(meno)));
 }
 
 /* Kto smie prepísať odmenu ručne. */
@@ -14601,7 +14640,7 @@ function viewResults(){
 
   /* Záložky a filtre v jednej lište. Obchodník a oslovenie sú len pre
      vedenie — obchodník vidí svoje prípady tak či tak. */
-  const lista=el("div","res-lista");
+  const lista=el("div","res-lista flista res-flista");
   lista.appendChild(prep);
   if(vidiLiderFilter()) lista.appendChild(liderPill());
   /* Nový biznis — len prípady, ktorým zvolený mesiac je prvým mesiacom
@@ -14639,6 +14678,8 @@ function viewResults(){
         }, popis));
     });
   }
+  // rovnaký čistý vzhľad ako lišta v Aktivitách — položky oddelené zvislou čiarou
+  [...lista.children].slice(1).forEach(d=>lista.insertBefore(el("span","flista-sep"), d));
   wrap.appendChild(lista);
 
   const info=el("div","feed-count"); wrap.appendChild(info);
@@ -18148,7 +18189,7 @@ function smieOznacit(opp){
   if(smieMenitOdmenu()) return true;
   const uid=state.user?.uid, meno=state.user?.name||"";
   return (opp.ownerUids||[]).includes(uid)
-      || (opp.vlastnici||[]).some(v=>normalizeForCompare(v.meno||"")===normalizeForCompare(meno));
+      || (opp.vlastnici||[]).some(v=>normalizeForCompare(uplneMeno(v.meno||""))===normalizeForCompare(meno));
 }
 async function zmenStavKontroly(opp, novy){
   const zmeny={ kontrola:novy, updatedBy:state.user.name, updatedAt:Date.now() };
