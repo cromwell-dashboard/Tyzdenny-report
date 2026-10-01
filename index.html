@@ -14213,10 +14213,13 @@ function viewResults(){
     prep.querySelector('[data-tab="vybavene"] .tab-n').textContent=vybavene.length;
     if(state.resTab==="vybavene") rows=vybavene;
     else if(state.resTab==="nevybavene") rows=caka;
-    /* Najnovšie navrch — podľa posledného vyplneného mesiaca, pri zhode
-       podľa začiatku NB obdobia. Abecedne až nakoniec. */
+    /* Najväčšia tržba navrch — za zvolené mesiace (pri „Všetko" za celé
+       obdobie). Prípady bez tržby idú na koniec; pri zhode rozhoduje
+       posledný vyplnený mesiac, začiatok NB obdobia a nakoniec abeceda. */
+    const trz=new Map(rows.map(o=>[o.id, cislaPreZoznam(o).trzba]));
     rows.sort((a,b)=>
-      String(poslednyMesiac(b)||"").localeCompare(String(poslednyMesiac(a)||""))
+      ((trz.get(b.id)??-Infinity) - (trz.get(a.id)??-Infinity))
+      || String(poslednyMesiac(b)||"").localeCompare(String(poslednyMesiac(a)||""))
       || String(b.nbOd||"").localeCompare(String(a.nbOd||""))
       || (a.client||"").localeCompare(b.client||"","sk"));
 
