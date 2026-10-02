@@ -3935,6 +3935,8 @@ select:disabled{cursor:default; opacity:.65}
   .gl-list.bez-odmeny .rs-head>span:nth-child(11){display:block}
   .gl-list.bez-odmeny .rs-row>span:nth-child(11){display:flex}
 }
+.lnk-fo{border:0;background:none;padding:0;margin-left:4px;color:var(--brand);font-family:inherit;font-size:inherit;
+  font-weight:600;text-decoration:underline;cursor:pointer}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -7642,7 +7644,7 @@ function vykresliRailFiltre(){
   const sr=el("div","rf-search");
   sr.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`;
   const si=el("input"); si.id="railSearch"; si.type="search"; si.autocomplete="off";
-  si.placeholder="Hľadať klienta…";
+  si.placeholder="Hľadať klienta, IČO alebo e-mail…";
   if(jeVysledky){
     si.value=state.resQ||"";
     si.oninput=()=>{ state.resQ=si.value; render(); };
@@ -13253,6 +13255,25 @@ const fmtDatum = iso => {
   return (r&&m&&d) ? `${+d}. ${+m}. ${r}` : (iso||"—");
 };
 
+/* Hľadanie podľa kontaktnej osoby — e-mail (aj časť, napr. „@jaguarlandrover"),
+   telefón (bez medzier a predvoľby) alebo meno. Prehľadáva kontakty záznamu
+   aj ostatných záznamov toho istého klienta, takže sa nájde celý klient. */
+const _kontaktyKlienta=new Map();
+function kontaktSedi(e, q){
+  if(!q || q.length<3) return false;
+  const k=clientKey(e.client);
+  let txt=_kontaktyKlienta.get(k);
+  if(txt===undefined || _kontaktyKlienta._n!==(state.all||[]).length){
+    if(_kontaktyKlienta._n!==(state.all||[]).length){ _kontaktyKlienta.clear(); _kontaktyKlienta._n=(state.all||[]).length; }
+    txt=(state.all||[]).filter(x=>clientKey(x.client)===k).flatMap(x=>x.contacts||[])
+      .map(c=>[c.email, c.firstName, c.lastName, String(c.phone||"").replace(/\D/g,"")].filter(Boolean).join(" ")).join(" ").toLowerCase();
+    _kontaktyKlienta.set(k, txt);
+  }
+  if(!txt) return false;
+  const qc=q.replace(/\s+/g,"");
+  if(/^\+?\d{6,}$/.test(qc)) return txt.includes(qc.replace(/^\+/,"").replace(/^0/,""));   // telefón
+  return txt.includes(q);
+}
 /* Použije filtre na zoznam záznamov. `lock` vynúti kontext sekcie (napr. New Business). */
 function applyEntryFilters(list, lock){
   const q=(state.search||"").trim().toLowerCase();
@@ -13273,7 +13294,8 @@ function applyEntryFilters(list, lock){
            || (e.projekt||"").toLowerCase().includes(q)
            || (e.events||"").toLowerCase().includes(q)
            || gsIcoVariants(e.leadIco||e.ico).some(v=>v.includes(q))
-           || entryOwnerNamesAll(e).some(n=>n.toLowerCase().includes(q)))) return false;
+           || entryOwnerNamesAll(e).some(n=>n.toLowerCase().includes(q))
+           || kontaktSedi(e, q))) return false;
     return true;
   });
 }
@@ -16670,7 +16692,7 @@ function viewClientRegistry(){
 
   const fbox=el("div","lf-box");
   const search=el("div","search lf-search",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
-  const si=el("input"); si.placeholder="Hľadať klienta…";
+  const si=el("input"); si.placeholder="Hľadať klienta, IČO alebo e-mail…";
   si.oninput=()=>renderList();
   search.appendChild(si); fbox.appendChild(search); wrap.appendChild(fbox);
 
@@ -17333,7 +17355,10 @@ async function saveFromModalInner(){
       : pendingLeadOrigin
       ? `<span class="ico-none">Pri zápise z databázy je IČO povinné.</span> Zadaj ho a daj Načítať — overí sa tým, že ide naozaj o túto firmu.`
       : `<span class="ico-none">Tohto klienta ešte nepoznáme — zadaj IČO.</span> Nájdeš ho na webe firmy, vo faktúre alebo na finstat.sk.`;
-    toast("Bez IČO sa záznam uložiť nedá.");
+    // fyzická osoba IČO nemá — jedným klikom ju označíme
+    $("#fIcoHint").insertAdjacentHTML("beforeend", ` <button type="button" class="lnk-fo" id="lnkFo">Je to fyzická osoba bez IČO?</button>`);
+    $("#lnkFo")?.addEventListener("click", ()=>{ $("#fOsobaPill")?.click(); $("#fIco").style.borderColor=""; $("#fClient")?.focus(); });
+    toast("Bez IČO sa záznam uložiť nedá — ak ide o fyzickú osobu, označ ju ikonkou osoby pri IČO.");
     return;
   }
 
