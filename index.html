@@ -10069,6 +10069,9 @@ function copyFromPrevWeek(segId, fromWeek){
     }));
 
   state.nbCopyPreview = nbEntries.length ? {segId, entries:nbEntries} : null;
+  /* Skopírované návrhy (na kontrolu a uloženie) sa zobrazujú v sekcii služby.
+     Pri kopírovaní z Aktivít sa tam preto prepneme — inak sa nič neukázalo. */
+  if(state.view!=="segment" || state.segFilter!==segId){ state.view="segment"; state.segFilter=segId; window.scrollTo?.(0,0); }
 
   if(!copies.length && !nbEntries.length){ toast("Všetci klienti z minulého týždňa sú už zadaní."); return; }
   if(copies.length){
@@ -11341,8 +11344,24 @@ const jeFakturant = meno => {
   const p = priez(uplneMeno(meno));
   return !!p && FAKTURANTI.some(f=>priez(f)===p);
 };
-async function exportOdmienXls(mesiace, filtr){
-  if(!mesiace.length){ toast("Za zvolené mesiace nie sú žiadne odmeny."); return; }
+async function exportOdmienXls(mesiace, filtr, volby){
+  if(!mesiace.length){ toast("Za zvolené mesiace nie sú v Zappise žiadne výsledky ani odmeny."); return; }
+  const lenMoje=!!volby?.lenMoje;
+  const ja=normalizeForCompare(state.user?.name||""), mojUid=state.user?.uid;
+  const jeMoj=p=>(p.uid&&p.uid===mojUid) || normalizeForCompare(uplneMeno(p.meno||""))===ja;
+  /* Ak v zvolených mesiacoch nie je nič schválené (napr. staršie mesiace,
+     ktoré sa ešte neschvaľovali), ponúkneme export aj vypočítaných odmien. */
+  const vsetkyPol=mesiace.flatMap(m=>odmenyZaMesiac(m, lenMoje).filter(r=>!filtr || filtr(r)));
+  const schvalenych=vsetkyPol.filter(r=>(r.stav==="schvalene"||r.stav==="nesulad") && (r.suma||0)>0).length;
+  const vypocitanych=vsetkyPol.filter(r=>r.stav==="caka" && (r.suma||0)>0).length;
+  let ajNeschvalene=false;
+  if(!schvalenych && vypocitanych){
+    ajNeschvalene=confirm(`V zvolených mesiacoch nie je žiadna schválená odmena.\n\nExportovať ${vypocitanych} ${plural(vypocitanych,"vypočítanú odmenu","vypočítané odmeny","vypočítaných odmien")}, ktoré ešte nie sú schválené?`);
+    if(!ajNeschvalene) return;
+  } else if(!schvalenych){
+    toast("Za zvolené mesiace nie sú žiadne odmeny vyššie ako 0 €."+(lenMoje?" (exportujú sa len tvoje — prepni na všetkých obchodníkov)":""));
+    return;
+  }
   const styl=await nacitajXlsxStyl();
   const X = styl || window.XLSX;
   if(!X){ toast("Knižnica na Excel sa nenačítala. Skontroluj pripojenie."); return; }
@@ -11356,23 +11375,24 @@ async function exportOdmienXls(mesiace, filtr){
   const ram={ top:{style:"thin",color:{rgb:SIVA}}, bottom:{style:"thin",color:{rgb:SIVA}}, left:{style:"thin",color:{rgb:SIVA}}, right:{style:"thin",color:{rgb:SIVA}} };
   const font={ name:"Calibri", sz:11, color:{rgb:TMAVA} };
   mesiace.slice().sort().forEach(m=>{
-    const polozky=odmenyZaMesiac(m, false).filter(r=>!filtr || filtr(r));
-    cakaSpolu+=polozky.filter(r=>r.stav==="caka" && (r.suma||0)>0).length;
+    const polozky=odmenyZaMesiac(m, lenMoje).filter(r=>!filtr || filtr(r));
+    if(!ajNeschvalene) cakaSpolu+=polozky.filter(r=>r.stav==="caka" && (r.suma||0)>0).length;
     const riadky=[];
-    polozky.filter(r=>r.stav==="schvalene" || r.stav==="nesulad").forEach(r=>{
+    polozky.filter(r=>r.stav==="schvalene" || r.stav==="nesulad" || (ajNeschvalene && r.stav==="caka")).forEach(r=>{
       const opp=r.opp, res=r.res||{};
       const schv=r.schvalene||{};
       const pr=r.vypocet?.pravidlo || pravidloPrePripad(opp);
       const zaklad = pr?.zaklad==="obrat" ? "Výnos" : "Marža";
       const sadzba = schv.sadzba ?? r.vypocet?.sadzba ?? pr?.sadzba ?? null;
       const podiely = (schv.podiely && schv.podiely.length) ? schv.podiely : rozdelOdmenu(opp, r.suma);
-      podiely.filter(p=>(p.suma||0)>0).forEach(p=>riadky.push([
+      podiely.filter(p=>(p.suma||0)>0 && (!lenMoje || jeMoj(p))).forEach(p=>riadky.push([
         uplneMeno(p.meno), jeFakturant(p.meno) ? "Áno" : "", opp.client||"", SEG[opp.segment]?.short||"",
         res.trzba ?? null, res.marza ?? null, zaklad, p.podiel, sadzba, p.suma ]));
     });
     riadky.sort((a,b)=>a[0].localeCompare(b[0],"sk") || a[2].localeCompare(b[2],"sk"));
     spoluRiadkov+=riadky.length;
-    const aoa=[[`Odmeny New Business — ${nazovMes(m)}`],[`Cromwell Group · vygenerované ${dnes}`],[],
+    const aoa=[[`Odmeny New Business — ${nazovMes(m)}${lenMoje?` · ${state.user?.name||""}`:""}`],
+      [`Cromwell Group · vygenerované ${dnes}${ajNeschvalene?" · vrátane ešte neschválených odmien":""}`],[],
       ["Obchodník","Fakturant","Klient","Služba","Výnos","Marža","Základ odmeny","Podiel","Percento odmeny","Výška odmeny"],
       ...riadky];
     const spoluR=aoa.length+1;
@@ -11410,7 +11430,9 @@ async function exportOdmienXls(mesiace, filtr){
     ws["!rows"]=[{hpt:26},{hpt:16},{hpt:8},{hpt:22}];
     X.utils.book_append_sheet(wb, ws, `Odmeny ${m}`);
   });
-  const subor = mesiace.length===1 ? `Odmeny_NewBusiness_${mesiace[0]}.xlsx` : `Odmeny_NewBusiness_vsetky_mesiace.xlsx`;
+  const zor=mesiace.slice().sort();
+  const kto = lenMoje ? "_"+String(state.user?.name||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"_") : "";
+  const subor = zor.length===1 ? `Odmeny_NewBusiness_${zor[0]}${kto}.xlsx` : `Odmeny_NewBusiness_${zor[0]}_${zor[zor.length-1]}${kto}.xlsx`;
   X.writeFile(wb, subor);
   toast(`Export hotový · ${spoluRiadkov} ${plural(spoluRiadkov,"riadok","riadky","riadkov")}${
     cakaSpolu?` · ${cakaSpolu} ${plural(cakaSpolu,"odmena ešte čaká","odmeny ešte čakajú","odmien ešte čaká")} na schválenie a nie je v exporte`:""}${
@@ -14366,7 +14388,13 @@ function viewRewards(){
     ex.type="button";
     ex.title = zvoleneMes.length>1 ? "Exportovať schválené odmeny — každý mesiac na samostatnom hárku"
                                    : `Exportovať schválené odmeny za ${menoMesiaca(zvoleneMes[0]||"")}`;
-    ex.onclick=()=>exportOdmienXls(zvoleneMes.filter(m=>mesiace.includes(m)), podlaSluzby);
+    // pri „Len moje" sa exportujú len odmeny prihláseného obchodníka
+    ex.onclick=async()=>{
+      ex.disabled=true;
+      try{ await exportOdmienXls(zvoleneMes.filter(m=>mesiace.includes(m)), podlaSluzby, { lenMoje:!vsetci }); }
+      catch(e){ console.error("export odmien:", e); toast("⚠ Export zlyhal: "+(e?.message||e)); }
+      finally{ ex.disabled=false; }
+    };
     bar.appendChild(ex);
   }
   if(veduci){
