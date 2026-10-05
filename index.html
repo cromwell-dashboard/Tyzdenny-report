@@ -4074,6 +4074,18 @@ select:disabled{cursor:default; opacity:.65}
 .ph-nj .s{font-size:12px;color:var(--ink-soft)}
 .ph-nj.zle .m{color:var(--red)}
 .rf-bez-obd .rf-obd-rad,.rf-bez-obd .rf-obd-list,.rf-bez-obd .rf-tyz{display:none !important}
+/* Mobil — prepínač týždňa navrchu Aktivít */
+.mob-tyz{display:none}
+@media (max-width:900px){
+  .mob-tyz{display:flex;align-items:center;gap:6px;margin:0 0 12px;padding:5px;background:#F3F4F7;border-radius:14px}
+  .mob-tyz-s{flex:0 0 auto;width:40px;height:40px;border:0;border-radius:10px;background:#fff;color:var(--brand);
+    font-size:22px;line-height:1;cursor:pointer;box-shadow:0 1px 2px rgba(22,26,36,.06)}
+  .mob-tyz-s:disabled{color:var(--line);box-shadow:none;background:transparent}
+  .mob-tyz-l{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;align-items:center;border:0;background:none;
+    font-family:inherit;cursor:pointer;line-height:1.25;padding:2px 4px}
+  .mob-tyz-l b{font-size:14px;color:var(--ink)}
+  .mob-tyz-l span{font-size:12px;color:var(--muted);white-space:nowrap}
+}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -7739,6 +7751,27 @@ function filtrovaciaLista(opts){
   return bar;
 }
 
+/* Prepínač týždňa pre mobil — ľavé menu je na mobile skryté, preto je
+   ‹ týždeň › hneď na začiatku Aktivít. Na počítači sa nezobrazuje. */
+function mobilTyzden(){
+  const o=state.obdobie||{};
+  const jeTyzden=(o.preset||"tyzden")==="tyzden" && !o.od && !o.do;
+  const posun=jeTyzden?(o.posun||0):0;
+  const w=zvolenyTyzden(), {week}=parseWeekId(w);
+  const box=el("div","mob-tyz");
+  const sip=(smer,dis)=>{ const b=el("button","mob-tyz-s", smer<0?"‹":"›"); b.type="button"; b.disabled=dis;
+    b.setAttribute("aria-label", smer<0?"Predchádzajúci týždeň":"Nasledujúci týždeň");
+    b.onclick=()=>{ state.obdobie={preset:"tyzden", posun:posun+smer}; state.tyzdneLimit=2; render(); window.scrollTo?.(0,0); };
+    return b; };
+  box.appendChild(sip(-1,false));
+  const lb=el("button","mob-tyz-l",
+    jeTyzden ? `<b>${posun?`Týždeň ${week}`:"Tento týždeň"}</b><span>${esc(weekRangeLabel(w))}</span>`
+             : `<b>${esc(obdobiePopis())}</b><span>klikni pre tento týždeň</span>`);
+  lb.type="button"; lb.onclick=()=>{ state.obdobie={preset:"tyzden"}; state.tyzdneLimit=2; render(); };
+  box.appendChild(lb);
+  box.appendChild(sip(1, jeTyzden && posun>=0));
+  return box;
+}
 function viewActivities(lenMoje){
   /* Prepínanie Aktivity / Klienti je v menu — v sekcii by robilo to isté
      druhýkrát. Tu zostáva filter služby a filter týždňa. */
@@ -7749,6 +7782,7 @@ function viewActivities(lenMoje){
     "Zoradené od najnovších.", null, "",
     {tyzden:true, segChip:(state.aktSluzby||[]).length!==1, bezNadpisu:true});
   w.prepend(filtrovaciaLista({ kopirovat:true }));
+  w.prepend(mobilTyzden());          // na mobile prepínanie týždňa úplne navrchu
   return w;
 }
 
