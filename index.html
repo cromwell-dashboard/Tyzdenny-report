@@ -4490,7 +4490,7 @@ select:disabled{cursor:default; opacity:.65}
       <div class="lw-hint" id="lwHint" style="display:none">
         <div class="lw-hint-head">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-          Čo sa dialo minulý týždeň
+          <span id="lwHintHead">Posledná aktivita s klientom</span>
         </div>
         <div class="lw-hint-text" id="lwHintText"></div>
         <button type="button" class="lw-hint-btn" id="lwHintCopy">⧉ Skopírovať text do záznamu</button>
@@ -9161,6 +9161,7 @@ function buildStatic(){
     zbalSpolupracujucich();
   });
   $("#fClient").addEventListener("input",updateLastWeekHint);
+  $("#fClient").addEventListener("change",updateLastWeekHint);   // aj pri výbere klienta zo zoznamu
   $("#fSegment").addEventListener("change",updateLastWeekHint);
   $("#lwHintCopy").onclick=()=>{
     const ta=$("#fEvents"); const text=$("#lwHintText").textContent;
@@ -17871,11 +17872,17 @@ function updateLastWeekHint(){
   const clientVal=$("#fClient").value.trim();
   const segId=[...$("#fSegment").querySelectorAll("input")].find(i=>i.checked)?.value;
   if(!clientVal || !segId){ box.style.display="none"; return; }
-  const prevWeek=shiftWeek(state.week,-1);
+  /* Posledná predchádzajúca aktivita s klientom — nielen z minulého týždňa
+     (predtým sa ukázala len vtedy, a preto často „zmizla"). Najprv v tej istej
+     službe, ak tam nič nie je, v ktorejkoľvek inej. */
   const k=clientKey(clientVal);
-  const match=state.all.find(e=>e.weekId===prevWeek && e.segment===segId && clientKey(e.client)===k);
-  if(!match || !match.events){ box.style.display="none"; return; }
+  const skorsie=state.all.filter(e=>clientKey(e.client)===k && e.events && e.weekId && weekCmpDesc(e.weekId,state.week)>0)
+    .sort((a,b)=>weekCmpDesc(a.weekId,b.weekId) || (b.updatedAt||0)-(a.updatedAt||0));
+  const match = skorsie.find(e=>e.segment===segId) || skorsie[0];
+  if(!match){ box.style.display="none"; return; }
   $("#lwHintText").textContent=match.events;
+  const tyz = match.weekId===shiftWeek(state.week,-1) ? "minulý týždeň" : weekRangeLabel(match.weekId);
+  $("#lwHintHead").textContent=`Posledná aktivita · ${tyz} · ${SEG[match.segment]?.short||""} · ${uplneMeno(resolveOwnerName(match))}`;
   box.style.display="";
 }
 function closeModal(){ $("#scrim").classList.remove("open"); editing=null; pendingLeadOrigin=null; pendingFinstat=null; }
