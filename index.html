@@ -3203,6 +3203,11 @@ select:disabled{cursor:default; opacity:.65}
   background:#EDEDED; border-bottom:1px solid #DEDEDE;
 }
 .rail-top #addBtnTop{ margin:0 !important }
+/* Kopírovať záznamy — rovnaké rozmery ako Nový záznam, bledšia modrá */
+.rail #kopirujBtnTop{width:100%;margin:8px 0 0 !important;background:#E8ECFB !important;border-color:#C9D2F5 !important;
+  color:#3E56CB !important;font-weight:600}
+.rail #kopirujBtnTop:hover{background:#DCE2F9 !important;border-color:#B9C5F2 !important;color:#2F45B5 !important}
+.rail #kopirujBtnTop svg{color:#3E56CB}
 @media (max-height:900px){ .rail-top{padding:14px 17px 16px; margin-bottom:5px} }
 @media (max-height:780px){ .rail-top{padding:10px 17px 13px; margin-bottom:4px} }
 
@@ -4192,6 +4197,10 @@ select:disabled{cursor:default; opacity:.65}
         <button class="btn-primary" id="addBtnTop">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           Nový záznam
+        </button>
+        <button class="btn-primary" id="kopirujBtnTop" type="button" title="Skopírovať záznamy z niektorého z minulých týždňov">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Kopírovať záznamy
         </button>
       </div>
 
@@ -7690,6 +7699,31 @@ function zoznamObchodnikovFiltra(){
     .filter(n=>{ const w=n.split(/\s+/); return w.length>=2 && w.every(x=>x.length>2 && !x.endsWith(".")); }))]
     .sort((a,b)=>(b===ja)-(a===ja) || a.localeCompare(b,"sk"));
 }
+/* Kopírovanie záznamov: služba podľa toho, kam obchodník patrí; pri viacerých
+   (alebo pri vedení bez služby) sa najprv vyberie služba, potom týždeň. */
+function kopirujZaznamy(anchor){
+  const moje=(state.user?.segments||[]).filter(id=>SEG[id]);
+  const ponuka = moje.length ? moje : SEGMENTS.map(x=>x.id);
+  if(ponuka.length===1){ openCopyWeekPicker(ponuka[0]); return; }
+  document.querySelector(".qsp")?.remove();
+  const od=shiftWeek(state.week,-5);
+  const box=el("div","qsp fpill-pop");
+  box.innerHTML=`<div class="qsp-h">Z ktorej služby?</div>`;
+  const zoz=el("div","qsp-list");
+  ponuka.forEach(id=>{
+    const n=state.all.filter(e=>e.segment===id && e.weekId<state.week && e.weekId>=od && !e.sleeping).length;
+    const b=el("button","qsp-it",`<span class="qsp-tx">${esc(SEG[id].short)} · ${n?`${n} ${plural(n,"záznam","záznamy","záznamov")}`:"bez záznamov"}</span>`);
+    b.type="button"; b.onclick=ev=>{ ev.stopPropagation(); box.remove(); openCopyWeekPicker(id); };
+    zoz.appendChild(b);
+  });
+  box.appendChild(zoz); document.body.appendChild(box);
+  const r=anchor.getBoundingClientRect(), w=Math.max(220, r.width);
+  box.style.width=w+"px";
+  box.style.left=Math.max(10, Math.min(r.left, window.innerWidth-10-w))+"px";
+  box.style.top=(r.bottom+6)+"px";
+  setTimeout(()=>{ const zavri=ev=>{ if(!box.contains(ev.target)){ box.remove(); document.removeEventListener("mousedown",zavri); } };
+    document.addEventListener("mousedown",zavri); },0);
+}
 function filtrovaciaLista(opts){
   const bar=el("div","flista");
   const IKO_NB=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.1 6.4H21l-5.5 4 2.1 6.4L12 15.9 6.4 19.8l2.1-6.4L3 9.4h6.9z"/></svg>`;
@@ -9262,6 +9296,7 @@ function renderNow(){
   $("#importNbBtn").style.display=["admin","sef"].includes(state.user.role)?"":"none";
   $("#importResBtn").style.display=["admin","sef","lider"].includes(state.user.role)?"":"none";
   $("#clientRegistryBtn").style.display=["admin","sef"].includes(state.user.role)?"":"none";
+  { const k=$("#kopirujBtnTop"); if(k) k.onclick=ev=>{ ev.stopPropagation(); kopirujZaznamy(k); }; }
   { const b=$("#opravMenaBtn"); if(b){ b.style.display = state.user.role==="admin" ? "" : "none"; b.onclick=opravMenaVZaznamoch; } }
   { const b=$("#leadNaOslovenieBtn"); if(b){
       const n=(state.all||[]).filter(e=>e.status==="lead" && (e.isNewBusiness || kindOf(e)==="nb")).length;
@@ -10075,13 +10110,8 @@ async function importNewBusinessRows(rows){
     let zApky=false;
     if(!existing){
       const zid=String(row["ID Zappis"]||row["ID zaznam (Zappis)"]||row["ID záznam (Zappis)"]||row["Zappis ID"]||"").trim();
-      let app = zid ? state.all.find(e=>e.id===zid) : null;
-      if(!app){
-        const ic=icoKey(icoCsv), kk=clientKey(klient);
-        const kand=state.all.filter(e=>e.entrySource==="app" && e.dmisExportedAt && !e.nbSourceId && e.segment===segId
-          && ((ic && icoKey(e.leadIco||e.ico)===ic) || clientKey(e.client)===kk));
-        if(kand.length===1) app=kand[0];
-      }
+      // párovanie len podľa ID Zappis z exportu DMIS (bez odhadovania podľa klienta)
+      const app = zid ? state.all.find(e=>e.id===zid) : null;
       if(app){
         existing=app; entryId=app.id; zApky=true;
         // upravený v Zappise po exporte/poslednom importe = ručná úprava → nedotknuteľný, len si zapamätáme DMIS ID
@@ -14092,7 +14122,12 @@ const DMIS_COLS = ["Názov klienta","ICO","Krajina","Meno kontaktu","Priezvisko 
  "Adreska predp. trzba","Adreska termin followup","Adreska zodpovedny",
  "Neadreska predp. trzba","Neadreska termin followup","Neadreska zodpovedny",
  "Tlac predp. trzba","Tlac termin followup","Tlac zodpovedny",
- "Ine predp. trzba","Ine termin followup","Ine zodpovedny"];
+ "Ine predp. trzba","Ine termin followup","Ine zodpovedny",
+ // fáza a dôvod odmietnutia — rovnaké stĺpce a kódy ako v exporte aktivít z DMIS
+ "Balíky (fáza)","Balíky (dôvod odmietnutia)","Zelená pošta (fáza)","Zelená pošta (dôvod odmietnutia)",
+ "Digital (fáza)","Digital (dôvod odmietnutia)","Adresné doručovanie (fáza)","Adresné doručovanie (dôvod odmietnutia)",
+ "Neadresné doručovanie (fáza)","Neadresné doručovanie (dôvod odmietnutia)","Tlač (fáza)","Tlač (dôvod odmietnutia)",
+ "Iné (fáza)","Iné (dôvod odmietnutia)"];
 
 /* Ktoré záznamy sa exportujú: New business vytvorené v appke (oranžový odznak) */
 function dmisExportRows(onlyNew){
@@ -14116,6 +14151,14 @@ function menoPreDmis(meno){
   const naj=[...pocty.entries()].sort((a,b)=>b[1]-a[1])[0];
   return naj ? naj[0] : cele;
 }
+/* Stav zo Zappisu → kód fázy v DMIS (opak mapovania pri importe z DMIS).
+   Staršie stavy (pred DMIS fázami) sa preložia na najbližšiu fázu;
+   „Pozastavené" nemá v DMIS obdobu, preto zostane prázdne. */
+const STAV_NA_DMIS_FAZU = {
+  nb_odmietnutie:"0", nb_oslovenie:"20", nb_ponuka:"30", nb_cennik:"30", nb_vyjednavanie:"50",
+  nb_potvrdenie:"70", nb_registracia:"70", nb_zakazka:"90", nb_vyfakturovane:"100",
+  lead:"20", ponuka:"30", jednanie:"50", potvrdene:"70", bezi:"90", vyfakturovane:"100", nechce:"0", zrusene:"0",
+};
 function dmisBuildCsv(rows, sId){
   // Zadanie z DMIS má stĺpec "Sluzba baliky" malým písmenom, ale "Baliky predp. trzba"
   // veľkým — preto dve mapy, aby názvy sedeli presne.
@@ -14174,6 +14217,9 @@ function dmisBuildCsv(rows, sId){
     row[col+" termin followup"]=fup;
     row[col+" zodpovedny"]=menoPreDmis(owner);
     row["ID zaznam (Zappis)"]=e.id;
+    // fáza (a pri odmietnutí dôvod) do stĺpca služby záznamu
+    { const kol=DMIS_STLPEC_FAZY[e.segment], kod=STAV_NA_DMIS_FAZU[e.status];
+      if(kol && kod!=null){ row[kol]=kod; if(kod==="0") row[DMIS_STLPEC_DOVOD[e.segment]]=e.lossReason||""; } }
     lines.push(COLS.map(k=>q(row[k])).join(";"));
   });
   return "\uFEFF"+lines.join("\r\n");   // BOM, aby Excel správne zobrazil diakritiku
