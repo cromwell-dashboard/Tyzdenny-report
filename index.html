@@ -4110,10 +4110,49 @@ select:disabled{cursor:default; opacity:.65}
 .rail .rf-svc-b:hover{background:rgba(62,86,203,.08) !important}
 /* Nový a Kopírovať vedľa seba, rovnako veľké */
 .rail .rail-top-2{display:flex;gap:8px}
-.rail .rail-top-2 #addBtnTop,.rail .rail-top-2 #kopirujBtnTop{flex:1 1 0;width:auto;min-width:0;margin:0 !important;justify-content:center;white-space:nowrap}
+.rail .rail-top-2 #addBtnTop,.rail .rail-top-2 #kopirujBtnTop{flex:1 1 0;width:auto;min-width:0;margin:0 !important;justify-content:center;white-space:nowrap;
+  font-size:12.5px;padding-left:8px !important;padding-right:8px !important;gap:5px}
+.rail .rail-top-2 #addBtnTop{flex:1.15 1 0}
+.rail .rail-top-2 svg{width:14px;height:14px;flex:0 0 auto}
 .rail .rf-tyz-l b{display:inline-flex;align-items:center;gap:6px}
 .rail .rf-tabs .rf-kal{align-self:flex-start;margin:-1px -6px 0 0;color:#8A8F99}
 .rail .rf-tabs .rf-kal:hover,.rail .rf-tabs .rf-kal.on{color:#3E56CB}
+/* Aktivity — sivá lišta + dve samostatné tlačidlá rovnakej výšky */
+.flista-rad{display:flex;align-items:stretch;gap:8px;margin:0 0 14px}
+.flista-rad>.flista{flex:1 1 auto;min-width:0;margin:0}
+.flista-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;padding:0 16px;border-radius:12px;border:1px solid transparent;
+  font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.flista-btn svg{width:16px;height:16px}
+.flista-btn.novy{background:#3E56CB;color:#fff}
+.flista-btn.novy:hover{background:#3347B0}
+.flista-btn.kop{background:#E8ECFB;border-color:#C9D2F5;color:#3E56CB}
+.flista-btn.kop:hover{background:#DCE2F9}
+@media (max-width:900px){ .flista-btn span{display:none} .flista-btn{padding:0 12px} }
+/* Tenšia filtračná lišta (Aktivity, Klienti) — tlačidlá vedľa nej sú tak nižšie */
+.flista:not(.res-flista){padding:2px 6px;border-radius:10px}
+.flista:not(.res-flista) .flista-chip,.flista:not(.res-flista) .fpill{height:28px;padding:0 10px;font-size:12.5px;gap:6px}
+.flista:not(.res-flista) .flista-chip svg,.flista:not(.res-flista) .fpill svg{width:14px;height:14px}
+.flista:not(.res-flista) .flista-sep{height:15px}
+.flista-btn{padding:0 13px;border-radius:10px;font-size:12.5px;gap:6px}
+.flista-btn svg{width:14px;height:14px}
+/* Jednotná výška tlačidiel = výška tlačidiel pri filtračnej lište (32 px).
+   Len na počítači — na mobile zostávajú väčšie kvôli dotyku. */
+@media (min-width:901px){
+  .btn,.btn-primary,.rail .btn-primary,.rail #addBtnTop,.rail #kopirujBtnTop{
+    height:32px;min-height:0 !important;padding-top:0 !important;padding-bottom:0 !important;
+    display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;line-height:1}
+  .rail .btn-primary:not(#addBtnTop):not(#kopirujBtnTop){width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
+  .svc-bar .svc-f{height:32px}
+  .ta-btn{height:32px !important;min-height:0 !important;max-height:32px}
+  #logoutBtn{height:32px;width:32px}
+  .modal-zaznam{--bh:32px}
+  /* ľavé menu — položky, hľadanie aj zoznamy filtrov v rovnakej výške */
+  .rail .navitem{height:32px !important;min-height:0 !important;padding-top:0 !important;padding-bottom:0 !important;box-sizing:border-box;flex:0 0 auto !important}
+  .rail>*{flex-shrink:0}
+  .rail .rf-search{height:32px !important;min-height:0}
+  .rail .rf-search input{height:30px}
+  .rail .rf-db{height:30px !important}
+}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -4219,7 +4258,7 @@ select:disabled{cursor:default; opacity:.65}
       <div class="rail-top rail-top-2">
         <button class="btn-primary" id="addBtnTop" title="Nový záznam">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          Nový
+          Nový záznam
         </button>
         <button class="btn-primary" id="kopirujBtnTop" type="button" title="Kopírovať záznamy z niektorého z minulých týždňov">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -7777,33 +7816,23 @@ function filtrovaciaLista(opts){
     z.onclick=()=>{ state.filterRecType=""; state.filterSalesperson=""; state.filterDb=""; render(); };
     bar.appendChild(z);
   }
-  /* Kopírovať záznamy z minulých týždňov — v Aktivitách. Pri jednej zvolenej
-     službe rovno otvorí výber týždňa, inak sa najprv vyberie služba. */
-  if(opts?.kopirovat){
-    const ICO_COPY=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
-    /* Služba sa berie podľa toho, kam obchodník patrí (jeho služby v profile),
-       ako to bolo pri pôvodnom tlačidle v sekcii služby. Vedenie bez vlastných
-       služieb si vyberie z ponuky. Potom nasleduje výber týždňa. */
-    const moje=(state.user?.segments||[]).filter(id=>SEG[id]);
-    const ponuka = moje.length ? moje : SEGMENTS.map(x=>x.id);
-    let kb;
-    if(ponuka.length===1){
-      kb=el("button","fpill flista-pill flista-kop", `${ICO_COPY}<span>Kopírovať záznamy</span>`);
-      kb.type="button"; kb.title=`Skopírovať záznamy služby ${SEG[ponuka[0]]?.short||""} — vyber týždeň`;
-      kb.onclick=()=>openCopyWeekPicker(ponuka[0]);
-    } else {
-      const od=shiftWeek(state.week,-5);
-      const sluzby=ponuka.map(id=>({ id, n:state.all.filter(e=>e.segment===id && e.weekId<state.week && e.weekId>=od && !e.sleeping).length }));
-      kb=fpill(ICO_COPY, "Kopírovať záznamy", false,
-        sluzby.map(x=>[x.id, `${SEG[x.id].short}${x.n?` · ${x.n} ${plural(x.n,"záznam","záznamy","záznamov")}`:" · bez záznamov"}`, false]),
-        v=>{ if(v) openCopyWeekPicker(v); }, "Z ktorej služby?", "flista-pill flista-kop");
-    }
-    bar.appendChild(kb);
-  }
+
   // čistá lišta — položky oddelené zvislou čiarou ako horná lišta služieb
   [...bar.querySelectorAll(":scope > .flista-sep")].forEach(x=>x.remove());
   const deti=[...bar.children];
-  deti.slice(1).forEach(d=>{ if(!d.classList.contains("flista-zrus") && !d.classList.contains("flista-kop")) bar.insertBefore(el("span","flista-sep"), d); });
+  deti.slice(1).forEach(d=>{ if(!d.classList.contains("flista-zrus")) bar.insertBefore(el("span","flista-sep"), d); });
+  /* V Aktivitách: vedľa sivej lišty dve samostatné tlačidlá rovnakej výšky. */
+  if(opts?.kopirovat){
+    const rad=el("div","flista-rad");
+    rad.appendChild(bar);
+    const nov=el("button","flista-btn novy",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Nový záznam</span>`);
+    nov.type="button"; nov.onclick=()=>$("#addBtnTop")?.click();
+    const kop=el("button","flista-btn kop",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Kopírovať záznamy</span>`);
+    kop.type="button"; kop.title="Kopírovať záznamy z niektorého z minulých týždňov";
+    kop.onclick=ev=>{ ev.stopPropagation(); kopirujZaznamy(kop); };
+    rad.appendChild(nov); rad.appendChild(kop);
+    return rad;
+  }
   return bar;
 }
 
