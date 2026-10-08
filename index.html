@@ -4153,6 +4153,15 @@ select:disabled{cursor:default; opacity:.65}
   .rail .rf-search input{height:30px}
   .rail .rf-db{height:30px !important}
 }
+/* Jednorazový oznam */
+.oznam-modal .akt-acts{justify-content:flex-end}
+.ozn-how{display:flex;gap:12px;align-items:flex-start;background:#F6F7FA;border-radius:12px;padding:12px 14px;margin:0 0 12px}
+.ozn-how p,.ozn-tad p{margin:0;font-size:13.5px;line-height:1.6;color:#3A4150}
+.ozn-how b,.ozn-tad b{color:#1F2430}
+.ozn-tad{display:flex;gap:12px;align-items:flex-start;border:1px solid #CDEBD9;background:#F2FAF5;border-radius:12px;padding:12px 14px;margin:0 0 18px}
+.ozn-av{flex:0 0 34px;height:34px;border-radius:50%;background:#1F9D61;color:#fff;display:grid;place-items:center;font-weight:700;font-size:12.5px}
+.akt-btn.ozn-fb{background:#1F9D61;border-color:#1F9D61;color:#fff}
+.akt-btn.ozn-fb:hover{background:#178452;border-color:#178452}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -7066,10 +7075,16 @@ function leadWebLinks(l){
    Ak ho poznáme, obchodník ho nemusí zadávať znova a pole sa vôbec nezobrazí. */
 function knownIcoFor(name){
   const k=clientKey(name); if(!k) return "";
-  const e=state.all.find(x=>clientKey(x.client)===k && (x.leadIco||x.ico));
-  if(e) return String(e.leadIco||e.ico).replace(/\D/g,"");
-  const l=state.leads.find(x=>clientKey(x.company)===k && x.ico);
-  return l?String(l.ico).replace(/\D/g,""):"";
+  /* Len platné IČO (aspoň 6 číslic, nie samé nuly). Predtým sa vzalo prvé
+     vyplnené — aj „0" či iný zápis z importu — a správne napísané IČO sa
+     potom odmietlo s hláškou, že klienta nepoznáme. */
+  const platne=v=>{ const d=String(v||"").replace(/\D/g,""); return d.length>=6 && icoKey(d) ? d : ""; };
+  const pocty=new Map();
+  state.all.forEach(x=>{ if(clientKey(x.client)!==k) return; const d=platne(x.leadIco||x.ico); if(d) pocty.set(d,(pocty.get(d)||0)+1); });
+  const naj=[...pocty.entries()].sort((a,b)=>b[1]-a[1])[0];
+  if(naj) return naj[0];
+  const l=(state.leads||[]).find(x=>clientKey(x.company)===k && platne(x.ico));
+  return l?platne(l.ico):"";
 }
 /* Hľadanie firmy v naimportovaných databázach.
    Databázy sa načítavajú až na požiadanie, preto na ne chvíľu počkáme —
@@ -9501,6 +9516,7 @@ function renderNow(){
   setTimeout(skontrolujFakturacnuUlohu, 3000);
   setTimeout(novinkyPopup, 700);                       // uvítacie okno, každému raz
   setTimeout(aktualizaciaPopup, 900);                  // okno „Vylepšenie podľa vašich pripomienok"
+  setTimeout(oznamPopup, 1500);                        // jednorazový oznam (Zálohová FA)
   if(state.view==="meetings") state.view="dashboard";   // sekcia porád už v UI nie je
   if(state.activeClient) c.appendChild(viewClientDetail());
   else if(state.view==="dashboard") c.appendChild(viewDashboard());
@@ -14753,6 +14769,43 @@ function aktualizaciaPopup(){
   setTimeout(()=>scrim.querySelector('[data-act="ok"]')?.focus(), 40);
 }
 
+/* ---------------------------------------------------------------- JEDNORAZOVÝ OZNAM
+   Každému sa ukáže len raz — zapamätá sa v profile používateľa (pole
+   oznamVideny) aj v prehliadači. Nový oznam = nové OZNAM_ID. */
+const OZNAM_ID = "zalohova-fa-2026-10";
+const OZNAM_DO = "2026-11-30";
+let _oznamZobrazeny=false;
+function oznamPopup(){
+  if(_oznamZobrazeny || !state.user) return;
+  if(Date.now() > Date.parse(OZNAM_DO+"T23:59:59")) return;
+  let lokalne=""; try{ lokalne=localStorage.getItem("zappisOznam")||""; }catch(e){}
+  if(state.user.oznamVideny===OZNAM_ID || lokalne===OZNAM_ID) return;
+  if(document.querySelector(".scrim.open")){ setTimeout(oznamPopup, 4000); return; }   // neprekrývame iné okno
+  _oznamZobrazeny=true;
+  const scrim=el("div","scrim open akt-scrim"); scrim.style.zIndex="97";
+  scrim.innerHTML=`<div class="akt-modal oznam-modal" role="dialog" aria-modal="true" aria-labelledby="oznNadpis">
+    <div class="akt-kick">Novinka v cenových ponukách</div>
+    <h2 id="oznNadpis">Automatický podklad pre vystavenie Zálohovej FA</h2>
+    <p class="akt-lead">V cenovej ponuke <b>CRW – Tlač a poštové služby</b> pribudlo v časti <b>Neadresné doručovanie</b> tlačidlo <b>Zálohová FA</b>.</p>
+    <div class="ozn-how"><span class="akt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></span>
+      <p><b>Čo robí?</b> Údaje z cenovej ponuky prenesie do podkladu pre ekonomické oddelenie, ktoré vám podľa neho vystaví ostrú zálohovú faktúru. Položky v podklade môžete pred odoslaním upraviť podľa potreby.</p></div>
+    <div class="ozn-tad"><span class="ozn-av">TB</span>
+      <p>Toto zlepšenie vymyslel <b>Tadeáš Bílek</b> — ďakujeme! Máte aj vy nápad, čo by vám uľahčilo prácu? Napíšte mi ho cez <b>Pridať postreh</b> a rada ho do Zappisu doplním.</p></div>
+    <div class="akt-acts">
+      <button type="button" class="akt-btn ozn-fb" data-act="fb">Pridať postreh</button>
+      <button type="button" class="akt-btn solid" data-act="ok">Rozumiem</button>
+    </div></div>`;
+  const zavri=()=>{ scrim.remove(); document.removeEventListener("keydown",esc_);
+    try{ localStorage.setItem("zappisOznam", OZNAM_ID); }catch(e){}
+    zapamatajAktualizaciu({ oznamVideny:OZNAM_ID }); };
+  function esc_(ev){ if(ev.key==="Escape") zavri(); }
+  scrim.querySelector('[data-act="ok"]').onclick=zavri;
+  scrim.querySelector('[data-act="fb"]').onclick=()=>{ zavri(); setTimeout(()=>openFeedback(), 60); };
+  document.addEventListener("keydown", esc_);
+  document.body.appendChild(scrim);
+  setTimeout(()=>scrim.querySelector('[data-act="ok"]')?.focus(), 40);
+}
+
 /* Automatická úloha na doplnenie fakturácie.
    ID je odvodené od používateľa a obdobia, takže sa nemôže zdvojiť.
    Vzniká len pre prihláseného človeka a len za mesiac, ktorý je práve na rade.
@@ -17987,7 +18040,9 @@ async function saveFromModalInner(){
   const alreadyKnown = vnutorne ? "" : knownIcoFor(client);
   /* Pri zápise z databázy sa IČO NEPREBERÁ podľa mena klienta — zhoda názvov
      nie je dôkaz, že ide o tú istú firmu. Musí byť načítané alebo napísané. */
-  const icoVal = vnutorne ? "" : (pendingLeadOrigin ? poleIco : (alreadyKnown || poleIco));
+  // napísané platné IČO má prednosť; známe IČO klienta sa použije, len keď pole ostane prázdne
+  const poleOk = poleIco.length>=6 && !!icoKey(poleIco);
+  const icoVal = vnutorne ? "" : (pendingLeadOrigin ? poleIco : (poleOk ? poleIco : (alreadyKnown || poleIco)));
   const icoPrazdne = !icoVal || icoVal.length < 6 || !icoKey(icoVal);
   const jeOsoba = $("#fOsoba")?.checked;
   if(!vnutorne && !jeOsoba && icoPrazdne){
@@ -18020,7 +18075,10 @@ async function saveFromModalInner(){
     /* Overenie netreba, keď IČO už poznáme z iných záznamov toho istého
        klienta — appka ho tam doplnila sama a raz overené už bolo. */
     const znameKlienta = !!alreadyKnown && icoKey(alreadyKnown)===icoKey(icoVal);
-    const overene = jeOsoba || !!pendingFinstat || kraj!=="SK" || znameKlienta || (!zmenene && !!povodne);
+    // IČO, ktoré už v Zappise figuruje pri inom zázname, je už raz overené
+    const ikk=icoKey(icoVal);
+    const znameVZappise = !!ikk && state.all.some(x=>icoKey(x.leadIco||x.ico)===ikk);
+    const overene = jeOsoba || !!pendingFinstat || kraj!=="SK" || znameKlienta || znameVZappise || (!zmenene && !!povodne);
     if(!overene){
       $("#fIcoField").style.display="";
       $("#fIco").focus(); $("#fIco").style.borderColor="var(--red)";
