@@ -7869,7 +7869,7 @@ function mobilTyzden(){
              : `<b>${esc(obdobiePopis())}</b><span>klikni pre tento týždeň</span>`);
   lb.type="button"; lb.onclick=()=>{ state.obdobie={preset:"tyzden"}; state.tyzdneLimit=2; render(); };
   box.appendChild(lb);
-  box.appendChild(sip(1, jeTyzden && posun>=0));
+  box.appendChild(sip(1, jeTyzden && posun>=buduciPosunMax()));
   return box;
 }
 function viewActivities(lenMoje){
@@ -8017,7 +8017,8 @@ function vykresliRailFiltre(){
       lb.title = posun ? "Späť na tento týždeň" : "Tento týždeň";
       lb.onclick=()=>{ state.obdobie={preset:"tyzden"}; state.tyzdneLimit=2; render(); };
       tz.appendChild(lb);
-      tz.appendChild(sip(1, posun>=0, posun>=0 ? "Budúce týždne ešte nie sú" : "Nasledujúci týždeň"));
+      const maxP=buduciPosunMax();
+      tz.appendChild(sip(1, posun>=maxP, posun>=maxP ? "Ďalšie týždne zatiaľ nemajú záznamy" : "Nasledujúci týždeň"));
       box.appendChild(tz);
     }
 
@@ -12941,6 +12942,14 @@ const OBD_PRESETY = [
   ["vsetko",  "Všetko"],
 ];
 /* Hranice obdobia ako dátumy (od, do). null = bez obmedzenia. */
+/* Koľko týždňov dopredu sa dá posunúť — podľa najvzdialenejšieho záznamu
+   s budúcim týždňom (napr. plánovaná distribúcia), najviac 12. */
+function buduciPosunMax(){
+  let n=0;
+  (state.all||[]).forEach(e=>{ if(e.weekId && weekCmpDesc(CURRENT_WEEK, e.weekId)>0){
+    for(let i=1;i<=12;i++){ if(shiftWeek(CURRENT_WEEK,i)===e.weekId){ if(i>n) n=i; break; } } } });
+  return n;
+}
 /* Týždeň zvolený šípkami v ľavom menu (posun 0 = tento týždeň, -1 = minulý…). */
 const zvolenyTyzden = () => {
   const o=state.obdobie||{};
@@ -12957,8 +12966,10 @@ function obdobieHranice(){
   switch(o.preset||"tyzden"){
     case "tyzden": { const {year,week}=parseWeekId(zvolenyTyzden());
       const pon=mondayOf(year,week);
-      if(!(o.posun<0)) return { od:isoD(pon), do:null };
-      const ned=new Date(pon); ned.setUTCDate(pon.getUTCDate()+6);   // starší týždeň — len on
+      /* Len zvolený týždeň — aj pri tomto týždni s koncom v nedeľu. Predtým
+         bol koniec otvorený a záznamy s budúcim týždňom (napr. plánovaná
+         distribúcia) sa ukázali navrchu, kým aktuálny týždeň zostal schovaný. */
+      const ned=new Date(pon); ned.setUTCDate(pon.getUTCDate()+6);
       return { od:isoD(pon), do:isoD(ned) }; }
     case "m1":     return { od:pred(1,"m"), do:null };
     case "m3":     return { od:pred(3,"m"), do:null };
@@ -12996,7 +13007,7 @@ function obdobiePopis(){
   const o=state.obdobie||{};
   if(o.tyzdnov) return `Posledné ${o.tyzdnov} ${plural(o.tyzdnov,"týždeň","týždne","týždňov")}`;
   if(!o.od && !o.do && (o.preset||"tyzden")==="tyzden" && o.posun)
-    return o.posun===-1 ? "Minulý týždeň" : `Týždeň ${parseWeekId(zvolenyTyzden()).week}`;
+    return o.posun===-1 ? "Minulý týždeň" : o.posun===1 ? "Budúci týždeň" : `Týždeň ${parseWeekId(zvolenyTyzden()).week}`;
   if(o.od || o.do){
     const f=d=>{ if(!d) return ""; const [r,m,dd]=d.split("-"); return `${+dd}. ${+m}. ${r}`; };
     return o.od && o.do ? `${f(o.od)} – ${f(o.do)}` : (o.od ? `od ${f(o.od)}` : `do ${f(o.do)}`);
@@ -15765,7 +15776,7 @@ function viewClients(lenMoji){
     });
     wrap.appendChild(prep);
   }
-  wrap.appendChild(filtrovaciaLista());
+  wrap.appendChild(filtrovaciaLista({ kopirovat:true }));   // aj v Klientoch: + Nový záznam a Kopírovať záznamy
   if(len12){
     const hr=new Date(); hr.setMonth(hr.getMonth()-12);
     const hranica=hr.toISOString().slice(0,10);
