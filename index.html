@@ -4281,10 +4281,6 @@ select:disabled{cursor:default; opacity:.65}
       <div id="railFiltre"></div>
 
       <div class="grp">Prehľad</div>
-      <button class="navitem" data-view="dashboard">
-        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>
-        <span class="lbl">Prehľad</span>
-      </button>
       <button class="navitem" data-view="activities">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg></span>
         <span class="lbl">Aktivity</span><span class="ct" id="actCount">0</span>
@@ -4321,6 +4317,10 @@ select:disabled{cursor:default; opacity:.65}
       <button class="navitem" data-view="feedback" id="navFeedback" style="display:none">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
         <span class="lbl">Postrehy</span><span class="ct fb-ct" data-cnt="feedback">0</span>
+      </button>
+      <button class="navitem" data-view="dashboard">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>
+        <span class="lbl">Prehľad</span>
       </button>
       <button class="navitem navitem-calc" data-view="calculators">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="8" y1="18" x2="12" y2="18"/></svg></span>
@@ -5116,7 +5116,7 @@ function nbIcon(size=14){
 // "Skupina hotovosti" pre týždenný checklist — Adresné a Neadresné sa počítajú spolu
 // (rovnakí obchodníci pracujú na oboch), ostatné služby majú vlastnú samostatnú skupinu.
 const COMPLETION_GROUP = { baliky:"baliky", digital:"digital", tlac:"tlac", ad:"postove", nad:"postove", zelena:"zelena", ine:"ine" };
-const COMPLETION_GROUP_LABEL = { baliky:"Balíky", digital:"Digitálne služby", tlac:"Tlač", postove:"Poštové služby (adresné + neadresné)", zelena:"Zelená pošta", ine:"Iné" };
+const COMPLETION_GROUP_LABEL = { adr_tlac:"Adresné, neadresné a tlač", baliky:"Balíky", digital:"Digitálne služby", tlac:"Tlač", postove:"Poštové služby (adresné + neadresné)", zelena:"Zelená pošta", ine:"Iné" };
 // Nájde e-mail(y) lídra, ktorý má na starosti daný segment (napr. "ad"/"nad" → líder poštových služieb)
 function liderEmailsForSegment(segId){
   return Object.entries(LIDER_EMAILS).filter(([,segs])=>segs.includes(segId)).map(([email])=>email);
@@ -5132,7 +5132,24 @@ const GROUP_EXPECTED_NAMES = {
   ine:     [],   // Iné nemá pevne pridelených obchodníkov — checklist ju nevyžaduje
 };
 function assignedNamesForGroup(group){
+  const sk=HOTOVO_SKUPINY.find(g=>g.id===group);
+  if(sk) return sk.clenovia.slice();
   return GROUP_EXPECTED_NAMES[group] || [];
+}
+/* Skupiny pre lištu „Hotovo" v Aktivitách. Člen skupiny (alebo jej líder)
+   vidí lištu vždy — bez filtra služby — s menami svojej skupiny.
+   Ďalšie skupiny sa doplnia sem. */
+const HOTOVO_SKUPINY = [
+  { id:"adr_tlac", nazov:"Adresné, neadresné a tlač — Cromwell a KOLOS", sluzby:["ad","nad","tlac"],
+    clenovia:["Zuzana Dávidová","Peter Moravčík","Simona Bucseková","Dagmar Ševcechová","Alexandra Uhláriková",
+              "Veronika Bajúsová","Peter Papaj","Miloslav Donar","Dagmar Stanček","Juraj Praženica"],
+    lidri:["Katarína Chmelová"] },
+];
+function hotovoSkupinyPreMna(){
+  const ja=normalizeForCompare(state.user?.name||"");
+  const role=state.user?.role;
+  if(role==="admin" || role==="sef") return HOTOVO_SKUPINY.slice();      // vedenie vidí všetky skupiny
+  return HOTOVO_SKUPINY.filter(g=>[...g.clenovia, ...g.lidri].some(n=>normalizeForCompare(n)===ja));
 }
 // Admin/líder označí (alebo odznačí) konkrétneho obchodníka ako hotového za daný týždeň+skupinu.
 async function markWeeklyDoneFor(group, targetKey, targetName, currentlyDone){
@@ -5852,13 +5869,12 @@ function warningBox(e){
    Záznamy importované z DMIS (New Business) sa do tohto pravidla nepočítajú. */
 function editedAfterDone(e){
   if(!e || e.isNewBusiness || !e.updatedAt) return null;
-  const group=COMPLETION_GROUP[e.segment];
-  if(!group) return null;
-  const wd=state.weeklyDone.find(d=>d.weekId===e.weekId && d.group===group);
-  if(!wd || !wd.entries || !wd.entries.length) return null;
+  const skupiny=[COMPLETION_GROUP[e.segment], ...HOTOVO_SKUPINY.filter(g=>g.sluzby.includes(e.segment)).map(g=>g.id)].filter(Boolean);
+  if(!skupiny.length) return null;
   const ownerName=resolveOwnerName(e);
   // obchodník sa mohol označiť sám (key = jeho e-mail) alebo ho označil admin/líder (key = "named_…")
-  const hit=wd.entries.find(x=>(x.key && x.key===e.ownerKey) || x.name===ownerName);
+  const hit=state.weeklyDone.filter(d=>d.weekId===e.weekId && skupiny.includes(d.group))
+    .flatMap(d=>d.entries||[]).find(x=>(x.key && x.key===e.ownerKey) || x.name===ownerName);
   if(!hit || !hit.at) return null;
   return e.updatedAt > hit.at ? hit.at : null;
 }
@@ -16370,8 +16386,8 @@ function viewServicesList(){
 }
 
 /* ---------------------------------------------------------------- SEGMENT / LIST */
-function weeklyDoneBar(seg){
-  const group=COMPLETION_GROUP[seg.id];
+function weeklyDoneBar(seg){ return weeklyDoneBarGroup(COMPLETION_GROUP[seg.id]); }
+function weeklyDoneBarGroup(group){
   const groupLabel=COMPLETION_GROUP_LABEL[group];
   const docEntry=state.weeklyDone.find(d=>d.weekId===state.week && d.group===group);
   const entries=docEntry?.entries||[];
@@ -16412,7 +16428,10 @@ function weeklyDoneBar(seg){
   const assignedNames=assignedNamesForGroup(group);
   const doneOrdered=entries.slice().sort((a,b)=>a.at-b.at);
   const pendingOrdered=assignedNames.filter(n=>!doneNames.has(n)).sort((a,b)=>a.localeCompare(b,"sk"));
-  const canManage = state.user.role==="admin" || state.user.role==="lider" || state.user.role==="sef";
+  const sk=HOTOVO_SKUPINY.find(g=>g.id===group);
+  const jaN=normalizeForCompare(state.user.name||"");
+  const canManage = state.user.role==="admin" || state.user.role==="sef"
+    || (sk ? sk.lidri.some(n=>normalizeForCompare(n)===jaN) : state.user.role==="lider");
 
   const namesWrap=el("div","wd-names");
   doneOrdered.forEach(e=>{
@@ -16433,7 +16452,8 @@ function weeklyDoneBar(seg){
   });
   if(!doneOrdered.length && !pendingOrdered.length){ namesWrap.innerHTML=`<span class="wd-empty">Zatiaľ nikto neoznačil hotovo</span>`; }
   row.appendChild(namesWrap);
-  row.appendChild(toggleBtn);   // moje označenie vpravo, oddelene od mien
+  // vlastné tlačidlo Hotovo len pre člena skupiny (líder a vedenie označujú kliknutím na meno)
+  if(!sk || sk.clenovia.some(n=>normalizeForCompare(n)===jaN)) row.appendChild(toggleBtn);
 
   bar.appendChild(row);
   return bar;
@@ -16498,7 +16518,11 @@ function viewList(list,title,sub,seg,logoHtml,opts){
      sa preto objaví, až keď si človek vyberie konkrétnu službu v páse. */
   const segPreHotovo = seg || ((state.aktSluzby||[]).length===1 ? SEG[state.aktSluzby[0]] : null);
   const jeAktualny = (state.obdobie?.preset||"tyzden")==="tyzden" && !state.obdobie?.od;
-  if(segPreHotovo && jeAktualny) wrap.appendChild(weeklyDoneBar(segPreHotovo));
+  const mojeSkupiny = (!seg && state.view!=="internal") ? hotovoSkupinyPreMna() : [];
+  if(mojeSkupiny.length && jeAktualny){
+    // člen skupiny vidí lištu Hotovo stále, s menami svojej skupiny
+    mojeSkupiny.forEach(g=>wrap.appendChild(weeklyDoneBarGroup(g.id)));
+  } else if(segPreHotovo && jeAktualny) wrap.appendChild(weeklyDoneBar(segPreHotovo));
 
   // Definície pred AI bannerom
   const clients=clientIndex();
