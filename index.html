@@ -4165,6 +4165,7 @@ select:disabled{cursor:default; opacity:.65}
 /* Výsledky NB — neaktívna fajka pri prípadoch, ktoré daný človek označiť nemôže */
 .rs-ico.ok.zak{opacity:.35;cursor:not-allowed;filter:grayscale(1)}
 .rs-ico.ok.zak:hover{background:none}
+.wd-wk{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -5142,7 +5143,7 @@ function assignedNamesForGroup(group){
 const HOTOVO_SKUPINY = [
   { id:"adr_tlac", nazov:"Adresné, neadresné a tlač — Cromwell a KOLOS", sluzby:["ad","nad","tlac"],
     clenovia:["Zuzana Dávidová","Peter Moravčík","Simona Bucseková","Dagmar Ševcechová","Alexandra Uhláriková",
-              "Veronika Bajúsová","Peter Papaj","Miloslav Donar","Dagmar Stanček","Juraj Praženica"],
+              "Veronika Bajúsová","Peter Papaj","Miloslav Donar","Dagmar Stanček","Juraj Praženica","Tadeáš Bílek"],
     lidri:["Katarína Chmelová"] },
 ];
 function hotovoSkupinyPreMna(){
@@ -5152,16 +5153,17 @@ function hotovoSkupinyPreMna(){
   return HOTOVO_SKUPINY.filter(g=>[...g.clenovia, ...g.lidri].some(n=>normalizeForCompare(n)===ja));
 }
 // Admin/líder označí (alebo odznačí) konkrétneho obchodníka ako hotového za daný týždeň+skupinu.
-async function markWeeklyDoneFor(group, targetKey, targetName, currentlyDone){
-  const id=`${state.week}__${group}`;
+async function markWeeklyDoneFor(wk, group, targetKey, targetName, currentlyDone){
+  wk = wk || state.week;
+  const id=`${wk}__${group}`;
   let doc0=state.weeklyDone.find(d=>d.id===id);
-  if(!doc0){ doc0={id, weekId:state.week, group, entries:[]}; state.weeklyDone=[...state.weeklyDone, doc0]; }
+  if(!doc0){ doc0={id, weekId:wk, group, entries:[]}; state.weeklyDone=[...state.weeklyDone, doc0]; }
   // optimistic update
   if(currentlyDone){ doc0.entries=doc0.entries.filter(e=>e.key!==targetKey); }
   else { doc0.entries=[...doc0.entries, {key:targetKey, name:targetName, at:Date.now()}]; }
   render();
   try{
-    await backend.toggleWeeklyDone(state.week, group, targetKey, targetName);
+    await backend.toggleWeeklyDone(wk, group, targetKey, targetName);
   }catch(err){
     console.error("Zmena Hotovo zlyhala:", err);
     toast("⚠ Nepodarilo sa uložiť: "+(err.message||err.code||"neznáma chyba"));
@@ -16388,12 +16390,16 @@ function viewServicesList(){
 /* ---------------------------------------------------------------- SEGMENT / LIST */
 function weeklyDoneBar(seg){ return weeklyDoneBarGroup(COMPLETION_GROUP[seg.id]); }
 function weeklyDoneBarGroup(group){
+  /* Každý týždeň má vlastné Hotovo — lišta patrí k týždňu, ktorý je práve
+     zobrazený (šípkami sa dá vrátiť aj k minulým týždňom). */
+  const wk = zvolenyTyzden();
   const groupLabel=COMPLETION_GROUP_LABEL[group];
-  const docEntry=state.weeklyDone.find(d=>d.weekId===state.week && d.group===group);
+  const docEntry=state.weeklyDone.find(d=>d.weekId===wk && d.group===group);
   const entries=docEntry?.entries||[];
   const isDone=entries.some(e=>e.key===state.user.key);
 
   const bar=el("div","wd-bar");
+  if(wk!==CURRENT_WEEK) bar.appendChild(el("div","wd-wk",`Hotovo za ${esc(weekRangeLabel(wk))}`));
   const row=el("div","wd-row");
 
   const toggleBtn=el("button", "wd-toggle"+(isDone?" on":""),
@@ -16404,14 +16410,14 @@ function weeklyDoneBarGroup(group){
     toggleBtn.disabled=true;
     // Okamžitá lokálna zmena (optimistic update) — tlačidlo zareaguje hneď,
     // aj kým sa zápis do databázy ešte len posiela.
-    const id=`${state.week}__${group}`;
+    const id=`${wk}__${group}`;
     let doc0=state.weeklyDone.find(d=>d.id===id);
     const wasIn = doc0?.entries?.some(e=>e.key===state.user.key);
-    if(!doc0){ doc0={id, weekId:state.week, group, entries:[]}; state.weeklyDone=[...state.weeklyDone, doc0]; }
+    if(!doc0){ doc0={id, weekId:wk, group, entries:[]}; state.weeklyDone=[...state.weeklyDone, doc0]; }
     doc0.entries = wasIn ? doc0.entries.filter(e=>e.key!==state.user.key) : [...doc0.entries, {key:state.user.key, name:state.user.name, at:Date.now()}];
     render();
     try{
-      await backend.toggleWeeklyDone(state.week, group, state.user.key, state.user.name);
+      await backend.toggleWeeklyDone(wk, group, state.user.key, state.user.name);
     }catch(err){
       console.error("Hotovo sa nepodarilo uložiť:", err);
       toast("⚠ Nepodarilo sa uložiť do databázy: "+(err.message||err.code||"neznáma chyba"));
@@ -16438,7 +16444,7 @@ function weeklyDoneBarGroup(group){
     const chip=el("span","wd-chip done"+(canManage?" clickable":""),`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${esc(e.name)}`);
     if(canManage){
       chip.title="Klikni pre zrušenie označenia (späť na nesplnené)";
-      chip.onclick=()=>markWeeklyDoneFor(group, e.key||("named_"+clientKey(e.name)), e.name, true);
+      chip.onclick=()=>markWeeklyDoneFor(wk, group, e.key||("named_"+clientKey(e.name)), e.name, true);
     }
     namesWrap.appendChild(chip);
   });
@@ -16446,7 +16452,7 @@ function weeklyDoneBarGroup(group){
     const chip=el("span","wd-chip pending"+(canManage?" clickable":""),`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>${esc(n)}`);
     if(canManage){
       chip.title="Klikni pre označenie ako hotovo za tohto obchodníka";
-      chip.onclick=()=>markWeeklyDoneFor(group, "named_"+clientKey(n), n, false);
+      chip.onclick=()=>markWeeklyDoneFor(wk, group, "named_"+clientKey(n), n, false);
     }
     namesWrap.appendChild(chip);
   });
