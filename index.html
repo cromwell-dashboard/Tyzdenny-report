@@ -11502,6 +11502,42 @@ async function leadNaOslovenie(){
   }catch(err){ toast("⚠ Nepodarilo sa uložiť: "+(err?.message||err?.code||"neznáma chyba")); }
 }
 
+/* ---------------------------------------------------------------- HROMADNÉ SCHVÁLENIE
+   Admin: potvrdí čísla a schváli odmeny všetkých prípadov za mesiace do
+   zvoleného mesiaca vrátane. Už schválené so správnou sumou sa preskočia;
+   odmeny, ktoré sa nedajú vypočítať, zostanú neschválené a nahlásia sa. */
+async function hromadneSchvalenie(btn){
+  const pred=pridajMesiace(terajsiMesiac(),-2);
+  const doMes=(prompt("Schváliť všetky odmeny do mesiaca vrátane (RRRR-MM):", pred)||"").trim();
+  if(!/^\d{4}-\d{2}$/.test(doMes)) return;
+  const ciele=[];
+  (state.opportunities||[]).forEach(o=>{
+    resultsPre(o.id).filter(r=>r.obdobie<=doMes && (r.trzba!=null || r.bezFakturacie)).forEach(r=>ciele.push({o,r}));
+  });
+  const naSchv=ciele.filter(({o,r})=>{ const st=stavOdmeny(o,r); return st.stav!=="schvalene"; });
+  if(!naSchv.length){ toast(`Do ${menoMesiaca(doMes)} je už všetko schválené.`); return; }
+  if(!confirm(`Potvrdiť čísla a schváliť odmeny za ${naSchv.length} ${plural(naSchv.length,"mesiac","mesiace","mesiacov")} prípadov do ${menoMesiaca(doMes)} vrátane?\n\nOdmeny, ktoré sa nedajú vypočítať (chýba sadzba alebo marža), zostanú neschválené.`)) return;
+  btn.disabled=true;
+  let ok=0, neupl=0, chyby=0;
+  const poPripadoch=new Map();
+  naSchv.forEach(({o,r})=>{ (poPripadoch.get(o.id)||poPripadoch.set(o.id,{o,rs:[]}).get(o.id)).rs.push(r); });
+  for(const {o,rs} of poPripadoch.values()){
+    try{
+      const pot=[];
+      for(const r of rs){
+        if(naPotvrdenie(r)){
+          const zm={ potvrdene:true, potvrdilUid:state.user.uid||null, potvrdilMeno:state.user.name, potvrdilKedy:Date.now() };
+          await backend.confirmResult(r.id, zm); pot.push({...r, ...zm});
+        } else pot.push(r);
+      }
+      const v=await schvalOdmenyPripadu(o, pot);
+      ok+=v.ok; neupl+=v.neuplne;
+    }catch(e){ console.error("hromadné schválenie:", o.id, e); chyby++; }
+  }
+  btn.disabled=false;
+  toast(`Schválené: ${ok} ${plural(ok,"odmena","odmeny","odmien")}`+(neupl?` · ${neupl} sa nedá vypočítať`:"")+(chyby?` · ⚠ ${chyby} ${plural(chyby,"prípad zlyhal","prípady zlyhali","prípadov zlyhalo")}`:""));
+}
+
 /* ---------------------------------------------------------------- FILTER PODĽA LÍDRA
    Vo Výsledkoch NB a v Odmenách si líder vyberie seba a uvidí len prípady
    služieb, za ktoré zodpovedá (LIDER_EMAILS) — tie potom schvaľuje. */
@@ -15127,6 +15163,13 @@ function viewRewards(){
 
   const bar=el("div","fbar fbar-sekcia");
   if(vidiLiderFilter()) bar.appendChild(liderPill());
+  if(state.user?.role==="admin"){
+    const hb=el("button","fbar-mine odm-hrom",
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="fm-lbl">Schváliť všetko do…</span>`);
+    hb.type="button"; hb.title="Hromadne potvrdiť čísla a schváliť odmeny do zvoleného mesiaca";
+    hb.onclick=()=>hromadneSchvalenie(hb);
+    bar.appendChild(hb);
+  }
   if(smieExportOdmien()){
     const ex=el("button","fbar-mine odm-export",
       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span class="fm-lbl">Export do XLS</span>`);
