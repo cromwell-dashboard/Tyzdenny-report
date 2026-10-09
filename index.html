@@ -7799,6 +7799,8 @@ function zoznamObchodnikovFiltra(){
 /* Kopírovanie záznamov: služba podľa toho, kam obchodník patrí; pri viacerých
    (alebo pri vedení bez služby) sa najprv vyberie služba, potom týždeň. */
 function kopirujZaznamy(anchor){
+  // z Mojich aktivít sa ponúknu na kopírovanie len vlastné záznamy
+  state.kopirujLenMoje = state.view==="mine";
   const moje=(state.user?.segments||[]).filter(id=>SEG[id]);
   const ponuka = moje.length ? moje : SEGMENTS.map(x=>x.id);
   if(ponuka.length===1){ openCopyWeekPicker(ponuka[0]); return; }
@@ -7809,7 +7811,7 @@ function kopirujZaznamy(anchor){
   const zoz=el("div","qsp-list");
   ponuka.forEach(id=>{
     const n=state.all.filter(e=>e.segment===id && e.weekId<state.week && e.weekId>=od && !e.sleeping).length;
-    const b=el("button","qsp-it",`<span class="qsp-tx">${esc(SEG[id].short)} · ${n?`${n} ${plural(n,"záznam","záznamy","záznamov")}`:"bez záznamov"}</span>`);
+    const b=el("button","qsp-it",`<span class="qsp-tx">${esc(SEG[id].short)}</span>`);
     b.type="button"; b.onclick=ev=>{ ev.stopPropagation(); box.remove(); openCopyWeekPicker(id); };
     zoz.appendChild(b);
   });
@@ -10356,11 +10358,12 @@ function handleNbFile(file){
 
 /* Kopírovanie záznamov z minulého týždňa */
 /* Výber týždňa, z ktorého sa má kopírovať (predvolený minulý, ponuka ~mesiac dozadu) */
+const mojeNaKopiu = e => !state.kopirujLenMoje || entryHasOwner(e, state.user?.name||"");
 function openCopyWeekPicker(segId){
   const weeks=[];
   for(let i=1;i<=5;i++){
     const w=shiftWeek(state.week,-i);
-    const cnt=state.all.filter(e=>e.segment===segId && e.weekId===w && !e.sleeping).length;
+    const cnt=state.all.filter(e=>e.segment===segId && e.weekId===w && !e.sleeping && mojeNaKopiu(e)).length;
     weeks.push({w,cnt});
   }
   if(!weeks.some(x=>x.cnt)){ toast("Za posledných 5 týždňov tu nie sú žiadne záznamy na kopírovanie."); return; }
@@ -10392,7 +10395,7 @@ function openCopyWeekPicker(segId){
 function copyFromPrevWeek(segId, fromWeek){
   const prevWeek=fromWeek||shiftWeek(state.week,-1);
   // Spiace záznamy sa nekopírujú — do ďalších týždňov sa prenášajú automaticky
-  let prevEntries=state.all.filter(e=>e.segment===segId && e.weekId===prevWeek && !e.sleeping);
+  let prevEntries=state.all.filter(e=>e.segment===segId && e.weekId===prevWeek && !e.sleeping && mojeNaKopiu(e));
   if(!prevEntries.length){ toast(`Týždeň ${weekRangeLabel(prevWeek)} nemá žiadne záznamy na kopírovanie.`); return; }
   // Nepridávame to čo už máme (rovnaký klient+segment v tomto týždni)
   const thisWeekClients=new Set(state.all.filter(e=>e.segment===segId&&e.weekId===state.week).map(e=>clientKey(e.client)));
@@ -16531,6 +16534,8 @@ function viewSegment(){
     klienti ? "Od každého klienta posledná aktivita. Klikni na klienta pre celú históriu."
             : "Aktivity zoradené od najnovších. Týždeň si vyber filtrom.",
     s, logoHtml);
+  // rovnaká filtračná lišta ako v Aktivitách (aj s Nový záznam / Kopírovať)
+  wrap.prepend(filtrovaciaLista({ kopirovat:true }));
   return wrap;
 }
 
@@ -16553,7 +16558,7 @@ function viewList(list,title,sub,seg,logoHtml,opts){
   if(seg && hasPrevEarly && segSuggestionsEarly.length===0 && !state.suggestionsLoading){
     const btnCopy=el("button","copy-prompt-btn");
     btnCopy.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopírovať záznamy`;
-    btnCopy.onclick=()=>openCopyWeekPicker(seg.id);
+    btnCopy.onclick=()=>{ state.kopirujLenMoje=false; openCopyWeekPicker(seg.id); };
     actionsBlock.appendChild(btnCopy);
   }
   const addBtn=el("button","btn solid","+ Pridať záznam");
@@ -16701,7 +16706,7 @@ function viewList(list,title,sub,seg,logoHtml,opts){
         const btnRow=el("div","ai-btnrow"); btnRow.style.justifyContent="center";
         const abCopy=el("button","copy-prompt-btn");
         abCopy.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopírovať záznamy`;
-        abCopy.onclick=()=>openCopyWeekPicker(seg.id);
+        abCopy.onclick=()=>{ state.kopirujLenMoje=false; openCopyWeekPicker(seg.id); };
         btnRow.appendChild(abCopy); em.appendChild(btnRow);
       } else {
         /* Prázdny zoznam musí povedať, čo ho spôsobilo — najčastejšie je to
