@@ -4166,6 +4166,7 @@ select:disabled{cursor:default; opacity:.65}
 .rs-ico.ok.zak{opacity:.35;cursor:not-allowed;filter:grayscale(1)}
 .rs-ico.ok.zak:hover{background:none}
 .wd-wk{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.res-lock{display:inline-block;margin-left:6px;font-size:10.5px;font-weight:700;color:#6B7280;background:#F1F2F5;border-radius:6px;padding:1px 6px;vertical-align:middle}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -12235,7 +12236,12 @@ function openResultsModal(opp, zameraj){
           const povod=r ? `${r.zdroj==="import"?"import":"ručne"}${r.revizia>1?` · ${r.revizia}. verzia`:""}` : "";
           /* Potvrdené čísla sa už neprepisujú — obchodník ich odsúhlasil.
              Opraviť ich môže vedenie, ktoré odmeny aj schvaľuje. */
-          const zamknute = !!(r && r.potvrdene) && !smieMenitOdmenu();
+          /* Po schválení odmeny je mesiac uzamknutý pre všetkých okrem admina —
+             spätná zmena čísel by inak zmenila už schválenú (a vyplatenú) odmenu.
+             Odomkne sa vrátením odmeny v Odmenách. */
+          const schvalena = !!r && odmenaFor(r.id)?.stav==="schvalene";
+          const zamknuteSchv = schvalena && state.user?.role!=="admin";
+          const zamknute = (!!(r && r.potvrdene) && !smieMenitOdmenu()) || zamknuteSchv;
           /* Viac riadkov v jednom mesiaci (napr. dve faktúry). Prvý riadok je
              hlavný, ďalšie sa pridajú tlačidlom +. Do prípadu sa ukladá súčet. */
           // riadky použijeme len vtedy, keď ich súčet sedí s tržbou (import ich mohol prepísať)
@@ -12247,6 +12253,7 @@ function openResultsModal(opp, zameraj){
             <span class="res-m"${povod?` title="${esc(povod)}"`:""}>${esc(menoMesiaca(m))}${
               (!zamknute)?`<button type="button" class="res-plus" data-plus="${m}" title="Pridať ďalší riadok do ${esc(menoMesiaca(m))}"${bez?" disabled":""}>+</button>`:""}${prebieha?`<span class="res-now">prebieha</span>`:""}${meska?`<span class="res-late" title="Termín bol ${esc(terminText(m))}">po termíne</span>`:""}${
               (r && r.zdroj==="import")?`<span class="res-imp">Import ${esc(r.zdrojSystem||"Nemesis")}</span>`:""}${
+              schvalena?`<span class="res-lock" title="Odmena za tento mesiac je schválená — čísla sa už nedajú meniť. Odomkne sa vrátením odmeny v Odmenách.">🔒 uzamknuté</span>`:""}${
               dalsie.length?`<span class="res-sucet" title="V zozname sa zobrazuje súčet všetkých riadkov mesiaca">spolu ${esc(formatCislo(r?.trzba))} €</span>`:""}${
               ktoZadal(polozky ? { ...r, zadalMeno:p0?.zadalMeno||r?.zadalMeno, zadalKedy:p0?.zadalKedy||r?.zadalKedy } : r)}</span>
             <input data-f="trzba"  inputmode="decimal"${zamknute?" disabled":""} value="${esc(formatCislo(p0?.trzba))}" placeholder="—"${bez?" disabled":""}>
@@ -12254,7 +12261,7 @@ function openResultsModal(opp, zameraj){
             <input data-f="marza"  inputmode="decimal"${zamknute?" disabled":""} value="${esc(formatCislo(p0?.marza))}"${marzaPovinna(opp.segment,opp.produkt)?' class="povinne"':""} placeholder="—"${bez?" disabled":""}>
             ${kusy?`<input data-f="mnozstvo" inputmode="numeric"${zamknute?" disabled":""} value="${esc(formatCislo(p0?.mnozstvo))}" placeholder="—"${bez?" disabled":""}>`:""}
             <span class="res-akt">
-              <label class="res-nil${zamknute?" zamknute":""}" title="${zamknute?"Čísla sú potvrdené — zmenu urobí vedenie.":"Tento mesiac sa nefakturovalo. Obdobie odmeny beží ďalej."}"><input type="checkbox" data-f="bez"${bez?" checked":""}${zamknute?" disabled":""}><span>bez fakturácie</span></label>
+              <label class="res-nil${zamknute?" zamknute":""}" title="${zamknuteSchv?"Odmena je schválená — mesiac je uzamknutý.":zamknute?"Čísla sú potvrdené — zmenu urobí vedenie.":"Tento mesiac sa nefakturovalo. Obdobie odmeny beží ďalej."}"><input type="checkbox" data-f="bez"${bez?" checked":""}${zamknute?" disabled":""}><span>bez fakturácie</span></label>
               ${naPotvrdenie(r)?`<button type="button" class="res-potvrd" data-potvrd="${m}">Potvrdiť</button>`
                 : (r && r.potvrdene)
                   ? `<span class="res-ok" title="Potvrdil ${esc(r.potvrdilMeno||"")}">✓ potvrdené</span>` : ""}
@@ -12612,6 +12619,7 @@ function openResultsModal(opp, zameraj){
   const ukazPotvrd=row=>{
     const m=row.dataset.m, r=resultFor(opp.id,m);
     if(r?.potvrdene && !smieMenitOdmenu()) return;
+    if(r && odmenaFor(r.id)?.stav==="schvalene" && state.user?.role!=="admin") return;   // uzamknutý mesiac
     const t=row.querySelector('input[data-f="trzba"]'), bez=scrim.querySelector(`.res-row[data-m="${CSS.escape(m)}"] input[data-f="bez"]`);
     const vyplnene = (t && cisloAleboNull(t.value)!=null) || bez?.checked;
     const akt=row.querySelector(".res-akt"); if(!akt) return;
@@ -13248,7 +13256,8 @@ function povodCisel(opp, lenMesiace){
 
 /* Hodnota prípadu pre daný stĺpec — podľa nej sa filtruje aj ponúka zoznam. */
 function stlpecHodnoty(o, kluc){
-  if(kluc==="obchodnik") return (o.vlastnici||[]).map(v=>v.meno).filter(Boolean);
+  // mená zjednotené na tvar zo zoznamu používateľov („Zuzana Davidova" = „Zuzana Dávidová")
+  if(kluc==="obchodnik") return (o.vlastnici||[]).map(v=>uplneMeno(v.meno)).filter(Boolean);
   if(kluc==="oslovenie") return [cleanApproachText(o.sposobOslovenia||"") || "— bez oslovenia —"];
   if(kluc==="sluzba")    return [SEG[o.segment]?.short || "Iné"];
   return [];
@@ -15274,7 +15283,7 @@ function viewRewards(){
            ktoré kontrola nemusí potvrdiť. */
         : (r.stav==="schvalene" ? eur(r.suma) : `<span class="odm-caka">po schválení</span>`)}</span>
       ${vsetci
-        ? `<span class="odm-ob">${esc(r.podiely.map(p=>`${p.meno} ${Math.round(p.podiel*100)} %`).join(", ")||"—")}</span>`
+        ? `<span class="odm-ob">${esc(r.podiely.map(p=>`${uplneMeno(p.meno)} ${Math.round(p.podiel*100)} %`).join(", ")||"—")}</span>`
         : `<span class="odm-su moj">${r.stav==="schvalene"
             ? `${eur(r.mojaSuma)}${r.mojPodiel<1?`<span>${Math.round(r.mojPodiel*100)} %</span>`:""}`
             : `<span class="odm-caka">po schválení</span>`}</span>`}
@@ -15759,6 +15768,10 @@ function viewResults(){
       // bez fakturácie sa dá zaškrtnúť priamo z riadku
       {
         const bez=r.querySelector('input[data-f="bez"]');
+        // uzamknutý mesiac (schválená odmena) sa z riadku meniť nedá
+        { const rr=resultFor(o.id, resJedenMesiac());
+          if(bez && rr && odmenaFor(rr.id)?.stav==="schvalene" && state.user?.role!=="admin"){
+            bez.disabled=true; bez.closest("label")?.setAttribute("title","Odmena je schválená — mesiac je uzamknutý."); } }
         if(bez) bez.onchange=async()=>{
           r.classList.add("uklada");
           try{ await ulozZRiadku(o, resJedenMesiac(), {bezFakturacie:bez.checked}); }
