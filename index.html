@@ -4174,6 +4174,10 @@ select:disabled{cursor:default; opacity:.65}
 .res-skr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px solid #F3E6CC}
 .res-skr-r>span{flex:1 1 auto;min-width:0}
 .res-skr-r .btn{height:28px;min-height:0;padding:0 12px;font-size:12px}
+.res-odpotvrd{margin-left:8px;border:1px solid var(--line);background:#fff;border-radius:7px;padding:2px 8px;font-family:inherit;
+  font-size:11.5px;font-weight:600;color:var(--brand);cursor:pointer;white-space:nowrap}
+.res-odpotvrd:hover{border-color:var(--brand)}
+.res-obd-edit select{height:32px;border:1px solid #D5D9E0;border-radius:7px;padding:0 8px;font-family:inherit;font-size:13px;background:#fff}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -10979,7 +10983,8 @@ function pridajMesiace(obdobie, oKolko){
 function nbObdobie(opp, fakturovaneOd){
   const od=fakturovaneOd||opp.fakturovaneOd;
   if(!od) return {};
-  const mes=nbDlzkaMesiacov(opp.segment, opp.produkt);
+  // ručne nastavená dĺžka obdobia má prednosť pred pravidlom služby
+  const mes=opp.nbMesiacovRucne || nbDlzkaMesiacov(opp.segment, opp.produkt);
   return { nbOd:od, nbDo:pridajMesiace(od, mes-1), nbMesiacov:mes };
 }
 
@@ -12248,9 +12253,11 @@ function openResultsModal(opp, zameraj){
         <div class="res-obd-edit" id="obdEdit" style="display:none">
           <label>Prvý fakturovaný mesiac</label>
           <input type="month" id="obdInput" value="${esc(opp.nbOd||"")}" max="${esc(terajsiMesiac())}">
+          ${smieMenitOdmenu()?`<label>Dĺžka obdobia</label>
+          <select id="obdDlzka">${[1,3,6,12,24,36].map(n=>`<option value="${n}"${(opp.nbMesiacov||nbDlzkaMesiacov(opp.segment,opp.produkt))===n?" selected":""}>${n} ${n===1?"mesiac":n<5?"mesiace":"mesiacov"}</option>`).join("")}</select>`:""}
           <button type="button" class="btn solid" data-act="obdSave">Prepočítať</button>
           <button type="button" class="btn" data-act="obdCancel">Zrušiť</button>
-          <div class="hint">Posunie celé obdobie. Použi, keď bola aktivita nahodená spätne a fakturovalo sa skôr.</div>
+          <div class="hint">Posunie celé obdobie. Použi, keď bola aktivita nahodená spätne a fakturovalo sa skôr.${smieMenitOdmenu()?" Dĺžku obdobia môže zmeniť vedenie, napríklad z 36 na 12 mesiacov.":""}</div>
         </div>
       </div>
       ${(()=>{ const teraz=terajsiMesiac();
@@ -12302,7 +12309,7 @@ function openResultsModal(opp, zameraj){
               <label class="res-nil${zamknute?" zamknute":""}" title="${zamknuteSchv?"Odmena je schválená — mesiac je uzamknutý.":zamknute?"Čísla sú potvrdené — zmenu urobí vedenie.":"Tento mesiac sa nefakturovalo. Obdobie odmeny beží ďalej."}"><input type="checkbox" data-f="bez"${bez?" checked":""}${zamknute?" disabled":""}><span>bez fakturácie</span></label>
               ${naPotvrdenie(r)?`<button type="button" class="res-potvrd" data-potvrd="${m}">Potvrdiť</button>`
                 : (r && r.potvrdene)
-                  ? `<span class="res-ok" title="Potvrdil ${esc(r.potvrdilMeno||"")}">✓ potvrdené</span>` : ""}
+                  ? `<span class="res-ok" title="Potvrdil ${esc(r.potvrdilMeno||"")}">✓ potvrdené</span>${smieMenitOdmenu()?`<button type="button" class="res-odpotvrd" data-odpotvrd="${esc(m)}" title="Vrátiť mesiac na doplnenie — obchodník ho bude môcť znova upraviť${odmenaFor(r.id)?.stav==="schvalene"?" (schválená odmena sa tým vráti)":""}">↺ otvoriť</button>`:""}` : ""}
             </span>
             ${(()=>{ if(!vidiOdmenu()) return "";
               const o=odmenaZaVysledok(opp, r);
@@ -12498,11 +12505,15 @@ function openResultsModal(opp, zameraj){
       if(!nove){ err.textContent="⚠ Vyber mesiac."; err.classList.add("on"); return; }
       if(nove>terajsiMesiac()){ err.textContent="⚠ Mesiac nemôže byť v budúcnosti."; err.classList.add("on"); return; }
       const b=ev.currentTarget; b.disabled=true; b.textContent="Prepočítavam…";
+      const dlz=Number(scrim.querySelector("#obdDlzka")?.value)||null;
+      const zmenaDlzky = dlz && dlz!==(opp.nbMesiacov||nbDlzkaMesiacov(opp.segment,opp.produkt));
       try{
+        const oppD = dlz ? { ...opp, nbMesiacovRucne:dlz } : opp;
         await backend.saveOpportunity({ id:opp.id,
-          fakturovaneOd:nove, ...nbObdobie(opp, nove), nbZamknute:true,
+          fakturovaneOd:nove, ...nbObdobie(oppD, nove), nbZamknute:true,
+          ...(dlz ? { nbMesiacovRucne:dlz } : {}),
           updatedBy:state.user.name, updatedAt:Date.now() });
-        toast("Obdobie prepočítané");
+        toast(zmenaDlzky ? `Obdobie zmenené na ${dlz} mes.` : "Obdobie prepočítané");
         scrim.remove();
         setTimeout(()=>{ const o=oppById(opp.id); if(o) openResultsModal(o); }, 120);
       }catch(e3){
@@ -12648,6 +12659,22 @@ function openResultsModal(opp, zameraj){
 
   /* Potvrdenie importovaných čísel. Kým to obchodník neurobí, riadok nesie
      štítok „z Nemesisu" a odmena zaň čaká. */
+  /* Vrátiť potvrdený mesiac na doplnenie — zruší potvrdenie a pri schválenej
+     odmene ju vráti, takže mesiac sa odomkne a obchodník ho môže upraviť. */
+  scrim.querySelectorAll("[data-odpotvrd]").forEach(b=>b.onclick=async(ev)=>{
+    ev.stopPropagation();
+    const m=b.dataset.odpotvrd, r=resultFor(opp.id,m); if(!r) return;
+    const schv=odmenaFor(r.id)?.stav==="schvalene";
+    if(!confirm(`Vrátiť ${menoMesiaca(m)} na doplnenie?\n\nPotvrdenie sa zruší${schv?" a schválená odmena sa vráti":""}. Obchodník bude môcť čísla upraviť a mesiac sa potom potvrdí znova.`)) return;
+    b.disabled=true;
+    try{
+      await backend.confirmResult(r.id, { potvrdene:false, potvrdilUid:null, potvrdilMeno:null, potvrdilKedy:null,
+        vratilMeno:state.user.name, vratilKedy:Date.now() });
+      if(schv) await backend.saveRewards([{ id:r.id, stav:"vratene", vratilUid:state.user.uid||null, vratilMeno:state.user.name, vratilKedy:Date.now() }]);
+      toast(`${menoMesiaca(m)} je otvorený na doplnenie`);
+      close(); setTimeout(()=>{ const o=oppById(opp.id)||opp; openResultsModal(o, m); }, 150);
+    }catch(e7){ b.disabled=false; toast("⚠ Nepodarilo sa: "+(e7?.message||e7?.code||"")); }
+  });
   /* Potvrdiť = uložiť rozpísané čísla + potvrdiť mesiac (líder tým rovno
      schváli odmenu). Bez uloženia by sa práve zadané čísla stratili. */
   const naviazPotvrd=b=>{
