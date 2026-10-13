@@ -4167,6 +4167,13 @@ select:disabled{cursor:default; opacity:.65}
 .rs-ico.ok.zak:hover{background:none}
 .wd-wk{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
 .res-lock{display:inline-block;margin-left:6px;font-size:10.5px;font-weight:700;color:#6B7280;background:#F1F2F5;border-radius:6px;padding:1px 6px;vertical-align:middle}
+.rs-name > .rs-uk{grid-column:2;justify-self:start;margin-top:3px;font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;
+  color:#6B7280;background:#F1F2F5;border-radius:5px;padding:1px 6px}
+.res-skryte{margin:0 0 14px;padding:12px 14px;border:1px solid #F3D9A8;background:#FFF9EE;border-radius:12px;font-size:13px;color:var(--ink-soft)}
+.res-skryte>b{display:block;color:var(--ink);margin-bottom:6px}
+.res-skr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px solid #F3E6CC}
+.res-skr-r>span{flex:1 1 auto;min-width:0}
+.res-skr-r .btn{height:28px;min-height:0;padding:0 12px;font-size:12px}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -7850,9 +7857,25 @@ function filtrovaciaLista(opts){
       [["", "Každá databáza", !state.filterDb], ...dbs.map(d=>[d, d, state.filterDb===d])],
       v=>{ state.filterDb=v; state.groupLimit=60; render(); }, "Databáza", "flista-pill"));
   } else if(state.filterDb) state.filterDb="";
-  if(state.filterRecType || state.filterSalesperson || state.filterDb){
+  // Oslovenie a Info oslovenie — hodnoty zo záznamov
+  {
+    const ICO_OSL=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>`;
+    const ICO_INF=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>`;
+    const sk=(a,b)=>a.localeCompare(b,"sk");
+    const osl=[...new Set((state.all||[]).map(e=>cleanApproachText(e.nbApproach||"")).filter(Boolean))].sort(sk);
+    if(osl.length) bar.appendChild(fpill(ICO_OSL, state.filterApproach || "Oslovenie", !!state.filterApproach,
+      [["", "Každé oslovenie", !state.filterApproach], ...osl.map(v=>[v,v,state.filterApproach===v])],
+      v=>{ state.filterApproach=v; state.filterApproachInfo=""; state.feedLimit=20; state.groupLimit=60; render(); }, "Oslovenie", "flista-pill"));
+    // info len k zvolenému osloveniu (ak je zvolené)
+    const inf=[...new Set((state.all||[]).filter(e=>!state.filterApproach || cleanApproachText(e.nbApproach||"")===state.filterApproach)
+      .map(e=>cleanApproachText(e.nbApproachInfo||"")).filter(Boolean))].sort(sk);
+    if(inf.length) bar.appendChild(fpill(ICO_INF, state.filterApproachInfo || "Info oslovenie", !!state.filterApproachInfo,
+      [["", "Každé info", !state.filterApproachInfo], ...inf.map(v=>[v,v,state.filterApproachInfo===v])],
+      v=>{ state.filterApproachInfo=v; state.feedLimit=20; state.groupLimit=60; render(); }, "Info oslovenie", "flista-pill"));
+  }
+  if(state.filterRecType || state.filterSalesperson || state.filterDb || state.filterApproach || state.filterApproachInfo){
     const z=el("button","flista-zrus","Zrušiť filtre"); z.type="button";
-    z.onclick=()=>{ state.filterRecType=""; state.filterSalesperson=""; state.filterDb=""; render(); };
+    z.onclick=()=>{ state.filterRecType=""; state.filterSalesperson=""; state.filterDb=""; state.filterApproach=""; state.filterApproachInfo=""; render(); };
     bar.appendChild(z);
   }
 
@@ -8414,7 +8437,8 @@ function clientIndexCompute(){
     if(!map.has(k)) map.set(k,{ key:k, name:e.client, ico:"", entries:[], segments:new Set(), people:new Set() });
     const c=map.get(k);
     c.entries.push(e); c.segments.add(e.segment);
-    if(!c.ico && (e.leadIco||e.ico)) c.ico=String(e.leadIco||e.ico);
+    // IČO z fyzickej osoby sa neberie — FO by sa inak zlúčila s firmou s tým IČO
+    if(!c.ico && (e.leadIco||e.ico) && !e.fyzickaOsoba) c.ico=String(e.leadIco||e.ico);
     if(e.salesperson) e.salesperson.split("/").forEach(p=>c.people.add(p.trim()));
     if(e.client.length>c.name.length) c.name=e.client; // dlhší/úplnejší názov
   });
@@ -10965,6 +10989,8 @@ function nbObdobie(opp, fakturovaneOd){
 async function zosuladPripad(e){
   const opp=oppById(e.opportunityId);
   if(!opp) return;
+  // fyzická osoba omylom prepojená s prípadom inej firmy — ten nemeníme
+  if(e.fyzickaOsoba && clientKey(opp.client)!==clientKey(e.client)) return;
   // práve uložený záznam ešte nemusí byť v state.all — doplníme ho ručne
   const zaznamy=[e, ...state.all.filter(x=>x.id!==e.id && x.opportunityId===opp.id)];
   zaznamy.sort((a,b)=>weekCmpDesc(a.weekId,b.weekId) || entryTs(b)-entryTs(a));
@@ -10987,9 +11013,16 @@ async function zosuladPripad(e){
       zmeny.ownerUids=spravni.map(x=>x.uid).filter(Boolean);
     }
   }
-  if(opp.stav!==novyStav){
-    zmeny.stav=novyStav;
-    zmeny.uzavreteOd = (novyStav==="prehraty") ? mesiacZTyzdna(najnovsi.weekId) : null;
+  /* Prípad, ktorý už fakturuje (beží NB obdobie), neuzatvára neskoršie
+     „odmietnutie" — to sa týka ďalšej ponuky, nie bežiacej spolupráce.
+     Ručne uzavretý prípad sa automaticky neotvára. */
+  let cielStav=novyStav;
+  if(cielStav==="prehraty" && opp.fakturovaneOd) cielStav = opp.stav==="prehraty" ? "vyhrany" : opp.stav;
+  if(opp.stav==="uzavrety") cielStav="uzavrety";
+  if(opp.stav!==cielStav){
+    const novyStav2=cielStav;
+    zmeny.stav=novyStav2;
+    zmeny.uzavreteOd = (novyStav2==="prehraty") ? mesiacZTyzdna(najnovsi.weekId) : (novyStav2==="uzavrety" ? (opp.uzavreteOd||null) : null);
   }
   // Prvý mesiac fakturácie sa nastaví raz a späť sa už neruší.
   // Spolu s ním sa dopočíta NB obdobie — 12 mesiacov, pri Zelenej pošte 36.
@@ -11018,7 +11051,7 @@ async function zosuladPripad(e){
 }
 
 function oppMatchKey(e){
-  const ic = icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client));
+  const ic = e.fyzickaOsoba ? "" : (icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client)));
   return (ic ? "i:"+ic : "n:"+clientKey(e.client))
        + "|" + (e.segment||"")
        + (e.produkt  ? "|p:"+clientKey(e.produkt)  : "")
@@ -11071,7 +11104,8 @@ async function otvorVysledkyPreZaznam(e){
     try{
       const id=await zabezpecPripad(e, false);
       if(id){
-        if(!e.opportunityId) await backend.save({ ...e, opportunityId:id });
+        // aj keď bol záznam omylom prepojený s cudzím prípadom (FO), prepojí sa so svojím
+        if(e.opportunityId!==id) await backend.save({ ...e, opportunityId:id });
         opp=oppById(id);
       }
     }catch(err){ console.error("založenie prípadu:", err); }
@@ -11084,7 +11118,11 @@ async function otvorVysledkyPreZaznam(e){
    vďaka tomu model funguje aj pred migráciou starých záznamov. */
 function oppForEntry(e){
   if(!e || !e.isNewBusiness) return null;
-  return oppById(e.opportunityId) || openOppForKey(oppMatchKey(e));
+  let o = oppById(e.opportunityId);
+  /* Fyzická osoba nesmie skončiť pri prípade inej firmy (napr. cez IČO, ktoré
+     omylom ostalo v zázname) — prepojenie platí len pri rovnakom mene. */
+  if(o && e.fyzickaOsoba && clientKey(o.client)!==clientKey(e.client)) o=null;
+  return o || openOppForKey(oppMatchKey(e));
 }
 
 /* Nové IČO oproti existujúcemu — hľadá sa, či firma figurovala v Zappise skôr,
@@ -11125,7 +11163,7 @@ function vlastniciZoZaznamu(e){
 /* Zostaví nový obchodný prípad zo záznamu. Neukladá — to robí volajúci. */
 function novyPripad(e, seq){
   const mk=oppMatchKey(e);
-  const ic=icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client));
+  const ic=e.fyzickaOsoba ? "" : (icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client)));
   const vlastnici=vlastniciZoZaznamu(e);
   return {
     matchKey: mk, seq: seq||1,
@@ -11232,7 +11270,7 @@ async function zabezpecPripad(e, naNovy){
   const mk=oppMatchKey(e);
   try{
     if(!naNovy){
-      const existuje = oppById(e.opportunityId) || openOppForKey(mk);
+      const existuje = oppForEntry(e);
       if(existuje) return existuje.id;
       // pokračovanie starého obchodu — posledný uzavretý sa znovu otvorí
       const zavrete=oppsForKey(mk).slice().sort((a,b)=>(b.seq||0)-(a.seq||0));
@@ -12308,7 +12346,9 @@ function openResultsModal(opp, zameraj){
       <div class="task-err" id="resErr"></div>
     </div>
     <div class="modal-f" style="justify-content:flex-end;flex-wrap:wrap">
-      ${pripadUzavrety(opp) ? "" : `<button class="btn" data-act="uzavriet" style="margin-right:auto">Uzavrieť prípad</button>`}
+      ${pripadUzavrety(opp)
+        ? (smieMenitOdmenu() && ["uzavrety","prehraty"].includes(opp.stav) ? `<button class="btn solid" data-act="otvorit">Znovu otvoriť prípad</button>` : "")
+        : `<button class="btn" data-act="uzavriet" style="margin-right:auto">Uzavrieť prípad</button>`}
       ${smieMenitOdmenu() ? `<button class="btn danger" data-act="zrusit"${pripadUzavrety(opp)?` style="margin-right:auto"`:""}>Odstrániť prípad</button>` : ""}
       <button class="btn" data-act="cancel">Zavrieť</button>
       ${mesiace.length?`<button class="btn solid" data-act="save">Uložiť zmeny</button>`:""}
@@ -12782,6 +12822,16 @@ function openResultsModal(opp, zameraj){
         err.classList.add("on");
         zr.disabled=false; zr.textContent="Odstrániť prípad";
       }
+    };
+    // uzavretý / prehratý prípad sa dá vrátiť medzi aktívne — znovu sa ukáže vo Výsledkoch NB
+    const ot=scrim.querySelector('[data-act="otvorit"]');
+    if(ot) ot.onclick=async()=>{
+      ot.disabled=true;
+      try{
+        await backend.saveOpportunity({ id:opp.id, stav: opp.fakturovaneOd ? "vyhrany" : "aktivny", uzavreteOd:null,
+          updatedBy:state.user.name, updatedAt:Date.now() });
+        toast("Prípad je znova otvorený"); close();
+      }catch(e6){ ot.disabled=false; toast("⚠ Nepodarilo sa otvoriť: "+(e6?.message||e6?.code||"")); }
     };
     const uz=scrim.querySelector('[data-act="uzavriet"]');
     if(uz) uz.onclick=async()=>{
@@ -14990,8 +15040,11 @@ function fakturaciaReminder(){
 
 /* Prípady, ktoré daný používateľ vidí. Obchodník svoje, vedenie všetky. */
 const pripadZruseny = o => o?.stav==="zruseny";
-function viditelnePripady(){
-  const bezi=(state.opportunities||[]).filter(o=>o.nbOd && !pripadUzavrety(o) && !pripadZruseny(o));
+function viditelnePripady(volby){
+  /* ajUkoncene: aj prípady s ukončeným NB obdobím (alebo uzavreté) — vo
+     Výsledkoch NB sa musia dať nájsť pri mesiacoch, keď ešte bežali. */
+  const bezi=(state.opportunities||[]).filter(o=>o.nbOd && !pripadZruseny(o) && o.stav!=="zruseny"
+    && (volby?.ajUkoncene || !pripadUzavrety(o)));
   if(["admin","sef","lider"].includes(state.user?.role)) return bezi;
   const uid=state.user?.uid, meno=state.user?.name||"";
   return bezi.filter(o=>(o.ownerUids||[]).includes(uid)
@@ -15388,7 +15441,21 @@ function zoradVysledky(rows){
 
 function viewResults(){
   const wrap=el("div");
-  const pripady=viditelnePripady();
+  /* Ukončené prípady (obdobie skončilo, uzavreté) sa ukážu, keď zvolený mesiac
+     spadá do ich obdobia alebo majú za neho čísla, pri hľadaní, alebo po
+     zapnutí „Aj ukončené". Predtým zo zoznamu úplne zmizli. */
+  const vsetkyPr=viditelnePripady({ ajUkoncene:true });
+  const jednoraz = o => !periodicitaPodla(o.periodicita).krok;
+  const pripady=vsetkyPr.filter(o=>{
+    if(!pripadUzavrety(o)) return true;
+    if(state.resUkoncene) return true;
+    // jednorazové prípady (nie ručne uzavreté) sa ukazujú vždy
+    if(jednoraz(o) && !["uzavrety","prehraty"].includes(o.stav)) return true;
+    const vyb=resVybrane();
+    if(!vyb) return false;
+    const kon=o.nbDo || pridajMesiace(o.nbOd,(o.nbMesiacov||nbDlzkaMesiacov(o.segment,o.produkt)||12)-1);
+    return vyb.some(m=>(m>=o.nbOd && m<=kon) || !!resultFor(o.id,m));
+  });
   const chybaSpolu=pripady.reduce((a,o)=>a+stavVyplnenia(o).chyba,0);
 
   wrap.appendChild(el("div","page-h",`<div>
@@ -15481,6 +15548,16 @@ function viewResults(){
     nb.onclick=()=>{ state.resLenNove=!state.resLenNove; render(); };
     lista.appendChild(nb);
   }
+  {
+    const nUk=vsetkyPr.filter(o=>pripadUzavrety(o)).length;
+    if(nUk){
+      const uk=el("button","fpill"+(state.resUkoncene?" on":""),
+        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg><span>Aj ukončené (${nUk})</span>`);
+      uk.type="button"; uk.title="Zobraziť aj prípady, ktorým už skončilo NB obdobie alebo boli uzavreté";
+      uk.onclick=()=>{ state.resUkoncene=!state.resUkoncene; render(); };
+      lista.appendChild(uk);
+    }
+  }
   if(vidiLiderFilter()){
     const ex=el("button","fpill",
       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span>Vývoj XLS</span>`);
@@ -15533,7 +15610,8 @@ function viewResults(){
 
   function paint(){
     const q=(state.resQ||"").trim().toLowerCase();
-    let rows=pripady.filter(o=>!q || (o.client||"").toLowerCase().includes(q));
+    // pri hľadaní aj ukončené prípady — nech sa klient vždy nájde
+    let rows=(q ? vsetkyPr : pripady).filter(o=>!q || (o.client||"").toLowerCase().includes(q));
     // filter služieb z hornej lišty
     { const sl=state.aktSluzby||[]; if(sl.length) rows=rows.filter(o=>sl.includes(o.segment)); }
     // filter podľa lídra — služby, za ktoré zodpovedá
@@ -15555,7 +15633,8 @@ function viewResults(){
     _vyvojRows = zoradVysledky(rows.slice());
     // zvolený mesiac musí byť fakturačným mesiacom prípadu (alebo musí mať čísla)
     { const vyb=resVybrane();
-      if(vyb) rows=rows.filter(o=>vyb.some(m=>mesiacFakturacnyPripadu(o,m))); }
+      // jednorazová fakturácia: prípad sa ukazuje v každom mesiaci od začiatku obdobia
+      if(vyb && !q) rows=rows.filter(o=>vyb.some(m=>mesiacFakturacnyPripadu(o,m) || (jednoraz(o) && m>=o.nbOd))); }
 
     const vybavene=rows.filter(jeVybavene);
     const caka=rows.filter(o=>!jeVybavene(o));
@@ -15593,6 +15672,36 @@ function viewResults(){
         const n=pripady.reduce((a,o)=>a+resultsPre(o.id).filter(r=>naPotvrdenie(r) && (!vybM || vybM.includes(r.obdobie))).length,0);
         return n?` · ${n} ${plural(n,"mesiac čaká na potvrdenie","mesiace čakajú na potvrdenie","mesiacov čaká na potvrdenie")}`:""; })()}`;
     listWrap.innerHTML="";
+    /* Diagnostika pri hľadaní: prípady s hľadaným názvom, ktoré v zozname nie
+       sú — s dôvodom a možnosťou ich otvoriť (alebo obnoviť). */
+    if(q){
+      const vRows=new Set(rows.map(o=>o.id));
+      const skryte=(state.opportunities||[]).filter(o=>(o.client||"").toLowerCase().includes(q) && !vRows.has(o.id));
+      if(skryte.length){
+        const box=el("div","res-skryte");
+        box.innerHTML=`<b>Nájdené prípady, ktoré sa v zozname nezobrazujú (${skryte.length})</b>`;
+        skryte.forEach(o=>{
+          const dovod = o.stav==="zruseny" ? "prípad je zrušený"
+            : (o.stav==="uzavrety"||o.stav==="prehraty") ? "prípad je uzavretý"
+            : !o.nbOd ? "nemá spustené NB obdobie"
+            : !vsetkyPr.some(x=>x.id===o.id) ? "nemáš k nemu prístup"
+            : "skrýva ho niektorý filter (záložka, líder, služba, obchodník, 1. mesiac…)";
+          const r=el("div","res-skr-r",`<span><b>${esc(o.client)}</b> · ${esc(segLabel(o.segment,o.produkt)||"")} — ${esc(dovod)}</span>`);
+          const ot=el("button","btn","Otvoriť výsledky"); ot.type="button"; ot.onclick=()=>openResultsModal(o);
+          r.appendChild(ot);
+          if((o.stav==="zruseny"||o.stav==="uzavrety"||o.stav==="prehraty") && state.user?.role==="admin"){
+            const ob=el("button","btn","Obnoviť prípad"); ob.type="button";
+            ob.onclick=async()=>{ await backend.saveOpportunity({ id:o.id, stav:"aktivny", uzavreteOd:null, updatedBy:state.user.name, updatedAt:Date.now() }); toast("Prípad je znova aktívny"); };
+            r.appendChild(ob);
+          }
+          box.appendChild(r);
+        });
+        listWrap.appendChild(box);
+      } else if(!rows.length && !(state.opportunities||[]).some(o=>(o.client||"").toLowerCase().includes(q))){
+        listWrap.appendChild(el("div","res-skryte",`<b>Obchodný prípad „${esc(state.resQ)}“ v Zappise nie je.</b>
+          Tržby pri klientovi môžu byť pod iným názvom (napr. pred premenovaním). Skús hľadať časť názvu alebo IČO.`));
+      }
+    }
     if(!rows.length && state.resTab==="vsetko"){
       listWrap.appendChild(el("div","empty",
         `<b>Za ${esc(resPopisObdobia())} tu nič nie je</b>Vyber iné mesiace hore, alebo prepni na Všetko.`));
@@ -15661,7 +15770,7 @@ function viewResults(){
             const cele=mena.join(", ");
             const kratke=mena.map(m=>{ const w=m.split(/\s+/); return w.length>1 ? `${w[0][0]}. ${w.slice(1).join(" ")}` : m; }).join(", ");
             return `<span class="rs-obchm" title="${esc(cele)}"><span class="dl">${esc(cele)}</span><span class="kr">${esc(kratke)}</span></span>`;
-          })()}</span>
+          })()}${pripadUzavrety(o)?`<span class="rs-uk" title="NB obdobie skončilo alebo bol prípad uzavretý">ukončený</span>`:""}</span>
         <span class="gl-seg" title="${esc(segLabel(o.segment,o.produkt))}">${seg?segIcon(o.segment,16):""}</span>
         <span class="rs-own" title="${esc((o.vlastnici||[]).map(x=>x.meno).join(", ")||"")}">${
           (o.vlastnici||[]).length
@@ -18320,7 +18429,8 @@ async function saveFromModalInner(){
                  : (baseEntry.isNewBusiness ?? false),
     // odkiaľ záznam pochádza: "dmis" = CSV import, "app" = nahodené priamo v appke
     entrySource: baseEntry.entrySource ?? (baseEntry.nbImportedAt ? "dmis" : "app"),
-    leadIco: icoVal || (pendingLeadOrigin ? pendingLeadOrigin.ico : baseEntry.leadIco) || null,
+    // fyzická osoba IČO nemá — aj keď v sivom poli ostalo IČO z predchádzajúcej firmy
+    leadIco: jeOsoba ? null : (icoVal || (pendingLeadOrigin ? pendingLeadOrigin.ico : baseEntry.leadIco) || null),
     // údaje firmy načítané pri zadaní IČO — záznam aj klient vzniknú naraz
     companyInfo: pendingFinstat ? {...pendingFinstat} : (baseEntry.companyInfo ?? null),
     contacts: entryContacts.length ? entryContacts.map(c=>({...c})) : (baseEntry.contacts ?? []),
