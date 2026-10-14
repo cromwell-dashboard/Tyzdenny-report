@@ -4178,6 +4178,43 @@ select:disabled{cursor:default; opacity:.65}
   font-size:11.5px;font-weight:600;color:var(--brand);cursor:pointer;white-space:nowrap}
 .res-odpotvrd:hover{border-color:var(--brand)}
 .res-obd-edit select{height:32px;border:1px solid #D5D9E0;border-radius:7px;padding:0 8px;font-family:inherit;font-size:13px;background:#fff}
+/* Upraviť klienta — vzhľad ako sekcia Firma v zázname */
+.cp-modal .cp-firma{background:#F1F2F5;border:1px solid #DCDFE5;border-radius:14px;padding:12px 16px 14px;margin:0 0 16px}
+.cp-sek{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid #DCDFE5}
+.cp-r1{display:grid;grid-template-columns:minmax(0,1.1fr) auto minmax(0,1fr);gap:12px;align-items:end}
+.cp-r1 label,.cp-r2 label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin:0 0 6px}
+.cp-nep{font-size:10.5px;font-weight:600;color:var(--muted);background:#E6E8EC;border-radius:5px;padding:1px 6px;margin-left:4px}
+.cp-r1 input,.cp-r2 input,.cp-r2 select{width:100%;height:38px;box-sizing:border-box;border:1px solid #D5D9E0;border-radius:9px;padding:0 12px;font-family:inherit;font-size:14px;background:#fff}
+.cp-ico-ok{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:38px;padding:6px 10px;border:1px solid #CDEBD9;background:#F2FAF5;border-radius:10px}
+.cp-ico-ok b{font-size:14.5px;color:var(--ink)}
+.cp-chk{color:#1F9D61;font-weight:700;margin-right:6px}
+.cp-ico-nm{font-size:13px;color:var(--muted)}
+.cp-ico-ok .btn{height:30px;min-height:0;padding:0 12px;font-size:12.5px}
+.btn.cp-fin{height:38px;background:#1F9D61;border-color:#1F9D61;color:#fff;font-weight:600;padding:0 16px}
+.btn.cp-fin:hover{background:#178452;border-color:#178452}
+.cp-firma .hint{margin:6px 0 12px;font-size:12px;color:var(--muted)}
+.cp-r2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cp-r2 .field{margin:0}
+.cp-adr{display:flex;align-items:center;gap:6px;margin:8px 0 0;font-size:13px;color:var(--ink-soft)}
+.cp-adr svg{width:14px;height:14px;color:var(--muted)}
+.cp-kont{margin-top:14px;background:#fff;border:1px solid #E3E6EB;border-radius:12px;padding:12px 14px}
+.cp-kont-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 8px}
+.cp-kont-h b{font-size:14px;color:var(--ink)}
+.cp-kont-h span{font-size:11.5px;color:var(--muted)}
+.cp-k{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.3fr) auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid #EEF0F3;border-radius:10px;margin-top:6px;font-size:13px}
+.cp-k-n b{display:block;color:var(--ink)}
+.cp-k-n span{font-size:12px;color:var(--muted)}
+.cp-k-c{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cp-k-c span{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-soft)}
+.cp-k-c svg{width:13px;height:13px;flex:0 0 auto;color:var(--muted)}
+.cp-k-z{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.cp-k-nic{font-size:12.5px;color:var(--muted)}
+@media (max-width:700px){ .cp-r1,.cp-r2,.cp-k{grid-template-columns:1fr} }
+.cp-modal textarea#cpNote{height:76px !important;min-height:0 !important;resize:vertical}
+/* Neadresné — hmotnostná kategória a automatický náklad */
+.nd-kat-w{display:block;margin-top:4px}
+.nd-kat{height:26px;max-width:100%;border:1px solid #D5D9E0;border-radius:7px;padding:0 6px;font-family:inherit;font-size:11.5px;background:#fff;color:var(--ink)}
+.res-row input.nd-auto{background:#F6F7FA;color:var(--ink-soft)}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -12182,12 +12219,24 @@ function ktoZadal(x){
   if(x.potvrdene && x.potvrdilMeno) casti.push(`potvrdil ${esc(uplneMeno(x.potvrdilMeno))}${x.potvrdilKedy?` · ${esc(casKratko(x.potvrdilKedy))}`:""}`);
   return casti.length ? `<span class="res-kto">${casti.join("<br>")}</span>` : "";
 }
+/* Nákladový cenník neadresného doručovania — cena za 1000 ks podľa hmotnosti
+   (kategória „do X g"). Rovnaký pre Cromwell aj KOLOS. Pri zmene cien upraviť tu. */
+const ND_CENNIK = [[6,4.74],[14,7.55],[20,9.15],[30,12.01],[40,15.48],[50,19.72],
+  [60,23.15],[70,26.20],[80,29.16],[90,31.78],[100,34.73],[150,36.57]];
+const ndCena = g => (ND_CENNIK.find(x=>x[0]===Number(g))||[])[1] ?? null;
+function ndVyber(val, dis){
+  return `<label class="nd-kat-w" title="Hmotnosť letáku — podľa nej sa z kusov vypočíta náklad">
+    <select class="nd-kat"${dis?" disabled":""}><option value="">hmotnosť…</option>${
+      ND_CENNIK.map(([g,c])=>`<option value="${g}"${Number(val)===g?" selected":""}>do ${g} g · ${String(c.toFixed(2)).replace(".",",")} €/1000</option>`).join("")
+    }</select></label>`;
+}
 /* Ďalší riadok v mesiaci — rovnaké stĺpce ako hlavný riadok, bez mesiaca a odmeny. */
 function riadokPolozkyVysledku(m, x, kusy, zamknute, bez, opp){
   const dis=(zamknute||bez)?" disabled":"";
   const meta = x ? ` data-zm="${esc(x.zadalMeno||"")}" data-zk="${esc(x.zadalKedy||"")}"` : "";
   return `<div class="res-row res-sub${bez?" bez":""}" data-m="${m}" data-sub="1"${meta}>
     <span class="res-m res-m-sub"><span>${esc(menoMesiaca(m))}${zamknute?"":`<button type="button" class="res-minus" title="Odstrániť riadok">✕</button>`}${
+      opp?.segment==="nad" ? ndVyber(x?.ndKategoria ?? opp.ndKategoria, zamknute||bez) : ""}${
       x?.zadalMeno ? `<span class="res-kto">zadal ${esc(uplneMeno(x.zadalMeno))}${x.zadalKedy?` · ${esc(casKratko(x.zadalKedy))}`:""}</span>` : ""}</span></span>
     <input data-f="trzba"  inputmode="decimal"${dis} value="${esc(formatCislo(x?.trzba))}" placeholder="—">
     <input data-f="naklad" inputmode="decimal"${dis} value="${esc(formatCislo(x?.naklad))}" placeholder="—">
@@ -12296,7 +12345,8 @@ function openResultsModal(opp, zameraj){
           const dalsie = polozky ? polozky.slice(1) : [];
           return `<div class="res-row${bez?" bez":""}${prebieha?" prebieha":""}${meska?" meska":""}${mimo?" mimo":""}${dalsie.length?" ma-sub":""}" data-m="${m}">
             <span class="res-m"${povod?` title="${esc(povod)}"`:""}>${esc(menoMesiaca(m))}${
-              (!zamknute)?`<button type="button" class="res-plus" data-plus="${m}" title="Pridať ďalší riadok do ${esc(menoMesiaca(m))}"${bez?" disabled":""}>+</button>`:""}${prebieha?`<span class="res-now">prebieha</span>`:""}${meska?`<span class="res-late" title="Termín bol ${esc(terminText(m))}">po termíne</span>`:""}${
+              (!zamknute)?`<button type="button" class="res-plus" data-plus="${m}" title="Pridať ďalší riadok do ${esc(menoMesiaca(m))}"${bez?" disabled":""}>+</button>`:""}${
+              opp.segment==="nad" ? ndVyber(p0?.ndKategoria ?? r?.ndKategoria ?? opp.ndKategoria, zamknute||bez) : ""}${prebieha?`<span class="res-now">prebieha</span>`:""}${meska?`<span class="res-late" title="Termín bol ${esc(terminText(m))}">po termíne</span>`:""}${
               (r && r.zdroj==="import")?`<span class="res-imp">Import ${esc(r.zdrojSystem||"Nemesis")}</span>`:""}${
               schvalena?`<span class="res-lock" title="Odmena za tento mesiac je schválená — čísla sa už nedajú meniť. Odomkne sa vrátením odmeny v Odmenách.">🔒 uzamknuté</span>`:""}${
               dalsie.length?`<span class="res-sucet" title="V zozname sa zobrazuje súčet všetkých riadkov mesiaca">spolu ${esc(formatCislo(r?.trzba))} €</span>`:""}${
@@ -12386,6 +12436,28 @@ function openResultsModal(opp, zameraj){
     n.addEventListener("input", ()=>prepocet("naklad"));
     mz.addEventListener("input", ()=>prepocet("marza"));
     t.addEventListener("input", ()=>prepocet("trzba"));
+    /* Neadresné doručovanie: náklad = kusy / 1000 × cena kategórie,
+       marža = tržba − náklad. Náklad sa počíta sám, ručne sa nemení. */
+    const kat=row.querySelector("select.nd-kat");
+    if(kat){
+      const ks=pole("mnozstvo");
+      // bez zvolenej hmotnosti sa dá náklad aj marža zadať ručne ako doteraz
+      const zamkni=()=>{ const on=!!kat.value;
+        n.readOnly=on; mz.readOnly=on; n.classList.toggle("nd-auto",on); mz.classList.toggle("nd-auto",on);
+        n.title=on?"Vypočíta sa z kusov a hmotnosti":""; mz.title=on?"Tržba mínus náklad":""; };
+      zamkni(); kat.addEventListener("change", zamkni);
+      const ndPrepocet=()=>{
+        const c=ndCena(kat.value), k=cisloAleboNull(ks?.value);
+        if(c==null || k==null){ return; }
+        const nv=zaokruhli(k/1000*c);
+        n.value=formatCislo(nv);
+        const tv=cisloAleboNull(t.value);
+        if(tv!=null) mz.value=formatCislo(zaokruhli(tv-nv));
+      };
+      kat.addEventListener("change", ndPrepocet);
+      ks?.addEventListener("input", ndPrepocet);
+      t.addEventListener("input", ndPrepocet);
+    }
     row.querySelector(".res-minus")?.addEventListener("click", ()=>row.remove());
   };
   scrim.querySelectorAll(".res-row[data-m]").forEach(pripojPrepocet);
@@ -12893,6 +12965,7 @@ function openResultsModal(opp, zameraj){
       const riadky=[...scrim.querySelectorAll(`.res-row[data-m="${CSS.escape(m)}"]`)].map((r2,i)=>{
         const x={};
         POLIA.forEach(f=>{ const inp=r2.querySelector(`input[data-f="${f}"]`); x[f]= (bez||!inp) ? null : cisloAleboNull(inp.value); });
+        { const kat=r2.querySelector("select.nd-kat"); if(kat) x.ndKategoria = kat.value ? Number(kat.value) : null; }
         // kto riadok zadal — hlavný riadok podľa mesiaca, ďalšie podľa svojho zápisu
         if(i===0){ const p0=star?.polozky?.[0]; x.zadalMeno=p0?.zadalMeno||star?.zadalMeno||state.user.name; x.zadalKedy=p0?.zadalKedy||star?.zadalKedy||Date.now(); }
         else { x.zadalMeno=r2.dataset.zm||state.user.name; x.zadalKedy=Number(r2.dataset.zk)||Date.now(); }
@@ -12903,7 +12976,10 @@ function openResultsModal(opp, zameraj){
         nove[f]= hod.length ? Math.round(hod.reduce((a,v)=>a+v,0)*100)/100 : null;
       });
       nove.polozky = (!bez && riadky.length>1) ? riadky : null;
+      nove.ndKategoria = riadky[0]?.ndKategoria ?? null;
       const rovnake = star && !!star.bezFakturacie===bez
+        && (opp.segment!=="nad" || (star.ndKategoria??null)===(nove.ndKategoria??null)
+            && JSON.stringify((star.polozky||[]).map(x=>x.ndKategoria??null))===JSON.stringify((nove.polozky||[]).map(x=>x.ndKategoria??null)))
         && POLIA.every(k=>(star[k]??null)===(nove[k]??null))
         && JSON.stringify((star.polozky||[]).map(x=>POLIA.map(f=>x[f]??null)))===JSON.stringify((nove.polozky||[]).map(x=>POLIA.map(f=>x[f]??null)));
       const prazdne = !star && !bez && ["trzba","naklad","marza","mnozstvo"].every(k=>nove[k]==null);
@@ -12921,6 +12997,11 @@ function openResultsModal(opp, zameraj){
         return;
       }
     }
+    // neadresné: posledne zvolenú hmotnosť si prípad zapamätá ako predvolenú
+    if(opp.segment==="nad"){
+      const posl=zmeny.map(z=>z.nove.ndKategoria).filter(Boolean).pop();
+      if(posl && posl!==opp.ndKategoria){ try{ await backend.saveOpportunity({ id:opp.id, ndKategoria:posl }); }catch(e){} }
+    }
     if(!zmeny.length && !potvrdM){ close(); return; }
     if(ok){ ok.disabled=true; ok.textContent="Ukladám…"; }
     try{
@@ -12934,6 +13015,7 @@ function openResultsModal(opp, zameraj){
           mnozstvo: kusy ? nove.mnozstvo : null,
           bezFakturacie: nove.bezFakturacie,
           polozky: nove.polozky,                 // jednotlivé riadky mesiaca (súčet je v poliach vyššie)
+          ndKategoria: opp.segment==="nad" ? (nove.ndKategoria ?? null) : (star?.ndKategoria ?? null),
           mena: "EUR",
           ico: opp.ico||null, segment: opp.segment||null, produkt: opp.produkt||null,
           ownerUids: opp.ownerUids||[],
@@ -16048,22 +16130,57 @@ function viewClients(lenMoji){
 function openClientProfile(c){
   const p=c.profile||{};
   const scrim=el("div","scrim open"); scrim.style.zIndex="90";
-  scrim.innerHTML=`<div class="modal" style="max-width:520px">
-    <div class="modal-h"><h2>Údaje klienta</h2>
+  /* Vzhľad ako sekcia Firma v okne záznamu: overené IČO v zelenom rámiku
+     so „Zmeniť", Načítať z Finstat, web, klient, adresa a kontaktné osoby. */
+  const icoTeraz=String(p.ico||c.ico||"").replace(/\D/g,"");
+  const ePosl=c.entries.slice().sort((x,y)=>entryTs(y)-entryTs(x));
+  const webTeraz=p.web || (ePosl.find(e=>e.web)?.web) || "";
+  const eAdr=ePosl.find(e=>e.dmisStreet||e.companyInfo?.address);
+  const adresa=p.adresa || (eAdr ? (eAdr.dmisStreet ? [eAdr.dmisStreet, eAdr.dmisCity].filter(Boolean).join(", ") : eAdr.companyInfo.address) : "");
+  let kontakty=[]; try{ kontakty=kontaktyKlienta(c, (typeof kartyZDatabazy==="function")?kartyZDatabazy(c):[]); }catch(e){}
+  const ICO_TEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  const ICO_MAIL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>';
+  scrim.innerHTML=`<div class="modal cp-modal" style="max-width:760px">
+    <div class="modal-h"><h2>Upraviť klienta</h2>
       <button class="ghost" data-act="cancel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
     <div class="modal-b">
-      <div class="field"><label>Názov klienta</label><input id="cpName" value="${esc(p.name||c.name||"")}"></div>
-      <div class="field"><label>IČO</label>
-        <div class="ico-row">
-          <input id="cpIco" inputmode="numeric" autocomplete="off" value="${esc(p.ico||c.ico||"")}" placeholder="8 číslic">
-          <button type="button" class="btn" id="cpLookup">Načítať z Finstatu</button>
+      <div class="cp-firma">
+        <div class="cp-sek">Firma</div>
+        <div class="cp-r1">
+          <div class="cp-ico">
+            <label>IČO</label>
+            <div class="cp-ico-ok" id="cpIcoOk"${icoTeraz?"":' style="display:none"'}>
+              <div><span class="cp-chk">✓</span><b id="cpIcoTxt">${esc(icoTeraz)}</b> <span class="cp-ico-nm">· ${esc(p.name||c.name||"")}</span></div>
+              <button type="button" class="btn" id="cpIcoZmen">Zmeniť</button>
+            </div>
+            <input id="cpIco" inputmode="numeric" autocomplete="off" value="${esc(icoTeraz)}" placeholder="Zadaj IČO firmy"${icoTeraz?' style="display:none"':""}>
+          </div>
+          <button type="button" class="btn cp-fin" id="cpLookup">Načítať z Finstat</button>
+          <div class="cp-web"><label>Web klienta <span class="cp-nep">nepovinné</span></label>
+            <input id="cpWeb" value="${esc(webTeraz)}" placeholder="napr. firma.sk"></div>
         </div>
-        <div class="hint" id="cpIcoHint">Zadaj IČO a načítaj údaje, alebo nechaj hľadať podľa názvu klienta.</div></div>
-      <div class="field"><label>Obchodník v Zappise</label>
-        <select id="cpObch"><option value="">— nezvolený —</option>${
-          OBCH_NAME_LIST.map(n=>`<option value="${esc(n)}"${(p.obchodnik||"")===n?" selected":""}>${esc(n)}</option>`).join("")
-        }</select>
-        <div class="hint">Hlavný obchodník klienta. Nemení vlastníkov jednotlivých záznamov.</div></div>
+        <div class="hint" id="cpIcoHint">${icoTeraz?"IČO je overené a uložené. Meniť ho treba len vtedy, keď ide o inú firmu.":"Zadaj IČO a načítaj údaje, alebo nechaj hľadať podľa názvu klienta."}</div>
+        <div class="cp-r2">
+          <div class="field"><label>Klient</label><input id="cpName" value="${esc(p.name||c.name||"")}"></div>
+          <div class="field"><label>Obchodník v Zappise</label>
+            <select id="cpObch"><option value="">— nezvolený —</option>${
+              OBCH_NAME_LIST.map(n=>`<option value="${esc(n)}"${(p.obchodnik||"")===n?" selected":""}>${esc(n)}</option>`).join("")
+            }</select></div>
+        </div>
+        ${adresa?`<div class="cp-adr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(adresa)}</div>`:""}
+        <div class="cp-kont">
+          <div class="cp-kont-h"><b>Kontaktné osoby</b><span>upravíš ich v zázname klienta</span></div>
+          ${kontakty.length ? kontakty.slice(0,6).map(k=>{
+            const mena=[k.firstName,k.lastName].filter(Boolean).join(" ")||"(bez mena)";
+            const tels=String(k.phone||"").split(/[,;]/).map(x=>x.trim()).filter(Boolean);
+            const mails=String(k.email||"").split(/[,;]/).map(x=>x.trim()).filter(Boolean);
+            return `<div class="cp-k"><div class="cp-k-n"><b>${esc(mena)}</b>${k.position?`<span>${esc(k.position)}</span>`:""}</div>
+              <div class="cp-k-c">${tels.map(t=>`<span>${ICO_TEL}${esc(t)}</span>`).join("")}</div>
+              <div class="cp-k-c">${mails.map(m=>`<span>${ICO_MAIL}${esc(m)}</span>`).join("")}</div>
+              <div class="cp-k-z">${esc((k.zdroje||[]).join(", "))}</div></div>`;
+          }).join("") : `<div class="cp-k-nic">Zatiaľ žiadna kontaktná osoba.</div>`}
+        </div>
+      </div>
       <div class="field"><label>Poznámka</label><textarea id="cpNote" rows="3">${esc(p.poznamka||"")}</textarea></div>
       <label class="chk-row"><input type="checkbox" id="cpPropagate"><span>Doplniť toto IČO aj do všetkých záznamov klienta (${c.entries.length})</span></label>
       <div class="cp-derived">
@@ -16078,6 +16195,12 @@ function openClientProfile(c){
       <button class="btn" data-act="cancel">Zrušiť</button>
       <button class="btn solid" data-act="save">Uložiť</button>
     </div></div>`;
+  // „Zmeniť" overené IČO — prepne na pole
+  scrim.querySelector("#cpIcoZmen")?.addEventListener("click", ()=>{
+    scrim.querySelector("#cpIcoOk").style.display="none";
+    const i=scrim.querySelector("#cpIco"); i.style.display=""; i.focus(); i.select();
+    scrim.querySelector("#cpIcoHint").textContent="Zadaj nové IČO a overíš ho cez Načítať z Finstat.";
+  });
   const close=()=>scrim.remove();
   scrim.querySelectorAll('[data-act="cancel"]').forEach(b=>b.onclick=close);
 
@@ -16098,6 +16221,12 @@ function openClientProfile(c){
       if(r && r.found){
         if(r.ico) inIco.value=String(r.ico).replace(/\D/g,"");
         if(r.name) inName.value=r.name;
+        // overené IČO zobrazíme v zelenom rámiku ako v zázname
+        { const ok=scrim.querySelector("#cpIcoOk");
+          if(ok && inIco.value){ scrim.querySelector("#cpIcoTxt").textContent=inIco.value;
+            ok.querySelector(".cp-ico-nm").textContent="· "+(r.name||inName.value||"");
+            ok.style.display=""; inIco.style.display="none"; } }
+        if(r.web && scrim.querySelector("#cpWeb") && !scrim.querySelector("#cpWeb").value) scrim.querySelector("#cpWeb").value=r.web;
         const adresa=[r.street,[r.zipCode,r.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
         const own=dmisOwnersFor(r.ico, r.name);
         hint.innerHTML=`<span class="ico-ok">✓ ${esc(r.name||"")}</span>`
@@ -16143,6 +16272,7 @@ function openClientProfile(c){
         ico: ico ? ico.padStart(8,"0") : null,
         obchodnik: scrim.querySelector("#cpObch").value || null,
         poznamka: (scrim.querySelector("#cpNote").value||"").trim() || null,
+        web: (typeof normalizujWeb==="function" ? normalizujWeb(scrim.querySelector("#cpWeb")?.value||"") : (scrim.querySelector("#cpWeb")?.value||"").trim()) || null,
         updatedBy: state.user.name, updatedAt: Date.now(),
       });
       if(ico && scrim.querySelector("#cpPropagate").checked){
