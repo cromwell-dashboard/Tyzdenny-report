@@ -9510,6 +9510,15 @@ function renderNow(){
     const moje=viditelnePripady();
     counts.results = moje.reduce((a,o)=>a+stavVyplnenia(o).chyba, 0);
     document.querySelectorAll('[data-cnt="results"]').forEach(x=>x.classList.toggle("has", counts.results>0));
+    /* Odznak: koľko mojich prípadov má nedoplnené čísla (obchodník svoje, líder
+       svoje služby, vedenie všetky) — ako červená bublina pri Úlohách. */
+    const nedopl=moje.filter(o=>smieRiesitPripad(o) && stavVyplnenia(o).chyba>0).length;
+    document.querySelectorAll('[data-view="results"]').forEach(b=>{
+      let dot=b.querySelector(".urgent-dot");
+      if(nedopl && !dot){ dot=el("span","urgent-dot"); b.appendChild(dot); }
+      if(dot){ dot.style.display=nedopl?"":"none"; dot.textContent=nedopl>99?"99+":String(nedopl);
+        b.title = nedopl ? `${nedopl} ${plural(nedopl,"prípad má","prípady majú","prípadov má")} nedoplnené čísla` : ""; }
+    });
   }
   counts.leads = state.leads.length ? state.leads.filter(l=>l.segment!=="E").length : "";
   counts.myleads = myTakenLeadsCount() || "";
@@ -11976,6 +11985,28 @@ function mesiaceNaVyplnenie(opp){
   }
   return out;
 }
+/* Mesiace v okne výsledkov: uzavreté mesiace (na vyplnenie) + každý ďalší
+   mesiac obdobia, ktorý už niekto pridal (aj prázdny) — prebiehajúci aj budúce.
+   Predtým sa pridaný prázdny mesiac neukázal a nedal sa vyplniť. */
+function koniecObdobia(opp){
+  return opp.nbDo || (opp.nbOd ? pridajMesiace(opp.nbOd,(opp.nbMesiacov||nbDlzkaMesiacov(opp.segment,opp.produkt)||12)-1) : null);
+}
+function mesiaceVOkne(opp){
+  const out=new Set(mesiaceNaVyplnenie(opp));
+  const kon=koniecObdobia(opp);
+  resultsPre(opp.id).forEach(r=>{ if(r.obdobie>=opp.nbOd && (!kon || r.obdobie<=kon)) out.add(r.obdobie); });
+  return [...out].sort();
+}
+/* Ďalší mesiac, ktorý sa dá pridať — prebiehajúci, potom nasledujúce (v rámci obdobia). */
+function dalsiMesiacNaPridanie(opp){
+  if(!opp?.nbOd) return null;
+  const m=mesiaceVOkne(opp), kon=koniecObdobia(opp), teraz=terajsiMesiac();
+  let dalsi = m.length ? pridajMesiace(m[m.length-1],1) : opp.nbOd;
+  if(dalsi<opp.nbOd) dalsi=opp.nbOd;
+  if(kon && dalsi>kon) return null;
+  if(dalsi>pridajMesiace(teraz,12)) return null;
+  return dalsi;
+}
 /* Termín na doplnenie fakturácie: 20. deň nasledujúceho mesiaca.
    Po ňom sa mesiac považuje za zmeškaný a odmena zaň v danom kole nejde. */
 const TERMIN_DEN = 20;
@@ -12247,7 +12278,7 @@ function riadokPolozkyVysledku(m, x, kusy, zamknute, bez, opp){
 }
 
 function openResultsModal(opp, zameraj){
-  const mesiace=mesiaceNaVyplnenie(opp);
+  const mesiace=mesiaceVOkne(opp);
   const periodicke=new Set(mesiacePodlaPeriodicity(opp));
   const kusy=evidujeKusy(opp.segment);
   const scrim=el("div","scrim open res-scrim"); scrim.style.zIndex="92";
@@ -12309,11 +12340,9 @@ function openResultsModal(opp, zameraj){
           <div class="hint">Posunie celé obdobie. Použi, keď bola aktivita nahodená spätne a fakturovalo sa skôr.${smieMenitOdmenu()?" Dĺžku obdobia môže zmeniť vedenie, napríklad z 36 na 12 mesiacov.":""}</div>
         </div>
       </div>
-      ${(()=>{ const teraz=terajsiMesiac();
-        const uzTam=mesiace.includes(teraz);
-        const vObdobi=opp.nbOd && opp.nbOd<=teraz && (!opp.nbDo || teraz<=opp.nbDo);
-        return (!uzTam && vObdobi)
-          ? `<button type="button" class="res-pridaj" data-act="pridajMesiac">+ Pridať ${esc(menoMesiaca(teraz))}</button>` : "";
+      ${(()=>{ const d=dalsiMesiacNaPridanie(opp);
+        return (d && !pripadUzavrety(opp))
+          ? `<button type="button" class="res-pridaj" data-act="pridajMesiac" data-m="${esc(d)}">+ Pridať ${esc(menoMesiaca(d))}</button>` : "";
       })()}
       ${mesiace.length ? `<div class="res-grid res-list${kusy?"":" bez-kusov"}${vidiOdmenu()?"":" bez-odmeny"}">
         <div class="res-row res-hd"><span>Mesiac</span><span>Tržba NB €</span><span>Náklad €</span><span>Marža NB €</span>${kusy?`<span>Kusy</span>`:""}<span></span>${vidiOdmenu()?`<span class="r">Odmena</span>`:""}</div>
@@ -12705,7 +12734,7 @@ function openResultsModal(opp, zameraj){
   {
     const pm=scrim.querySelector('[data-act="pridajMesiac"]');
     if(pm) pm.onclick=async()=>{
-      const m=terajsiMesiac();
+      const m=pm.dataset.m || terajsiMesiac();
       const [rok,mes]=m.split("-").map(Number);
       pm.disabled=true; pm.textContent="Pridávam…";
       try{
