@@ -4970,7 +4970,7 @@ const firebaseConfig = {
   appId:             "1:998598557554:web:dcf8a546fcf8423386e7eb",
   measurementId:     "G-LSVKHVY5WH"
 };
-const BOSS_EMAILS  = [ "peter.durana@cromwell.sk", "sef@cromwell.sk" ];
+const BOSS_EMAILS  = [ "peter.durana@cromwell.sk", "slavek.mynar@cromwell.sk", "sef@cromwell.sk" ];
 const ADMIN_EMAILS = [ "miroslava.stalmaskova@cromwell.sk" ];
 const LIDER_EMAILS = {     // email → segmenty ktoré líder riadi
   "katarina.chmelova@cromwell.sk": ["ad","nad"],
@@ -5033,6 +5033,7 @@ const KNOWN_EMAILS = new Set([
 // Používa sa na zobrazenie mena namiesto akéhokoľvek staršieho/nesprávneho textu uloženého priamo v zázname.
 const NAME_BY_EMAIL = {
   "peter.durana@cromwell.sk": "Peter Ďurana",
+  "slavek.mynar@cromwell.sk": "Slávek Mynář",
   "miroslava.stalmaskova@cromwell.sk": "Miroslava Štalmašková",
   "michal.svec@cromwell.sk": "Michal Švec",
   ...Object.fromEntries(Object.entries(OBCHODNIK_EMAILS).filter(([,v])=>v.name).map(([email,v])=>[email,v.name])),
@@ -8741,7 +8742,7 @@ async function firebaseBackend(){
     const autoRole = isAdmin?"admin": isBoss?"sef": liderSegs?"lider":"obchodnik";
     const autoSegs = liderSegs || obchInfo?.segments || [];
     const autoFirma = obchInfo?.firma || null;
-    const autoName = obchInfo?.name || null;
+    const autoName = obchInfo?.name || NAME_BY_EMAIL[email] || null;
     if(!data){
       data={name:autoName||u.displayName||u.email.split("@")[0], email:u.email,
             role:autoRole, segments:autoSegs, firma:autoFirma};
