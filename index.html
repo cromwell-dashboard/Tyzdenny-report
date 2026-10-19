@@ -4271,6 +4271,19 @@ select:disabled{cursor:default; opacity:.65}
 .imp-row.vynech{opacity:.45}
 .imp-row.vynech .imp-st{text-decoration:line-through}
 .imp-tip{font-size:12px;color:var(--muted);margin:2px 0 8px}
+/* Mesačné výsledky — kto a kedy jedným riadkom */
+.res-kto{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:var(--muted);margin-top:3px;cursor:help}
+.res-kto-n{font-style:normal;font-size:10px;font-weight:700;color:var(--brand);background:var(--brand-soft);border-radius:5px;padding:0 4px;margin-left:3px}
+/* Mesačné výsledky — rovnaké šírky stĺpcov v každom riadku (predtým sa podľa
+   obsahu riadku posúvali a polia neboli pod sebou) */
+@media (min-width:901px){
+  .res-row{grid-template-columns:minmax(0,1fr) 100px 100px 100px 80px 300px 100px}
+  .res-list.bez-odmeny .res-row{grid-template-columns:minmax(0,1fr) 100px 100px 100px 80px 300px}
+  .res-grid.bez-kusov .res-row{grid-template-columns:minmax(0,1fr) 104px 104px 104px 300px 100px}
+  .res-grid.bez-kusov.bez-odmeny .res-row{grid-template-columns:minmax(0,1fr) 104px 104px 104px 300px}
+  .res-row .res-m{min-width:0;overflow:hidden}
+}
+.rs-name > .rs-klient{grid-column:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--ink)}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -12555,8 +12568,12 @@ const evidujeKusy = segment => segment!=="digital";
    kde sa odmena počíta z obratu. Všade inde je povinná. */
 const marzaPovinna = (segment, produkt) => !(segment==="zelena" && !produkt);
 const cisloAleboNull = v => {
-  // odstránime medzery aj pevné medzery z tisícov a povolíme desatinnú čiarku
-  const t=String(v??"").replace(/[\s\u00A0]/g,"").replace(",","."); if(!t) return null;
+  /* Toleruje aj vložené hodnoty z Excelu: „1 534,18 €", „1.534,18", „1534.18 EUR".
+     Predtým sa také číslo nerozpoznalo — marža sa nedopočítala a Potvrdiť chýbalo. */
+  let t=String(v??"").replace(/[\s\u00A0\u202F]/g,"").replace(/€|eur/gi,"");
+  if(!t) return null;
+  if(t.includes(",") && t.includes(".")) t=t.replace(/\./g,"").replace(",",".");
+  else t=t.replace(",",".");
   const n=Number(t); return Number.isFinite(n) ? n : null; };
 const formatCislo = v => v==null ? "" : String(v);
 const MESIACE_SK=["január","február","marec","apríl","máj","jún","júl","august","september","október","november","december"];
@@ -12589,7 +12606,12 @@ function ktoZadal(x){
   else if(x.zadalMeno) casti.push(`zadal ${esc(uplneMeno(x.zadalMeno))}${x.zadalKedy?` · ${esc(casKratko(x.zadalKedy))}`:""}`);
   if(x.upravilMeno) casti.push(`upravil ${esc(uplneMeno(x.upravilMeno))}${x.upravilKedy?` · ${esc(casKratko(x.upravilKedy))}`:""}`);
   if(x.potvrdene && x.potvrdilMeno) casti.push(`potvrdil ${esc(uplneMeno(x.potvrdilMeno))}${x.potvrdilKedy?` · ${esc(casKratko(x.potvrdilKedy))}`:""}`);
-  return casti.length ? `<span class="res-kto">${casti.join("<br>")}</span>` : "";
+  if(!casti.length) return "";
+  /* Prehľadnejšie: jeden riadok s poslednou zmenou, celá história po prejdení myšou. */
+  const posledna=casti[casti.length-1];
+  const ikona = posledna.startsWith("potvrdil") ? "✓" : posledna.startsWith("upravil") ? "✎" : posledna.startsWith("import") ? "⇣" : "+";
+  const plny=casti.map(c=>c.replace(/<[^>]+>/g,"")).join("\n");
+  return `<span class="res-kto" title="${plny}">${ikona} ${posledna}${casti.length>1?` <i class="res-kto-n">+${casti.length-1}</i>`:""}</span>`;
 }
 /* Nákladový cenník neadresného doručovania — cena za 1000 ks podľa hmotnosti
    (kategória „do X g"). Rovnaký pre Cromwell aj KOLOS. Pri zmene cien upraviť tu. */
@@ -13350,6 +13372,11 @@ function openResultsModal(opp, zameraj){
         const hod=riadky.map(x=>x[f]).filter(v=>v!=null);
         nove[f]= hod.length ? Math.round(hod.reduce((a,v)=>a+v,0)*100)/100 : null;
       });
+      // chýbajúcu maržu / náklad dopočítame z tržby (aj keď sa čísla vložili naraz)
+      if(!bez && nove.trzba!=null){
+        if(nove.marza==null && nove.naklad!=null) nove.marza=Math.round((nove.trzba-nove.naklad)*100)/100;
+        else if(nove.naklad==null && nove.marza!=null) nove.naklad=Math.round((nove.trzba-nove.marza)*100)/100;
+      }
       nove.polozky = (!bez && riadky.length>1) ? riadky : null;
       nove.ndKategoria = riadky[0]?.ndKategoria ?? null;
       const rovnake = star && !!star.bezFakturacie===bez
@@ -16254,7 +16281,7 @@ function viewResults(){
       /* Miesto pre fajku je vždy rovnaké — aj keď fajka nie je. Názvy firiem
          tak tvoria jeden zvislý stĺpec bez ohľadu na stav prípadu. */
       r.innerHTML=`<span class="rs-name"><span class="rs-fajka-box">${stk==="naKontrolu"||stk==="skontrolovane"
-          ? `<span class="rs-fajka ${stk}" title="${stk==="skontrolovane"?`Skontroloval ${esc(o.skontrolovalKym||"—")}`:`Označil za hotové ${esc(o.hotovoKym||"—")}`}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>` : ""}</span><span class="kl-link" data-klient="${esc(o.client||"")}" title="${esc(o.client||"")} — otvoriť detail klienta">${esc(o.client||"—")}</span>${
+          ? `<span class="rs-fajka ${stk}" title="${stk==="skontrolovane"?`Skontroloval ${esc(o.skontrolovalKym||"—")}`:`Označil za hotové ${esc(o.hotovoKym||"—")}`}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>` : ""}</span><span class="rs-klient" title="${esc(o.client||"")} — otvoriť mesačné výsledky">${esc(o.client||"—")}</span>${
           o.zakazka?`<span class="rs-zak">${esc(o.zakazka)}</span>`:""}${(()=>{
             /* Meno obchodníka pod firmou — celé; ak sa nezmestí, skráti sa
                a celé mená sú v bublinke. */
@@ -16388,7 +16415,8 @@ function viewResults(){
          Tlačidlá, odkazy a políčka si svoje kliknutie ponechajú. */
       r.classList.add("klik");
       r.onclick=(ev)=>{
-        if(ev.target.closest("button, a, input, label, .kl-link")) return;
+        // názov klienta už nevedie do detailu klienta — celý riadok otvára mesačné výsledky
+        if(ev.target.closest("button, a, input, label")) return;
         openResultsModal(o);
       };
       // úpravy priamo v riadku — netreba vchádzať do záznamu
