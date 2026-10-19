@@ -12466,16 +12466,10 @@ async function potvrdVysledok(res, opp){
   await backend.confirmResult(res.id, { potvrdene:true,
     potvrdilUid: state.user.uid||null, potvrdilMeno: state.user.name,
     potvrdilKedy: Date.now() });
-  /* Potvrdením je práca za daný mesiac hotová — prípad rovno dostane zelenú
-     fajku. Klikať ešte raz v zozname by bolo to isté dvakrát. */
-  const pripad = opp || oppById(res.opportunityId);
-  if(pripad && stavKontroly(pripad)!=="skontrolovane"){
-    await backend.saveOpportunity({ id:pripad.id, kontrola:"skontrolovane",
-      skontrolovalKym:state.user.name, skontrolovalKedy:Date.now(),
-      updatedBy:state.user.name, updatedAt:Date.now() });
-  }
-  // líder potvrdením rovno schváli odmenu za tento mesiac
-  return await schvalOdmenyPripadu(pripad, [{ ...res, potvrdene:true }]);
+  /* Potvrdenie = obchodník (alebo ktokoľvek) potvrdí čísla. Odmenu NEschvaľuje —
+     to robí líder samostatne tlačidlom „Schváliť" vo Výsledkoch NB alebo
+     fajkou „Označiť za hotové". */
+  return { ok:0, neuplne:0 };
 }
 const mesiacVyplneny = (oppId, m) => {
   const r=resultFor(oppId,m);
