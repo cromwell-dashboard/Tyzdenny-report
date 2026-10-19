@@ -4465,7 +4465,7 @@ select:disabled{cursor:default; opacity:.65}
         <input type="file" id="nbFileInput" accept=".csv" style="display:none">
         <button class="btn-primary" id="importResBtn" style="background:#fff;color:var(--brand);border:1px solid var(--line);box-shadow:none;margin-top:6px;display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
-          Import výsledkov (XLSX)
+          Import výsledkov Balíky
         </button>
         <input type="file" id="resFileInput" accept=".xlsx,.xls,.csv" style="display:none">
         <button class="navitem" id="opravMenaBtn" type="button" style="margin-top:8px; display:none" title="Doplní neúplné mená obchodníkov v záznamoch (napr. Csuba → Adrian Csuba)">
@@ -8775,9 +8775,16 @@ function demoBackend(){
 async function firebaseBackend(){
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
   const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
-  const { getFirestore, collection, query, where, onSnapshot, doc, setDoc, deleteDoc, getDoc, getDocs, arrayUnion, arrayRemove, writeBatch } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+  const { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, query, where, onSnapshot, doc, setDoc, deleteDoc, getDoc, getDocs, arrayUnion, arrayRemove, writeBatch } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
   const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
-  const app=initializeApp(firebaseConfig); const auth=getAuth(app); const db=getFirestore(app);
+  const app=initializeApp(firebaseConfig); const auth=getAuth(app);
+  /* Lokálna kópia dát v prehliadači (IndexedDB): pri ďalšom otvorení sa Zappis
+     zobrazí hneď z nej a zo servera sa stiahnu len zmeny. Bez nej sa pri každom
+     štarte sťahovali všetky záznamy, výsledky a odmeny nanovo. Ak prehliadač
+     lokálne úložisko nedovolí, Firestore funguje ďalej ako doteraz. */
+  let db;
+  try{ db=initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+  catch(e){ console.warn("Lokálna cache nie je dostupná:", e); db=getFirestore(app); }
   const fx=getFunctions(app,"europe-west1");
   const improveTextCallable=httpsCallable(fx,"improveText");
   const generateSuggestionsCallable=httpsCallable(fx,"generateSuggestions");
@@ -8901,7 +8908,8 @@ async function firebaseBackend(){
         err=>{ console.error("meetings snapshot error:", err); });
       // Ponuky z Kolos kalkulačky — jedno dávkové čítanie celej kolekcie, potom už
       // len lookup v mape (žiadne čítanie na každý záznam zvlášť).
-      if(!state.kolosOffersLoaded){
+      // ponuky KOLOS netreba hneď — načítame ich až po zobrazení Zappisu
+      if(!state.kolosOffersLoaded) setTimeout(()=>{ if(state.kolosOffersLoaded) return;
         getDocs(collection(db,"kolosOffers"))
           .then(snap=>{
             const m=new Map();
@@ -8909,7 +8917,7 @@ async function firebaseBackend(){
             state.kolosOffers=m; state.kolosOffersLoaded=true; render();
           })
           .catch(err=>{ console.error("kolosOffers load error:", err); state.kolosOffersLoaded=true; });
-      }
+      }, 3000);
       // Databázy firiem sa NENAČÍTAVAJÚ pri štarte — býva ich tisíce a väčšina
       // používateľov ich vôbec neotvorí. Načítajú sa až pri prvom použití.
       unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); u13(); u14(); u15(); u16(); u17(); u18(); u19(); if(leadsUnsub) leadsUnsub(); };
@@ -19481,9 +19489,11 @@ function firmaKluc(nazov){
    v mesiaci importu. Najprv podľa IČO, potom podľa názvu firmy. */
 function impNajdiPripad(r){
   const klucRiadku=firmaKluc(r.klient);
+  // DMIS export Balíkov produkt neuvádza — ak ho nemá ani riadok, produkt sa nekontroluje
+  const bezProduktu = r.segment==="baliky" && !r.produkt;
   const kandidati=(state.opportunities||[]).filter(o=>{
     if(o.segment!==r.segment) return false;
-    if((o.produkt||null)!==(r.produkt||null)) return false;
+    if(!bezProduktu && (o.produkt||null)!==(r.produkt||null)) return false;
     if(pripadZruseny(o)) return false;
     if(r.ico && icoKey(o.ico)) return icoKey(o.ico)===r.ico;
     return firmaKluc(o.client)===klucRiadku;
@@ -19507,7 +19517,8 @@ function impSpracuj(tabulka){
   const IX={ ico:stlpec("ICO"), klient:stlpec("Klient"), sluzba:stlpec("Sluzba"),
     produkt:stlpec("Produkt"), zakazka:stlpec("Zakazka"), mesiac:stlpec("Mesiac"),
     trzba:stlpec("Trzba"), marza:stlpec("Marza"), mnozstvo:stlpec("Mnozstvo"),
-    bez:stlpec("Bez_fakturacie"), obchodnik:stlpec("Obchodnik"), poznamka:stlpec("Poznamka") };
+    bez:stlpec("Bez_fakturacie"), obchodnik:stlpec("Obchodnik"), poznamka:stlpec("Poznamka"),
+    material:stlpec("Material") };
   if(IX.sluzba<0 || IX.mesiac<0){
     /* Nech je z hlášky jasné, čo v súbore naozaj je — inak sa dohaduje,
        či ide o iný export alebo len o inak pomenovaný stĺpec. */
@@ -19529,7 +19540,8 @@ function impSpracuj(tabulka){
       ico:icoKey(g("ico")), zakazka:String(g("zakazka")||"").trim(),
       mesiac:impMesiac(g("mesiac")), trzba:impCislo(g("trzba")), marza:impCislo(g("marza")),
       mnozstvo:impCislo(g("mnozstvo")), bez:impAno(g("bez")),
-      obchodnik:String(g("obchodnik")||"").trim(), poznamka:String(g("poznamka")||"").trim() };
+      obchodnik:String(g("obchodnik")||"").trim(), poznamka:String(g("poznamka")||"").trim(),
+      material:String(g("material")||"").trim() };
 
     const m=impSluzba(sl);
     if(!m){ r.stav="chyba"; r.preco=`Neznáma služba „${sl}“.`; out.push(r); return; }
@@ -19545,11 +19557,53 @@ function impSpracuj(tabulka){
     if(!r.mesiac){ r.stav="chyba"; r.preco="Nečitateľný mesiac."; out.push(r); return; }
     if(!r.bez && r.trzba==null){ r.stav="chyba"; r.preco="Chýba tržba."; out.push(r); return; }
 
-    const opp=impNajdiPripad(r);
-    if(!opp){ r.stav="nespar"; r.preco="K tomuto klientovi a službe nie je obchodný prípad."; out.push(r); return; }
+    let opp=impNajdiPripad(r);
+    /* Balíky: stačí IČO + služba Balíky v Zappise — v akejkoľvek fáze (nie len
+       Vyfakturované). Ak k IČO existuje záznam Balíkov bez obchodného prípadu,
+       prípad sa pri zápise založí; prípadu bez spusteného obdobia sa obdobie
+       spustí mesiacom z importu. */
+    if(r.segment==="baliky" && r.ico){
+      const zazn=(state.all||[]).filter(e=>e.segment==="baliky" && icoKey(e.leadIco||e.ico)===r.ico)
+        .sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+      /* Viac obchodov u jedného klienta rozlišuje materiál (= názov zákazky).
+         Zhodný materiál → bežiaci prípad. Iný materiál → nový prípad s novým
+         NB obdobím. Prípad bez názvu zákazky prevezme materiál z importu. */
+      if(r.material){
+        const pripady=[...new Set([
+          ...(state.opportunities||[]).filter(o=>o.segment==="baliky" && icoKey(o.ico)===r.ico),
+          ...zazn.map(e=>oppById(e.opportunityId)).filter(Boolean),
+        ])].filter(o=>!pripadZruseny(o));
+        if(pripady.length){
+          const zhoda=pripady.find(o=>o.zakazka && matZhoda(o.zakazka, r.material));
+          const prazdny=pripady.filter(o=>!String(o.zakazka||"").trim())
+            .sort((a,b)=>(pripadUzavrety(a)-pripadUzavrety(b)) || String(b.nbOd||"").localeCompare(String(a.nbOd||"")))[0];
+          if(zhoda) opp=zhoda;
+          else if(prazdny) opp=prazdny;
+          else{
+            const nb=zazn.find(e=>e.isNewBusiness||kindOf(e)==="nb") || zazn[0];
+            if(nb){ r.zalozZ=nb; r.novyMat=true; r.stav="novy";
+              r.preco=`Iný materiál („${r.material}“) — založí sa nový prípad s novým NB obdobím.`; out.push(r); return; }
+          }
+        }
+      }
+      if(!opp){
+        // bežiaci prípad klienta: cez prepojenie záznamu alebo podľa IČO / názvu (ako pri zázname)
+        const sPripadom=zazn.map(e=>oppById(e.opportunityId)).find(o=>o && !pripadZruseny(o))
+          || zazn.filter(e=>e.isNewBusiness||kindOf(e)==="nb").map(e=>{ try{ return oppForEntry({ ...e, isNewBusiness:true }); }catch(x){ return null; } }).find(o=>o && !pripadZruseny(o));
+        if(sPripadom) opp=sPripadom;
+        else{
+          // len New business záznam (v akejkoľvek fáze) — Customer care klient nie je nový obchod
+          const nb=zazn.find(e=>e.isNewBusiness||kindOf(e)==="nb");
+          if(nb){ r.zalozZ=nb; r.stav="novy"; r.preco="Obchodný prípad sa založí zo záznamu Balíkov."; out.push(r); return; }
+          if(zazn.length){ r.stav="nespar"; r.preco="IČO je pri Balíkoch len ako Customer care — nie je to New business."; out.push(r); return; }
+        }
+      }
+      if(opp && (!opp.nbOd || (r.mesiac<opp.nbOd && !opp.nbZamknute))){ r.opp=opp; r.spustiOd=true; }
+    }
+    if(!opp){ r.stav="nespar"; r.preco="K tomuto IČO a službe nie je v Zappise žiadny záznam."; out.push(r); return; }
     r.opp=opp;
-    if(!opp.nbOd){ r.stav="nespar"; r.preco="Prípadu ešte nebeží obdobie odmeny."; out.push(r); return; }
-    if(r.mesiac<opp.nbOd || (opp.nbDo && r.mesiac>opp.nbDo)){
+    if(!opp.nbOd && !r.spustiOd){ r.stav="nespar"; r.preco="Prípadu ešte nebeží obdobie odmeny."; out.push(r); return; }
+    if(!r.spustiOd && (r.mesiac<opp.nbOd || (opp.nbDo && r.mesiac>opp.nbDo))){
       r.stav="mimo"; r.preco=`Mesiac je mimo obdobia ${menoMesiaca(opp.nbOd)} – ${menoMesiaca(opp.nbDo)}.`;
       out.push(r); return;
     }
@@ -19908,6 +19962,75 @@ async function ulozZRiadku(opp, mesiac, zmeny){
 }
 
 /* Načítanie súboru a okno s náhľadom. */
+/* Export z DMIS pre Balíky (stĺpce MRS - Suma, MRS - Počet …). Prevedie sa na
+   bežný formát importu: jeden riadok = klient (IČO) × mesiac, sčítané.
+   K = klient, L = IČO, N = materiál (→ názov zákazky, ak je prázdny),
+   R = náklad, U = počet, V = predajná cena (tržba), H / G = mesiac. */
+/* Názov materiálu bez dátumov, čísel a interpunkcie — „ZPC group_01 09 2026"
+   a „ZPC Group 02.09." je ten istý materiál. */
+const MAT_STOP=new Set(["sk","cz","sro","as","spol","jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"]);
+function matKluc(t){
+  return normalizeForCompare(t).replace(/\d+/g," ").replace(/[^a-z]+/g," ").split(" ")
+    .filter(w=>w.length>1 && !MAT_STOP.has(w));
+}
+/* Materiál bez dátumov na názov zákazky: „COOP Jednota 9_2026 03 09 2026" → „COOP Jednota". */
+function cistyMaterial(t){
+  // časti s číslicami (dátumy, poradové čísla) preč, podčiarkovníky na medzery
+  const c=String(t||"").split(/[\s_]+/).filter(w=>w && !/\d/.test(w)).join(" ").trim();
+  return c || String(t||"").trim();
+}
+function levPomer(a,b){
+  if(a===b) return 1; if(!a||!b) return 0;
+  const m=a.length, n=b.length, d=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){ let p=d[0]; d[0]=i;
+    for(let j=1;j<=n;j++){ const t=d[j]; d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1)); p=t; } }
+  return 1-d[n]/Math.max(m,n);
+}
+/* Približná zhoda materiálu: rovnaké slová (aspoň 60 % kratšieho názvu),
+   alebo podobný text (preklepy, iné medzery) — aspoň 80 %. */
+function matZhoda(a,b){
+  const A=matKluc(a), B=matKluc(b);
+  if(!A.length || !B.length) return false;
+  const SA=new Set(A), SB=new Set(B);
+  const spol=[...SA].filter(w=>SB.has(w) || [...SB].some(v=>levPomer(w,v)>=0.8)).length;
+  if(spol/Math.min(SA.size,SB.size)>=0.6) return true;
+  return levPomer(A.join(""), B.join(""))>=0.8;
+}
+function jeDmisBaliky(hl){
+  const h=(hl||[]).map(x=>normalizeForCompare(x));
+  return h.includes(normalizeForCompare("MRS - Suma")) && h.includes(normalizeForCompare("MRS - Počet")) && h.includes("ico");
+}
+function prevedDmisBaliky(tabulka){
+  const hl=tabulka[0].map(x=>normalizeForCompare(x));
+  const ix=n=>hl.indexOf(normalizeForCompare(n));
+  const IX={ klient:ix("Klient refakturovať"), ico:ix("IČO"), mat:ix("Materiál"), naklad:ix("MRS - Suma obj."),
+    pocet:ix("MRS - Počet"), trzba:ix("MRS - Suma"), datum:ix("Dátum distribúcie"), blok:ix("Blok"), obch:ix("Obchodník") };
+  // stĺpce podľa písmen, keby sa hlavička líšila
+  const P={ klient:10, ico:11, mat:13, naklad:17, pocet:20, trzba:21, datum:7, blok:6, obch:4 };
+  Object.keys(P).forEach(k=>{ if(IX[k]<0) IX[k]=P[k]; });
+  const mesiacZ=(d,b)=>{ const m=impMesiac(d); if(m) return m;
+    const x=String(b||"").match(/(\d{1,2})[_\/.\-](\d{4})/); return x?`${x[2]}-${String(+x[1]).padStart(2,"0")}`:""; };
+  // „Prištic Peter" → „Peter Prištic", ak tak meno v Zappise je
+  const obchMeno=t=>{ const c=String(t||"").trim(); if(!c) return "";
+    const otoc=c.split(/\s+/).reverse().join(" ");
+    return OBCH_NAME_LIST.find(x=>normalizeForCompare(x)===normalizeForCompare(otoc)) ? otoc : c; };
+  const sk=new Map();
+  tabulka.slice(1).forEach(row=>{
+    const ico=icoKey(row[IX.ico]); const klient=String(row[IX.klient]||"").trim();
+    if(!ico && !klient) return;
+    const mes=mesiacZ(row[IX.datum], row[IX.blok]);
+    const mat=String(row[IX.mat]||"").trim();
+    // rovnaký klient + mesiac + (približne) rovnaký materiál = jeden riadok
+    const zak=(ico||firmaKluc(klient))+"|"+mes;
+    let a=[...sk.values()].find(x=>x.zak===zak && (x.mat===mat || matZhoda(x.mat, mat)));
+    if(!a){ a={ zak, ico, klient, mes, trzba:0, naklad:0, pocet:0, mat, obch:obchMeno(row[IX.obch]) }; sk.set(zak+"|"+sk.size,a); }
+    a.trzba+=impCislo(row[IX.trzba])||0; a.naklad+=impCislo(row[IX.naklad])||0; a.pocet+=impCislo(row[IX.pocet])||0;
+  });
+  const out=[["ICO","Klient","Sluzba","Mesiac","Trzba","Marza","Mnozstvo","Obchodnik","Material"]];
+  sk.forEach(a=>{ const t=Math.round(a.trzba*100)/100, n=Math.round(a.naklad*100)/100;
+    out.push([a.ico, a.klient, "Balíky", a.mes, t, Math.round((t-n)*100)/100, a.pocet||null, a.obch, a.mat]); });
+  return out;
+}
 async function nacitajImportVysledkov(file){
   if(typeof XLSX==="undefined"){
     toast("⚠ Knižnica na čítanie XLSX sa nenačítala. Skontroluj pripojenie na internet a načítaj stránku znova.");
@@ -19925,6 +20048,11 @@ async function nacitajImportVysledkov(file){
     return;
   }
   console.info("Import: prečítaných riadkov v hárku:", tabulka.length);
+  if(jeDmisBaliky(tabulka[0])){
+    tabulka=prevedDmisBaliky(tabulka);
+    state.impSystem="DMIS";
+    console.info("Import: rozpoznaný export DMIS – Balíky, zlúčených riadkov:", tabulka.length-1);
+  }
   const res=impSpracuj(tabulka);
   if(res.chyba){ toast("⚠ "+res.chyba); return; }
   if(!res.riadky.length){
@@ -19947,7 +20075,7 @@ const IMP_STAVY={
 /* Zdrojové systémy, z ktorých sa výsledky importujú. Pribúdajú — Nemesis,
    systémy Zelenej pošty a ďalšie. Názov ide do príznaku pri každom čísle,
    aby obchodník vedel, odkiaľ mu tam pribudlo. */
-const IMP_SYSTEMY = ["Nemesis", "Zelená pošta", "KOLOS", "Iný import"];
+const IMP_SYSTEMY = ["Nemesis", "DMIS", "Zelená pošta", "KOLOS", "Iný import"];
 function oknoImportu(riadky, nazovSuboru){
   if(!state.impSystem) state.impSystem=IMP_SYSTEMY[0];
   if(state.impPrepis===undefined) state.impPrepis=false;
@@ -20068,7 +20196,7 @@ function oknoImportu(riadky, nazovSuboru){
      spravidla spáruje viac mesiacov toho istého klienta naraz. */
   const prepocitaj=()=>{
     riadky.forEach(r=>{
-      if(!r.segment || r.stav==="chyba") return;
+      if(!r.segment || r.stav==="chyba" || r.zalozZ || r.spustiOd) return;   // Balíky — vybavené pri zápise
       const opp=impNajdiPripad(r);
       if(!opp){ r.stav="nespar"; r.preco="K tomuto klientovi a službe nie je obchodný prípad."; return; }
       r.opp=opp;
@@ -20106,7 +20234,53 @@ function oknoImportu(riadky, nazovSuboru){
     const err=scrim.querySelector("#impErr");
     const zapis=riadky.filter(r=>r.stav==="novy"||r.stav==="prepis");
     let hotovo=0, zlyhalo=0;
+    /* Najprv prípady: založiť chýbajúce a spustiť obdobie od najstaršieho
+       mesiaca v importe (Balíky v akejkoľvek fáze). */
+    {
+      const prvyMes=new Map();
+      zapis.forEach(r=>{ const k=r.zalozZ ? "z:"+r.zalozZ.id+(r.novyMat?"|"+matKluc(r.material).join(" "):"") : (r.spustiOd&&r.opp ? "o:"+r.opp.id : null);
+        if(k && (!prvyMes.has(k) || r.mesiac<prvyMes.get(k))) prvyMes.set(k, r.mesiac); });
+      const hotoveId=new Map();
+      for(const r of zapis){
+        try{
+          if(r.zalozZ){
+            const k="z:"+r.zalozZ.id+(r.novyMat?"|"+matKluc(r.material).join(" "):"");
+            if(!hotoveId.has(k)){
+              const e={ ...r.zalozZ, isNewBusiness:true, ...(r.novyMat?{ zakazka:r.material }:{}) };
+              const id=await zabezpecPripad(e, !!r.novyMat);   // nový materiál → nový prípad
+              if(id && !r.zalozZ.opportunityId && !r.novyMat) await backend.opravMena([["entries", r.zalozZ.id, { opportunityId:id }]]);
+              if(id && r.novyMat) await backend.saveOpportunity({ id, zakazka:cistyMaterial(r.material) });
+              const o=oppById(id) || _cerstvePripady.get(id) || { id, segment:"baliky" };
+              /* Ak sa ukázalo, že prípad už existuje a beží, jeho obdobie sa NEMENÍ —
+                 čísla sa len doplnia do bežiaceho obdobia. Nové obdobie len pre nový prípad. */
+              let od=prvyMes.get(k);
+              if(!r.novyMat && o.nbOd && (od>=o.nbOd || o.nbZamknute)){
+                od=o.nbOd;
+                if(!o.ico && r.ico) await backend.saveOpportunity({ id, ico:r.ico });
+              } else {
+                await backend.saveOpportunity({ id, fakturovaneOd:od, ...nbObdobie(o, od), ico:o.ico||r.ico,
+                  updatedBy:state.user.name, updatedAt:Date.now() });
+              }
+              hotoveId.set(k, { ...o, id, nbOd:od, ico:o.ico||r.ico });
+            }
+            r.opp=hotoveId.get(k);
+          } else if(r.spustiOd && r.opp){
+            const k="o:"+r.opp.id;
+            if(!hotoveId.has(k)){
+              const od=r.opp.nbOd && r.opp.nbOd<prvyMes.get(k) ? r.opp.nbOd : prvyMes.get(k);
+              await backend.saveOpportunity({ id:r.opp.id, fakturovaneOd:od, ...nbObdobie(r.opp, od),
+                updatedBy:state.user.name, updatedAt:Date.now() });
+              hotoveId.set(k, { ...r.opp, nbOd:od });
+            }
+            r.opp=hotoveId.get(k);
+          }
+        }catch(e5){ console.error("import — prípad:", e5); r.chybaPripadu=true; }
+      }
+    }
     for(const r of zapis){
+      if(r.chybaPripadu || !r.opp){ zlyhalo++; continue; }
+      // mesiac po skončení bežiaceho obdobia sa nezapisuje (nové obdobie sa neotvára)
+      if(r.opp.nbDo && r.mesiac>r.opp.nbDo) continue;
       ok.textContent=`Zapisujem ${hotovo+1}/${zapis.length}…`;
       try{
         const [rok,mes]=r.mesiac.split("-").map(Number);
@@ -20138,6 +20312,15 @@ function oknoImportu(riadky, nazovSuboru){
           upravilKedy: star ? Date.now() : null,
           poznamka: r.poznamka || star?.poznamka || null,
         });
+        /* Materiál z DMIS → názov zákazky, len ak ho obchodník nechal prázdny
+           (ručne vyplnený názov má prednosť). */
+        if(r.material){
+          if(!String(r.opp.zakazka||"").trim()) await backend.saveOpportunity({ id:r.opp.id, zakazka:cistyMaterial(r.material) });
+          const zazn=(state.all||[]).filter(e=>e.opportunityId===r.opp.id && !String(e.zakazka||"").trim())
+            .sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0];
+          // zápis bez zmeny času úpravy — aktivita sa v zozname neposunie
+          if(zazn) await backend.opravMena([["entries", zazn.id, { zakazka:cistyMaterial(r.material) }]]);
+        }
         hotovo++;
       }catch(e2){ console.error("import riadok", r.riadok, e2); zlyhalo++; }
     }
