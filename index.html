@@ -4215,6 +4215,55 @@ select:disabled{cursor:default; opacity:.65}
 .nd-kat-w{display:block;margin-top:4px}
 .nd-kat{height:26px;max-width:100%;border:1px solid #D5D9E0;border-radius:7px;padding:0 6px;font-family:inherit;font-size:11.5px;background:#fff;color:var(--ink)}
 .res-row input.nd-auto{background:#F6F7FA;color:var(--ink-soft)}
+/* X-Sell — produktové bingo */
+.xs-lista{margin-bottom:12px}
+.xs-q{height:28px;border:1px solid #D5D9E0;border-radius:8px;padding:0 10px;font-family:inherit;font-size:12.5px;min-width:180px;background:#fff}
+.xs-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 12px}
+.xs-kpi>div{background:#fff;border:1px solid var(--line-2);border-radius:12px;padding:10px 14px}
+.xs-kpi span{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.xs-kpi b{font-size:22px;color:var(--ink)} .xs-kpi b.g{color:#1D9E75} .xs-kpi b.g2{color:#4FA77F} .xs-kpi b.r{color:#C2453A}
+.xs-leg{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--ink-soft);margin:0 0 8px}
+.xs-leg em{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:5px;vertical-align:-2px}
+.xs-tw{overflow-x:auto;background:#fff;border:1px solid var(--line-2);border-radius:14px;padding:6px}
+.xs-t{border-collapse:separate;border-spacing:4px;width:100%;min-width:820px;font-size:12.5px}
+.xs-t th{font-size:11px;font-weight:700;color:var(--muted);text-align:center;padding:4px 2px;white-space:nowrap}
+.xs-t th svg{width:13px;height:13px;vertical-align:-2px;margin-right:4px}
+.xs-t th.l{text-align:left}
+.xs-cl{min-width:180px;max-width:260px}
+.xs-cl-b{display:block;width:100%;text-align:left;border:0;background:none;padding:2px 4px;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xs-cl-b:hover{color:var(--brand)}
+.xs-cl-b small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.xs-c{width:96px;height:38px;border-radius:9px;text-align:center;font-size:11.5px;font-weight:600;cursor:pointer;line-height:1.15}
+.xs-c small{display:block;font-size:10px;font-weight:500;opacity:.8}
+.xs-c:hover{outline:2px solid #B9C5F2;outline-offset:1px}
+.xs-ma,.xs-leg .xs-ma{background:#E6EAF5;color:#3E56CB}
+.xs-po,.xs-leg .xs-po{background:#1D9E75;color:#fff}
+.xs-zn,.xs-leg .xs-zn{background:#E1F5EE;color:#0F6E56;box-shadow:inset 0 0 0 1.5px #1D9E75}
+.xs-je,.xs-leg .xs-je{background:#FCEFD9;color:#9A5B07}
+.xs-ne,.xs-leg .xs-ne{background:repeating-linear-gradient(135deg,#F7E1DE 0 4px,#fff 4px 8px);color:#B5443A}
+.xs-nic,.xs-leg .xs-nic{background:#F4F5F7;color:#B5BBC6}
+.xs-info{font-size:12px;color:var(--ink-soft);white-space:nowrap;padding-left:8px}
+.xs-info b{color:var(--ink)}
+.xs-due{color:#C2453A;font-weight:700}
+.xs-prazdne{text-align:center;color:var(--muted);padding:24px}
+.xs-viac{margin:12px auto 0;display:block}
+.xs-modal .xs-auto{background:#F6F7FA;border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink-soft);margin:0 0 12px}
+.xs-st{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.xs-stb{height:32px;padding:0 12px;border:1px solid #D5D9E0;border-radius:16px;background:#fff;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink-soft);cursor:pointer}
+.xs-stb.on{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.xs-stb[data-st="odmietol"].on,.xs-stb[data-st="nezaujem"].on{background:#C2453A;border-color:#C2453A}
+.xs-stb[data-st=""].on{background:#7A8394;border-color:#7A8394}
+.xs-f{margin:0 0 10px}
+.xs-f label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin:0 0 5px}
+.xs-f input,.xs-f select{width:100%;height:34px;box-sizing:border-box;border:1px solid #D5D9E0;border-radius:8px;padding:0 10px;font-family:inherit;font-size:13px;background:#fff}
+.xs-r{display:grid;grid-template-columns:1.4fr 1fr 1.2fr;gap:10px}
+.xs-modal .hint{font-size:12px;color:var(--muted);margin:2px 0 12px}
+.xs-hist{border-top:1px solid var(--line-2);padding-top:10px;font-size:12.5px;color:var(--ink-soft)}
+.xs-hist b{display:block;color:var(--ink);margin-bottom:6px}
+.xs-hist>div{padding:3px 0}
+.xs-hist span{color:var(--muted);margin-right:6px}
+.xs-hn{color:var(--muted)}
+@media (max-width:700px){ .xs-r{grid-template-columns:1fr} }
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -4346,6 +4395,10 @@ select:disabled{cursor:default; opacity:.65}
       <button class="navitem" data-view="myclients">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M19 3l1.2 2.5L23 6.5l-2 1.8.5 2.7L19 9.7l-2.5 1.3.5-2.7-2-1.8 2.8-.5z"/></svg></span>
         <span class="lbl">Moji klienti</span><span class="ct" id="myClientCount">0</span>
+      </button>
+      <button class="navitem" data-view="xsell">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg></span>
+        <span class="lbl">X-Sell</span><span class="ct" data-cnt="xsell">0</span>
       </button>
       <button class="navitem" data-view="internal">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#7C5CD6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V8l6-4 6 4v13M10 12h4M10 16h4"/></svg></span>
@@ -5812,6 +5865,7 @@ const state = {
   sluzbyIne:[],            // číselník upresnení pri službe „Iné" (meta/sluzbyIne)
   materials:[],            // číselník materiálov agentúr (meta/materials)
   users:[],                // prihlásení používatelia (users/{uid}) — kvôli párovaniu mena na UID
+  xsell:{},                // xsell/{klient__služba} — zápisy produktového binga (X-Sell)
   clientProfiles:{},       // clients/{key} — údaje klienta nad rámec záznamov (IČO, obchodník, poznámka)
   opportunities:[],        // obchodné prípady (New business) — firma × služba × priebeh obchodu
   results:[],              // mesačné výsledky prípadov (tržba, marža, kusy)
@@ -8619,6 +8673,7 @@ function demoBackend(){
     },
     async getTask(id){ return tasks.find(t=>t.id===id)||null; },
     async saveClientProfile(key,data){ state.clientProfiles={...state.clientProfiles,[key]:{id:key,...(state.clientProfiles[key]||{}),...data}}; _ciCache=null; render(); },
+    async saveXsell(id,data){ state.xsell={...state.xsell,[id]:{id,...(state.xsell[id]||{}),...data}}; render(); },
     async setUserPassword(){ throw new Error("V ukážkovom režime sa heslá nemenia."); },
     async saveUserPref(){},
     async saveRewardRules(items){ state.rewardRules=[...items]; render(); },
@@ -8820,6 +8875,9 @@ async function firebaseBackend(){
           state.clientProfiles=m; _ciCache=null; gsInvalidate(); render();
         },
         err=>{ console.warn("Profily klientov sa nepodarilo načítať:", err); });
+      const u19=onSnapshot(collection(db,"xsell"),
+        snap=>{ const m={}; snap.forEach(d=>{ m[d.id]={id:d.id,...d.data()}; }); state.xsell=m; _xsCache=null; render(); },
+        err=>{ console.warn("X-Sell sa nepodarilo načítať:", err); });
       const u12=onSnapshot(collection(db,"users"),
         snap=>{ state.users=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },
         err=>{ console.warn("Zoznam používateľov sa nepodarilo načítať:", err); });
@@ -8852,7 +8910,7 @@ async function firebaseBackend(){
       }
       // Databázy firiem sa NENAČÍTAVAJÚ pri štarte — býva ich tisíce a väčšina
       // používateľov ich vôbec neotvorí. Načítajú sa až pri prvom použití.
-      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); u13(); u14(); u15(); u16(); u17(); u18(); if(leadsUnsub) leadsUnsub(); };
+      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); u13(); u14(); u15(); u16(); u17(); u18(); u19(); if(leadsUnsub) leadsUnsub(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     /* Doplní len chýbajúce IČO — bez zmeny času úpravy, aby sa záznam neposunul navrch zoznamu. */
@@ -8894,6 +8952,11 @@ async function firebaseBackend(){
     async getTask(id){ const sn=await getDoc(doc(db,"tasks",id)); return sn.exists()?{id:sn.id,...sn.data()}:null; },
     async saveClientProfile(key, data){
       await setDoc(doc(db,"clients",clientDocId(key)), { ...data, clientKey:key }, {merge:true});
+    },
+    async saveXsell(id, data){
+      await setDoc(doc(db,"xsell",id), data, {merge:true});
+      // zmenu ukážeme hneď — nečakáme na odozvu zo servera
+      state.xsell={...state.xsell,[id]:{id,...(state.xsell[id]||{}),...data}}; _xsCache=null; render();
     },
     async saveUserPref(data){ if(state.user?.uid) await setDoc(doc(db,"users",state.user.uid), data, {merge:true}); },
     async saveRewardRules(items){ await setDoc(doc(db,"meta","rewardRules"), {items, updatedBy:state.user.name, updatedAt:Date.now()}, {merge:true}); },
@@ -9508,6 +9571,7 @@ function renderNow(){
   }
   {
     // v odznaku je počet chýbajúcich mesiacov, nie počet prípadov
+    try{ counts.xsell = xsData().reduce((a,c)=>a+XS_SLUZBY.filter(sg=>["potencial","znova"].includes(c.bunky[sg].stav)).length,0); }catch(e){ counts.xsell=0; }
     const moje=viditelnePripady();
     counts.results = moje.reduce((a,o)=>a+stavVyplnenia(o).chyba, 0);
     document.querySelectorAll('[data-cnt="results"]').forEach(x=>x.classList.toggle("has", counts.results>0));
@@ -9639,6 +9703,7 @@ function renderNow(){
   else if(state.view==="myleads") c.appendChild(viewLeads(true));
   else if(state.view==="leads") c.appendChild(viewLeads());
   else if(state.view==="clientRegistry") c.appendChild(viewClientRegistry());
+  else if(state.view==="xsell") c.appendChild(viewXsell());
   else if(state.view==="help") c.appendChild(viewHelp());
 }
 /* Farby loga podľa otvorenej sekcie.
@@ -11630,6 +11695,260 @@ async function hromadneSchvalenie(btn){
   }
   btn.disabled=false;
   toast(`Schválené: ${ok} ${plural(ok,"odmena","odmeny","odmien")}`+(neupl?` · ${neupl} sa nedá vypočítať`:"")+(chyby?` · ⚠ ${chyby} ${plural(chyby,"prípad zlyhal","prípady zlyhali","prípadov zlyhalo")}`:""));
+}
+
+/* ---------------------------------------------------------------- X-SELL (produktové bingo)
+   Klienti so spoluprácou (Customer care alebo New business od Potvrdenia
+   spolupráce vyššie) × základné služby. Automatické stavy zo záznamov
+   (využíva, v jednaní, odmietnuté) + ručné zápisy obchodníkov (potenciál,
+   ponúknuté – odmietol, nemá záujem) s menom a dátumom v histórii.
+   6 mesiacov po odmietnutí → „Skúsiť znova" + úloha tomu, kto to zapísal. */
+const XS_SLUZBY = ["baliky","digital","tlac","ad","nad","zelena"];
+const XS_WON  = ["nb_potvrdenie","nb_registracia","nb_zakazka","nb_vyfakturovane","potvrdene","bezi","vyfakturovane"];
+const XS_LOST = ["nb_odmietnutie","nechce","zrusene"];
+const XS_ZNOVA_MES = 6;
+const XS_STAVY = {
+  vyuziva:{ l:"využíva",       c:"xs-ma" },
+  jedna:  { l:"v jednaní",     c:"xs-je" },
+  potencial:{ l:"potenciál",   c:"xs-po" },
+  odmietol:{ l:"odmietol",     c:"xs-ne" },
+  nezaujem:{ l:"nemá záujem",  c:"xs-ne" },
+  znova:  { l:"skúsiť znova",  c:"xs-zn" },
+  nic:    { l:"",              c:"xs-nic" },
+};
+const xsId = (klientKey, seg) => `${String(klientKey).replace(/[\/#?\[\]*]/g,"_").slice(0,300)}__${seg}`;
+const xsDatum = e => { const {year,week}=parseWeekId(e.weekId||""); return (year&&week) ? mondayOf(year,week).getTime() : (e.updatedAt||0); };
+function xsSmieZapisovat(seg){
+  const r=state.user?.role;
+  if(r==="admin"||r==="sef") return true;
+  if(r==="lider") return (LIDER_EMAILS[(state.user.email||"").toLowerCase()]||[]).includes(seg);
+  return (state.user?.segments||[]).includes(seg);
+}
+function xsSmieMenitZapis(z){
+  const r=state.user?.role;
+  if(r==="admin"||r==="sef") return true;
+  if(r==="lider" && xsSmieZapisovat(z.seg)) return true;
+  return (z.ktoEmail||"").toLowerCase()===(state.user?.email||"").toLowerCase();
+}
+let _xsCache=null, _xsKey="";
+function xsData(){
+  const kluc=state.all.length+"|"+Object.keys(state.xsell||{}).length+"|"+JSON.stringify(Object.values(state.xsell||{}).map(x=>x.kedy||0));
+  if(_xsCache && _xsKey===kluc) return _xsCache;
+  const map=new Map();
+  (state.all||[]).forEach(e=>{
+    if(!e.client || e.client==="—" || isInternal(e)) return;
+    const k=clientKey(e.client); if(!k) return;
+    let c=map.get(k); if(!c){ c={ key:k, name:e.client, spolupraca:false, seg:{}, obch:new Map(), last:0 }; map.set(k,c); }
+    const kind=kindOf(e);
+    if(kind==="cc" || (kind==="nb" && XS_WON.includes(e.status))) c.spolupraca=true;
+    const d=xsDatum(e); if(d>c.last){ c.last=d; c.name=e.client; }
+    entryOwnerNamesAll(e).forEach(n=>c.obch.set(n,(c.obch.get(n)||0)+1));
+    if(!XS_SLUZBY.includes(e.segment)) return;
+    const s=c.seg[e.segment] || (c.seg[e.segment]={ vyuziva:false, nb:null });
+    if(kind==="cc" || (kind==="nb" && XS_WON.includes(e.status))) s.vyuziva=true;
+    if(kind==="nb" && (!s.nb || d>=xsDatum(s.nb))) s.nb=e;
+  });
+  const teraz=Date.now(), polRoka=XS_ZNOVA_MES*30.5*864e5;
+  const klienti=[...map.values()].filter(c=>c.spolupraca).map(c=>{
+    const bunky={};
+    XS_SLUZBY.forEach(seg=>{
+      const s=c.seg[seg]||{}; const z=(state.xsell||{})[xsId(c.key,seg)];
+      let stav="nic", info="";
+      if(s.vyuziva) stav="vyuziva";
+      else if(s.nb && !XS_WON.includes(s.nb.status) && !XS_LOST.includes(s.nb.status)) stav="jedna";
+      else if(z && z.stav){
+        stav=z.stav;
+        if((stav==="odmietol") && z.kedy && teraz-z.kedy>polRoka) stav="znova";
+      }
+      else if(s.nb && XS_LOST.includes(s.nb.status)){
+        stav = (teraz-xsDatum(s.nb)>polRoka) ? "znova" : "odmietol"; info="z New business";
+      }
+      bunky[seg]={ stav, z, info, nb:s.nb };
+    });
+    const hlavny=[...c.obch.entries()].filter(([n])=>n.trim().split(/\s+/).length>=2).sort((a,b)=>b[1]-a[1])[0]?.[0]||"";
+    const kroky=XS_SLUZBY.map(seg=>bunky[seg].z).filter(z=>z && z.termin).sort((a,b)=>a.termin.localeCompare(b.termin));
+    const pot=XS_SLUZBY.filter(seg=>["potencial","znova"].includes(bunky[seg].stav)).length;
+    const vyu=XS_SLUZBY.filter(seg=>bunky[seg].stav==="vyuziva").length;
+    return { ...c, bunky, hlavny, krok:kroky[0]||null, pot, vyu };
+  });
+  _xsCache=klienti; _xsKey=kluc;
+  return klienti;
+}
+/* Zodpovedný za pripomienku: kto zapísal → hlavný obchodník klienta → líder služby. */
+function xsZodpovedny(c, seg, z){
+  const em=(z?.ktoEmail||"").toLowerCase();
+  if(em && KNOWN_EMAILS.has(em)) return { meno:z.kto, email:em };
+  if(c.hlavny){ const e2=NAME_TO_EMAIL[c.hlavny]; if(e2) return { meno:c.hlavny, email:e2 }; }
+  const lid=Object.entries(LIDER_EMAILS).find(([,segs])=>segs.includes(seg));
+  return lid ? { meno:NAME_BY_EMAIL[lid[0]]||lid[0], email:lid[0] } : null;
+}
+/* Pripomienky po pol roku — úlohu založí Zappis tomu, koho sa týka, keď sa prihlási. */
+let _xsPripBezi=false;
+async function xsPripomienky(){
+  if(_xsPripBezi || !state.user || !backend?.saveTask) return;
+  _xsPripBezi=true;
+  try{
+    const ja=(state.user.email||"").toLowerCase();
+    for(const c of xsData()){
+      for(const seg of XS_SLUZBY){
+        const b=c.bunky[seg]; if(b.stav!=="znova" || !b.z) continue;
+        if(b.z.pripomenuteKedy && b.z.pripomenuteKedy>=b.z.kedy) continue;
+        const zod=xsZodpovedny(c, seg, b.z); if(!zod || zod.email!==ja) continue;
+        const id=`xsell_${xsId(c.key,seg)}_${b.z.kedy}`.replace(/[^\w-]/g,"_").slice(0,140);
+        if((state.tasks||[]).some(t=>t.id===id)) continue;
+        await backend.saveTask({ id, title:`Skús znova ponúknuť ${SEG[seg]?.short||seg} — ${c.name}`,
+          note:`Pred ${XS_ZNOVA_MES} mesiacmi klient ponuku odmietol${b.z.dovod?` (${b.z.dovod})`:""}. Zápis: ${b.z.kto||""}, ${new Date(b.z.kedy).toLocaleDateString("sk-SK")}.\n\nNájdeš v sekcii X-Sell.`,
+          assignee: zod.meno, assigneeUid: state.user.uid||null,
+          due: new Date().toISOString().slice(0,10), client:c.name, segment:seg, status:"open",
+          autoXsell:true, createdBy:"Zappis", createdAt:Date.now() });
+        await backend.saveXsell(xsId(c.key,seg), { pripomenuteKedy:Date.now() });
+      }
+    }
+  }catch(e){ console.warn("X-Sell pripomienky:", e); }
+  finally{ _xsPripBezi=false; }
+}
+function viewXsell(){
+  const wrap=el("div","xs");
+  const vsetci=xsData();
+  const sl=(state.aktSluzby||[]).filter(x=>XS_SLUZBY.includes(x));
+  const stlpce = sl.length ? XS_SLUZBY.filter(x=>sl.includes(x)) : XS_SLUZBY;
+  const f=state.xsFilter||"vsetci", q=(state.xsQ||"").trim().toLowerCase(), ob=state.xsObch||"";
+  let rows=vsetci.filter(c=>
+    (!q || c.name.toLowerCase().includes(q)) &&
+    (!ob || c.obch.has(ob)) &&
+    (f==="vsetci" || (f==="pot" && stlpce.some(s=>c.bunky[s].stav==="potencial")) || (f==="znova" && stlpce.some(s=>c.bunky[s].stav==="znova"))
+      || (f==="bez" && !stlpce.some(s=>["potencial","znova"].includes(c.bunky[s].stav)))));
+  rows.sort((a,b)=>(b.pot-a.pot) || (b.vyu-a.vyu) || a.name.localeCompare(b.name,"sk"));
+  wrap.appendChild(el("div","page-h",`<div>
+    <div class="eyebrow">Cross-sell</div>
+    <h1>X-Sell</h1>
+    <div class="sub">Produktové bingo — existujúci klienti a služby, ktoré ešte nevyužívajú. Klik na bunku = zápis potenciálu alebo odmietnutia.</div></div><div></div>`));
+  // lišta
+  const bar=el("div","flista xs-lista");
+  [["vsetci","Všetci klienti"],["pot","★ S potenciálom"],["znova","↻ Skúsiť znova"],["bez","Bez potenciálu"]].forEach(([k,l],i)=>{
+    if(i) bar.appendChild(el("span","flista-sep"));
+    const b=el("button","flista-chip"+(f===k?" on":""),`<span>${l}</span>`); b.type="button";
+    b.onclick=()=>{ state.xsFilter=k; state.xsLimit=60; render(); }; bar.appendChild(b);
+  });
+  bar.appendChild(el("span","flista-sep"));
+  const mena=[...new Set(vsetci.flatMap(c=>[...c.obch.keys()]))].filter(n=>n.trim().split(/\s+/).length>=2).sort((a,b)=>a.localeCompare(b,"sk"));
+  bar.appendChild(fpill(ICO_USER, ob||"Obchodník", !!ob, [["","Každý obchodník",!ob], ...mena.map(n=>[n,n,ob===n])],
+    v=>{ state.xsObch=v; state.xsLimit=60; render(); }, "Obchodník", "flista-pill"));
+  bar.appendChild(el("span","flista-sep"));
+  const si=el("input","xs-q"); si.placeholder="Hľadať klienta…"; si.value=state.xsQ||"";
+  si.oninput=()=>{ state.xsQ=si.value; clearTimeout(si._t); si._t=setTimeout(()=>{ render(); const n=document.querySelector(".xs-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); };
+  bar.appendChild(si);
+  wrap.appendChild(bar);
+  // čísla
+  const dnes=new Date().toISOString().slice(0,10);
+  const poCount=vsetci.reduce((a,c)=>a+stlpce.filter(s=>c.bunky[s].stav==="potencial").length,0);
+  const znCount=vsetci.reduce((a,c)=>a+stlpce.filter(s=>c.bunky[s].stav==="znova").length,0);
+  const poTerm=vsetci.reduce((a,c)=>a+stlpce.filter(s=>c.bunky[s].z?.termin && c.bunky[s].z.termin<dnes && ["potencial","znova"].includes(c.bunky[s].stav)).length,0);
+  wrap.appendChild(el("div","xs-kpi",`
+    <div><span>Klienti so spoluprácou</span><b>${vsetci.length}</b></div>
+    <div><span>Využívajú 2+ služby</span><b>${vsetci.filter(c=>c.vyu>=2).length}</b></div>
+    <div><span>Identifikovaný potenciál</span><b class="g">${poCount}</b></div>
+    <div><span>Skúsiť znova</span><b class="g2">${znCount}</b></div>
+    <div><span>Termín po splatnosti</span><b class="r">${poTerm}</b></div>`));
+  wrap.appendChild(el("div","xs-leg",
+    ["vyuziva","potencial","znova","jedna","odmietol"].map(k=>`<span><em class="${XS_STAVY[k].c}"></em>${k==="odmietol"?"odmietol / nemá záujem":XS_STAVY[k].l}</span>`).join("")+`<span><em class="xs-nic"></em>zatiaľ nič</span>`));
+  // tabuľka
+  const lim=state.xsLimit||60;
+  const tw=el("div","xs-tw"); const t=el("table","xs-t");
+  t.innerHTML=`<thead><tr><th class="l">Klient</th>${stlpce.map(s=>`<th>${segIcon(s,14)}<span>${esc(SEG[s].short)}</span></th>`).join("")}<th class="l">Obchodník · ďalší krok</th></tr></thead>`;
+  const tb=el("tbody");
+  if(!rows.length) tb.innerHTML=`<tr><td colspan="${stlpce.length+2}" class="xs-prazdne">Žiadni klienti pre zvolený filter.</td></tr>`;
+  rows.slice(0,lim).forEach(c=>{
+    const tr=el("tr");
+    const tdN=el("td","xs-cl"); const nb=el("button","xs-cl-b",`${esc(c.name)}<small>${esc(XS_SLUZBY.filter(s=>c.bunky[s].stav==="vyuziva").map(s=>SEG[s].short).join(", ")||"—")}</small>`);
+    nb.type="button"; nb.onclick=()=>goClient(c.key, c.name); tdN.appendChild(nb); tr.appendChild(tdN);
+    stlpce.forEach(seg=>{
+      const b=c.bunky[seg], st=XS_STAVY[b.stav]||XS_STAVY.nic;
+      const td=el("td","xs-c "+st.c);
+      let txt=st.l;
+      if(b.stav==="odmietol"||b.stav==="nezaujem"){ const d=b.z?.kedy||(b.nb?xsDatum(b.nb):0); if(d) txt+=`<small>${new Date(d).toLocaleDateString("sk-SK",{day:"numeric",month:"numeric",year:"2-digit"})}</small>`; }
+      if(b.stav==="potencial" && b.z?.kto) txt+=`<small>${esc(b.z.kto.split(" ").slice(-1)[0])}</small>`;
+      td.innerHTML=(b.stav==="vyuziva"?"✓ ":b.stav==="potencial"?"★ ":b.stav==="znova"?"↻ ":"")+txt;
+      td.title=`${c.name} · ${SEG[seg].short}${b.z?.kto?` — zapísal ${b.z.kto}, ${new Date(b.z.kedy).toLocaleDateString("sk-SK")}`:""}`;
+      td.onclick=()=>xsOkno(c, seg);
+      tr.appendChild(td);
+    });
+    const ti=el("td","xs-info");
+    const k=c.krok;
+    ti.innerHTML=`<b>${esc(c.hlavny?uplneMeno(c.hlavny):"—")}</b>${k?` · ${esc(k.krok||SEG[k.seg]?.short||"")} <span class="${k.termin<dnes?"xs-due":""}">${esc(k.termin.split("-").reverse().join(". "))}</span>`:""}`;
+    tr.appendChild(ti);
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb); tw.appendChild(t); wrap.appendChild(tw);
+  if(rows.length>lim){ const m=el("button","btn xs-viac",`Zobraziť ďalších (${rows.length-lim})`); m.type="button"; m.onclick=()=>{ state.xsLimit=lim+60; render(); }; wrap.appendChild(m); }
+  setTimeout(xsPripomienky, 800);
+  return wrap;
+}
+function xsOkno(c, seg){
+  const b=c.bunky[seg], z=b.z||{}, smie=xsSmieZapisovat(seg);
+  const auto = b.stav==="vyuziva" ? "Klient túto službu využíva (podľa záznamov)."
+             : b.stav==="jedna" ? `V jednaní — New business: ${esc(ST[b.nb?.status]?.label||"")}.`
+             : (b.info && !z.stav) ? `Odmietnutie z New business${b.nb?.lossReason?` (${esc(b.nb.lossReason)})`:""}.` : "";
+  const hist=(z.historia||[]).slice().reverse();
+  const scrim=el("div","scrim open");
+  const volby=[["potencial","★ Potenciál"],["odmietol","Ponúknuté – odmietol"],["nezaujem","Nemá záujem"],["","Zrušiť označenie"]];
+  scrim.innerHTML=`<div class="modal xs-modal" style="max-width:560px">
+    <div class="modal-h"><h2>${esc(c.name)} · ${esc(SEG[seg].short)}</h2>
+      <button class="ghost" data-x><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-b">
+      ${auto?`<div class="xs-auto">${auto}</div>`:""}
+      ${smie ? `
+      <div class="xs-st">${volby.map(([k,l])=>`<button type="button" class="xs-stb${(z.stav||"")===k&&(k||z.stav)?" on":""}" data-st="${k}">${l}</button>`).join("")}</div>
+      <div class="xs-f xs-dov"${(z.stav==="odmietol"||z.stav==="nezaujem")?"":' style="display:none"'}><label>Dôvod</label>
+        <select id="xsDovod"><option value="">—</option>${LOSS_REASONS.map(r=>`<option${z.dovod===r?" selected":""}>${esc(r)}</option>`).join("")}</select></div>
+      <div class="xs-f"><label>Poznámka</label><input id="xsPozn" value="" placeholder="napr. komu sme ponúkali, čo zaujalo…"></div>
+      <div class="xs-r">
+        <div class="xs-f"><label>Ďalší krok</label><input id="xsKrok" value="${esc(z.krok||"")}" placeholder="napr. zavolať marketingu"></div>
+        <div class="xs-f"><label>Termín</label><input id="xsTerm" type="date" value="${esc(z.termin||"")}"></div>
+        <div class="xs-f"><label>Kto</label><select id="xsKto">${[...new Set([state.user.name, ...OBCH_NAME_LIST])].map(n=>`<option${(z.krokKto||state.user.name)===n?" selected":""}>${esc(n)}</option>`).join("")}</select></div>
+      </div>
+      <div class="hint">Zápis sa uloží s tvojím menom a dnešným dátumom. Termín sa pridá aj do Úloh. Po ${XS_ZNOVA_MES} mesiacoch od odmietnutia pripomenie Zappis ponuku zopakovať tomu, kto odmietnutie zapísal.</div>`
+      : `<div class="xs-auto">Do služby ${esc(SEG[seg].short)} zapisuje obchodník tejto služby, jej líder alebo vedenie.</div>`}
+      <div class="xs-hist"><b>História</b>${hist.length ? hist.map(h=>`<div><span>${new Date(h.kedy).toLocaleDateString("sk-SK")} · ${esc(h.kto||"")}</span>${esc(XS_STAVY[h.stav]?.l || (h.stav?h.stav:"zrušené označenie"))}${h.dovod?` (${esc(h.dovod)})`:""}${h.pozn?` — ${esc(h.pozn)}`:""}${h.krok?` · krok: ${esc(h.krok)}${h.termin?` do ${esc(h.termin.split("-").reverse().join(". "))}`:""}`:""}</div>`).join("") : `<div class="xs-hn">Zatiaľ bez zápisu.</div>`}</div>
+    </div>
+    <div class="modal-f" style="justify-content:flex-end">
+      <button class="btn" data-x>Zavrieť</button>
+      ${smie?`<button class="btn solid" data-ulozit>Uložiť zápis</button>`:""}
+    </div></div>`;
+  document.body.appendChild(scrim);
+  const zavri=()=>scrim.remove();
+  scrim.querySelectorAll("[data-x]").forEach(x=>x.onclick=zavri);
+  scrim.addEventListener("mousedown",ev=>{ if(ev.target===scrim) zavri(); });
+  let zvoleny=z.stav||"";
+  scrim.querySelectorAll(".xs-stb").forEach(bt=>bt.onclick=()=>{
+    zvoleny=bt.dataset.st;
+    scrim.querySelectorAll(".xs-stb").forEach(x=>x.classList.toggle("on", x===bt));
+    scrim.querySelector(".xs-dov").style.display = (zvoleny==="odmietol"||zvoleny==="nezaujem") ? "" : "none";
+  });
+  const ul=scrim.querySelector("[data-ulozit]");
+  if(ul) ul.onclick=async()=>{
+    if(z.stav && z.ktoEmail && !xsSmieMenitZapis({ ...z, seg }) && zvoleny!==z.stav){
+      toast("Tento zápis môže zmeniť ten, kto ho urobil, alebo líder služby."); return; }
+    const kedy=Date.now();
+    const zapis={ stav:zvoleny||null, dovod:(zvoleny==="odmietol"||zvoleny==="nezaujem") ? (scrim.querySelector("#xsDovod").value||null) : null,
+      pozn:(scrim.querySelector("#xsPozn").value||"").trim()||null,
+      krok:(scrim.querySelector("#xsKrok").value||"").trim()||null, termin:scrim.querySelector("#xsTerm").value||null,
+      krokKto:scrim.querySelector("#xsKto").value||state.user.name,
+      kto:state.user.name, ktoEmail:(state.user.email||"").toLowerCase(), kedy };
+    ul.disabled=true;
+    try{
+      const id=xsId(c.key,seg);
+      await backend.saveXsell(id, { klient:c.name, klientKey:c.key, segment:seg, ...zapis, pripomenuteKedy:null,
+        historia:[...(z.historia||[]), zapis] });
+      if(zapis.termin && zapis.termin!==z.termin){
+        await backend.saveTask({ id:`xs_${id}_${kedy}`.replace(/[^\w-]/g,"_").slice(0,140),
+          title:`${zapis.krok||"X-Sell"} — ${c.name} (${SEG[seg].short})`, note:zapis.pozn||"Zápis z X-Sell.",
+          assignee:zapis.krokKto, assigneeUid:uidForName(zapis.krokKto), due:zapis.termin, client:c.name, segment:seg, status:"open",
+          autoXsell:true, createdBy:state.user.name, createdAt:kedy });
+      }
+      toast("Zápis uložený"); zavri();
+    }catch(e){ ul.disabled=false; toast("⚠ Nepodarilo sa uložiť: "+(e?.message||e?.code||"")); }
+  };
 }
 
 /* ---------------------------------------------------------------- FILTER PODĽA LÍDRA
