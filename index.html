@@ -7226,6 +7226,11 @@ function knownIcoFor(name){
   const platne=v=>{ const d=String(v||"").replace(/\D/g,""); return d.length>=6 && icoKey(d) ? d : ""; };
   const pocty=new Map();
   state.all.forEach(x=>{ if(clientKey(x.client)!==k) return; const d=platne(x.leadIco||x.ico); if(d) pocty.set(d,(pocty.get(d)||0)+1); });
+  // IČO, ktoré je v Zappise aj pri úplne inej firme, je podozrivé — nepoužijeme ho
+  for(const d of [...pocty.keys()]){
+    const ik=icoKey(d);
+    if((state.all||[]).some(x=>icoKey(x.leadIco||x.ico)===ik && x.client && !menaSedia(x.client, name))) pocty.delete(d);
+  }
   const naj=[...pocty.entries()].sort((a,b)=>b[1]-a[1])[0];
   if(naj) return naj[0];
   const l=(state.leads||[]).find(x=>clientKey(x.company)===k && platne(x.ico));
@@ -11268,6 +11273,8 @@ function ukazVysledky(e){
 }
 /* Otvorí výsledky. Keď prípad ešte nie je, najprv ho založí. */
 async function otvorVysledkyPreZaznam(e){
+  { const ine=icoPatriInemu(e);
+    if(ine) toast(`⚠ ${e.client} má v zázname IČO firmy ${ine.client}. Oprav IČO v zázname (Upraviť → IČO → Zmeniť).`); }
   let opp=oppForEntry(e);
   if(!opp){
     try{
@@ -11285,13 +11292,34 @@ async function otvorVysledkyPreZaznam(e){
 
 /* Prípad, do ktorého záznam patrí. Najprv uložená väzba, potom dohľadanie cez kľúč —
    vďaka tomu model funguje aj pred migráciou starých záznamov. */
+/* Patrí prípad k tomu istému klientovi? Pri IČO zhode ešte overíme aj názov —
+   keď v zázname omylom ostalo IČO inej firmy (napr. ORYS so IČO Swietelsky),
+   otvoril sa prípad úplne iného klienta. */
+function menaSedia(a,b){
+  const A=firmaKluc(a||""), B=firmaKluc(b||"");
+  if(!A || !B) return true;
+  if(A===B || A.includes(B) || B.includes(A)) return true;
+  const ta=A.split(" ").filter(w=>w.length>2), tb=new Set(B.split(" "));
+  if(ta.some(w=>tb.has(w))) return true;
+  return levPomer(A.replace(/ /g,""), B.replace(/ /g,""))>=0.7;
+}
 function oppForEntry(e){
   if(!e || !e.isNewBusiness) return null;
   let o = oppById(e.opportunityId);
-  /* Fyzická osoba nesmie skončiť pri prípade inej firmy (napr. cez IČO, ktoré
-     omylom ostalo v zázname) — prepojenie platí len pri rovnakom mene. */
-  if(o && e.fyzickaOsoba && clientKey(o.client)!==clientKey(e.client)) o=null;
-  return o || openOppForKey(oppMatchKey(e));
+  // prepojenie / IČO zhoda platí len pri tom istom klientovi
+  if(o && !menaSedia(o.client, e.client)) o=null;
+  if(o) return o;
+  let k = openOppForKey(oppMatchKey(e));
+  if(k && !menaSedia(k.client, e.client)){
+    // IČO v zázname patrí inej firme — hľadáme podľa názvu
+    k = openOppForKey(oppMatchKey({ ...e, fyzickaOsoba:true }));
+  }
+  return k;
+}
+/* IČO zo záznamu, ktoré už v Zappise patrí prípadu inej firmy. */
+function icoPatriInemu(e){
+  const ic=icoKey(e.leadIco||e.ico); if(!ic) return null;
+  return (state.opportunities||[]).find(o=>icoKey(o.ico)===ic && !pripadZruseny(o) && !menaSedia(o.client, e.client)) || null;
 }
 
 /* Nové IČO oproti existujúcemu — hľadá sa, či firma figurovala v Zappise skôr,
@@ -11331,8 +11359,10 @@ function vlastniciZoZaznamu(e){
 
 /* Zostaví nový obchodný prípad zo záznamu. Neukladá — to robí volajúci. */
 function novyPripad(e, seq){
-  const mk=oppMatchKey(e);
-  const ic=e.fyzickaOsoba ? "" : (icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client)));
+  // IČO, ktoré patrí prípadu inej firmy, sa do nového prípadu neprenesie
+  const cudzieIco = !e.fyzickaOsoba && icoPatriInemu(e);
+  const mk=oppMatchKey(cudzieIco ? { ...e, fyzickaOsoba:true } : e);
+  const ic=(e.fyzickaOsoba || cudzieIco) ? "" : (icoKey(e.leadIco||e.ico) || icoKey(resolveClientIco(e.client)));
   const vlastnici=vlastniciZoZaznamu(e);
   return {
     matchKey: mk, seq: seq||1,
@@ -18500,11 +18530,14 @@ function openModal(entry,presetSeg){
     if(icoZFinstatu){ $("#fIco").value=""; icoZFinstatu=false; }
 
     const vlastne = icoKey(entry?.leadIco || entry?.ico || "");
-    const potvrdene = !icoOdomknute && (vlastne || icoKey(known));
+    /* Overené (zelené) IČO len z otvoreného záznamu. Podľa napísaného mena
+       klienta sa IČO do poľa NIKDY neponúka ani nedopĺňa — pri novom zázname
+       je pole vždy prázdne. */
+    const potvrdene = !icoOdomknute && !!vlastne;
     $("#fIcoLocked").style.display = potvrdene ? "" : "none";
     $("#fIcoRow").style.display    = potvrdene ? "none" : "";
     if(potvrdene){
-      const hodnota = (vlastne ? (entry.leadIco||entry.ico) : known);
+      const hodnota = entry.leadIco||entry.ico;
       $("#fIco").value = hodnota;                 // aby sa uložilo aj bez odomknutia
       icoDoplnene = String(hodnota).replace(/\D/g,"");
       // zobrazujeme IČO tak, ako je uložené — aj s vedúcimi nulami
@@ -18522,9 +18555,7 @@ function openModal(entry,presetSeg){
       icoDoplnene="";
       pendingFinstat=null;
     }
-    $("#fIcoHint").innerHTML = known
-      ? `<b>Klienta už poznáme</b> — IČO máme uložené ako ${esc(known)}. Ak je to iná firma, zadaj nové a daj Načítať.`
-      : "Načíta názov a adresu firmy.";
+    $("#fIcoHint").innerHTML = "Zadaj IČO firmy a klikni Načítať z Finstat.";
   };
   $("#fIcoUnlock").onclick=()=>{
     icoOdomknute=true;
@@ -18870,6 +18901,13 @@ async function saveFromModalInner(){
   // napísané platné IČO má prednosť; známe IČO klienta sa použije, len keď pole ostane prázdne
   const poleOk = poleIco.length>=6 && !!icoKey(poleIco);
   const icoVal = vnutorne ? "" : (pendingLeadOrigin ? poleIco : (poleOk ? poleIco : (alreadyKnown || poleIco)));
+  /* Poistka: IČO, ktoré už v Zappise patrí inej firme. Typicky ostane v poli
+     z predchádzajúceho klienta — záznam by sa potom spároval s cudzím prípadom. */
+  if(icoVal && !$("#fOsoba")?.checked){
+    const ik=icoKey(icoVal), klientNovy=client;
+    const ini=(state.all||[]).find(x=>x.id!==editing?.id && icoKey(x.leadIco||x.ico)===ik && x.client && !menaSedia(x.client, klientNovy));
+    if(ini && !confirm(`IČO ${icoVal} je v Zappise pri firme „${ini.client}“, nie pri „${klientNovy}“.\n\nNaozaj ho chceš uložiť pri tomto klientovi? (Ak nie, klikni Zrušiť a IČO oprav.)`)) return;
+  }
   const icoPrazdne = !icoVal || icoVal.length < 6 || !icoKey(icoVal);
   const jeOsoba = $("#fOsoba")?.checked;
   if(!vnutorne && !jeOsoba && icoPrazdne){
