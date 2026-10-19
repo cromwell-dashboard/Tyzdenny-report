@@ -9011,6 +9011,9 @@ async function firebaseBackend(){
       const clean={}; Object.entries(r).forEach(([k,v])=>{ if(v!==undefined) clean[k]=v; });
       b.set(ref, clean, {merge:true});
       await b.commit();
+      // lokálne hneď — znovu otvorené okno nesmie ukázať staré (prázdne) čísla
+      const i=state.results.findIndex(x=>x.id===r.id);
+      state.results = i>=0 ? state.results.map(x=>x.id===r.id?{...x,...clean}:x) : [...state.results, {...clean}];
     },
     /* Potvrdenie čísel nemení čísla — nevytvára revíziu ani nezvyšuje číslo
        revízie. Inak by sa práve schválená odmena hneď označila ako nesúlad. */
@@ -12779,7 +12782,12 @@ function openResultsModal(opp, zameraj){
     </div></div>`;
 
   const close=()=>scrim.remove();
-  scrim.querySelectorAll('[data-act="cancel"]').forEach(b=>b.onclick=close);
+  /* Neuložené čísla sa nesmú stratiť zatvorením okna bez upozornenia. */
+  let neulozene=false;
+  scrim.addEventListener("input", ev=>{ if(ev.target.closest?.(".res-row")) neulozene=true; });
+  scrim.addEventListener("change", ev=>{ if(ev.target.closest?.(".res-row")) neulozene=true; });
+  const zavriet=()=>{ if(neulozene && !confirm("Máš neuložené čísla. Zavrieť okno bez uloženia?")) return; close(); };
+  scrim.querySelectorAll('[data-act="cancel"]').forEach(b=>b.onclick=zavriet);
   scrim.onclick=ev=>{ if(ev.target===scrim) close(); };
 
   /* Marža = tržba − náklad. Obchodník vyplní jedno z dvoch, druhé sa dopočíta.
@@ -13359,6 +13367,9 @@ function openResultsModal(opp, zameraj){
       if(chybna){
         err.textContent=`⚠ Pri službe ${segLabel(opp.segment,opp.produkt,true)} je marža povinná. Doplň ju za ${menoMesiaca(chybna.m)} — alebo zadaj náklad a marža sa dopočíta.`;
         err.classList.add("on");
+        // chyba je na konci okna — aby ju bolo vidieť, posunieme ju do zorného poľa aj ukážeme hlášku
+        err.scrollIntoView?.({block:"nearest", behavior:"smooth"});
+        toast(`⚠ Neuložené — doplň maržu (alebo náklad) za ${menoMesiaca(chybna.m)}.`);
         scrim.querySelector(`.res-row[data-m="${chybna.m}"] input[data-f="marza"]`)?.focus();
         if(tlacidlo){ tlacidlo.disabled=false; tlacidlo.textContent="Potvrdiť"; }
         return;
@@ -13425,6 +13436,8 @@ function openResultsModal(opp, zameraj){
       console.error("saveResult:", e2);
       err.textContent="⚠ "+(e2?.message||e2?.code||"Výsledky sa nepodarilo uložiť.");
       err.classList.add("on");
+      err.scrollIntoView?.({block:"nearest", behavior:"smooth"});
+      toast("⚠ Výsledky sa neuložili: "+(e2?.message||e2?.code||"neznáma chyba"));
       if(ok){ ok.disabled=false; ok.textContent="Uložiť zmeny"; }
       if(tlacidlo){ tlacidlo.disabled=false; tlacidlo.textContent="Potvrdiť"; }
     }
@@ -19612,7 +19625,9 @@ function impSpracuj(tabulka){
       r.stav="mimo"; r.preco=`Mesiac je mimo obdobia ${menoMesiaca(opp.nbOd)} – ${menoMesiaca(opp.nbDo)}.`;
       out.push(r); return;
     }
-    const jest=resultFor(opp.id, r.mesiac);
+    let jest=resultFor(opp.id, r.mesiac);
+    // prázdny mesiac (pridaný tlačidlom, bez čísel) sa berie ako nevyplnený
+    if(jest && jest.trzba==null && jest.marza==null && jest.naklad==null && !jest.bezFakturacie && !jest.potvrdene) jest=null;
     /* Ručné zadanie má prednosť pred importom. Keď mesiac niekto vyplnil sám
        alebo ho potvrdil, import ho nechá na pokoji — inak by prepísal prácu,
        ktorú už obchodník urobil a odsúhlasil. */
