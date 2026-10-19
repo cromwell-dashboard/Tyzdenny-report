@@ -4266,6 +4266,11 @@ select:disabled{cursor:default; opacity:.65}
 @media (max-width:700px){ .xs-r{grid-template-columns:1fr} }
 .xs-vo,.xs-leg .xs-vo{background:#fff;color:#5B6B8C;box-shadow:inset 0 0 0 1.5px #B9C5F2;background-image:repeating-linear-gradient(90deg,transparent 0 6px,transparent 6px 12px)}
 .xs-stb[data-st="nezaujem"].on{background:#5B6B8C !important;border-color:#5B6B8C !important}
+.imp-chk{display:inline-flex;align-items:center;cursor:pointer}
+.imp-chk input{width:16px;height:16px;accent-color:var(--brand);cursor:pointer}
+.imp-row.vynech{opacity:.45}
+.imp-row.vynech .imp-st{text-decoration:line-through}
+.imp-tip{font-size:12px;color:var(--muted);margin:2px 0 8px}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -20105,6 +20110,7 @@ function oknoImportu(riadky, nazovSuboru){
           `<span class="imp-chip ${k}" title="${esc(IMP_STAVY[k].t)}">${pocty[k]} ${esc(IMP_STAVY[k].l)}</span>`).join("")}
       </div>
       <label class="imp-only"><input type="checkbox" id="impLenProblem"><span>Ukázať len to, čo sa nezapíše</span></label>
+      <div class="imp-tip">Riadok, ktorý nemá ísť do Zappisu, odškrtni políčkom vľavo.</div>
       <div class="imp-head">
         <span></span><span>Klient</span><span>Služba</span><span>Mesiac</span>
         <span class="r">Tržba NB</span><span class="r">Marža NB</span><span>Stav</span>
@@ -20149,7 +20155,7 @@ function oknoImportu(riadky, nazovSuboru){
   const box=scrim.querySelector("#impRows");
   /* Po zmene pravidiel prekreslíme zoznam aj počet v tlačidle. */
   const obnovOkno=()=>{
-    const z=riadky.filter(r=>["novy","prepis"].includes(r.stav));
+    const z=riadky.filter(r=>["novy","prepis"].includes(r.stav) && !r.vynechat);
     const btn=scrim.querySelector('[data-act="zapis"]');
     if(btn){
       btn.disabled=!z.length;
@@ -20159,13 +20165,19 @@ function oknoImportu(riadky, nazovSuboru){
   };
   const vykresli=()=>{
     const lenProblem=scrim.querySelector("#impLenProblem").checked;
-    const zoznam=lenProblem ? riadky.filter(r=>!["novy","prepis"].includes(r.stav)) : riadky;
+    const zoznam=lenProblem ? riadky.filter(r=>!["novy","prepis"].includes(r.stav) || r.vynechat) : riadky;
     box.innerHTML = zoznam.length ? "" : `<div class="empty" style="padding:22px">Nič také tu nie je.</div>`;
     zoznam.forEach(r=>{
-      const d=el("div","imp-row "+r.stav);
-      d.innerHTML=`<span class="imp-n">${r.riadok}</span>
+      const zapisatelny=["novy","prepis"].includes(r.stav);
+      const d=el("div","imp-row "+r.stav+(r.vynechat?" vynech":""));
+      /* Zaškrtávacie políčko — riadok, ktorý nemá ísť do Zappisu (napr. interný
+         klient), sa dá pred zápisom vynechať. */
+      d.innerHTML=`<span class="imp-n">${zapisatelny
+          ? `<label class="imp-chk" title="Odškrtni, ak sa tento riadok nemá importovať"><input type="checkbox"${r.vynechat?"":" checked"}></label>`
+          : r.riadok}</span>
         <span class="imp-cl" title="${esc(r.klient)}">${esc(r.klient||"—")}${
-          r.zakazka?`<span class="imp-zak">${esc(r.zakazka)}</span>`:""}</span>
+          r.zakazka?`<span class="imp-zak">${esc(r.zakazka)}</span>`:""}${
+          r.material?`<span class="imp-zak">${esc(cistyMaterial(r.material))}</span>`:""}</span>
         <span class="imp-sl">${esc(r.sluzbaTxt||"—")}</span>
         <span class="imp-m">${esc(r.mesiac||"—")}</span>
         <span class="imp-eur">${r.bez?"<i>bez fakt.</i>":(r.trzba==null?"—":eur(r.trzba))}</span>
@@ -20174,6 +20186,8 @@ function oknoImportu(riadky, nazovSuboru){
           r.preco?`<span class="imp-preco">${esc(r.preco)}</span>`:""}${
           r.stav==="nespar" && r.segment && r.klient
             ? `<button type="button" class="imp-zaloz">Založiť prípad</button>` : ""}</span>`;
+      const ch=d.querySelector(".imp-chk input");
+      if(ch) ch.onchange=()=>{ r.vynechat=!ch.checked; obnovOkno(); };
       const zb=d.querySelector(".imp-zaloz");
       if(zb) zb.onclick=async()=>{
         zb.disabled=true; zb.textContent="Zakladám…";
@@ -20232,7 +20246,7 @@ function oknoImportu(riadky, nazovSuboru){
   if(ok) ok.onclick=async()=>{
     ok.disabled=true;
     const err=scrim.querySelector("#impErr");
-    const zapis=riadky.filter(r=>r.stav==="novy"||r.stav==="prepis");
+    const zapis=riadky.filter(r=>(r.stav==="novy"||r.stav==="prepis") && !r.vynechat);
     let hotovo=0, zlyhalo=0;
     /* Najprv prípady: založiť chýbajúce a spustiť obdobie od najstaršieho
        mesiaca v importe (Balíky v akejkoľvek fáze). */
