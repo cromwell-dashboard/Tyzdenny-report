@@ -11163,8 +11163,13 @@ function nbObdobie(opp, fakturovaneOd){
 async function zosuladPripad(e){
   const opp=oppById(e.opportunityId);
   if(!opp) return;
-  // fyzická osoba omylom prepojená s prípadom inej firmy — ten nemeníme
-  if(e.fyzickaOsoba && clientKey(opp.client)!==clientKey(e.client)) return;
+  /* Záznam prepojený s prípadom INEJ firmy (napr. klient v DMIS premenovaný zo
+     Swietelsky na ORYS, prepojenie ostalo) — cudzí prípad nemeníme. Pri
+     Vyfakturované si záznam založí / nájde vlastný prípad. */
+  if(!menaSedia(opp.client, e.client) || (e.fyzickaOsoba && clientKey(opp.client)!==clientKey(e.client))){
+    try{ await backend.opravMena([["entries", e.id, { opportunityId:null }]]); }catch(x){}
+    return;
+  }
   // práve uložený záznam ešte nemusí byť v state.all — doplníme ho ručne
   const zaznamy=[e, ...state.all.filter(x=>x.id!==e.id && x.opportunityId===opp.id)];
   zaznamy.sort((a,b)=>weekCmpDesc(a.weekId,b.weekId) || entryTs(b)-entryTs(a));
@@ -19111,6 +19116,11 @@ async function saveFromModalInner(){
     // Väzbu preto zrušíme a nižšie sa dohľadá alebo založí správny.
     const terajsi=oppById(entry.opportunityId);
     if(terajsi && terajsi.matchKey!==oppMatchKey(entry)) entry.opportunityId=null;
+  }
+  // prepojenie na prípad inej firmy (iný názov klienta) sa zruší — nájde sa / založí vlastný
+  if(entry.isNewBusiness && entry.opportunityId){
+    const pr=oppById(entry.opportunityId);
+    if(pr && !menaSedia(pr.client, entry.client)) entry.opportunityId=null;
   }
   /* Súvisiace služby — jedna zákazka, viac služieb. Vzniknú samostatné záznamy
      so spoločným `linkId`. Prideliť ho treba EŠTE PRED založením obchodného
