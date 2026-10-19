@@ -4264,6 +4264,8 @@ select:disabled{cursor:default; opacity:.65}
 .xs-hist span{color:var(--muted);margin-right:6px}
 .xs-hn{color:var(--muted)}
 @media (max-width:700px){ .xs-r{grid-template-columns:1fr} }
+.xs-vo,.xs-leg .xs-vo{background:#fff;color:#5B6B8C;box-shadow:inset 0 0 0 1.5px #B9C5F2;background-image:repeating-linear-gradient(90deg,transparent 0 6px,transparent 6px 12px)}
+.xs-stb[data-st="nezaujem"].on{background:#5B6B8C !important;border-color:#5B6B8C !important}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -11707,12 +11709,16 @@ const XS_SLUZBY = ["baliky","digital","tlac","ad","nad","zelena"];
 const XS_WON  = ["nb_potvrdenie","nb_registracia","nb_zakazka","nb_vyfakturovane","potvrdene","bezi","vyfakturovane"];
 const XS_LOST = ["nb_odmietnutie","nechce","zrusene"];
 const XS_ZNOVA_MES = 6;
+/* Dôvody v X-Sell: bežné dôvody odmietnutia + dva špecifické pre cross-sell. */
+const XS_DOVODY = ["Vôbec nevyužíva službu", ...LOSS_REASONS];
 const XS_STAVY = {
   vyuziva:{ l:"využíva",       c:"xs-ma" },
   jedna:  { l:"v jednaní",     c:"xs-je" },
   potencial:{ l:"potenciál",   c:"xs-po" },
   odmietol:{ l:"odmietol",     c:"xs-ne" },
-  nezaujem:{ l:"nemá záujem",  c:"xs-ne" },
+  // kľúč „nezaujem" zostáva kvôli uloženým zápisom — význam: obchodník službu
+  // neponúkol, môže ju osloviť iný obchodník
+  nezaujem:{ l:"neponúkané",   c:"xs-vo" },
   znova:  { l:"skúsiť znova",  c:"xs-zn" },
   nic:    { l:"",              c:"xs-nic" },
 };
@@ -11851,7 +11857,7 @@ function viewXsell(){
     <div><span>Skúsiť znova</span><b class="g2">${znCount}</b></div>
     <div><span>Termín po splatnosti</span><b class="r">${poTerm}</b></div>`));
   wrap.appendChild(el("div","xs-leg",
-    ["vyuziva","potencial","znova","jedna","odmietol"].map(k=>`<span><em class="${XS_STAVY[k].c}"></em>${k==="odmietol"?"odmietol / nemá záujem":XS_STAVY[k].l}</span>`).join("")+`<span><em class="xs-nic"></em>zatiaľ nič</span>`));
+    ["vyuziva","potencial","znova","jedna","odmietol","nezaujem"].map(k=>`<span><em class="${XS_STAVY[k].c}"></em>${k==="nezaujem"?"neponúkané – voľné pre iných":XS_STAVY[k].l}</span>`).join("")+`<span><em class="xs-nic"></em>zatiaľ nič</span>`));
   // tabuľka
   const lim=state.xsLimit||60;
   const tw=el("div","xs-tw"); const t=el("table","xs-t");
@@ -11866,7 +11872,8 @@ function viewXsell(){
       const b=c.bunky[seg], st=XS_STAVY[b.stav]||XS_STAVY.nic;
       const td=el("td","xs-c "+st.c);
       let txt=st.l;
-      if(b.stav==="odmietol"||b.stav==="nezaujem"){ const d=b.z?.kedy||(b.nb?xsDatum(b.nb):0); if(d) txt+=`<small>${new Date(d).toLocaleDateString("sk-SK",{day:"numeric",month:"numeric",year:"2-digit"})}</small>`; }
+      if(b.stav==="nezaujem" && b.z?.kto) txt+=`<small>${esc(b.z.kto.split(" ").slice(-1)[0])}</small>`;
+      else if(b.stav==="odmietol"){ const d=b.z?.kedy||(b.nb?xsDatum(b.nb):0); if(d) txt+=`<small>${new Date(d).toLocaleDateString("sk-SK",{day:"numeric",month:"numeric",year:"2-digit"})}</small>`; }
       if(b.stav==="potencial" && b.z?.kto) txt+=`<small>${esc(b.z.kto.split(" ").slice(-1)[0])}</small>`;
       td.innerHTML=(b.stav==="vyuziva"?"✓ ":b.stav==="potencial"?"★ ":b.stav==="znova"?"↻ ":"")+txt;
       td.title=`${c.name} · ${SEG[seg].short}${b.z?.kto?` — zapísal ${b.z.kto}, ${new Date(b.z.kedy).toLocaleDateString("sk-SK")}`:""}`;
@@ -11891,7 +11898,7 @@ function xsOkno(c, seg){
              : (b.info && !z.stav) ? `Odmietnutie z New business${b.nb?.lossReason?` (${esc(b.nb.lossReason)})`:""}.` : "";
   const hist=(z.historia||[]).slice().reverse();
   const scrim=el("div","scrim open");
-  const volby=[["potencial","★ Potenciál"],["odmietol","Ponúknuté – odmietol"],["nezaujem","Nemá záujem"],["","Zrušiť označenie"]];
+  const volby=[["potencial","★ Potenciál"],["odmietol","Ponúknuté – odmietol"],["nezaujem","Neponúkané – voľné pre iných"],["","Zrušiť označenie"]];
   scrim.innerHTML=`<div class="modal xs-modal" style="max-width:560px">
     <div class="modal-h"><h2>${esc(c.name)} · ${esc(SEG[seg].short)}</h2>
       <button class="ghost" data-x><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
@@ -11899,15 +11906,15 @@ function xsOkno(c, seg){
       ${auto?`<div class="xs-auto">${auto}</div>`:""}
       ${smie ? `
       <div class="xs-st">${volby.map(([k,l])=>`<button type="button" class="xs-stb${(z.stav||"")===k&&(k||z.stav)?" on":""}" data-st="${k}">${l}</button>`).join("")}</div>
-      <div class="xs-f xs-dov"${(z.stav==="odmietol"||z.stav==="nezaujem")?"":' style="display:none"'}><label>Dôvod</label>
-        <select id="xsDovod"><option value="">—</option>${LOSS_REASONS.map(r=>`<option${z.dovod===r?" selected":""}>${esc(r)}</option>`).join("")}</select></div>
+      <div class="xs-f xs-dov"${z.stav==="odmietol"?"":' style="display:none"'}><label>Dôvod</label>
+        <select id="xsDovod"><option value="">—</option>${XS_DOVODY.map(r=>`<option${z.dovod===r?" selected":""}>${esc(r)}</option>`).join("")}</select></div>
       <div class="xs-f"><label>Poznámka</label><input id="xsPozn" value="" placeholder="napr. komu sme ponúkali, čo zaujalo…"></div>
       <div class="xs-r">
         <div class="xs-f"><label>Ďalší krok</label><input id="xsKrok" value="${esc(z.krok||"")}" placeholder="napr. zavolať marketingu"></div>
         <div class="xs-f"><label>Termín</label><input id="xsTerm" type="date" value="${esc(z.termin||"")}"></div>
         <div class="xs-f"><label>Kto</label><select id="xsKto">${[...new Set([state.user.name, ...OBCH_NAME_LIST])].map(n=>`<option${(z.krokKto||state.user.name)===n?" selected":""}>${esc(n)}</option>`).join("")}</select></div>
       </div>
-      <div class="hint">Zápis sa uloží s tvojím menom a dnešným dátumom. Termín sa pridá aj do Úloh. Po ${XS_ZNOVA_MES} mesiacoch od odmietnutia pripomenie Zappis ponuku zopakovať tomu, kto odmietnutie zapísal.</div>`
+      <div class="hint"><b>Ponúknuté – odmietol:</b> službu sme ponúkli, po ${XS_ZNOVA_MES} mesiacoch príde pripomienka. <b>Neponúkané:</b> službu si nepredával — môže ju osloviť iný obchodník.<br>Zápis sa uloží s tvojím menom a dnešným dátumom. Termín sa pridá aj do Úloh. Po ${XS_ZNOVA_MES} mesiacoch od odmietnutia pripomenie Zappis ponuku zopakovať tomu, kto odmietnutie zapísal.</div>`
       : `<div class="xs-auto">Do služby ${esc(SEG[seg].short)} zapisuje obchodník tejto služby, jej líder alebo vedenie.</div>`}
       <div class="xs-hist"><b>História</b>${hist.length ? hist.map(h=>`<div><span>${new Date(h.kedy).toLocaleDateString("sk-SK")} · ${esc(h.kto||"")}</span>${esc(XS_STAVY[h.stav]?.l || (h.stav?h.stav:"zrušené označenie"))}${h.dovod?` (${esc(h.dovod)})`:""}${h.pozn?` — ${esc(h.pozn)}`:""}${h.krok?` · krok: ${esc(h.krok)}${h.termin?` do ${esc(h.termin.split("-").reverse().join(". "))}`:""}`:""}</div>`).join("") : `<div class="xs-hn">Zatiaľ bez zápisu.</div>`}</div>
     </div>
@@ -11923,14 +11930,14 @@ function xsOkno(c, seg){
   scrim.querySelectorAll(".xs-stb").forEach(bt=>bt.onclick=()=>{
     zvoleny=bt.dataset.st;
     scrim.querySelectorAll(".xs-stb").forEach(x=>x.classList.toggle("on", x===bt));
-    scrim.querySelector(".xs-dov").style.display = (zvoleny==="odmietol"||zvoleny==="nezaujem") ? "" : "none";
+    scrim.querySelector(".xs-dov").style.display = zvoleny==="odmietol" ? "" : "none";
   });
   const ul=scrim.querySelector("[data-ulozit]");
   if(ul) ul.onclick=async()=>{
     if(z.stav && z.ktoEmail && !xsSmieMenitZapis({ ...z, seg }) && zvoleny!==z.stav){
       toast("Tento zápis môže zmeniť ten, kto ho urobil, alebo líder služby."); return; }
     const kedy=Date.now();
-    const zapis={ stav:zvoleny||null, dovod:(zvoleny==="odmietol"||zvoleny==="nezaujem") ? (scrim.querySelector("#xsDovod").value||null) : null,
+    const zapis={ stav:zvoleny||null, dovod:zvoleny==="odmietol" ? (scrim.querySelector("#xsDovod").value||null) : null,
       pozn:(scrim.querySelector("#xsPozn").value||"").trim()||null,
       krok:(scrim.querySelector("#xsKrok").value||"").trim()||null, termin:scrim.querySelector("#xsTerm").value||null,
       krokKto:scrim.querySelector("#xsKto").value||state.user.name,
@@ -12314,6 +12321,9 @@ function koniecObdobia(opp){
 function mesiaceVOkne(opp){
   const out=new Set(mesiaceNaVyplnenie(opp));
   const kon=koniecObdobia(opp);
+  /* Automaticky len uzavreté mesiace (v októbri sa dopĺňa september; október
+     sa objaví 1. 11.). Prebiehajúci či budúci mesiac si obchodník pridá
+     tlačidlom „+ Pridať" — pridaný mesiac sa potom zobrazuje stále. */
   resultsPre(opp.id).forEach(r=>{ if(r.obdobie>=opp.nbOd && (!kon || r.obdobie<=kon)) out.add(r.obdobie); });
   return [...out].sort();
 }
@@ -12322,6 +12332,7 @@ function dalsiMesiacNaPridanie(opp){
   if(!opp?.nbOd) return null;
   const m=mesiaceVOkne(opp), kon=koniecObdobia(opp), teraz=terajsiMesiac();
   let dalsi = m.length ? pridajMesiace(m[m.length-1],1) : opp.nbOd;
+
   if(dalsi<opp.nbOd) dalsi=opp.nbOd;
   if(kon && dalsi>kon) return null;
   if(dalsi>pridajMesiace(teraz,12)) return null;
@@ -15907,6 +15918,8 @@ function viewResults(){
   const pripady=vsetkyPr.filter(o=>{
     if(!pripadUzavrety(o)) return true;
     if(state.resUkoncene) return true;
+    // ručne uzavretý / prehratý prípad (už nespolupracujeme) sa nezobrazuje
+    if(["uzavrety","prehraty"].includes(o.stav)) return false;
     // jednorazové prípady (nie ručne uzavreté) sa ukazujú vždy
     if(jednoraz(o) && !["uzavrety","prehraty"].includes(o.stav)) return true;
     const vyb=resVybrane();
@@ -15933,7 +15946,9 @@ function viewResults(){
   {
     const teraz=terajsiMesiac();
     const rokTeraz=Number(teraz.slice(0,4));
-    if(state.resMesiace===null) state.resMesiace=[poslednyUzavretyMesiac()];
+    /* Predvolene posledný uzavretý aj prebiehajúci mesiac — aby boli vidieť aj
+       zákazky vyfakturované tento mesiac a dali sa hneď doplniť. */
+    if(state.resMesiace===null) state.resMesiace=[poslednyUzavretyMesiac(), terajsiMesiac()].filter((v,i,a)=>a.indexOf(v)===i).sort();
     if(state.resRok===null){
       const prvy=(state.resMesiace||[])[0];
       state.resRok = prvy ? Number(prvy.slice(0,4)) : rokTeraz;
