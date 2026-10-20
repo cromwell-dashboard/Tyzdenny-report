@@ -5084,6 +5084,9 @@ const OBCHODNIK_EMAILS = {
   "lorincz@kolos.sk":                  { name:"Richard Lorincz",      firma:"KOLOS",         segments:["baliky"] },
   // Zelená pošta
   "roman.chalama@zelenaposta.sk":      { name:"Roman Chalama",        firma:"Zelená pošta",  segments:["zelena"] },
+  // Nie je to človek: klienti, ktorí sa zaregistrovali sami, bez obchodníka.
+  // Konto sa nedá použiť na prihlásenie (neexistujúca adresa) a odmena nevzniká.
+  "samoregistracia@zelenaposta.local": { name:"Samoregistrácia Zelená pošta", firma:"Zelená pošta", segments:["zelena"], bezOdmeny:true },
   "miroslav.cvacho@zelenaposta.sk":    { name:"Miroslav Cvacho",      firma:"Zelená pošta",  segments:["zelena"] },
   "peter.beck@zelenaposta.sk":         { name:"Peter Beck",           firma:"Zelená pošta",  segments:["zelena"] },
   // Digitance
@@ -11587,6 +11590,9 @@ function odmenaZaVysledok(opp, res){
      hoci líder odmenu zadal ručne. */
   if(res && res.odmenaRucne!=null)
     return { suma:res.odmenaRucne, rucne:true, dovod:res.odmenaRucneDovod || "Odmena upravená ručne." };
+  // klient prišiel sám (Samoregistrácia) — odmena nevzniká
+  { const v=(opp?.vlastnici||[]).filter(x=>x.meno);
+    if(v.length && v.every(x=>BEZ_ODMENY_MENA.has(x.meno))) return { suma:0, dovod:"Samoregistrácia — klient prišiel bez obchodníka, odmena nevzniká." }; }
   let p = pravidloPrePripad(opp);
   // ručná sadzba platí aj tam, kde služba vlastné pravidlo nemá
   if(!p && opp?.sadzbaRucne!=null)
@@ -11609,6 +11615,8 @@ function odmenaZaVysledok(opp, res){
   return { suma:Math.round(suma*100)/100, zaklad, sadzba:p.sadzba, pravidlo:p, dovod:null };
 }
 /* Rozdelenie odmeny medzi obchodníkov podľa podielov na prípade. */
+/* „Obchodníci", za ktorých sa odmena nevypláca (napr. Samoregistrácia). */
+const BEZ_ODMENY_MENA = new Set(Object.values(OBCHODNIK_EMAILS).filter(v=>v.bezOdmeny).map(v=>v.name));
 function rozdelOdmenu(opp, suma){
   const v=(opp?.vlastnici||[]).filter(x=>x.meno);
   if(!v.length || suma==null) return [];
@@ -11616,7 +11624,7 @@ function rozdelOdmenu(opp, suma){
   const sucet=v.reduce((a,x)=>a+(x.podiel||0),0) || 1;
   return v.map(x=>({ meno:x.meno, uid:x.uid||null,
     podiel:(x.podiel||0)/sucet,
-    suma:Math.round(suma*((x.podiel||0)/sucet)*100)/100 }));
+    suma: BEZ_ODMENY_MENA.has(x.meno) ? 0 : Math.round(suma*((x.podiel||0)/sucet)*100)/100 }));
 }
 const eur = n => n==null ? "—" : n.toLocaleString("sk-SK",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
 
@@ -12674,6 +12682,16 @@ function ktoZadal(x){
 const ND_CENNIK = [[6,4.74],[14,7.55],[20,9.15],[30,12.01],[40,15.48],[50,19.72],
   [60,23.15],[70,26.20],[80,29.16],[90,31.78],[100,34.73],[150,36.57]];
 const ndCena = g => (ND_CENNIK.find(x=>x[0]===Number(g))||[])[1] ?? null;
+/* Nákladový cenník platí len pre zákazky Cromwellu. Firmu prípadu berieme zo
+   záznamov prípadu, inak podľa firmy hlavného obchodníka. KOLOS a ostatní
+   majú iné ceny — tam sa náklad a marža dopĺňajú ručne. */
+function jeCromwellPripad(opp){
+  const zazn=(state.all||[]).filter(e=>e.opportunityId===opp?.id && e.firma)
+    .sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0];
+  let f=zazn?.firma || "";
+  if(!f){ const m=(opp?.vlastnici||[])[0]?.meno; const em=m && NAME_TO_EMAIL[uplneMeno(m)]; f=em ? (OBCHODNIK_EMAILS[em]?.firma||"") : ""; }
+  return /cromwell|post/i.test(f) && !/kolos/i.test(f);
+}
 function ndVyber(val, dis){
   return `<label class="nd-kat-w" title="Hmotnosť letáku — podľa nej sa z kusov vypočíta náklad">
     <select class="nd-kat"${dis?" disabled":""}><option value="">hmotnosť…</option>${
@@ -12686,7 +12704,7 @@ function riadokPolozkyVysledku(m, x, kusy, zamknute, bez, opp){
   const meta = x ? ` data-zm="${esc(x.zadalMeno||"")}" data-zk="${esc(x.zadalKedy||"")}"` : "";
   return `<div class="res-row res-sub${bez?" bez":""}" data-m="${m}" data-sub="1"${meta}>
     <span class="res-m res-m-sub"><span>${esc(menoMesiaca(m))}${zamknute?"":`<button type="button" class="res-minus" title="Odstrániť riadok">✕</button>`}${
-      opp?.segment==="nad" ? ndVyber(x?.ndKategoria ?? opp.ndKategoria, zamknute||bez) : ""}${
+      (opp?.segment==="nad" && jeCromwellPripad(opp)) ? ndVyber(x?.ndKategoria ?? opp.ndKategoria, zamknute||bez) : ""}${
       x?.zadalMeno ? `<span class="res-kto">zadal ${esc(uplneMeno(x.zadalMeno))}${x.zadalKedy?` · ${esc(casKratko(x.zadalKedy))}`:""}</span>` : ""}</span></span>
     <input data-f="trzba"  inputmode="decimal"${dis} value="${esc(formatCislo(x?.trzba))}" placeholder="—">
     <input data-f="naklad" inputmode="decimal"${dis} value="${esc(formatCislo(x?.naklad))}" placeholder="—">
@@ -12794,7 +12812,7 @@ function openResultsModal(opp, zameraj){
           return `<div class="res-row${bez?" bez":""}${prebieha?" prebieha":""}${meska?" meska":""}${mimo?" mimo":""}${dalsie.length?" ma-sub":""}" data-m="${m}">
             <span class="res-m"${povod?` title="${esc(povod)}"`:""}>${esc(menoMesiaca(m))}${
               (!zamknute)?`<button type="button" class="res-plus" data-plus="${m}" title="Pridať ďalší riadok do ${esc(menoMesiaca(m))}"${bez?" disabled":""}>+</button>`:""}${
-              opp.segment==="nad" ? ndVyber(p0?.ndKategoria ?? r?.ndKategoria ?? opp.ndKategoria, zamknute||bez) : ""}${prebieha?`<span class="res-now">prebieha</span>`:""}${meska?`<span class="res-late" title="Termín bol ${esc(terminText(m))}">po termíne</span>`:""}${
+              (opp.segment==="nad" && jeCromwellPripad(opp)) ? ndVyber(p0?.ndKategoria ?? r?.ndKategoria ?? opp.ndKategoria, zamknute||bez) : ""}${prebieha?`<span class="res-now">prebieha</span>`:""}${meska?`<span class="res-late" title="Termín bol ${esc(terminText(m))}">po termíne</span>`:""}${
               (r && r.zdroj==="import")?`<span class="res-imp">Import ${esc(r.zdrojSystem||"Nemesis")}</span>`:""}${
               schvalena?`<span class="res-lock" title="Odmena za tento mesiac je schválená — čísla sa už nedajú meniť. Odomkne sa vrátením odmeny v Odmenách.">🔒 uzamknuté</span>`:""}${
               dalsie.length?`<span class="res-sucet" title="V zozname sa zobrazuje súčet všetkých riadkov mesiaca">spolu ${esc(formatCislo(r?.trzba))} €</span>`:""}${
@@ -16235,11 +16253,25 @@ function viewResults(){
         if(c.mnozstvo!=null){ ks+=c.mnozstvo; maK=true; } });
       const pct = maT && t ? Math.round(m/t*1000)/10 : null;
       const kus=n=>Math.round(n).toLocaleString("sk-SK");
+      /* Celková odmena za zobrazené prípady a zvolené mesiace (namiesto kusov).
+         Vedenie a lídri: vypočítaná aj schválená. Obchodník: len jeho podiel
+         zo SCHVÁLENÝCH odmien — priebežné výpočty mu zámerne neukazujeme. */
+      let odm=0, odmSchv=0, maO=false;
+      { const vyb=resVybrane(), veduci=vidiOdmenu(), ja=normalizeForCompare(state.user?.name||"");
+        rows.forEach(o=>resultsPre(o.id).filter(r=>!vyb || vyb.includes(r.obdobie)).forEach(r=>{
+          const st=stavOdmeny(o,r); if(st.suma==null) return;
+          if(veduci){ odm+=st.suma; maO=true; if(st.stav==="schvalene") odmSchv+=st.suma; }
+          else if(st.stav==="schvalene"){
+            const moj=(st.schvalene?.podiely||[]).find(p=>normalizeForCompare(uplneMeno(p.meno||""))===ja);
+            if(moj){ odm+=moj.suma||0; maO=true; }
+          }
+        })); }
       karty.innerHTML=`
         <div class="res-k"><span>Tržby NB</span><b>${maT?eur(t):"—"}</b></div>
         <div class="res-k mz${m<0?" zap":""}"><span>Marža NB</span><b>${maM?eur(m):"—"}</b></div>
         <div class="res-k"><span>Marža v %</span><b>${pct!=null?pct.toLocaleString("sk-SK")+" %":"—"}</b></div>
-        ${maK?`<div class="res-k"><span>Kusy</span><b>${kus(ks)}</b></div>`:""}
+        <div class="res-k od"><span>${vidiOdmenu()?"Odmena":"Moja schválená odmena"}</span><b>${maO?eur(Math.round(odm*100)/100):"—"}</b>${
+          vidiOdmenu() && maO ? `<i>z toho schválené ${eur(Math.round(odmSchv*100)/100)}</i>` : ""}</div>
         <div class="res-k sm"><span>Obdobie</span><b>${esc(resPopisObdobia())}</b><i>${rows.length} ${plural(rows.length,"prípad","prípady","prípadov")}</i></div>`;
     }
     info.textContent=`${rows.length} ${plural(rows.length,"prípad","prípady","prípadov")}${
