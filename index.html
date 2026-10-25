@@ -4284,6 +4284,25 @@ select:disabled{cursor:default; opacity:.65}
   .res-row .res-m{min-width:0;overflow:hidden}
 }
 .rs-name > .rs-klient{grid-column:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--ink)}
+/* Progres aktivity */
+/* jemnejšie — bledomodré ako Kopírovať, nie sýto modré */
+.pg-btn{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:1px solid #D5DDF7;border-radius:8px;background:#F1F4FD;color:#3E56CB;
+  font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;margin-right:6px;white-space:nowrap}
+.pg-btn svg{width:12px;height:12px}
+.pg-btn:hover{background:#E6EBFB;border-color:#C2CDF2}
+.pg-os{border-left:2px solid var(--line);margin:8px 0 8px 4px;padding-left:14px}
+.pg-it{position:relative;margin:0 0 8px}
+.pg-it::before{content:"";position:absolute;left:-20px;top:4px;width:10px;height:10px;border-radius:50%;background:#1D9E75}
+.pg-it.old::before{background:#C9CDD5}
+.pg-m{display:block;font-size:11.5px;color:var(--muted);margin-bottom:1px}
+.pg-t{font-size:13.5px;color:var(--ink);white-space:pre-wrap}
+.pg-new{font-size:10px;font-weight:700;background:#E1F5EE;color:#0F6E56;border-radius:5px;padding:1px 5px;margin-left:6px}
+.pg-more{border:0;background:none;padding:0;font-family:inherit;font-size:12px;color:var(--brand);cursor:pointer}
+.e-events-povodny{color:var(--ink-soft)}
+.pg-r{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
+.pg-modal textarea{width:100%;box-sizing:border-box;border:1px solid #D5D9E0;border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13.5px;min-height:90px !important}
+#fIcoLookup.ico-zahr{background:#F1F4FD !important;border-color:#D5DDF7 !important;color:#3E56CB !important}
+#fIcoLookup.ico-zahr:hover{background:#E6EBFB !important;border-color:#C2CDF2 !important}
 @media (max-width:640px){
   #fFirmaSection{--fh:34px}
   #fFirmaSection .field input,#fFirmaSection .ico-row input{font-size:16px}
@@ -5087,6 +5106,8 @@ const OBCHODNIK_EMAILS = {
   // Nie je to človek: klienti, ktorí sa zaregistrovali sami, bez obchodníka.
   // Konto sa nedá použiť na prihlásenie (neexistujúca adresa) a odmena nevzniká.
   "samoregistracia@zelenaposta.local": { name:"Samoregistrácia Zelená pošta", firma:"Zelená pošta", segments:["zelena"], bezOdmeny:true },
+  // Zákazky z marketingových kampaní nahraté importom — bez obchodníka, bez odmeny.
+  "import.kampane@zelenaposta.local":  { name:"Import kampane",       firma:"Zelená pošta",  segments:["zelena"], bezOdmeny:true },
   "miroslav.cvacho@zelenaposta.sk":    { name:"Miroslav Cvacho",      firma:"Zelená pošta",  segments:["zelena"] },
   "peter.beck@zelenaposta.sk":         { name:"Peter Beck",           firma:"Zelená pošta",  segments:["zelena"] },
   // Digitance
@@ -7279,7 +7300,8 @@ function wireIcoLookup(){
         pendingFinstat={ ico:String(hit0.ico||ico), name:hit0.company, address:null, dic:null, icDph:null, legalForm:null };
         hint.innerHTML=`<span class="ico-ok">✓ ${esc(hit0.company)}</span> — z databázy „${esc(leadDbName(hit0))}“`;
       } else {
-        hint.innerHTML=`<span class="ico-ok">✓ IČO ${esc(icoKey(ico))} sa uloží</span> — ${esc(kraj)} firmy Finstat nepozná, názov a adresu vyplň ručne.`;
+        hint.innerHTML=`<span class="ico-ok">✓ IČO ${esc(icoKey(ico))} je uložené</span> — teraz do poľa Klient napíš <b>celý presný názov firmy</b>, napr. <i>Názov Firmy s.r.o.</i>`;
+        setTimeout(()=>$("#fClient")?.focus(), 30);
       }
       if(typeof updateLastWeekHint==="function") updateLastWeekHint();
       return;
@@ -7397,6 +7419,19 @@ function syncFlagBtn(){
   const k=krajinaPodla(sel.value||"SK");
   b.innerHTML=vlajkaSvg(k.kod);
   b.title=`Sídlo klienta: ${k.nazov}. Klikni pre zmenu.`;
+  syncKrajinaIco();
+}
+/* Zahraničná firma: Finstat ju nepozná — tlačidlo sa volá „Uložiť IČO“
+   a pod poľom je jasný pokyn napísať celý presný názov firmy. */
+function syncKrajinaIco(){
+  const kraj=$("#fCountry")?.value || "SK";
+  const btn=$("#fIcoLookup"), hint=$("#fIcoHint"), kl=$("#fClient");
+  const zahr = kraj!=="SK";
+  if(btn){ btn.textContent = zahr ? "Uložiť IČO" : "Načítať z Finstat"; btn.classList.toggle("ico-zahr", zahr); }
+  if(kl) kl.placeholder = zahr ? "Celý presný názov firmy, napr. Názov Firmy s.r.o." : "";
+  if(hint && zahr && !/✓/.test(hint.textContent||""))
+    hint.innerHTML=`<b>Zahraničná firma (${esc(krajinaPodla(kraj).nazov)})</b> — Finstat ju nepozná. Zadaj IČO, klikni <b>Uložiť IČO</b> a do poľa Klient napíš <b>celý presný názov firmy</b> aj s právnou formou, napr. <i>Názov Firmy s.r.o.</i> — nie skratku ani neúplný názov.`;
+  else if(hint && !zahr && /Zahraničná firma/.test(hint.textContent||"")) hint.textContent="Zadaj IČO firmy a klikni Načítať z Finstat.";
 }
 function openKrajinaPicker(anchor){
   document.querySelector(".qsp")?.remove();
@@ -10699,6 +10734,82 @@ function entryCtxChips(e){
 
   return ctx;
 }
+/* ---------------------------------------------------------------- PROGRES AKTIVITY
+   Obchodník doplní, čo sa udialo, do existujúcej aktivity (bez novej).
+   Aktivita sa presunie do týždňa progresu a v zozname je navrchu.
+   e.progres = [{id, datum, text, kto, kedy, stav?, z?}] — najnovší posledný. */
+const fmtDM = d => { const x=new Date(d); return isNaN(x) ? "" : `${x.getDate()}. ${x.getMonth()+1}. ${x.getFullYear()}`; };
+function povodnyDatum(e){
+  if(e.povodnyDatum) return fmtDM(e.povodnyDatum);
+  if(e.povodnyTyzden) return weekRangeLabel(e.povodnyTyzden);   // pôvodný týždeň, nie dátum progresu
+  if(e.datum) return fmtDM(e.datum);
+  return weekRangeLabel(e.weekId || "");
+}
+function progresOs(e){
+  const p=(e.progres||[]).slice().reverse();
+  if(!p.length) return "";
+  const otv=openProgres.has(e.id), ukaz=otv ? p : p.slice(0,2);
+  const novy = Date.now()-(p[0].kedy||0) < 3*864e5;
+  return `<div class="pg-os">${ukaz.map((x,i)=>`<div class="pg-it${i?" old":""}">
+      <div class="pg-m">${esc(fmtDM(x.datum))} · ${esc(x.kto||"")}${x.stav?` · ${esc(ST[x.stav]?.label||x.stav)}`:""}${i===0&&novy?`<span class="pg-new">NOVÉ</span>`:""}</div>
+      <div class="pg-t">${esc(x.text||"")}</div></div>`).join("")}${
+    p.length>2?`<button type="button" class="pg-more" data-pg-more="${esc(e.id)}">${otv?"skryť staršie":`+ ${p.length-2} ${plural(p.length-2,"starší progres","staršie progresy","starších progresov")}`}</button>`:""}</div>`;
+}
+const openProgres=new Set();
+document.addEventListener("click", ev=>{
+  const b=ev.target.closest?.("[data-pg-more]"); if(!b) return;
+  ev.stopPropagation(); const id=b.dataset.pgMore;
+  if(openProgres.has(id)) openProgres.delete(id); else openProgres.add(id); render();
+});
+function pridajProgres(e){
+  const nb=!!(e.isNewBusiness || kindOf(e)==="nb");
+  const stavy = nb ? STATUSES_NB : STATUSES;
+  const dnes=new Date().toISOString().slice(0,10);
+  const scrim=el("div","scrim open");
+  scrim.innerHTML=`<div class="modal pg-modal" style="max-width:520px">
+    <div class="modal-h"><h2>Pridať progres · ${esc(e.client||"")}</h2>
+      <button class="ghost" data-x><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-b">
+      <div class="pg-r">
+        <div class="xs-f"><label>Dátum</label><input type="date" id="pgDatum" value="${dnes}" max="${dnes}"></div>
+        <div class="xs-f"><label>Stav</label><select id="pgStav"><option value="">bez zmeny (${esc(ST[e.status]?.label||"—")})</option>${
+          stavy.filter(x=>x.id!==e.status).map(x=>`<option value="${esc(x.id)}">${esc(x.label)}</option>`).join("")}</select></div>
+      </div>
+      <div class="xs-f"><label>Čo sa udialo</label><textarea id="pgText" rows="4" placeholder="napr. klient potvrdil termín, poslali sme upravenú ponuku…"></textarea></div>
+      <div class="hint">Progres sa pridá k tejto aktivite s tvojím menom. Aktivita sa presunie do týždňa progresu a v zozname bude navrchu.</div>
+      <div class="task-err" id="pgErr"></div>
+    </div>
+    <div class="modal-f" style="justify-content:flex-end"><button class="btn" data-x>Zrušiť</button><button class="btn solid" data-ok>Uložiť progres</button></div></div>`;
+  document.body.appendChild(scrim);
+  const zavri=()=>scrim.remove();
+  scrim.querySelectorAll("[data-x]").forEach(b=>b.onclick=zavri);
+  setTimeout(()=>scrim.querySelector("#pgText")?.focus(),50);
+  scrim.querySelector("[data-ok]").onclick=async()=>{
+    const text=(scrim.querySelector("#pgText").value||"").trim();
+    const datum=scrim.querySelector("#pgDatum").value||dnes;
+    const stav=scrim.querySelector("#pgStav").value||null;
+    const err=scrim.querySelector("#pgErr");
+    if(!text){ err.textContent="⚠ Napíš, čo sa udialo."; err.classList.add("on"); return; }
+    const tyz=weekId(new Date(datum+"T12:00:00"));
+    const novyTyz = !e.weekId || weekCmpDesc(e.weekId, tyz)>0;   // progres je novší ako aktivita
+    const zapis={ id:"pg_"+Date.now().toString(36), datum, text, stav, kto:state.user.name, kedy:Date.now(), z:e.weekId||null };
+    const upd={ ...e,
+      progres:[...(e.progres||[]), zapis],
+      povodnyTyzden: e.povodnyTyzden || e.weekId || null,
+      povodnyDatum: e.povodnyDatum || e.datum || null,
+      ...(novyTyz ? { weekId:tyz, datum } : {}),
+      ...(stav ? { status:stav } : {}) };
+    scrim.querySelector("[data-ok]").disabled=true;
+    try{
+      await backend.save(upd);
+      if(stav && upd.isNewBusiness){
+        if(upd.opportunityId) await zosuladPripad(upd);
+        else if(jeVyfakturovane(stav)){ const id=await zabezpecPripad(upd,false); if(id) await backend.opravMena([["entries", upd.id, { opportunityId:id }]]); }
+      }
+      zavri(); toast("Progres pridaný"+(novyTyz?" — aktivita je teraz v aktuálnom týždni":""));
+    }catch(x){ scrim.querySelector("[data-ok]").disabled=false; err.textContent="⚠ "+(x?.message||x?.code||"Nepodarilo sa uložiť."); err.classList.add("on"); }
+  };
+}
 /* Prepínač poznámok — v zápätí karty, vedľa ostatných akcií. */
 function notesToggle(e){
   const count=(e.comments||[]).length;
@@ -11592,7 +11703,7 @@ function odmenaZaVysledok(opp, res){
     return { suma:res.odmenaRucne, rucne:true, dovod:res.odmenaRucneDovod || "Odmena upravená ručne." };
   // klient prišiel sám (Samoregistrácia) — odmena nevzniká
   { const v=(opp?.vlastnici||[]).filter(x=>x.meno);
-    if(v.length && v.every(x=>BEZ_ODMENY_MENA.has(x.meno))) return { suma:0, dovod:"Samoregistrácia — klient prišiel bez obchodníka, odmena nevzniká." }; }
+    if(v.length && v.every(x=>BEZ_ODMENY_MENA.has(x.meno))) return { suma:0, dovod:`${v[0].meno} — zákazka bez obchodníka, odmena nevzniká.` }; }
   let p = pravidloPrePripad(opp);
   // ručná sadzba platí aj tam, kde služba vlastné pravidlo nemá
   if(!p && opp?.sadzbaRucne!=null)
@@ -17712,7 +17823,7 @@ function entryCard(e,clients,opts={}){
       ${xsTags||""}
     </div></div>
     <div class="e-meta">${metaBits.join(`<span class="mt-dot">·</span>`)}</div>
-    <div class="e-events">${esc(e.events||"")}</div>${warningBox(e)}${sleepStaleBox}
+    ${progresOs(e)}<div class="e-events${(e.progres||[]).length?" e-events-povodny":""}">${(e.progres||[]).length?`<span class="pg-m">${esc(povodnyDatum(e))} · pôvodný zápis</span>`:""}${esc(e.events||"")}</div>${warningBox(e)}${sleepStaleBox}
     ${(e.contacts&&e.contacts.length)?`<div class="e-contacts">${e.contacts.map(c=>{
       const nm=[c.firstName,c.lastName].filter(Boolean).join(" ")||"(bez mena)";
       const ph=(c.phone||"").split(/·|,|;/)[0]?.trim();
@@ -17780,6 +17891,12 @@ function entryCard(e,clients,opts={}){
     if(dm){ const foot=card.querySelector(".e-foot"); foot.querySelector(".obch").after(dm); }
   }
   card.querySelector(".e-actions").insertBefore(notesToggle(e), card.querySelector(".e-actions").firstChild);
+  if(!e._suggested && canEdit(e)){
+    const pg=el("button","pg-btn",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Pridať progres`);
+    pg.type="button"; pg.title="Doplniť, čo sa udialo — bez zakladania novej aktivity";
+    pg.onclick=ev=>{ ev.stopPropagation(); pridajProgres(e); };
+    card.querySelector(".e-actions").insertBefore(pg, card.querySelector(".e-actions").firstChild);
+  }
   card.querySelector(".ebody").appendChild(notesBlock(e));
   return card;
 }
@@ -18681,6 +18798,7 @@ function openModal(entry,presetSeg){
     ACTIVITY_TYPES.forEach(t=>{ const o=el("option","",t); o.value=t; at.appendChild(o); });
     at.value=entry?.dmisActType||"";
     $("#fCountry").value=entry?.dmisCountry||"SK";
+    setTimeout(()=>{ if(typeof syncFlagBtn==="function") syncFlagBtn(); }, 0);
     $("#fRevenue").value=entry?.dmisRevenue??"";
     { const d=$("#fDmisDetails"); if(d) d.open=false; }   // údaje pre DMIS sú predvolene zbalené
   }
@@ -19181,6 +19299,17 @@ async function saveFromModalInner(){
     if(oppId) entry.opportunityId=oppId;
   }
 
+  /* Upravená aktivita (zmenený popis alebo stav) ide do aktuálneho týždňa
+     a v zozname navrch — pokiaľ obchodník sám nezmenil dátum. Oprava preklepu
+     v iných poliach ju nechá v jej týždni. */
+  if(wasEditing && editing && entry.weekId===editing.weekId
+     && ((entry.events||"").trim()!==(editing.events||"").trim() || entry.status!==editing.status)
+     && weekCmpDesc(entry.weekId, CURRENT_WEEK)>0){
+    entry.povodnyTyzden = editing.povodnyTyzden || editing.weekId;
+    entry.povodnyDatum = editing.povodnyDatum || editing.datum || null;
+    entry.weekId = CURRENT_WEEK;
+    entry.datum = new Date().toISOString().slice(0,10);
+  }
   state.poslednyZapis = entry.id || null;   // po uložení naň skočíme
   await backend.save(entry);
   // stav prípadu ide za stavom záznamu — "Vyfakturované" prípad označí ako vyhraný
