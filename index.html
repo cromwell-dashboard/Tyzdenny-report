@@ -4502,7 +4502,7 @@ select:disabled{cursor:default; opacity:.65}
         <input type="file" id="nbFileInput" accept=".csv" style="display:none">
         <button class="btn-primary" id="importResBtn" style="background:#fff;color:var(--brand);border:1px solid var(--line);box-shadow:none;margin-top:6px;display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
-          Import výsledkov Balíky
+          Import výsledkov
         </button>
         <input type="file" id="resFileInput" accept=".xlsx,.xls,.csv" style="display:none">
         <button class="navitem" id="opravMenaBtn" type="button" style="margin-top:8px; display:none" title="Doplní neúplné mená obchodníkov v záznamoch (napr. Csuba → Adrian Csuba)">
@@ -19929,6 +19929,7 @@ function impObchodnik(text){
 /* Založí obchodný prípad pre nespárovaný riadok — vytvorí New business záznam
    so stavom Vyfakturované v mesiaci, od ktorého sa fakturuje, a nechá appku
    prípad vytvoriť a spustiť mu obdobie rovnako, ako keby ho zapísal človek. */
+const impKlucKlienta = r => `${r.segment}|${r.produkt||""}|${r.ico || firmaKluc(r.klient)}`;
 async function impZalozPripad(r, vsetky){
   const o=impObchodnik(r.obchodnik);
   if(!o.hlavny) throw new Error(`Obchodník „${r.obchodnik||"—"}“ nie je v zozname Zappisu.`);
@@ -19959,6 +19960,11 @@ async function impZalozPripad(r, vsetky){
   zaznam.opportunityId = await zabezpecPripad(zaznam, false);
   await backend.save(zaznam);
   if(zaznam.opportunityId) await zosuladPripad(zaznam);
+  // NB obdobie presne od najstaršieho mesiaca v súbore
+  if(zaznam.opportunityId){
+    const o=oppById(zaznam.opportunityId) || _cerstvePripady.get(zaznam.opportunityId) || { id:zaznam.opportunityId, segment:r.segment, produkt:r.produkt||null };
+    if(o.nbOd!==prvy) await backend.saveOpportunity({ id:o.id, fakturovaneOd:prvy, ...nbObdobie({ ...o, segment:r.segment, produkt:r.produkt||null }, prvy) });
+  }
   return zaznam.opportunityId;
 }
 
@@ -19966,7 +19972,11 @@ async function impZalozPripad(r, vsetky){
 function prvyTyzdenMesiaca(obdobie){
   const [r,m]=String(obdobie||"").split("-").map(Number);
   if(!r||!m) return state.week;
-  const d=new Date(Date.UTC(r, m-1, 4));    // 4. deň mesiaca padne vždy do jeho prvého týždňa
+  /* Týždeň, ktorého pondelok je v danom mesiaci (prvý pondelok) — inak by sa
+     týždeň začínajúci koncom predošlého mesiaca prirátal k predošlému mesiacu
+     a NB obdobie by sa posunulo o mesiac dozadu. */
+  const d=new Date(Date.UTC(r, m-1, 1));
+  while(d.getUTCDay()!==1) d.setUTCDate(d.getUTCDate()+1);
   return weekId(d);
 }
 
@@ -20458,15 +20468,20 @@ function oknoImportu(riadky, nazovSuboru){
         <span class="imp-st" title="${esc(r.preco||IMP_STAVY[r.stav].t)}">${esc(IMP_STAVY[r.stav].l)}${
           r.preco?`<span class="imp-preco">${esc(r.preco)}</span>`:""}${
           r.stav==="nespar" && r.segment && r.klient
-            ? `<button type="button" class="imp-zaloz">Založiť prípad</button>` : ""}</span>`;
+            ? (prvyRiadokKlienta(r)
+                ? `<button type="button" class="imp-zaloz">Založiť prípad</button>`
+                : `<span class="imp-preco">Spáruje sa s prípadom, ktorý založíš pri ${esc(menoMesiaca(prvyRiadokKlienta(r,true).mesiac))}.</span>`) : ""}</span>`;
       const ch=d.querySelector(".imp-chk input");
       if(ch) ch.onchange=()=>{ r.vynechat=!ch.checked; obnovOkno(); };
       const zb=d.querySelector(".imp-zaloz");
       if(zb) zb.onclick=async()=>{
         zb.disabled=true; zb.textContent="Zakladám…";
         try{
-          await impZalozPripad(r, riadky);
-          // po založení sa prepočítajú všetky riadky — spravidla ich pribudne viac naraz
+          const id=await impZalozPripad(r, riadky);
+          /* Jeden prípad pre klienta — všetky jeho mesiace v súbore idú do tohto
+             jedného NB obdobia (nie nový prípad za každý mesiac). */
+          const k=impKlucKlienta(r);
+          riadky.forEach(x=>{ if(impKlucKlienta(x)===k) x.oppId=id; });
           setTimeout(()=>{ prepocitaj(); }, 400);
         }catch(err){
           console.error("založenie prípadu:", err);
@@ -20481,10 +20496,22 @@ function oknoImportu(riadky, nazovSuboru){
   };
   /* Po založení prípadu sa riadky vyhodnotia nanovo — jeden nový prípad
      spravidla spáruje viac mesiacov toho istého klienta naraz. */
+  // prvý (najstarší) nespárovaný riadok klienta — len pri ňom je „Založiť prípad"
+  function prvyRiadokKlienta(r, vratRiadok){
+    const k=impKlucKlienta(r);
+    const prvy=riadky.filter(x=>x.stav==="nespar" && impKlucKlienta(x)===k).sort((a,b)=>String(a.mesiac).localeCompare(String(b.mesiac)))[0];
+    return vratRiadok ? (prvy||r) : prvy===r;
+  }
+  let _pokusy=0;
   const prepocitaj=()=>{
+    let caka=false;
     riadky.forEach(r=>{
       if(!r.segment || r.stav==="chyba" || r.zalozZ || r.spustiOd) return;   // Balíky — vybavené pri zápise
-      const opp=impNajdiPripad(r);
+      let opp=impNajdiPripad(r);
+      if(!opp && r.oppId){
+        opp=oppById(r.oppId) || _cerstvePripady.get(r.oppId) || null;
+        if(opp && !opp.nbOd){ caka=true; return; }       // prípad sa ešte dopisuje — skúsime o chvíľu
+      }
       if(!opp){ r.stav="nespar"; r.preco="K tomuto klientovi a službe nie je obchodný prípad."; return; }
       r.opp=opp;
       if(!opp.nbOd){ r.stav="nespar"; r.preco="Prípadu ešte nebeží obdobie odmeny."; return; }
@@ -20498,12 +20525,13 @@ function oknoImportu(riadky, nazovSuboru){
     });
     obnovSuhrn();
     vykresli();
+    if(caka && _pokusy++<12) setTimeout(prepocitaj, 700);
   };
   const obnovSuhrn=()=>{
     const p={}; riadky.forEach(r=>p[r.stav]=(p[r.stav]||0)+1);
     scrim.querySelector(".imp-sum").innerHTML=Object.keys(IMP_STAVY).filter(k=>p[k]).map(k=>
       `<span class="imp-chip ${k}" title="${esc(IMP_STAVY[k].t)}">${p[k]} ${esc(IMP_STAVY[k].l)}</span>`).join("");
-    const n=riadky.filter(r=>r.stav==="novy"||r.stav==="prepis").length;
+    const n=riadky.filter(r=>(r.stav==="novy"||r.stav==="prepis") && !r.vynechat).length;
     const b=scrim.querySelector('[data-act="zapis"]');
     if(b){ b.disabled=!n; b.textContent=`Zapísať ${n} ${plural(n,"riadok","riadky","riadkov")}`; }
   };
