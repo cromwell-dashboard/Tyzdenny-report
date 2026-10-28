@@ -3793,6 +3793,74 @@ td.mp-nm[data-roz]{cursor:pointer}
    tlačidlo Finstat končí tam, kde pole Klient, ikonky začínajú tam, kde Názov zákazky.
    Výška prvkov (--fh) = výška tlačidiel v poli Služba. */
 #fFirmaSection{--fh:30px;--fborder:#D5D9E0}
+/* ---- Týždenný report lídra ---- */
+.rl{max-width:980px}
+.rl-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.rl-head h2{margin:0 0 4px;font-size:20px}
+.rl-sub{font-size:12.5px;color:var(--muted)}
+.rl-sub b{color:var(--ink)}
+.rl-po{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;color:#B42318;background:#FDECEA;border-radius:4px;padding:1px 7px}
+.rl-tyz{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px}
+.rl-tyz-t{font-size:12.5px;font-weight:600;padding:0 8px;white-space:nowrap}
+.rl-sip{border:0;background:none;width:28px;height:28px;border-radius:4px;font-size:18px;cursor:pointer;color:var(--ink-soft)}
+.rl-sip:hover:not(:disabled){background:var(--brand-soft);color:var(--brand)}
+.rl-sip:disabled{opacity:.3;cursor:default}
+.rl-err{background:#FDECEA;border:1px solid #F5C2BC;color:#8A1C12;border-radius:6px;padding:10px 12px;font-size:12.5px;margin-bottom:12px}
+.rl-err span{display:block;font-size:11px;opacity:.8;margin-top:3px}
+.rl-prehlad{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:16px}
+.rl-pr-h{font-size:13px;margin-bottom:10px}
+.rl-pr-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.rl-chip{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;border:1px solid var(--line);background:#fff;border-radius:6px;padding:9px 10px 8px 24px;cursor:pointer;position:relative;font:inherit}
+.rl-chip:hover{border-color:var(--brand)}
+.rl-chip.ja{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand)}
+.rl-chip .rl-dot{position:absolute;left:10px;top:14px;width:8px;height:8px;border-radius:50%;background:#C9CDD5}
+.rl-chip-m b{display:block;font-size:12.5px;color:var(--ink)}
+.rl-chip-m small{font-size:11px;color:var(--muted)}
+.rl-chip-s{font-size:11px;font-weight:600;color:var(--muted)}
+.rl-chip.rl-ok .rl-dot{background:#12915A}.rl-chip.rl-ok .rl-chip-s{color:#0E7C4C}
+.rl-chip.rl-neskoro .rl-dot{background:#E07B18}.rl-chip.rl-neskoro .rl-chip-s{color:#B45F0C}
+.rl-chip.rl-rozp .rl-dot{background:#3E56CB}.rl-chip.rl-rozp .rl-chip-s{color:#3E56CB}
+.rl-chip.rl-chyba .rl-dot{background:#C2362B}.rl-chip.rl-chyba .rl-chip-s{color:#B42318}
+.rl-stav{display:inline-block;font-size:11px;font-weight:600;border-radius:4px;padding:2px 8px;background:#F1F2F4;color:var(--muted)}
+.rl-stav.rl-ok{background:#E7F5EE;color:#0E7C4C}
+.rl-stav.rl-neskoro{background:#FFF2E5;color:#B45F0C}
+.rl-stav.rl-rozp{background:#EDF0FC;color:#3E56CB}
+.rl-stav.rl-chyba{background:#FDECEA;color:#B42318}
+.rl-moj{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-bottom:22px}
+.rl-moj-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.rl-moj-h>div{display:flex;align-items:center;gap:10px}
+.rl-moj-h h3,.rl-ost-h{margin:0;font-size:15px}
+.rl-ulozene{font-size:11.5px;color:var(--muted)}
+.rl-tip{font-size:12px;color:var(--muted);margin-bottom:12px}
+.rl-blok{border:1px solid var(--line);border-radius:6px;margin-bottom:10px;background:#FBFBFC}
+.rl-blok-h{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 10px;border-bottom:1px solid var(--line)}
+.rl-nazov{flex:1;border:0;background:none;font:inherit;font-size:13.5px;font-weight:700;color:var(--ink);padding:4px 2px;outline:none}
+.rl-nazov::placeholder{color:#A0A6B1;font-weight:600}
+.rl-blok-ak{display:flex;gap:2px}
+.rl-blok-ak button{border:0;background:none;width:26px;height:26px;border-radius:4px;cursor:pointer;color:var(--muted);font-size:13px}
+.rl-blok-ak button:hover:not(:disabled){background:#EEF0F3;color:var(--ink)}
+.rl-blok-ak button[data-a="zmaz"]:hover{background:#FDECEA;color:#B42318}
+.rl-blok-ak button:disabled{opacity:.3;cursor:default}
+.rl-text{display:block;width:100%;box-sizing:border-box;border:0;background:#fff;border-radius:0 0 6px 6px;padding:10px 12px;font:inherit;font-size:13.5px;line-height:1.5;resize:none;outline:none;min-height:90px}
+.rl-blok:focus-within{border-color:var(--brand)}
+.rl-akcie{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+.rl-akcie-r{display:flex;gap:8px}
+.rl-ostatni{display:flex;flex-direction:column;gap:12px}
+.rl-ost-h{margin-bottom:2px}
+.rl-karta{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.rl-karta-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.rl-karta-h>div{flex:1;min-width:0}
+.rl-karta-h b{display:block;font-size:13.5px}
+.rl-karta-h small{font-size:11.5px;color:var(--muted)}
+.rl-av{width:32px;height:32px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
+.rl-citanie{display:flex;flex-direction:column;gap:12px}
+.rl-cb-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--brand);margin-bottom:3px}
+.rl-cb-t{font-size:13.5px;line-height:1.55;color:var(--ink)}
+.rl-nic,.rl-prazdny{font-size:12.5px;color:var(--muted);font-style:italic}
+.rl-k-chyba:not(:has(.rl-citanie)),.rl-k-caka{background:#FBFBFC}
+#rlNavCt:empty{display:none}
+#rlNavCt.has{background:#C2362B;color:#fff}
+@media (max-width:640px){ .rl-head{align-items:stretch} .rl-tyz{justify-content:space-between} .rl-moj,.rl-karta{padding:12px} .rl-pr-l{grid-template-columns:1fr 1fr} }
 .zdroj-row .zdroj-vysv{display:flex; align-items:flex-end}
 .zdroj-row .zdroj-txt{font-size:11.5px; line-height:1.4; color:var(--muted); padding-bottom:2px}
 .zdroj-row .zdroj-txt b{color:var(--ink-soft); font-weight:600}
@@ -4612,6 +4680,15 @@ td.mp-nm[data-roz]{cursor:pointer}
 .e-events-os .pg-os{margin:6px 0 4px 4px}
 .pg-m{display:block;font-size:11.5px;color:var(--muted);margin-bottom:1px}
 .pg-t{font-size:13.5px;color:var(--ink);white-space:pre-wrap}
+.pg-edit{border:0;background:none;padding:0 3px;margin-left:6px;cursor:pointer;color:#A0A6B1;vertical-align:-2px;opacity:0;transition:opacity .12s}
+.pg-edit svg{width:13px;height:13px;display:block}
+.pg-it:hover .pg-edit,.pg-edit:focus{opacity:1}
+.pg-edit:hover{color:var(--brand)}
+@media (hover:none){ .pg-edit{opacity:1} }
+.pg-upr{margin-left:5px;font-style:italic}
+.pg-kto{font-size:13px;color:var(--ink-soft);padding:7px 0}
+.pg-zmaz{color:#B42318}
+.pg-zmaz:hover{border-color:#B42318;background:#FDECEA}
 .pg-new{font-size:10px;font-weight:700;background:#E1F5EE;color:#0F6E56;border-radius:4px;padding:1px 5px;margin-left:6px}
 .pg-more{border:0;background:none;padding:0;font-family:inherit;font-size:12px;color:var(--brand);cursor:pointer}
 .e-events-povodny{color:var(--ink-soft)}
@@ -4800,6 +4877,10 @@ td.mp-nm[data-roz]{cursor:pointer}
       <button class="navitem" data-view="marketing" id="mktNavBtn" style="display:none">
         <span class="ic mkt-nav-ic" id="mktNavIc"></span>
         <span class="lbl">Marketing</span>
+      </button>
+      <button class="navitem" data-view="reportLidra" id="rlNavBtn" style="display:none">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg></span>
+        <span class="lbl">Report lídra</span><span class="ct rl-ct" id="rlNavCt"></span>
       </button>
       <button class="navitem navitem-ov" id="ovBtn">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 11 2 2 4-4"/></svg></span>
@@ -9058,6 +9139,8 @@ function demoBackend(){
   let dmisOwners=[];
   let calculators=[];
   let feedback=[];
+  let reportyL=[];
+  const syncRL=()=>{ state.reportyLidrov=reportyL.map(x=>({...x, bloky:(x.bloky||[]).map(b=>({...b}))})); render(); };
   const sync=()=>{ _ciCache=null; gsInvalidate(); state.all=all.map(e=>({...e, comments:(e.comments||[]).map(c=>({...c}))})); state.tasks=tasks.map(t=>({...t})); state.hiddenClientNames=[...hiddenClients]; state.weeklyDone=weeklyDone.map(d=>({...d, entries:[...d.entries]})); state.meetings=meetings.map(m=>({...m})); state.leads=leads.map(l=>({...l})); state.approachInfos=[...approachInfos]; state.materials=[...materials]; state.dmisOwners=dmisOwners.map(e=>({...e})); state.calculators=calculators.map(c=>({...c})); state.feedback=feedback.map(f=>({...f})); render(); };
   return {
     mode:"demo",
@@ -9159,6 +9242,8 @@ function demoBackend(){
     async saveDmisOwners(list){ dmisOwners=mergeDmisOwners(dmisOwners,list); sync(); return dmisOwners.length; },
     async saveCalculators(list){ calculators=list.map(c=>({...c})); sync(); },
     async sendFeedback(f){ feedback=[{...f,id:"fb"+Date.now()},...feedback]; sync(); },
+    async saveReportLidra(rep){ const i=reportyL.findIndex(x=>x.id===rep.id); const n={...rep, updatedAt:Date.now()};
+      if(i>=0) reportyL[i]={...reportyL[i],...n}; else reportyL.push(n); syncRL(); },
     async setFeedbackDone(id,done){ feedback=feedback.map(f=>f.id===id?{...f,done}:f); sync(); },
     async replyFeedback(id,reply){ feedback=feedback.map(f=>f.id===id?{...f,reply,repliedAt:Date.now(),done:true}:f); sync(); },
     async removeFeedback(id){ feedback=feedback.filter(f=>f.id!==id); sync(); },
@@ -9335,6 +9420,12 @@ async function firebaseBackend(){
       const u10 = onSnapshot(fbQuery,
         snap=>{ state.feedback=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
         err=>console.error("feedback snapshot:", err));
+      /* Týždenné reporty lídrov — čítajú ich len lídri, šéfovia a admin. */
+      const u20 = vidiReportLidrov()
+        ? onSnapshot(collection(db,"reportyLidrov"),
+            snap=>{ state.reportyLidrov=snap.docs.map(d=>({id:d.id,...d.data()})); render(); },
+            err=>{ console.warn("Reporty lídrov sa nepodarilo načítať:", err); state.reportyLidrovChyba=String(err?.code||err?.message||err); render(); })
+        : ()=>{};
       const u4=onSnapshot(query(collection(db,"weeklyDone")),
         snap=>{ state.weeklyDone=snap.docs.map(d=>({id:d.id,entries:[],...d.data()})); render(); },
         err=>{ console.error("weeklyDone snapshot error:", err); toast("⚠ Chyba pri načítaní \"Hotovo\": "+(err.message||err.code||err)); });
@@ -9355,7 +9446,7 @@ async function firebaseBackend(){
       }, 3000);
       // Databázy firiem sa NENAČÍTAVAJÚ pri štarte — býva ich tisíce a väčšina
       // používateľov ich vôbec neotvorí. Načítajú sa až pri prvom použití.
-      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); u13(); u14(); u15(); u16(); u17(); u18(); u19(); if(leadsUnsub) leadsUnsub(); };
+      unsub=()=>{ u1(); u2(); u3(); u4(); u5(); u7(); u8(); u9(); u10(); u11(); u12(); u13(); u14(); u15(); u16(); u17(); u18(); u19(); u20(); if(leadsUnsub) leadsUnsub(); };
     },
     async save(entry){ const id=entry.id||doc(collection(db,"entries")).id; await setDoc(doc(db,"entries",id),{...entry,id,comments:entry.comments||[],updatedAt:Date.now()},{merge:true}); },
     /* Doplní len chýbajúce IČO — bez zmeny času úpravy, aby sa záznam neposunul navrch zoznamu. */
@@ -9530,6 +9621,9 @@ async function firebaseBackend(){
     },
     async saveCalculators(list){
       await setDoc(doc(db,"meta","calculators"),{items:list,updatedAt:Date.now()},{merge:true});
+    },
+    async saveReportLidra(rep){
+      await setDoc(doc(db,"reportyLidrov",rep.id),{...rep, updatedAt:Date.now()},{merge:true});
     },
     async sendFeedback(f){
       const id=doc(collection(db,"feedback")).id;
@@ -9995,6 +10089,8 @@ function renderNow(){
   $("#importResBtn").style.display=["admin","sef","lider"].includes(state.user.role)?"":"none";
   $("#clientRegistryBtn").style.display=["admin","sef"].includes(state.user.role)?"":"none";
   { const b=$("#mktNavBtn"); if(b) b.style.display = vidiMarketing() ? "" : "none"; }
+  { const b=$("#rlNavBtn"); if(b){ b.style.display = vidiReportLidrov() ? "" : "none";
+      const ct=$("#rlNavCt"); if(ct){ const n=rlNavPocet(); ct.textContent=n||""; ct.classList.toggle("has", n>0); } } }
   { const ic=$("#mktNavIc"); if(ic && !ic.firstChild) ic.innerHTML=MKT_IKO; }
   { const b=$("#doplnOslBtn"); if(b){ const n = state.user.role==="admin" ? oslChybajuce().length : 0;
       b.style.display = (state.user.role==="admin" && (n || state.view==="doplnOslovenie")) ? "" : "none";
@@ -10189,6 +10285,7 @@ function renderNow(){
   else if(state.view==="clientRegistry") c.appendChild(viewClientRegistry());
   else if(state.view==="doplnOslovenie") c.appendChild(viewDoplnOslovenie());
   else if(state.view==="marketing") c.appendChild(viewMarketing());
+  else if(state.view==="reportLidra") c.appendChild(viewReportLidra());
   else if(state.view==="xsell") c.appendChild(viewXsell());
   else if(state.view==="help") c.appendChild(viewHelp());
 }
@@ -11155,9 +11252,10 @@ function progresOs(e){
   const otv=openProgres.has(e.id), ukaz=otv ? p : p.slice(0,2);
   const novy = Date.now()-(p[0].kedy||0) < 3*864e5;
   const bodka=f=>{ const c=ST[f]?.color; return c ? ` style="--pgc:${c}"` : ""; };
+  const smie=canEdit(e);
   const riadok=(x,i)=>{ const st=x.stav?ST[x.stav]:null;
     return `<div class="pg-it"${bodka(x.faza)}>
-      <div class="pg-m">${esc(fmtDM(x.datum))} · ${esc(x.kto||"")}${st?` · <span class="pg-zm">zmena na fázu „${esc(st.label)}"</span>`:""}${i===0&&novy?`<span class="pg-new">NOVÉ</span>`:""}</div>
+      <div class="pg-m">${esc(fmtDM(x.datum))} · ${esc(x.kto||"")}${st?` · <span class="pg-zm">zmena na fázu „${esc(st.label)}"</span>`:""}${i===0&&novy?`<span class="pg-new">NOVÉ</span>`:""}${x.upravil?`<span class="pg-upr" title="Upravené ${esc(fmtDateTime(x.upravene||0))}">· upravené</span>`:""}${smie?`<button type="button" class="pg-edit" data-pg-edit="${esc(e.id)}" data-pg-id="${esc(x.id)}" title="Upraviť progres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>`:""}</div>
       ${x.text?`<div class="pg-t">${esc(x.text)}</div>`:""}</div>`; };
   return `<div class="pg-os">${ukaz.map(riadok).join("")}${
     p.length>2?`<button type="button" class="pg-more" data-pg-more="${esc(e.id)}">${otv?"skryť staršie":`+ ${p.length-2} ${plural(p.length-2,"starší progres","staršie progresy","starších progresov")}`}</button>`:""}
@@ -11182,6 +11280,55 @@ document.addEventListener("click", ev=>{
   ev.stopPropagation(); const id=b.dataset.pgMore;
   if(openProgres.has(id)) openProgres.delete(id); else openProgres.add(id); render();
 });
+/* Úprava už zapísaného progresu — dátum a text; dá sa aj odstrániť. */
+document.addEventListener("click", ev=>{
+  const b=ev.target.closest?.("[data-pg-edit]"); if(!b) return;
+  ev.stopPropagation();
+  const e=(state.all||[]).find(x=>x.id===b.dataset.pgEdit); if(e) upravProgres(e, b.dataset.pgId);
+});
+function upravProgres(e, pid){
+  const x=(e.progres||[]).find(p=>p.id===pid); if(!x) return;
+  const dnes=new Date().toISOString().slice(0,10);
+  const st=x.stav?ST[x.stav]:null;
+  const scrim=el("div","scrim open");
+  scrim.innerHTML=`<div class="modal pg-modal" style="max-width:520px">
+    <div class="modal-h"><h2>Upraviť progres · ${esc(e.client||"")}</h2>
+      <button class="ghost" data-x><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-b">
+      <div class="pg-r">
+        <div class="xs-f"><label>Dátum</label><input type="date" id="pgDatum" value="${esc(x.datum||dnes)}" max="${dnes}"></div>
+        <div class="xs-f"><label>Zapísal</label><div class="pg-kto">${esc(x.kto||"—")}${st?` · zmena na fázu „${esc(st.label)}"`:""}</div></div>
+      </div>
+      <div class="xs-f"><label>Čo sa udialo</label><textarea id="pgText" rows="5">${esc(x.text||"")}</textarea></div>
+      ${st?`<div class="hint">Fázu tu nemeníš — tá sa mení cez stav aktivity. Upravíš len dátum a text.</div>`:""}
+      <div class="task-err" id="pgErr"></div>
+    </div>
+    <div class="modal-f"><button class="btn pg-zmaz" data-del>Odstrániť progres</button><span style="flex:1"></span><button class="btn" data-x>Zrušiť</button><button class="btn solid" data-ok>Uložiť zmeny</button></div></div>`;
+  document.body.appendChild(scrim);
+  const zavri=()=>scrim.remove();
+  scrim.querySelectorAll("[data-x]").forEach(b=>b.onclick=zavri);
+  const ta=scrim.querySelector("#pgText");
+  setTimeout(()=>{ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); },50);
+  const err=scrim.querySelector("#pgErr");
+  const uloz=async(novy)=>{
+    scrim.querySelectorAll("[data-ok],[data-del]").forEach(b=>b.disabled=true);
+    try{
+      const cerstvy=(state.all||[]).find(y=>y.id===e.id)||e;
+      await backend.save({ ...cerstvy, progres:novy(cerstvy.progres||[]) });
+      zavri(); return true;
+    }catch(z){ scrim.querySelectorAll("[data-ok],[data-del]").forEach(b=>b.disabled=false);
+      err.textContent="⚠ "+(z?.message||z?.code||"Nepodarilo sa uložiť."); err.classList.add("on"); return false; }
+  };
+  scrim.querySelector("[data-ok]").onclick=async()=>{
+    const text=(ta.value||"").trim(), datum=scrim.querySelector("#pgDatum").value||x.datum||dnes;
+    if(!text && !x.stav){ err.textContent="⚠ Text nemôže byť prázdny — ak progres netreba, odstráň ho."; err.classList.add("on"); return; }
+    if(await uloz(arr=>arr.map(p=>p.id===pid ? { ...p, text, datum, upravil:state.user.name||"", upravene:Date.now() } : p))) toast("Progres upravený");
+  };
+  scrim.querySelector("[data-del]").onclick=async()=>{
+    if(!confirm("Naozaj odstrániť tento progres?")) return;
+    if(await uloz(arr=>arr.filter(p=>p.id!==pid))) toast("Progres odstránený");
+  };
+}
 function pridajProgres(e){
   const nb=!!(e.isNewBusiness || kindOf(e)==="nb");
   const stavy = nb ? STATUSES_NB : STATUSES;
@@ -16756,6 +16903,184 @@ const mpKratkyMes = m => { const [r,mm]=m.split("-"); return `${MESIACE_SK[Numbe
    prípady bez záznamov (napr. z importu kampaní) sa berú podľa prípadu.
    ============================================================================ */
 function vidiMarketing(){ return ["admin","sef","lider","marketing"].includes(state.user?.role); }
+
+/* ================================================================ TÝŽDENNÝ REPORT LÍDRA
+   Každý z piatich lídrov raz za týždeň napíše report — jedno okno, bloky si
+   pomenúva sám (napr. „Highlights“, „Riziká“, „Plán na budúci týždeň“).
+   Termín: piatok 14:00 daného týždňa. Reporty navzájom vidia lídri, šéfovia
+   a admin. Obchodníci ani marketing ich nevidia.
+   Firestore: kolekcia reportyLidrov, ID dokumentu = <týždeň>__<e-mail lídra>. */
+function jeLiderReportu(){ return !!LIDER_EMAILS[(state.user?.key||"").toLowerCase()]; }
+function vidiReportLidrov(){ return ["admin","sef"].includes(state.user?.role) || jeLiderReportu(); }
+function rlMenoLidra(em){ return OBCHODNIK_EMAILS[em]?.name || em; }
+function rlSluzbyLidra(em){ return (LIDER_EMAILS[em]||[]).map(s=>SEG[s]?.short||s).join(", "); }
+function rlId(week, em){ return `${week}__${em}`; }
+/* Termín: piatok 14:00 (miestny čas) v danom týždni */
+function rlTermin(week){ const {year,week:w}=parseWeekId(week); const m=mondayOf(year,w);
+  return new Date(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate()+4, 14, 0, 0); }
+function rlReport(week, em){ return (state.reportyLidrov||[]).find(x=>x.id===rlId(week,em)) || null; }
+function rlFmtCas(t){ if(!t) return ""; const d=new Date(t);
+  return `${d.getDate()}. ${d.getMonth()+1}. ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
+/* Stav reportu pre prehľad: odoslané / po termíne / rozpracované / chýba / čaká */
+function rlStav(week, em){
+  const r=rlReport(week, em), term=rlTermin(week).getTime(), po=Date.now()>term;
+  if(r && r.stav==="odoslane"){ const t=r.prveOdoslanie||r.odoslaneAt||0;
+    return t>term ? { k:"neskoro", t:`Odoslané po termíne · ${rlFmtCas(t)}` } : { k:"ok", t:`Odoslané · ${rlFmtCas(t)}` }; }
+  if(r && (r.bloky||[]).some(b=>(b.text||"").trim())) return po ? { k:"chyba", t:"Rozpracované · po termíne" } : { k:"rozp", t:"Rozpracované" };
+  return po ? { k:"chyba", t:"Chýba" } : { k:"caka", t:"Zatiaľ nič" };
+}
+/* Číslo pri položke v menu: líder — 1, kým nemá odoslaný report aktuálneho týždňa (od štvrtka) */
+function rlNavPocet(){
+  if(!jeLiderReportu()) return 0;
+  const em=(state.user.key||"").toLowerCase(); const r=rlReport(CURRENT_WEEK, em);
+  if(r && r.stav==="odoslane") return 0;
+  const den=(new Date().getDay()+6)%7;            // 0 = pondelok
+  return den>=3 ? 1 : 0;
+}
+let rlKoncept=null;          // rozpísaný report (lokálne), {id, week, bloky:[…]}
+let rlUlozTimer=null;
+let rlPoslUlozene=null;      // kedy sa naposledy uložil rozpísaný report (len na zobrazenie)
+function rlNovyBlok(nazov=""){ return { id:"b"+Math.random().toString(36).slice(2,8), nazov, text:"" }; }
+/* Rozpísaný report pre týždeň: z databázy, inak bloky (len názvy) z posledného reportu lídra */
+function rlNacitajKoncept(week, em){
+  const id=rlId(week, em);
+  if(rlKoncept && rlKoncept.id===id && rlKoncept._lok) return rlKoncept;
+  const r=rlReport(week, em);
+  const predUprava = (rlKoncept && rlKoncept.id===id) ? rlKoncept.uprava : null;
+  if(r){ rlKoncept={ id, week, bloky:(r.bloky||[]).map(b=>({...b})), stav:r.stav||"koncept", uprava: predUprava ?? (r.stav!=="odoslane") }; }
+  else {
+    const minule=(state.reportyLidrov||[]).filter(x=>x.leaderKey===em && x.week<week).sort((a,b)=>weekCmpDesc(a.week,b.week))[0];
+    const bl = minule && (minule.bloky||[]).length ? minule.bloky.map(b=>rlNovyBlok(b.nazov||"")) : [rlNovyBlok("")];
+    rlKoncept={ id, week, bloky:bl, stav:"koncept", uprava:true };
+  }
+  if(!rlKoncept.bloky.length) rlKoncept.bloky=[rlNovyBlok("")];
+  return rlKoncept;
+}
+async function rlUloz(odoslat){
+  const k=rlKoncept; if(!k) return;
+  const em=(state.user.key||"").toLowerCase();
+  const stary=rlReport(k.week, em);
+  const bloky=k.bloky.map(b=>({ id:b.id, nazov:(b.nazov||"").trim(), text:b.text||"" }));
+  const data={ id:k.id, week:k.week, leaderKey:em, leaderName:rlMenoLidra(em), sluzby:LIDER_EMAILS[em]||[], bloky };
+  if(odoslat){ data.stav="odoslane"; data.odoslaneAt=Date.now(); data.prveOdoslanie = stary?.prveOdoslanie || Date.now(); }
+  else data.stav = stary?.stav==="odoslane" ? "odoslane" : "koncept";
+  try{
+    await backend.saveReportLidra(data);
+    k._lok=false; k.stav=data.stav;
+    rlPoslUlozene={ id:k.id, t:Date.now() };
+    const st=$("#rlUlozene"); if(st) st.textContent = odoslat ? "" : `Rozpísané uložené ${rlFmtCas(Date.now())}`;
+    return true;
+  }catch(err){
+    console.error("Report sa nepodarilo uložiť:", err);
+    const kod=String(err?.code||err?.message||err);
+    toast(/permission|insufficient/i.test(kod) ? "Report sa nepodarilo uložiť — vo Firebase chýba pravidlo pre reportyLidrov." : "Report sa nepodarilo uložiť: "+kod);
+    return false;
+  }
+}
+function rlNaplanujUlozenie(){
+  if(rlKoncept) rlKoncept._lok=true;
+  const st=$("#rlUlozene"); if(st) st.textContent="Ukladám…";
+  clearTimeout(rlUlozTimer); rlUlozTimer=setTimeout(()=>rlUloz(false), 1500);
+}
+function rlTextHtml(t){ return esc(String(t||"").trim()).replace(/\n/g,"<br>"); }
+function rlCitanie(r){
+  const bl=(r?.bloky||[]).filter(b=>(b.nazov||"").trim()||(b.text||"").trim());
+  if(!bl.length) return `<div class="rl-prazdny">Report je prázdny.</div>`;
+  return bl.map(b=>`<div class="rl-cb">${(b.nazov||"").trim()?`<div class="rl-cb-h">${esc(b.nazov)}</div>`:""}<div class="rl-cb-t">${rlTextHtml(b.text)||"<i>—</i>"}</div></div>`).join("");
+}
+function viewReportLidra(){
+  const wrap=el("div","rl");
+  if(!vidiReportLidrov()){ wrap.appendChild(el("div","empty","<b>Len pre lídrov a vedenie</b>")); return wrap; }
+  if(!state.rl) state.rl={ week:CURRENT_WEEK, otv:{} };
+  const S=state.rl, week=S.week, em=(state.user.key||"").toLowerCase();
+  const term=rlTermin(week), poTermine=Date.now()>term.getTime();
+
+  // hlavička s výberom týždňa
+  const h=el("div","rl-head");
+  h.innerHTML=`<div><h2>Týždenný report lídra</h2><div class="rl-sub">Termín odovzdania: <b>piatok ${term.getDate()}. ${term.getMonth()+1}. do 14:00</b>${poTermine?` <span class="rl-po">termín uplynul</span>`:""}</div></div>
+    <div class="rl-tyz"><button type="button" class="rl-sip" data-d="-1" title="Predchádzajúci týždeň">‹</button>
+      <span class="rl-tyz-t">${week===CURRENT_WEEK?"Tento týždeň · ":""}${esc(weekRangeLabel(week))}</span>
+      <button type="button" class="rl-sip" data-d="1" title="Nasledujúci týždeň"${week>=CURRENT_WEEK?" disabled":""}>›</button></div>`;
+  h.querySelectorAll(".rl-sip").forEach(b=>b.onclick=()=>{ const n=shiftWeek(S.week, Number(b.dataset.d)); if(weekCmpDesc(n,CURRENT_WEEK)<0) return; S.week=n; rlKoncept=null; render(); });
+  wrap.appendChild(h);
+  if(state.reportyLidrovChyba && !(state.reportyLidrov||[]).length){
+    wrap.appendChild(el("div","rl-err",`<b>Reporty sa nedajú načítať.</b> Vo Firebase pravdepodobne chýba pravidlo pre kolekciu <code>reportyLidrov</code>. <span>${esc(state.reportyLidrovChyba)}</span>`));
+  }
+
+  // prehľad — kto už odovzdal
+  const lidri=Object.keys(LIDER_EMAILS);
+  const odosl=lidri.filter(x=>rlReport(week,x)?.stav==="odoslane").length;
+  const pr=el("div","rl-prehlad");
+  pr.innerHTML=`<div class="rl-pr-h"><b>Odovzdané ${odosl} z ${lidri.length}</b></div><div class="rl-pr-l">${lidri.map(x=>{ const st=rlStav(week,x);
+    return `<button type="button" class="rl-chip rl-${st.k}${x===em?" ja":""}" data-em="${esc(x)}"><span class="rl-dot"></span><span class="rl-chip-m"><b>${esc(rlMenoLidra(x))}</b><small>${esc(rlSluzbyLidra(x))}</small></span><span class="rl-chip-s">${esc(st.t)}</span></button>`; }).join("")}</div>`;
+  pr.querySelectorAll(".rl-chip").forEach(b=>b.onclick=()=>{ const c=document.getElementById("rl-r-"+b.dataset.em.replace(/[^a-z0-9]/gi,"_")); if(c) c.scrollIntoView({behavior:"smooth", block:"start"}); });
+  wrap.appendChild(pr);
+
+  // môj report — editor
+  if(jeLiderReportu()){
+    const k=rlNacitajKoncept(week, em);
+    const box=el("div","rl-moj"); box.id="rl-r-"+em.replace(/[^a-z0-9]/gi,"_");
+    const st=rlStav(week, em);
+    if(k.stav==="odoslane" && !k.uprava){
+      const r=rlReport(week, em);
+      box.innerHTML=`<div class="rl-moj-h"><div><h3>Môj report</h3><span class="rl-stav rl-${st.k}">${esc(st.t)}</span></div>
+        <button type="button" class="btn" id="rlUpravit">Upraviť</button></div><div class="rl-citanie">${rlCitanie(r)}</div>`;
+      box.querySelector("#rlUpravit").onclick=()=>{ k.uprava=true; k._lok=true; render(); };
+    } else {
+      box.innerHTML=`<div class="rl-moj-h"><div><h3>Môj report</h3><span class="rl-stav rl-${st.k}">${esc(st.t)}</span></div><span class="rl-ulozene" id="rlUlozene">${rlPoslUlozene&&rlPoslUlozene.id===k.id?`Rozpísané uložené ${rlFmtCas(rlPoslUlozene.t)}`:"Píš priebežne — rozpísané sa ukladá samo"}</span></div>
+        <div class="rl-tip">Bloky si pomenuj podľa seba — napr. <i>Highlights týždňa</i>, <i>Riziká a problémy</i>, <i>Plán na budúci týždeň</i>. Názvy blokov sa ti budúci týždeň pripravia znova.</div>
+        <div class="rl-bloky"></div>
+        <div class="rl-akcie"><button type="button" class="btn rl-pridaj">+ Pridať blok</button>
+          <span class="rl-akcie-r">${k.stav==="odoslane"?`<button type="button" class="btn rl-zrus">Zrušiť úpravy</button>`:""}<button type="button" class="btn solid rl-odosli">${k.stav==="odoslane"?"Odoslať upravený report":"Odoslať report"}</button></span></div>`;
+      const bx=box.querySelector(".rl-bloky");
+      k.bloky.forEach((b,i)=>{
+        const d=el("div","rl-blok");
+        d.innerHTML=`<div class="rl-blok-h"><input id="rlN_${b.id}" class="rl-nazov" placeholder="Názov bloku" value="${esc(b.nazov||"")}" autocomplete="off">
+          <span class="rl-blok-ak"><button type="button" data-a="hore" title="Posunúť vyššie"${i===0?" disabled":""}>↑</button><button type="button" data-a="dole" title="Posunúť nižšie"${i===k.bloky.length-1?" disabled":""}>↓</button><button type="button" data-a="zmaz" title="Odstrániť blok">✕</button></span></div>
+          <textarea id="rlT_${b.id}" class="rl-text" rows="4" placeholder="Čo sa v tejto oblasti udialo…">${esc(b.text||"")}</textarea>`;
+        const ta=d.querySelector("textarea");
+        const vyska=()=>{ ta.style.height="auto"; ta.style.height=Math.max(90, ta.scrollHeight+2)+"px"; };
+        setTimeout(vyska,0);
+        d.querySelector(".rl-nazov").oninput=ev=>{ b.nazov=ev.target.value; rlNaplanujUlozenie(); };
+        ta.oninput=()=>{ b.text=ta.value; vyska(); rlNaplanujUlozenie(); };
+        d.querySelectorAll("[data-a]").forEach(btn=>btn.onclick=()=>{
+          const a=btn.dataset.a;
+          if(a==="zmaz"){ if((b.text||"").trim() && !confirm(`Odstrániť blok „${b.nazov||"bez názvu"}“ aj s textom?`)) return;
+            k.bloky.splice(i,1); if(!k.bloky.length) k.bloky.push(rlNovyBlok("")); }
+          if(a==="hore" && i>0) [k.bloky[i-1],k.bloky[i]]=[k.bloky[i],k.bloky[i-1]];
+          if(a==="dole" && i<k.bloky.length-1) [k.bloky[i+1],k.bloky[i]]=[k.bloky[i],k.bloky[i+1]];
+          rlNaplanujUlozenie(); render(); });
+        bx.appendChild(d);
+      });
+      box.querySelector(".rl-pridaj").onclick=()=>{ const nb=rlNovyBlok(""); k.bloky.push(nb); rlNaplanujUlozenie(); render(); setTimeout(()=>document.getElementById("rlN_"+nb.id)?.focus(),60); };
+      box.querySelector(".rl-zrus")?.addEventListener("click",()=>{ clearTimeout(rlUlozTimer); rlKoncept=null; render(); });
+      box.querySelector(".rl-odosli").onclick=async ev=>{
+        if(!k.bloky.some(b=>(b.text||"").trim())){ toast("Report je prázdny — napíš aspoň jeden blok."); return; }
+        clearTimeout(rlUlozTimer); ev.target.disabled=true;
+        const ok=await rlUloz(true);
+        if(ok){ k.uprava=false; k._lok=false; rlKoncept=null; toast("Report je odoslaný. Ďakujem!"); render(); } else ev.target.disabled=false;
+      };
+    }
+    wrap.appendChild(box);
+  }
+
+  // reporty ostatných
+  const ini=n=>String(n||"").split(" ").map(x=>x[0]||"").join("").slice(0,2).toUpperCase();
+  const ost=lidri.filter(x=>x!==em || !jeLiderReportu());
+  const zoz=el("div","rl-ostatni");
+  zoz.appendChild(el("h3","rl-ost-h", jeLiderReportu() ? "Reporty ostatných lídrov" : "Reporty lídrov"));
+  ost.forEach(x=>{
+    const r=rlReport(week,x), st=rlStav(week,x);
+    const c=el("div","rl-karta rl-k-"+st.k); c.id="rl-r-"+x.replace(/[^a-z0-9]/gi,"_");
+    const odos = r && r.stav==="odoslane";
+    c.innerHTML=`<div class="rl-karta-h"><span class="rl-av">${esc(ini(rlMenoLidra(x)))}</span><div><b>${esc(rlMenoLidra(x))}</b><small>${esc(rlSluzbyLidra(x))}</small></div><span class="rl-stav rl-${st.k}">${esc(st.t)}</span></div>
+      ${odos ? `<div class="rl-citanie">${rlCitanie(r)}</div>` : `<div class="rl-nic">${st.k==="rozp"||(st.k==="chyba"&&r)?"Report sa práve píše — zobrazí sa po odoslaní.":"Report zatiaľ nie je odoslaný."}</div>`}`;
+    zoz.appendChild(c);
+  });
+  wrap.appendChild(zoz);
+  return wrap;
+}
+
 const MK_FAZY=[
   ["osl","Oslovené",["nb_oslovenie","lead"]],
   ["jed","Ponuka / jednanie",["nb_ponuka","nb_cennik","nb_vyjednavanie","ponuka","jednanie","pozastavene"]],
