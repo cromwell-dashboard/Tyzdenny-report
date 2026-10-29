@@ -645,6 +645,11 @@ button.gl-nb-mes:hover{text-decoration:underline}
 .page-h .eyebrow{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:6px}
 .page-h h1{font-family:var(--mono); font-weight:700; font-size:25px; margin:0; letter-spacing:-.01em}
 .page-h .sub{color:var(--muted); font-size:13px; margin-top:4px}
+/* Nadpisy sekcií (štítok, názov, podnadpis) sa nezobrazujú — kde človek je,
+   vidno v menu. Tlačidlá v hlavičke (napr. + Nová úloha) ostávajú. */
+#content .page-h .eyebrow,#content .page-h h1,#content .page-h .sub,#content .rl-head h2{display:none !important}
+#content .page-h{margin-bottom:12px; min-height:0}
+#content .page-h:not(:has(button,a,select,input)){display:none}
 .backlink{display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--brand); background:none; border:none; font-weight:600; margin-bottom:14px; padding:0}
 .backlink:hover{text-decoration:underline}
 .backlink svg{width:15px;height:15px}
@@ -2223,6 +2228,16 @@ select:disabled{cursor:default; opacity:.65}
   transition:background .12s, border-color .12s}
 .ta-btn svg{width:18px; height:18px; flex:0 0 auto}
 .ta-btn svg{width:13px; height:13px; flex:0 0 auto}
+.ta-btn.ta-zrus{background:#fff;border:1px solid #F1C4BF;color:#B42318;box-shadow:none}
+.ta-btn.ta-zrus:hover{background:#FDECEA;border-color:#B42318}
+.ta-btn.ta-zrus{width:34px;padding:0 !important;gap:0}
+.ta-btn.ta-zrus svg{width:15px;height:15px}
+.ta-btn.ta-zrus .ta-lbl,.ta-zrus-n{display:none !important}
+.ta-btn.ta-zrus.nic{color:#C3C8D0;border-color:var(--line);cursor:default}
+.ta-btn.ta-zrus.nic:hover{background:#fff;border-color:var(--line)}
+/* Na počítači je „Zrušiť filtre" len krížik v hornej lište — tlačidlá v lištách
+   sekcií sú preč. Na mobile (horná lišta tam nie je) ostávajú. */
+@media (min-width:901px){ .flista-zrus,.res-zrus,.fbar-clear,.lf-clear,.mk-fz{display:none !important} }
 /* Pridať záznam — plná modrá, hlavná akcia v lište. */
 .ta-btn.add{background:var(--brand); border-color:var(--brand); color:#fff}
 .ta-btn.add:hover{background:#4E65D6; border-color:#4E65D6}
@@ -3089,6 +3104,7 @@ select:disabled{cursor:default; opacity:.65}
 }
 .bn-badge.show{ display:grid }
 .bn-services.active{ color:var(--brand) }
+.bottom-nav .bn-item .urgent-dot{ position:absolute; top:3px; right:calc(50% - 22px); left:auto; display:grid; max-width:none; min-width:16px; height:16px; line-height:1; font-size:9px }
 
 /* ── FAB ─── */
 
@@ -3398,6 +3414,26 @@ select:disabled{cursor:default; opacity:.65}
 
 /* ============================ VÝSLEDKY NB — výber mesiacov */
 .res-mes{display:flex;flex-direction:column;gap:8px;margin:0 0 14px}
+.res-mes.res-mes-rad{flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap}
+.res-mes-rad .res-mes-mes{flex:1 1 auto;min-width:0}
+.res-rez-miesto{margin-left:auto;flex:0 0 auto}
+.res-rez-miesto .mp-rezim,.res-rez-rad .mp-rezim{margin:0}
+.res-rez-miesto .mp-rezim,.res-rez-rad .mp-rezim{height:34px;box-sizing:border-box;align-items:stretch}
+.res-rez-miesto .mp-rezim button,.res-rez-rad .mp-rezim button{display:flex;align-items:center;padding-top:0;padding-bottom:0}
+.res-mes-mes .res-rok-sel,.res-mes-mes .res-mb{height:34px;box-sizing:border-box}
+.res-rez-rad{display:flex;justify-content:flex-end;margin:0 0 14px}
+.res-rok-sel{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23646d7e%27 stroke-width=%272.4%27 stroke-linecap=%27round%27%3E%3Cpath d=%27M6 9l6 6 6-6%27/%3E%3C/svg%3E") !important;background-repeat:no-repeat !important;background-position:right 8px center !important;background-size:14px !important;height:34px;border:1px solid var(--line);border-radius:5px;background:#fff;font:inherit;font-size:13px;font-weight:700;color:var(--ink);padding:0 28px 0 10px;cursor:pointer;margin-right:4px}
+.res-lidri{display:flex;align-items:center;gap:6px;margin-left:auto;padding-left:8px;order:99}
+.res-lidri-t{font-size:11.5px;font-weight:600;color:var(--muted);margin-right:2px;white-space:nowrap}
+.res-lk{position:relative;border:0;background:none;padding:2px;cursor:pointer;border-radius:50%;display:inline-flex}
+.res-lk-av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;font-weight:700;background:#fff;border:2px dashed #D3D7DE;color:var(--muted);transition:transform .12s}
+.res-lk:hover .res-lk-av{transform:scale(1.07)}
+.res-lk-cast .res-lk-av{border:2px solid var(--brand);color:var(--brand)}
+.res-lk-ok .res-lk-av{background:#12915A;border:2px solid #12915A;color:#fff}
+.res-lk-nic .res-lk-av{opacity:.45}
+.res-lk-ck{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:9px;color:#12915A;box-shadow:0 0 0 1px var(--line)}
+.res-lk.zvol{box-shadow:0 0 0 2px var(--brand)}
+@media (max-width:980px){ .res-lidri{margin-left:0;padding-left:0;width:100%;flex-wrap:wrap} .res-rez-miesto{margin-left:0} }
 .res-mes-roky{display:flex;gap:5px;flex-wrap:wrap}
 .res-rok{height:30px;padding:0 13px;border:1px solid var(--line);background:#fff;border-radius:5px;
   font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
@@ -4317,6 +4353,7 @@ td.mp-nm[data-roz]{cursor:pointer}
 .rs-odm.ok{color:var(--brand)}
 .rs-odm-st{font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--nb);
   background:#E8F5EE;border-radius:4px;padding:2px 6px;white-space:nowrap}
+.rs-odm-st.uz{color:var(--muted);background:#EEF0F3}
 .rs-schval{flex:0 0 auto;height:24px;padding:0 10px;border-radius:4px;border:1px solid var(--brand);background:var(--brand);
   color:#fff;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap}
 .rs-schval:hover{background:var(--brand-dark);border-color:var(--brand-dark)}
@@ -4839,6 +4876,36 @@ td.mp-nm[data-roz]{cursor:pointer}
   #fFirmaSection .tel-wrap input{flex:1 1 auto}
   #fFirmaSection .lead-cform-actions .btn{height:34px}
 }
+
+/* ===== Výsledky NB — mobil (karta prípadu namiesto tabuľky) ===== */
+@media (max-width:980px){
+  .gl-list .rs-head{display:none !important}
+  .gl-list .rs-row,.gl-list:not(.bez-odmeny) .rs-row,.gl-list.bez-odmeny .rs-row{
+    grid-template-columns:22px minmax(0,1fr) auto !important;gap:5px 9px !important;padding:11px 12px !important;align-items:center}
+  .gl-list .rs-row>span{display:block}
+  .gl-list .rs-row>span:nth-child(2){grid-area:1/1 !important;display:flex}
+  .gl-list .rs-row .rs-name{grid-area:1/2 !important;white-space:normal !important;display:flex;flex-direction:column;gap:1px}
+  .gl-list .rs-row .rs-name .rs-klient{font-weight:700;font-size:14px;white-space:normal}
+  .gl-list .rs-row .rs-name .rs-fajka-box:empty{display:none}
+  .gl-list .rs-row .rs-name .rs-obchm{font-size:11.5px;color:var(--muted)}
+  .gl-list .rs-row .rs-name .rs-obchm .dl{display:inline !important}.gl-list .rs-row .rs-name .rs-obchm .kr{display:none !important}
+  .gl-list .rs-row .rs-act{grid-area:1/3 !important;display:flex !important;gap:2px}
+  .gl-list .rs-row .rs-own{display:none !important}
+  .gl-list .rs-row .rs-obd{grid-area:2/2 !important;display:flex !important;gap:6px;align-items:center;flex-wrap:wrap;white-space:normal}
+  .gl-list .rs-row .rs-cnt{grid-area:2/3 !important;text-align:right;display:block !important}
+  .gl-list .rs-row .rs-cell{grid-area:3/2 !important;display:block !important;overflow:visible}
+  .gl-list .rs-row>.rs-sum:not(.marza):not(.ks){grid-area:3/3 !important;text-align:right;display:block !important}
+  .gl-list .rs-row .rs-sum.marza,.gl-list .rs-row .rs-sum.ks{display:none !important}
+  .gl-list .rs-row .rs-pov-cell{grid-area:4/2 !important}
+  .gl-list .rs-row .rs-pov-cell:empty{display:none !important}
+  .gl-list .rs-row .rs-odmc{grid-area:4/3 !important;display:flex !important}
+  .gl-list .rs-row .rs-odmc:has(.rs-odm.nic){display:none !important}
+  .gl-list .rs-row>.rs-sum:not(.marza):not(.ks)::before{content:"Tržby ";font-family:Inter,system-ui,sans-serif;font-size:10.5px;color:var(--muted)}
+  .gl-list .rs-row .rs-odmc::before{content:"Odmena";font-size:10.5px;color:var(--muted)}
+  .gl-list .rs-row .rs-inline{display:inline-block;width:auto;max-width:100%;border-color:var(--line);background:#fff}
+  .res-tabs{display:flex;flex-wrap:nowrap;overflow-x:auto}
+  .res-tabs button{flex:1 0 auto;white-space:nowrap}
+}
 </style>
 </head>
 <body>
@@ -4895,6 +4962,9 @@ td.mp-nm[data-roz]{cursor:pointer}
 
       <button class="ta-btn add hidden" id="railAdd" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="ta-lbl">Pridať záznam</span>
+      </button>
+      <button class="ta-btn ta-zrus" id="taZrus" type="button" style="display:none" title="Zrušiť všetky filtre (služba, typ, obchodník, oslovenie, hľadanie, líder…)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg><span class="ta-lbl">Zrušiť filtre</span><span class="ta-zrus-n" id="taZrusN"></span>
       </button>
       <span class="svc-sep"></span>
       <button class="ta-btn fb" id="railFb" title="Postreh, podnet alebo návrh na zlepšenie">
@@ -5413,9 +5483,9 @@ td.mp-nm[data-roz]{cursor:pointer}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
     <span>Prehľad</span>
   </button>
-  <button class="bn-item" data-view="leads">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-    <span>Databázy</span>
+  <button class="bn-item bn-res" data-view="results">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+    <span>Výsledky</span>
   </button>
   <button class="bn-item" data-view="clients">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -5654,7 +5724,7 @@ const OBCHODNIK_EMAILS = {
   "katarina.chmelova@cromwell.sk":     { name:"Katarína Chmelová",    firma:"Cromwell Post", segments:["ad","nad"] },
   "michal.svec@cromwell.sk":           { name:"Michal Švec",          firma:"Cromwell Post", segments:["tlac"] },
   // Balíky — KOLOS
-  "felix.krause@kolos.sk":             { name:"Felix Krause",         firma:"KOLOS",         segments:["baliky"] },
+  "krause@kolos.sk":                   { name:"Felix Krause",         firma:"KOLOS",         segments:["baliky"] },
   "peleskova@kolos.sk":                { name:"Alexandra Pelešková",  firma:"KOLOS",         segments:["baliky"] },
   "sedlar@kolos.sk":                   { name:"Dominik Sedlář",       firma:"KOLOS",         segments:["baliky"] },
   "pristic@kolos.sk":                  { name:"Peter Prištic",        firma:"KOLOS",         segments:["baliky"] },
@@ -8910,6 +8980,17 @@ function railSluzby(box){
 function vykresliSvcBar(){
   const box=$("#svcBar");
   if(!box) return;
+  /* Výsledky NB — v hornej lište filter služieb (Všetky služby + jednotlivé služby). */
+  if(state.view==="results" && !state.activeClient){
+    box.style.display=""; box.innerHTML="";
+    const zv=(state.aktSluzby||[])[0]||"";
+    const tl=(id, ikona, nazov, farba)=>{ const b=el("button","svc-f"+(zv===id?" on":""));
+      b.type="button"; b.title=nazov; if(farba) b.style.setProperty("--sv",farba);
+      b.innerHTML=`${ikona}<span>${esc(nazov)}</span>`; b.onclick=()=>zvolSluzbu(id); return b; };
+    box.appendChild(tl("", `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`, "Všetky služby", null));
+    SEGMENTS.forEach(sg=>{ box.appendChild(el("span","svc-sep")); box.appendChild(tl(sg.id, segIcon(sg.id,20), sg.short, sg.color)); });
+    return;
+  }
   const vidno = ["activities","mine","clients","myclients"].includes(state.view) && !state.activeClient;
   box.style.display = vidno ? "" : "none";
   box.innerHTML="";
@@ -10184,7 +10265,14 @@ function buildStatic(){
     segSheetList.appendChild(row);
   });
   {
-    const cal=el("button","seg-sheet-row");
+    /* Reporty lídrov — namiesto Cenových ponúk (pre všetkých okrem obchodníkov) */
+    const rl=el("button","seg-sheet-row"); rl.id="ssReporty"; rl.style.display="none";
+    rl.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;flex:0 0 auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg><span class="ss-name">Reporty lídrov</span><span class="ss-ct" id="ssReportyCt"></span>`;
+    rl.onclick=()=>{ closeSegSheet(); state.rl={ week:rlUvodnyTyzden(), otv:{} }; rlKoncept=null; state.activeClient=null; state.view="reportLidra"; render(); window.scrollTo(0,0); };
+    segSheetList.appendChild(rl);
+  }
+  {
+    const cal=el("button","seg-sheet-row"); cal.id="ssCenove";
     cal.innerHTML=`<span class="ss-dot" style="background:#12915A"></span><span class="ss-name">Cenové ponuky</span><span class="ss-ct" data-ssct="calculators">0</span>`;
     cal.onclick=()=>{ closeSegSheet(); state.view="calculators"; state.activeClient=null; render(); };
     segSheetList.appendChild(cal);
@@ -10259,6 +10347,10 @@ function renderNow(){
   $("#importResBtn").style.display=["admin","sef","lider"].includes(state.user.role)?"":"none";
   $("#clientRegistryBtn").style.display=["admin","sef"].includes(state.user.role)?"":"none";
   { const b=$("#mktNavBtn"); if(b) b.style.display = vidiMarketing() ? "" : "none"; }
+  { const z=$("#taZrus"); if(z){ const n=pocetVsetkychFiltrov(); z.style.display = "";
+      z.classList.toggle("nic", !n); z.disabled = !n;
+      z.title = n ? `Zrušiť filtre (${n}) — služba, typ, obchodník, oslovenie, hľadanie, líder…` : "Žiadny filter nie je zapnutý";
+      const c=$("#taZrusN"); if(c) c.textContent = n>1 ? `(${n})` : ""; if(!z.onclick) z.onclick=zrusVsetkyFiltre; } }
   { const b=$("#rlNavBtn"); if(b){ b.style.display = vidiReportLidrov() ? "" : "none";
       const ct=$("#rlNavCt"); if(ct){ const n=rlNavPocet(); ct.textContent=n||""; ct.classList.toggle("has", n>0); } } }
   { const ic=$("#mktNavIc"); if(ic && !ic.firstChild) ic.innerHTML=MKT_IKO; }
@@ -10309,7 +10401,7 @@ function renderNow(){
     /* Staršie mesiace boli schválené ešte v pôvodnej aplikácii — lídrom
        ich na schválenie nepripomíname. */
     const naSchvalenie = obd >= NB_ZACIATOK;
-    counts.rewards = veduci ? (naSchvalenie ? r.filter(x=>x.stav==="caka" && x.suma!=null).length : 0)
+    counts.rewards = veduci ? (naSchvalenie ? r.filter(x=>x.stav==="caka" && x.suma!=null && !x.uzavrety).length : 0)
                             : r.filter(x=>x.suma!=null).length;
     document.querySelectorAll('[data-cnt="rewards"]').forEach(x=>x.classList.toggle("has", counts.rewards>0));
   }
@@ -10398,7 +10490,13 @@ function renderNow(){
   const overdueTasks=state.tasks.filter(t=>t.status==="open"&&dayDiff(t.due)<0&&(canManageTasks()||isMyTask(t)));
   const badge=$("#bnTaskBadge");
   if(badge){ if(overdueTasks.length){ badge.textContent=overdueTasks.length>9?"9+":overdueTasks.length; badge.classList.add("show"); } else badge.classList.remove("show"); }
-  // Segment sheet counts
+  // Segment sheet — Reporty lídrov namiesto Cenových ponúk (obchodník má ďalej Cenové ponuky)
+  { const rlr=$("#ssReporty"), cal=$("#ssCenove"), vidi=vidiReportLidrov();
+    if(rlr) rlr.style.display = vidi ? "" : "none";
+    if(cal) cal.style.display = vidi ? "none" : "";
+    if(rlr && vidi){ const w=rlUvodnyTyzden(), lid=rlLidri(), n=lid.filter(x=>rlReport(w,x)?.stav==="odoslane").length, f=rlFarbaPodiel(lid.length?n/lid.length:0);
+      rlr.style.color=f; rlr.querySelector(".ss-name").style.color=f; const ct=$("#ssReportyCt"); if(ct){ ct.textContent=`${n}/${lid.length}`; ct.style.color=f; }
+      rlr.classList.toggle("active", state.view==="reportLidra"); } }
   const _sp=svcPocty();
   document.querySelectorAll("[data-ssct]").forEach(c=>{
     const k=c.dataset.ssct;
@@ -12485,6 +12583,9 @@ function odmenyZaMesiac(obdobie, lenMoje){
        a nikto sa nedozvie prečo. */
     if(!res) return;
     const st=stavOdmeny(opp, res);
+    /* Uzavretý prípad / skončené NB obdobie sa už neschvaľuje — kým ho
+       niekto nevráti medzi aktívne. */
+    st.uzavrety=pripadUzavrety(opp);
     const podiely=rozdelOdmenu(opp, st.suma);
     if(lenMoje){
       const uid=state.user?.uid, meno=state.user?.name||"";
@@ -12875,6 +12976,58 @@ const vidiLiderFilter = () => {
   return ["admin","sef","lider","marketing"].includes(state.user?.role)
     || ADMIN_EMAILS.includes(k) || BOSS_EMAILS.includes(k) || !!LIDER_EMAILS[k];
 };
+/* Stav schválenia prípadu za zvolené mesiace — rovnaký pre riadok tabuľky
+   aj pre kolieska lídrov. Schvaľujú sa len fakturované mesiace s vypočítanou
+   odmenou; „bez fakturácie" schválenie nepotrebuje. */
+function stavSchvaleniaPripadu(o, vybM){
+  const rs=resultsPre(o.id).filter(x=>(x.trzba!=null || x.bezFakturacie) && (!vybM || vybM.includes(x.obdobie)));
+  const vsetky=rs.map(x=>stavOdmeny(o,x));
+  const suma=vsetky.reduce((a,st)=>a+(st.suma||0),0);
+  const stavy=rs.map((x,i)=>({x,st:vsetky[i]})).filter(({x})=>!x.bezFakturacie && x.trzba!=null).map(({st})=>st);
+  const vypocitane=stavy.filter(st=>st.suma!=null);
+  const neuplne=stavy.length-vypocitane.length;
+  const hotove=vypocitane.length>0 && vypocitane.every(st=>st.stav==="schvalene");
+  const nesulad=vypocitane.some(st=>st.stav==="nesulad");
+  /* Uzavretý prípad / skončené NB obdobie sa už neschvaľuje — až keď ho niekto vráti medzi aktívne. */
+  const uzavrety=pripadUzavrety(o);
+  const caka=!uzavrety && vypocitane.some(st=>st.stav!=="schvalene");
+  return { rs, suma, stavy, vypocitane, neuplne, hotove, nesulad, caka, uzavrety, potrebne:!uzavrety && vypocitane.length>0 };
+}
+/* Výsledky NB — kolieska lídrov: stav schválenia odmien vo zvolených mesiacoch
+   a zároveň filter na lídra (klik = len jeho služby, druhý klik zruší).
+   Zelené s fajkou = všetko schválené · modrý obrys = čiastočne schválené ·
+   sivé prerušované = zatiaľ nič neschválil · bledé = nemá čo schvaľovať. */
+function resLidriKolieska(){
+  const box=el("div","res-lidri");
+  box.appendChild(el("span","res-lidri-t","Schválenie:"));
+  const vyb=resVybrane();
+  const teraz=terajsiMesiac();
+  const mesiace = vyb || Array.from({length:12},(_,i)=>`${state.resRok}-${String(i+1).padStart(2,"0")}`).filter(m=>m<=teraz);
+  /* Rovnaké prípady ako v zozname Výsledkov NB. Schvaľuje sa len mesiac, ktorý
+     bol fakturovaný a má vypočítanú odmenu vyššiu ako 0 — „bez fakturácie"
+     a nulové odmeny sa neschvaľujú. */
+  const pripady=viditelnePripady().filter(o=>!pripadUzavrety(o));   // len aktívne prípady
+  const pol=[];
+  pripady.forEach(o=>{ const sp=stavSchvaleniaPripadu(o, mesiace);
+    if(sp.potrebne) pol.push({ opp:o, stav: sp.hotove ? "schvalene" : "caka", suma:sp.suma }); });
+  const inic=n=>String(n||"").split(" ").map(x=>x[0]||"").join("").slice(0,2).toUpperCase();
+  const ja=String(state.user?.key||"").toLowerCase();
+  Object.keys(LIDER_EMAILS).forEach(em=>{
+    const meno=OBCHODNIK_EMAILS[em]?.name||em;
+    const moje=pol.filter(r=>patriLidrovi(em, r.opp));
+    const n=moje.length, schv=moje.filter(r=>r.stav==="schvalene").length;
+    const k = !n ? "nic" : schv===n ? "ok" : schv>0 ? "cast" : "caka";
+    const txt = !n ? "nemá čo schvaľovať" : schv===n ? `všetko schválené (${n})` : `schválené ${schv} z ${n}`;
+    const zvol=state.liderFilter===em;
+    const b=el("button",`res-lk res-lk-${k}${zvol?" zvol":""}${em===ja?" ja":""}`);
+    b.type="button";
+    b.title=`${meno} · ${txt}${zvol?" · klik zruší filter":" · klik = len služby tohto lídra"}`;
+    b.innerHTML=`<span class="res-lk-av">${esc(inic(meno))}</span>${k==="ok"?`<span class="res-lk-ck">✓</span>`:""}`;
+    b.onclick=()=>{ state.liderFilter = zvol ? "" : em; render(); };
+    box.appendChild(b);
+  });
+  return box;
+}
 function liderPill(){
   const ja=String(state.user?.key||"").toLowerCase();
   const lidri=Object.entries(LIDER_EMAILS).map(([em,segs])=>({ em, segs,
@@ -15194,6 +15347,23 @@ function zoradPrepojene(rows, kluc){
   });
   return out;
 }
+/* Všetky filtre naraz — pre tlačidlo „Zrušiť filtre" v hornej lište.
+   Obdobie (týždeň / mesiace) sa nemení. */
+function pocetVsetkychFiltrov(){
+  return activeFilterCount(null)
+    + ((state.aktSluzby||[]).length?1:0)
+    + (state.liderFilter?1:0) + (state.resLenNove?1:0) + (state.resUkoncene?1:0)
+    + ((state.resTab && state.resTab!=="vsetko")?1:0) + (state.resObchodnik?1:0) + (state.resOnlyChyba?1:0)
+    + ((state.resStlpce?.obchodnik||[]).length?1:0) + ((state.resStlpce?.oslovenie||[]).length?1:0);
+}
+function zrusVsetkyFiltre(){
+  clearEntryFilters();
+  state.aktSluzby=[];
+  state.liderFilter=""; state.resLenNove=false; state.resUkoncene=false; state.resTab="vsetko";
+  state.resObchodnik=""; state.resStlpce={}; state.resOnlyChyba=false;
+  state.feedLimit=20; state.groupLimit=60; state.tyzdneLimit=2;
+  render();
+}
 function activeFilterCount(lock){
   return ((state.search||"").trim()?1:0)
        + (state.onlyMine?1:0)
@@ -16685,7 +16855,7 @@ function viewRewards(){
       || (b.suma??-1)-(a.suma??-1));
   // obchodníkovi sčítavame len schválené — inak by súhrn sľuboval viac, než dostane
   const spolu=riadky.reduce((a,r)=>a+((veduci||r.stav==="schvalene")?(r.mojaSuma||0):0),0);
-  const caka=riadky.filter(r=>r.stav==="caka" && r.suma!=null);
+  const caka=riadky.filter(r=>r.stav==="caka" && r.suma!=null && !r.uzavrety);
   const nesulad=riadky.filter(r=>r.stav==="nesulad");
 
   if(!veduci && caka.length){
@@ -16717,7 +16887,7 @@ function viewRewards(){
     const ja=String(state.user?.key||"").toLowerCase();
     const smieVsetko=["admin","sef"].includes(state.user?.role);
     const lidri=Object.keys(LIDER_EMAILS).map(em=>({ em, meno:OBCHODNIK_EMAILS[em]?.name||em,
-      pol:vsetkyPol.filter(r=>patriLidrovi(em, r.opp)) }))
+      pol:vsetkyPol.filter(r=>!r.uzavrety && patriLidrovi(em, r.opp)) }))
       .sort((a,b)=>(b.em===ja)-(a.em===ja) || a.meno.localeCompare(b.meno,"sk"));
     const sl=em=>{ const segs=LIDER_EMAILS[em]||[]; const v=Object.entries(LIDER_VYNIMKY).filter(([,e])=>e===em).map(([k])=>{ const [sg,pr]=k.split(":"); return `${SEG[sg]?.short||sg} – ${produktLabel(sg,pr)}`; });
       return [...segs.map(x=>SEG[x]?.short||x), ...v].join(", "); };
@@ -16787,6 +16957,7 @@ function viewRewards(){
     const stavHtml = r.suma==null ? `<span class="odm-st chyba">${esc(r.dovod||"neúplné")}</span>`
       : r.stav==="schvalene" ? `<span class="odm-st ok">schválené</span>`
       : r.stav==="nesulad" ? `<span class="odm-st nes" title="Výsledok sa po schválení zmenil">nesúlad</span>`
+      : r.uzavrety ? `<span class="odm-st" title="Prípad je uzavretý alebo mu skončilo NB obdobie — už sa neschvaľuje">uzavretý</span>`
       : r.vratene ? `<span class="odm-st vrat" title="Vrátil ${esc(r.vratene.vratilMeno||"")}">vrátené</span>`
       : `<span class="odm-st">čaká</span>`;
     row.innerHTML=`<span class="odm-cl"><span class="kl-link" data-klient="${esc(r.opp.client||"")}" title="${esc(r.opp.client||"")} — otvoriť detail klienta">${esc(r.opp.client||"—")}</span>${r.opp.zakazka?`<span class="rs-zak">${esc(r.opp.zakazka)}</span>`:""}</span>
@@ -17027,13 +17198,13 @@ function vidiMarketing(){ return ["admin","sef","lider","marketing"].includes(st
 /* ================================================================ TÝŽDENNÝ REPORT LÍDRA
    Každý z piatich lídrov raz za týždeň napíše report — jedno okno, bloky si
    pomenúva sám (napr. „Highlights“, „Riziká“, „Plán na budúci týždeň“).
-   Termín: piatok 14:00 daného týždňa. Reporty navzájom vidia lídri, šéfovia
+   Termín: piatok 16:00 daného týždňa. Reporty navzájom vidia lídri, šéfovia
    a admin. Obchodníci ani marketing ich nevidia.
    Firestore: kolekcia reportyLidrov, ID dokumentu = <týždeň>__<e-mail lídra>. */
 /* Testovací líder — Mirkin účet vystupuje v reporte pod menom „Test líder“,
    aby si mohla report vyskúšať. Vidí ho len ona sama; ostatní lídri ani
    vedenie ho v prehľade nemajú (počíta sa stále „z 5“). */
-const RL_TEST_EMAILS = ["miroslava.stalmaskova@cromwell.sk"];
+const RL_TEST_EMAILS = [];   // testovací líder zrušený (predtým Mirkin účet)
 const jeRlTest = em => RL_TEST_EMAILS.includes(String(em||"").toLowerCase());
 function jeLiderReportu(){ const k=(state.user?.key||"").toLowerCase(); return !!LIDER_EMAILS[k] || jeRlTest(k); }
 function vidiReportLidrov(){ return (state.user?.role && state.user.role!=="obchodnik") || jeLiderReportu(); }
@@ -17042,10 +17213,10 @@ function rlSluzbyLidra(em){ return jeRlTest(em) ? "testovací účet" : (LIDER_E
 /* Lídri v prehľade — piati skutoční; testovací len pre toho, kto ním je. */
 function rlLidri(){ const k=(state.user?.key||"").toLowerCase(); return [...Object.keys(LIDER_EMAILS), ...(jeRlTest(k)?[k]:[])]; }
 function rlId(week, em){ return `${week}__${em}`; }
-/* Termín: piatok 14:00 (miestny čas) v danom týždni */
+/* Termín: piatok 16:00 (miestny čas) v danom týždni */
 function rlTermin(week){ const {year,week:w}=parseWeekId(week); const m=mondayOf(year,w);
-  return new Date(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate()+4, 14, 0, 0); }
-/* Termín je piatok 14:00. Ikonka „Do reportu“ na aktivite však plní report
+  return new Date(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate()+4, 16, 0, 0); }
+/* Termín je piatok 16:00. Ikonka „Do reportu“ na aktivite však plní report
    aktuálneho týždňa až do nedele 23:59 — potom už patrí do nového týždňa
    a starý report sa dopĺňa cez „+ Načítať aktivity“ priamo v ňom. */
 function rlReport(week, em){ return (state.reportyLidrov||[]).find(x=>x.id===rlId(week,em)) || null; }
@@ -17353,7 +17524,7 @@ function viewReportLidra(){
   const h=el("div","rl-head");
   /* termín vidí len líder (pre seba) — ostatným ho neukazujeme */
   const vedenie=["admin","sef"].includes(state.user?.role);
-  h.innerHTML=`<div><h2>Reporty lídrov</h2>${jeLiderReportu()||vedenie?`<div class="rl-sub">${jeLiderReportu()&&!vedenie?"Tvoj termín":"Termín odovzdania"}: <b>piatok ${term.getDate()}. ${term.getMonth()+1}. do 14:00</b>${poTermine && (vedenie || rlReport(week,em)?.stav!=="odoslane")?` <span class="rl-po">termín uplynul</span>`:""}</div>`:""}</div>
+  h.innerHTML=`<div><h2>Reporty lídrov</h2>${jeLiderReportu()||vedenie?`<div class="rl-sub">${jeLiderReportu()&&!vedenie?"Tvoj termín":"Termín odovzdania"}: <b>piatok ${term.getDate()}. ${term.getMonth()+1}. do 16:00</b>${poTermine && (vedenie || rlReport(week,em)?.stav!=="odoslane")?` <span class="rl-po">termín uplynul</span>`:""}</div>`:""}</div>
     <div class="rl-tyz"><button type="button" class="rl-sip" data-d="-1" title="Predchádzajúci týždeň">‹</button>
       <span class="rl-tyz-t">${week===CURRENT_WEEK?"Tento týždeň · ":""}${esc(weekRangeLabel(week))}</span>
       <button type="button" class="rl-sip" data-d="1" title="Nasledujúci týždeň"${week>=CURRENT_WEEK?" disabled":""}>›</button></div>`;
@@ -18068,20 +18239,18 @@ function viewResults(){
   });
   const chybaSpolu=pripady.reduce((a,o)=>a+stavVyplnenia(o).chyba,0);
 
-  wrap.appendChild(el("div","page-h",`<div>
-    <div class="eyebrow">Mesačné výsledky</div>
-    <h1>Výsledky NB</h1>
-    <div class="sub">Obchodné prípady s bežiacim obdobím New business. Fakturácia sa dopĺňa spätne — v septembri sa zadáva august.</div></div><div></div>`));
-  /* Manažérsky prehľad — len pre vedenie (admin, šéf, líder). */
+  /* Nadpis stránky je preč — prepínač Prípady / Manažérsky prehľad je v riadku
+     s výberom obdobia (len pre vedenie). */
+  let rez=null;
   if(vidiLiderFilter()){
-    const rez=el("div","scope-switch mp-rezim");
+    rez=el("div","scope-switch mp-rezim");
     rez.innerHTML=`<button data-r="pripady"${state.resRezim!=="manazer"?' class="on"':""}>Prípady</button><button data-r="manazer"${state.resRezim==="manazer"?' class="on"':""}>Manažérsky prehľad</button>`;
     rez.querySelectorAll("button").forEach(b=>b.onclick=()=>{ state.resRezim=b.dataset.r; render(); });
-    wrap.lastChild.lastChild.appendChild(rez);
-    if(state.resRezim==="manazer"){ wrap.appendChild(viewManazerskyPrehlad()); return wrap; }
+    if(state.resRezim==="manazer"){ const rw=el("div","res-rez-rad"); rw.appendChild(rez); wrap.appendChild(rw); wrap.appendChild(viewManazerskyPrehlad()); return wrap; }
   }
 
-  if(!pripady.length){
+  if(!vsetkyPr.length){
+    if(rez){ const rw=el("div","res-rez-rad"); rw.appendChild(rez); wrap.appendChild(rw); }
     wrap.appendChild(el("div","empty","<b>Zatiaľ žiadne bežiace prípady</b>Obdobie sa spustí, keď prípad prepneš na Vyfakturované."));
     return wrap;
   }
@@ -18103,21 +18272,19 @@ function viewResults(){
     const roky=[...new Set([rokTeraz, rokTeraz-1, rokTeraz-2,
       ...(state.resMesiace||[]).map(m=>Number(m.slice(0,4)))])].sort((a,b)=>b-a);
 
-    const pas=el("div","res-mes");
-    const rr=el("div","res-mes-roky");
-    roky.forEach(r=>{
-      const b=el("button","res-rok"+(state.resRok===r?" on":""), String(r));
-      b.type="button";
-      b.onclick=()=>{ state.resRok=r; render(); };
-      rr.appendChild(b);
-    });
-    pas.appendChild(rr);
-
+    const pas=el("div","res-mes res-mes-rad");
     const mm=el("div","res-mes-mes");
+    /* Rok — rozbaľovací zoznam pred „Všetko", predvolene aktuálny rok */
+    const rs=el("select","res-rok-sel");
+    rs.title="Rok";
+    roky.forEach(r=>{ const o=el("option",null,String(r)); o.value=String(r); if(state.resRok===r) o.selected=true; rs.appendChild(o); });
+    rs.onchange=()=>{ state.resRok=Number(rs.value); render(); };
+    mm.appendChild(rs);
     const vsetko=el("button","res-mb"+(resVybrane()?"":" on"), "Všetko");
     vsetko.type="button";
-    vsetko.title="Sčítať celé obdobie";
-    vsetko.onclick=()=>{ state.resMesiace=[]; render(); };
+    /* „Všetko" prepína: všetky mesiace ↔ žiadny (potom si človek vyberie jednotlivé) */
+    vsetko.title = resVybrane() ? "Označiť všetky mesiace" : "Odznačiť všetky mesiace";
+    vsetko.onclick=()=>{ state.resMesiace = resVybrane() ? [] : ["__nic__"]; render(); };
     mm.appendChild(vsetko);
     mm.appendChild(el("span","res-mb-sep"));
     for(let i=1;i<=12;i++){
@@ -18130,13 +18297,16 @@ function viewResults(){
       b.title=menoMesiaca(kod)+(!resVybrane()?" — kliknutím zobrazíš len tento mesiac":zap?" — kliknutím odoberieš":" — kliknutím pridáš");
       b.onclick=()=>{
         const n=new Set(state.resMesiace||[]);
+        n.delete("__nic__");
         if(n.has(kod)) n.delete(kod); else n.add(kod);
+        if(!n.size) n.add("__nic__");          // odznačený posledný mesiac = nič, nie „Všetko"
         state.resMesiace=[...n].sort();
         render();
       };
       mm.appendChild(b);
     }
     pas.appendChild(mm);
+    if(rez){ const sp=el("span","res-rez-miesto"); sp.appendChild(rez); pas.appendChild(sp); }
     wrap.appendChild(pas);
   }
 
@@ -18157,7 +18327,7 @@ function viewResults(){
      vedenie — obchodník vidí svoje prípady tak či tak. */
   const lista=el("div","res-lista flista res-flista");
   lista.appendChild(prep);
-  if(vidiLiderFilter()) lista.appendChild(liderPill());
+  if(vidiLiderFilter()) lista.appendChild(resLidriKolieska());
   /* Nový biznis — len prípady, ktorým zvolený mesiac je prvým mesiacom
      NB obdobia (1/12, 1/36…). Bez zvoleného mesiaca platí posledný uzavretý. */
   {
@@ -18461,18 +18631,16 @@ function viewResults(){
         const bunka=r.querySelector(".rs-odmc");
         if(bunka){
           const vybM=resVybrane();
-          const rs=resultsPre(o.id).filter(x=>(x.trzba!=null || x.bezFakturacie) && (!vybM || vybM.includes(x.obdobie)));
-          const stavy=rs.map(x=>stavOdmeny(o,x));
-          const suma=stavy.reduce((a,st)=>a+(st.suma||0),0);
-          const neuplne=stavy.filter(st=>st.suma==null).length;
-          const hotove=stavy.length && stavy.every(st=>st.stav==="schvalene");
-          const nesulad=stavy.some(st=>st.stav==="nesulad");
-          if(!rs.length){ bunka.innerHTML=`<span class="rs-odm nic">—</span>`; }
+          const SP=stavSchvaleniaPripadu(o, vybM);
+          const { rs, suma, stavy, neuplne, hotove, nesulad } = SP;
+          if(!rs.length || !stavy.length){ bunka.innerHTML=`<span class="rs-odm nic" title="${rs.length?"Bez fakturácie — nič na schválenie":""}">—</span>`; }
           else {
             bunka.innerHTML=`<span class="rs-odm${hotove?" ok":""}" title="${esc(neuplne?`${neuplne} ${plural(neuplne,"mesiac sa nedá vypočítať","mesiace sa nedajú vypočítať","mesiacov sa nedá vypočítať")}`:"Odmena za zvolené mesiace")}">${eur(suma)}${neuplne?" ⚠":""}</span>`;
             if(hotove){
               bunka.insertAdjacentHTML("beforeend",`<span class="rs-odm-st" title="Odmena je schválená">schválené</span>`);
-            } else if(smieMenitOdmenu() && smieRiesitPripad(o) && stavy.some(st=>st.suma!=null)){
+            } else if(SP.uzavrety){
+              bunka.insertAdjacentHTML("beforeend",`<span class="rs-odm-st uz" title="Prípad je uzavretý alebo mu skončilo NB obdobie — už sa neschvaľuje">uzavretý</span>`);
+            } else if(smieMenitOdmenu() && smieRiesitPripad(o) && SP.caka){
               const sb=el("button","rs-schval", nesulad?"Schváliť znova":"Schváliť"); sb.type="button";
               sb.title="Potvrdí čísla za zvolené mesiace a schváli odmenu";
               sb.onclick=async(ev)=>{ ev.stopPropagation(); sb.disabled=true; sb.textContent="Schvaľujem…"; await oznacPripadHotovy(o); };
@@ -18485,7 +18653,8 @@ function viewResults(){
       const st=stavKontroly(o, resVybrane());
       /* Jedno kliknutie = hotovo. Dvojstupňové potvrdzovanie sme zrušili —
          obchodník označí prácu za hotovú a fajka je rovno zelená. */
-      if(st!=="skontrolovane" && smieOznacit(o)){
+      if(pripadUzavrety(o)){ /* uzavretý prípad sa už neoznačuje ani neschvaľuje */ }
+      else if(st!=="skontrolovane" && smieOznacit(o)){
         const hb=el("button","rs-ico ok"); hb.type="button";
         hb.title = (smieMenitOdmenu() && smieRiesitPripad(o)) ? "Označiť za hotové a schváliť odmenu" : "Označiť za hotové";
         hb.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
@@ -22376,7 +22545,8 @@ function sumaKusov(oppId){
    hodnoty — pri filtri na august má stĺpec Tržby hovoriť o auguste, nie
    o súčte za celé obdobie. Bez filtra sa sčíta všetko. */
 /* Zvolené mesiace. Prázdne pole aj null znamená „všetko". */
-const resVybrane = () => (state.resMesiace && state.resMesiace.length) ? state.resMesiace : null;
+/* null = „Všetko"; [] = nič nevybraté (po odznačení všetkých mesiacov) */
+const resVybrane = () => (state.resMesiace && state.resMesiace.length) ? state.resMesiace.filter(m=>m!=="__nic__") : null;
 /* Jeden zvolený mesiac — vtedy sa dá v riadku rovno editovať a označiť
    „bez fakturácie". Pri viacerých sa čísla len sčítavajú. */
 const resJedenMesiac = () => { const v=resVybrane(); return v && v.length===1 ? v[0] : null; };
@@ -22845,5 +23015,160 @@ function oknoImportu(riadky, nazovSuboru){
 /* ============================================================================ */
 boot();
 </script>
+<script>
+/* ============================================================================
+   JAZYK — prepínač SK / EN (vlajočka v hornej lište).
+   Prekladajú sa len tlačidlá, popisky a hlášky aplikácie. Texty, ktoré ľudia
+   napísali (popisy aktivít, poznámky, názvy klientov), ostávajú v slovenčine.
+   Preklad beží nad hotovou stránkou: slovník + pár vzorov pre texty s číslami.
+   ========================================================================== */
+(function(){
+  let LANG="sk";
+  try{ LANG = localStorage.getItem("zappisLang")==="en" ? "en" : "sk"; }catch(_){}
+  window.ZAPPIS_LANG=LANG;
+  const D={"Obchodné oddelenie Cromwell Group. Prihlás sa firemným účtom.": "Cromwell Group sales department. Sign in with your company account.", "Prihlásiť cez Google": "Sign in with Google", "alebo e-mailom": "or with e-mail", "Heslo": "Password", "Prihlásiť": "Sign in", "Vytvoriť nový účet": "Create a new account", "Zobraziť ako:": "View as:", "Šéf": "Boss", "Obchodník": "Sales rep", "Líder": "Leader", "Admin": "Admin", "Tento týždeň": "This week", "Pridať záznam": "Add entry", "Pridať postreh": "Send feedback", "Nový záznam": "New entry", "Kopírovať": "Copy", "Kopírovať záznamy": "Copy entries", "+ Pridať záznam": "+ Add entry", "Skryť bočné menu": "Hide side menu", "Predošlý týždeň": "Previous week", "Nasledujúci týždeň": "Next week", "Predchádzajúci týždeň": "Previous week", "Hľadať": "Search", "Hľadať…": "Search…", "Hľadať naprieč aplikáciou": "Search across the app", "Vymazať": "Clear", "Odhlásiť sa": "Sign out", "Postreh, podnet alebo návrh na zlepšenie": "Feedback or suggestion for improvement", "Kopírovať záznamy z niektorého z minulých týždňov": "Copy entries from one of the previous weeks", "Hľadať klienta, IČO alebo e-mail…": "Search client, company ID or e-mail…", "Hľadať klienta, text alebo obchodníka…": "Search client, text or sales rep…", "Hľadať klienta, IČO, text alebo obchodníka…": "Search client, company ID, text or sales rep…", "Hľadať klienta…": "Search client…", "Hľadať klienta / IČO…": "Search client / company ID…", "Hľadať klienta / obchodníka…": "Search client / sales rep…", "Hľadať firmu, e-shop, IČO…": "Search company, e-shop, company ID…", "Hľadať projekt, text alebo obchodníka…": "Search project, text or sales rep…", "Názov firmy alebo IČO…": "Company name or company ID…", "Filter obdobie": "Period filter", "Týždeň": "Week", "Všetko": "All", "Iné ▾": "Other ▾", "Iné obdobie": "Other period", "Posledný mesiac": "Last month", "Posledné 3 mesiace": "Last 3 months", "Posledných 12 mesiacov": "Last 12 months", "Tento rok": "This year", "Od": "From", "Do": "To", "Použiť vlastné obdobie": "Apply custom period", "Filter služieb": "Service filter", "Reporty lídrov": "Leader reports", "Všetky služby": "All services", "Balíky": "Parcels", "Digitálne": "Digital", "Digitálne služby": "Digital services", "Tlač": "Print", "Adresné": "Addressed", "Neadresné": "Unaddressed", "Poštové služby — adresné": "Postal services — addressed", "Poštové služby — neadresné": "Postal services — unaddressed", "Zelená pošta": "Zelená pošta", "Iné": "Other", "Prehľad": "Overview", "Aktivity": "Activities", "Moje aktivity": "My activities", "Klienti": "Clients", "Moji klienti": "My clients", "Interné / projekty": "Internal / projects", "Interné / projekty IT": "Internal / IT projects", "Úlohy & termíny": "Tasks & deadlines", "Úlohy": "Tasks", "Databázy": "Databases", "Moje databázy": "My databases", "Postrehy": "Feedback", "Cenové ponuky": "Price quotes", "Odmeny": "Rewards", "Výsledky NB": "NB results", "Výsledky": "Results", "Je klient voľný?": "Is the client free?", "Nová úloha": "New task", "+ Nová úloha": "+ New task", "Import New Business (CSV)": "Import New Business (CSV)", "Import výsledkov": "Import results", "Opraviť mená obchodníkov": "Fix sales rep names", "Doplniť oslovenie": "Fill in approach", "Číselník klientov": "Client list", "Nasadenie & návod": "Deployment & guide", "Služby": "Services", "Vyber službu": "Choose service", "Všetky aktivity": "All activities", "Postreh, podnet, návrh": "Feedback, idea, suggestion", "Zobraziť moje": "Show mine", "Zobraziť len moje záznamy": "Show only my entries", "Filtre": "Filters", "Zavrieť": "Close", "Zobraziť len New business": "Show only New business", "Zobraziť len Customer care": "Show only Customer care", "Len aktivity so spôsobom oslovenia z marketingu": "Only activities with a marketing approach", "Zrušiť filtre": "Clear filters", "Zrušiť filter": "Clear filter", "Iba moje": "Only mine", "Len nedoplnené": "Only incomplete", "Ďalšie týždne zatiaľ nemajú záznamy": "Later weeks have no entries yet", "Zobraziť predchádzajúci týždeň": "Show previous week", "minulý týždeň": "last week", "tento týždeň": "this week", "bez záznamov": "no entries", "Poznámka": "Note", "Pridať poznámku": "Add note", "Pridať progres": "Add progress", "Zmeniť stav": "Change status", "Upraviť": "Edit", "Zmazať záznam": "Delete entry", "Označiť ako spiaci (nemusí sa dopĺňať každý týždeň)": "Mark as dormant (no weekly update needed)", "Prebudiť záznam (vrátiť medzi aktívne)": "Wake up entry (return to active)", "Doplniť, čo sa udialo — bez zakladania novej aktivity": "Add what happened — without creating a new activity", "Záznam prišiel importom z DMIS": "Entry imported from DMIS", "Záznam pridaný v Zappise": "Entry added in Zappis", "apka": "app", "pôvodný zápis": "original entry", "zmena na fázu": "phase changed to", "NOVÉ": "NEW", "upravené": "edited", "Spiaci": "Dormant", "Problém / sťažnosť": "Problem / complaint", "ponuka zaslaná": "quote sent", "Pridať do môjho týždenného reportu lídra": "Add to my weekly leader report", "Už je v tvojom reporte lídra — klik pridá znova": "Already in your leader report — click to add again", "Napíš poznámku obchodníkovi…": "Write a note to the sales rep…", "Odpovedať šéfovi…": "Reply to the boss…", "+ oslovenie": "+ approach", "+ oslovenie info": "+ approach info", "+ zdroj leadu": "+ lead source", "fyzická osoba": "private person", "Interné / projekt": "Internal / project", "Lead / oslovený": "Lead / contacted", "Oslovenie klienta": "Client outreach", "Aktívne oslovenie klienta": "Active client outreach", "Prebieha jednanie": "In negotiation", "Zaslaná ponuka": "Quote sent", "Zaslaná cenová ponuka": "Price quote sent", "Potvrdené": "Confirmed", "Realizuje sa": "In progress", "Pozastavené": "On hold", "Vyfakturované": "Invoiced", "Odmietnutie": "Rejected", "Odmietnutie spolupráce": "Cooperation declined", "Ukončenie spolupráce": "Cooperation ended", "Nechce": "Not interested", "Zrušené": "Cancelled", "Oboznámenie klienta s cenovými podmienkami": "Client informed about pricing", "Spätná väzba od klienta (vyjednávame)": "Client feedback (negotiating)", "Potvrdenie spolupráce": "Cooperation confirmed", "Registrácia klienta alebo potvrdenie spolupráce": "Client registration or cooperation confirmed", "Zadanie zákazky": "Order placed", "Zapísané": "Recorded", "bez zmeny": "no change", "Upraviť záznam": "Edit entry", "Týždeň záznamu": "Entry week", "Záznam patrí do tohto týždňa.": "The entry belongs to this week.", "Dátum aktivity — podľa neho sa záznam zaradí do týždňa": "Activity date — determines the week of the entry", "Firma": "Company", "IČO": "Company ID (IČO)", "povinné": "required", "nepovinné": "optional", "Zmeniť": "Change", "Načítať z Finstat": "Load from Finstat", "Web klienta": "Client website", "Načíta názov a adresu firmy.": "Loads company name and address.", "Zadaj IČO firmy": "Enter company ID", "Zadaj IČO firmy a klikni Načítať z Finstat.": "Enter the company ID and click Load from Finstat.", "Krajina sídla klienta": "Client's country", "Agentúra — objednáva pre svojho klienta": "Agency — orders for its client", "Fyzická osoba — súkromná osoba bez IČO": "Private person — no company ID", "Klient": "Client", "bez IČO": "no company ID", "Materiál": "Material", "Každý materiál je samostatný obchod.": "Each material is a separate deal.", "Každý materiál sa vedie ako samostatný obchodný prípad s vlastným obdobím aj odmenou.": "Each material is a separate deal with its own period and reward.", "Názov zákazky": "Order name", "Aká služba": "Which service", "Kontaktné osoby": "Contact persons", "+ Pridať kontakt": "+ Add contact", "Zatiaľ žiadna kontaktná osoba. Keď zadáš klienta, doplnia sa tie, ktoré naň už poznáme — alebo pridaj novú tlačidlom vyššie.": "No contact person yet. When you enter the client, known contacts are filled in — or add a new one with the button above.", "Ulica a číslo": "Street and number", "PSČ a mesto": "Postcode and city", "Meno a priezvisko": "First and last name", "Pozícia (napr. konateľ, nákupca)": "Position (e.g. director, buyer)", "Telefón": "Phone", "+ Doplniť adresu ručne": "+ Enter address manually", "Zrušiť": "Cancel", "Pridať": "Add", "Typ záznamu": "Entry type", "✦ New business": "✦ New business", "Služba": "Service", "Produkt": "Product", "Upresni prosím typ služby — rozhoduje o pravidle odmeňovania.": "Please specify the service type — it determines the reward rule.", "Pridať súvisiacu službu": "Add related service", "Súvisiace služby": "Related services", "Vznikne samostatný záznam pre každú službu, ale píšeš ho raz. Každý má vlastnú tržbu, maržu aj odmenu.": "A separate entry is created for each service, but you write it once. Each has its own revenue, margin and reward.", "Posledná aktivita s klientom": "Last activity with the client", "⧉ Skopírovať text do záznamu": "⧉ Copy text into the entry", "Predpokladaná tržba a Typ aktivity": "Expected revenue and activity type", "Krajina": "Country", "SK — Slovensko": "SK — Slovakia", "CZ — Česko": "CZ — Czechia", "AT — Rakúsko": "AT — Austria", "HU — Maďarsko": "HU — Hungary", "PL — Poľsko": "PL — Poland", "DE — Nemecko": "DE — Germany", "Sídlo klienta.": "Client's registered office.", "Predpoklad tržba €/mes.": "Expected revenue €/month", "Odhad za zvolenú službu.": "Estimate for the selected service.", "Typ aktivity": "Activity type", "Čo si reálne urobil.": "What you actually did.", "Oslovenie": "Approach", "Spôsob oslovenia": "Approach method", "Vyber z číselníka.": "Choose from the list.", "Oslovenie — info": "Approach — info", "Oslovenie info": "Approach info", "Nový text sa pridá do číselníka.": "New text is added to the list.", "vlastný text…": "custom text…", "Zdroj leadu": "Lead source", "Nepovinné pole.": "Optional field.", "Vyber ho, ak bol klient oslovený aj iným spôsobom. Napríklad: klient síce vyplnil kontaktný formulár, ale urobil tak na základe tvojho aktívneho oslovenia.": "Choose it if the client was also approached another way. For example: the client filled in the contact form, but did so because of your active outreach.", "Progresy": "Progress updates", "najnovší hore": "newest first", "Popis": "Description", "Popis — pôvodný zápis": "Description — original entry", "Upozornenie": "Warning", "Každú novú myšlienku daj na nový riadok — zobrazí sa pekne pod sebou.": "Put each new thought on a new line — it will be shown neatly one below another.", "⚠ Upozornenie — zobrazí sa výrazne pri zázname": "⚠ Warning — shown prominently on the entry", "Pridať upozornenie — zobrazí sa výrazne pri zázname": "Add a warning — shown prominently on the entry", "✕ Odstrániť upozornenie": "✕ Remove warning", "Stručný prehľad udalostí, stavu jednania, dohodnutých krokov…": "Short summary of events, negotiation status, agreed steps…", "Spolupracujúci": "Co-workers", "Pridať ďalších obchodníkov": "Add more sales reps", "+ Pridať obchodníka": "+ Add sales rep", "Úloha": "Task", "Pridať úlohu s termínom": "Add a task with deadline", "Úloha — čo treba urobiť": "Task — what needs to be done", "Termín": "Deadline", "zajtra": "tomorrow", "dnes": "today", "o týždeň": "in a week", "o 2 týždne": "in 2 weeks", "o mesiac": "in a month", "+1 týždeň": "+1 week", "+2 týždne": "+2 weeks", "+1 mesiac": "+1 month", "Zodpovedný": "Responsible", "Pripomenie sa, kým ju nesplní.": "Reminds until it is done.", "✕ Nepridávať úlohu": "✕ Don't add a task", "Stav": "Status", "Dôvod straty": "Reason for loss", "— vyber dôvod —": "— choose reason —", "— nevybrané —": "— not selected —", "Cena": "Price", "Konkurencia": "Competition", "Nemá záujem": "Not interested", "Nereaguje": "No response", "Nevhodný termín": "Bad timing", "Rieši si sám / interne": "Handles it in-house", "Zanikol / nekomunikuje": "Defunct / not communicating", "Uvidíme, na čom prípady strácame.": "Shows where we lose deals.", "Zmazať": "Delete", "Uložiť záznam": "Save entry", "Uložiť": "Save", "Uložiť zmeny": "Save changes", "Zahodiť": "Discard", "Odstrániť": "Remove", "Otvoriť": "Open", "Potvrdiť": "Confirm", "Použiť": "Apply", "Rozumiem": "Got it", "Odoslať": "Send", "Typ aktivity:": "Activity type:", "Telefonát": "Phone call", "Osobné stretnutie": "In-person meeting", "Online stretnutie": "Online meeting", "Zaslanie cenovej ponuky": "Sending a price quote", "Obhliadka / analýza": "Site visit / analysis", "Podpis zmluvy": "Contract signing", "Follow-up": "Follow-up", "Aktívne oslovený": "Actively approached", "Aktívne oslovenie": "Active outreach", "Upsell": "Upsell", "Pasívny dopyt": "Passive inquiry", "Kontaktný formulár (marketing)": "Contact form (marketing)", "E-mail (marketing)": "E-mail (marketing)", "Telefonát (marketing)": "Phone call (marketing)", "Linkedin (marketing)": "LinkedIn (marketing)", "Chatbot (marketing)": "Chatbot (marketing)", "Event / Konferencia (marketing)": "Event / Conference (marketing)", "E-mail kampane (marketing)": "E-mail campaigns (marketing)", "Google sheet (marketing)": "Google sheet (marketing)", "Reaktivácia klienta": "Client reactivation", "Odporúčanie": "Referral", "Bez IČO sa záznam uložiť nedá — ak ide o fyzickú osobu, označ ju ikonkou osoby pri IČO.": "The entry can't be saved without a company ID — for a private person, mark it with the person icon next to the ID.", "Je to fyzická osoba bez IČO?": "Is it a private person without a company ID?", "Takýto záznam už tento týždeň existuje": "Such an entry already exists this week", "Uložiť aj tak": "Save anyway", "Nový obchod, alebo pokračovanie?": "New deal, or a continuation?", "Nový obchod": "New deal", "Pokračovanie starého": "Continuation of the old one", "Nový obchod začína vždy fázou Aktívne oslovenie klienta.": "A new deal always starts with the Active client outreach phase.", "Vyber prosím spôsob oslovenia.": "Please choose the approach method.", "Vyber prosím obchodníka.": "Please choose a sales rep.", "Vyber prosím dôvod straty.": "Please choose the reason for loss.", "Pri agentúre vyplň materiál.": "For an agency, fill in the material.", "Najprv over IČO tlačidlom Načítať.": "Verify the company ID with the Load button first.", "Zadaj platné IČO (aspoň 6 číslic).": "Enter a valid company ID (at least 6 digits).", "Prečo klient odmietol?": "Why did the client decline?", "Komu (obchodník)": "To (sales rep)", "Klient (nepovinné)": "Client (optional)", "Služba (nepovinné)": "Service (optional)", "Firma (nepovinné)": "Company (optional)", "— bez priradenia —": "— unassigned —", "Uzavrieť úlohu": "Close task", "Uložiť úlohu": "Save task", "Čo treba urobiť": "What needs to be done", "Ďalší krok": "Next step", "Doplňujúci kontext k úlohe…": "Additional context for the task…", "prepojiť s klientom…": "link to a client…", "meno obchodníka": "sales rep name", "Napíš, čo treba urobiť.": "Write what needs to be done.", "Záznam uložený a zaradený medzi spiace.": "Entry saved and marked as dormant.", "Zápis uložený": "Entry saved", "Záznam zmazaný": "Entry deleted", "Záznam zmazaný.": "Entry deleted.", "Záznam označený ako spiaci.": "Entry marked as dormant.", "Záznam prebudený — doplň prosím aktuálny text.": "Entry woken up — please add current text.", "Nemáš oprávnenie upraviť tento záznam.": "You don't have permission to edit this entry.", "Nemáš oprávnenie zmazať tento záznam.": "You don't have permission to delete this entry.", "Poznámka pridaná": "Note added", "Poznámka upravená": "Note edited", "Poznámka zmazaná": "Note deleted", "Kontakt pridaný.": "Contact added.", "Kontakt odstránený.": "Contact removed.", "Uložiť kontakt": "Save contact", "Meno": "First name", "Priezvisko": "Last name", "Úloha pridaná.": "Task added.", "Úloha zmazaná": "Task deleted", "Úloha označená ako hotová.": "Task marked as done.", "Text skopírovaný do záznamu": "Text copied into the entry", "Ďakujem, odoslané.": "Thank you, sent.", "Tvoj postreh": "Your feedback", "Z ktorej služby?": "From which service?", "Z ktorého týždňa chceš skopírovať záznamy do": "From which week do you want to copy entries to", "Pridať progres ·": "Add progress ·", "Čo sa udialo": "What happened", "Progres sa pridá k tejto aktivite s tvojím menom. Aktivita sa presunie do týždňa progresu a v zozname bude navrchu.": "The progress is added to this activity under your name. The activity moves to the progress week and appears at the top of the list.", "Uložiť progres": "Save progress", "napr. klient potvrdil termín, poslali sme upravenú ponuku…": "e.g. client confirmed the date, we sent an updated quote…", "Progres pridaný": "Progress added", "Dátum": "Date", "Odstrániť progres": "Remove progress", "Zobraziť ďalších 25": "Show 25 more", "Oslovenie a info": "Approach and info", "Vlastník DMIS": "DMIS owner", "Aktivít": "Activities", "Posledná": "Last", "NB": "NB", "Tržby NB": "NB revenue", "Marža NB": "NB margin", "Všetci klienti": "All clients", "Upraviť klienta": "Edit client", "Údaje klienta uložené": "Client details saved", "Nič nevyhovuje filtrom": "Nothing matches the filters", "Zobrazené obdobie: Tento týždeň. Skús ho rozšíriť kalendárom v hornej lište.": "Displayed period: This week. Try widening it with the calendar in the top bar.", "Všetky aktivity naprieč službami, najnovšie hore. Konkrétnu službu si vyberieš v menu vľavo.": "All activities across services, newest first. Choose a specific service in the menu on the left.", "New business aktivity zoradené od najnovších, naprieč všetkými službami.": "New business activities sorted by newest, across all services.", "Zatiaľ žiadne New Business záznamy": "No New Business entries yet", "✦ New Business": "✦ New Business", "Naprieč všetkými týždňami": "Across all weeks", "Zadávaj úlohy obchodníkom a sleduj termíny.": "Assign tasks to sales reps and track deadlines.", "Úlohy zadané tvojím vedúcim.": "Tasks assigned by your manager.", "Otvorené": "Open", "Moje": "Mine", "Dokončené": "Completed", "Všetky": "All", "Po termíne": "Overdue", "Žiadne úlohy": "No tasks", "Pridaj prvú úlohu alebo zmeň filter.": "Add the first task or change the filter.", "Označené ako hotové": "Marked as done", "Označiť za hotové": "Mark as done", "Ako obchodník môžeš meniť stav, poznámku a termín. Názov, zodpovedného, klienta a službu mení líder alebo šéf.": "As a sales rep you can change the status, note and deadline. The title, owner, client and service are changed by a leader or the boss.", "Mesačné výsledky": "Monthly results", "Obchodné prípady s bežiacim obdobím New business. Fakturácia sa dopĺňa spätne — v septembri sa zadáva august.": "Deals with a running New business period. Invoicing is entered retrospectively — August is entered in September.", "Prípady": "Deals", "Manažérsky prehľad": "Management overview", "jan": "Jan", "feb": "Feb", "mar": "Mar", "apr": "Apr", "máj": "May", "jún": "Jun", "júl": "Jul", "aug": "Aug", "sep": "Sep", "okt": "Oct", "nov": "Nov", "dec": "Dec", "Čaká na doplnenie": "Waiting for input", "Vybavené": "Done", "Marža v %": "Margin %", "Odmena": "Reward", "Obdobie": "Period", "Posl. mesiac": "Last month", "Fakt.": "Inv.", "Kusy": "Pieces", "Zdroj": "Source", "Sčítať celé obdobie": "Sum the whole period", "Odkiaľ pochádzajú čísla": "Where the numbers come from", "Vyplnené mesiace z celkového počtu fakturácií za obdobie": "Filled months out of all invoices in the period", "Spôsob oslovenia — pri pasívnom dopyte odmena nevzniká": "Approach method — no reward for a passive inquiry", "Označiť za hotové a schváliť odmenu": "Mark as done and approve the reward", "Pôvodná aktivita — tá, ktorú obchodník označil ako vyfakturovanú": "Original activity — the one the sales rep marked as invoiced", "Otvoriť mesačné výsledky": "Open monthly results", "Odstrániť prípad": "Remove deal", "Zatiaľ žiadne bežiace prípady": "No running deals yet", "Obdobie sa spustí, keď prípad prepneš na Vyfakturované.": "The period starts when you switch the deal to Invoiced.", "Moja schválená odmena": "My approved reward", "Len služby, za ktoré líder zodpovedá": "Only services the leader is responsible for", "Tržby": "Revenue", "Marža": "Margin", "Tržby v €": "Revenue in €", "Uzavrieť prípad": "Close deal", "Znovu otvoriť prípad": "Reopen deal", "Spustiť obdobie": "Start period", "Založiť prípad": "Create deal", "Prvý fakturovaný mesiac": "First invoiced month", "Suma v €": "Amount in €", "Sadzba v %": "Rate in %", "Dôvod": "Reason", "Najprv zadaj tržbu za tento mesiac.": "First enter revenue for this month.", "Najprv treba zadať mesačný výsledok.": "A monthly result must be entered first.", "Odmeny za New business": "New business rewards", "Odmeny — všetci obchodníci": "Rewards — all sales reps", "Moje odmeny": "My rewards", "Suma sa počíta z mesačného výsledku a sadzby uloženej na obchodnom prípade. Schválením sa zmrazí.": "The amount is calculated from the monthly result and the rate stored on the deal. Approval freezes it.", "Zatiaľ žiadne výsledky": "No results yet", "Odmeny sa objavia, keď sa vyplní prvá mesačná fakturácia.": "Rewards appear once the first monthly invoice is filled in.", "Termín odovzdania:": "Deadline:", "Tvoj termín:": "Your deadline:", "termín uplynul": "deadline passed", "Môj report": "My report", "Píš priebežne — rozpísané sa ukladá samo": "Write as you go — drafts save automatically", "Klienti a aktivity": "Clients and activities", "+ Načítať aktivity": "+ Load activities", "Ďalej od lídra": "More from the leader", "+ Pridať sekciu": "+ Add section", "Projekty, riziká, plán… veci, ktoré obchodníci do aktivít nezapísali. Každý Enter je nový bod; Backspace na začiatku riadku zmaže odrážku.": "Projects, risks, plans… things sales reps didn't record in activities. Each Enter is a new bullet; Backspace at the start of a line removes the bullet.", "Odoslať report": "Send report", "Odoslať upravený report": "Send updated report", "Zrušiť úpravy": "Discard changes", "Reporty ostatných lídrov": "Other leaders' reports", "Zatiaľ neodoslané": "Not sent yet", "Zatiaľ nič": "Nothing yet", "Chýba": "Missing", "Rozpracované": "Draft", "Report zatiaľ nie je odoslaný.": "Report not sent yet.", "Report sa práve píše — zobrazí sa po odoslaní.": "Report is being written — shown once sent.", "Report je prázdny.": "The report is empty.", "Ja": "Me", "Vyber aktivity z týždňa a pridaj ich do reportu": "Choose activities from the week and add them to the report", "Načítať aktivity do reportu": "Load activities into the report", "Z týždňa": "From week", "Označiť všetky": "Select all", "Zrušiť označenie": "Deselect all", "Pridať do reportu": "Add to report", "Klienti sa pridajú do časti „Klienti a aktivity“.": "Clients are added to the “Clients and activities” section.", "už v reporte": "already in report", "Komentár lídra (nepovinné) — napr. prečo je to dôležité": "Leader's comment (optional) — e.g. why it matters", "+ komentár lídra": "+ leader's comment", "Bez komentára": "No comment", "Odstrániť z reportu": "Remove from report", "Text k aktivite": "Activity text", "vrátiť text obchodníka": "restore sales rep's text", "Názov sekcie — napr. Projekty, Riziká, Plán na budúci týždeň": "Section name — e.g. Projects, Risks, Plan for next week", "Píš — každý Enter je nový bod": "Write — each Enter is a new bullet", "Posunúť vyššie": "Move up", "Posunúť nižšie": "Move down", "Odstrániť sekciu": "Remove section", "Report je odoslaný. Ďakujem!": "The report has been sent. Thank you!", "Report je prázdny — pridaj klientov alebo napíš aspoň jednu sekciu.": "The report is empty — add clients or write at least one section.", "Klient je pridaný do reportu.": "The client has been added to the report.", "Tento klient už v reporte je. Aktualizovať ho podľa aktivity?": "This client is already in the report. Update it from the activity?", "Otvoriť reporty lídrov": "Open leader reports", "Len pre lídrov a vedenie": "Leaders and management only", "Zatiaľ žiadni klienti. Klikni": "No clients yet. Click", "alebo v Aktivitách použi ikonku": "or in Activities use the icon", "Do reportu": "To report", "na karte.": "on the card.", "Všetci klienti, ktorí prišli cez marketingový spôsob oslovenia — od prvého oslovenia po fakturáciu. Lead = klient pri jednej službe.": "All clients that came through a marketing approach — from first contact to invoicing. Lead = client for one service.", "Zatiaľ žiadne marketingové leady": "No marketing leads yet", "Zobrazia sa aktivity so spôsobom oslovenia z marketingu.": "Activities with a marketing approach will appear here.", "Len pre vedenie a marketing": "Management and marketing only", "Kontaktná osoba": "Contact person", "Prvé oslovenie": "First contact", "Fáza": "Phase", "Obdobie NB": "NB period", "Leady": "Leads", "Konverzia": "Conversion", "Mesiac": "Month", "Kvartál": "Quarter", "Rok": "Year", "Tím": "Team", "Noví klienti, ktorých oslovujeme": "New clients we are approaching", "Oslovení klienti": "Approached clients", "Potvrdili spoluprácu": "Confirmed cooperation", "Konverzia oslovených": "Conversion of approached", "Čas do potvrdenia": "Time to confirmation", "Bez posunu 30+ dní": "No progress for 30+ days", "Spôsoby oslovenia": "Approach methods", "Klienti podľa stavu": "Clients by status", "Prečo nás odmietli": "Why they declined", "Klik = zoznam klientov": "Click = list of clients", "Zápisy pri existujúcich klientoch": "Entries for existing clients", "Zápisy": "Entries", "nové": "new", "Obchodníci": "Sales reps", "Klikni pre filter": "Click to filter", "Oddelenia": "Departments", "Predchádzajúce obdobie": "Previous period", "Nasledujúce obdobie": "Next period", "Neuvedené": "Not specified", "V období nie sú oslovení klienti.": "No approached clients in the period.", "V období žiadna aktivita.": "No activity in the period.", "V období nás nikto neodmietol.": "Nobody declined us in the period.", "Import databázy": "Import database", "⬆ Importovať databázu": "⬆ Import database", "Zatiaľ žiadna databáza": "No database yet", "Otvoriť Moje databázy": "Open My databases", "Databázu nahrá admin.": "The admin uploads the database.", "Od obchodníkov": "From sales reps", "Zatiaľ nič neprišlo": "Nothing received yet", "Tvoje postrehy a odpovede": "Your feedback and replies", "Zatiaľ si nič neposlal": "You haven't sent anything yet", "Nástroje": "Tools", "Rýchly prístup k cenníkom a kalkulačkám.": "Quick access to price lists and calculators.", "Odkazy sem doplní admin.": "The admin adds links here.", "Len pre admina": "Admin only", "Zatiaľ žiadne interné aktivity": "No internal activities yet", "Pridaj záznam a zvoľ typ Interné / projekty.": "Add an entry and choose type Internal / projects.", "Cross-sell": "Cross-sell", "Nastavenia": "Settings", "Zápis z porady": "Meeting minutes", "Uložiť zápis": "Save minutes", "Lead": "Lead", "Importovať": "Import", "Názov": "Name", "Kto": "Who", "upraviť": "edit", "zrušiť": "cancel", "všetko": "all", "Otvoriť aktivitu": "Open activity", "✎ Upraviť": "✎ Edit", "Zaradiť do spiacich": "Mark as dormant", "Pripomenúť neskôr": "Remind me later", "Idem sa pozrieť": "Let me have a look", "Áno, je to v poriadku": "Yes, it's fine", "Späť na úpravu": "Back to editing", "⚠ Nepodarilo sa uložiť.": "⚠ Could not save.", "⚠ Nepodarilo sa zmazať.": "⚠ Could not delete.", "Názov databázy": "Database name", "Pod týmto názvom sa bude dať databáza filtrovať.": "The database can be filtered under this name.", "Pre ktorú službu sú tieto leady?": "Which service are these leads for?", "Aktivita zapísaná z leadu pôjde do reportu pod túto službu.": "An activity recorded from a lead goes into the report under this service.", "Názov porady": "Meeting name", "Účastníci (nepovinné)": "Participants (optional)", "Appka si sama nájde sekciu s úlohami (Action Items / Úlohy / Ďalšie kroky) a ponúkne ich nižšie.": "The app finds the task section (Action Items / Tasks / Next steps) by itself and offers them below.", "🔍 Nájsť úlohy v zápise": "🔍 Find tasks in the minutes", "Nájdené úlohy — odškrtni tie, ktoré nechceš vytvoriť": "Tasks found — untick those you don't want to create", "Predvoľba: Slovensko (+421). Klikni pre zmenu.": "Prefix: Slovakia (+421). Click to change.", "Jedna zákazka, viac služieb — napríklad tlač letákov a ich roznos. Vznikne samostatný záznam pre každú službu, ale píšeš ho raz.": "One order, several services — e.g. printing leaflets and distributing them. A separate entry is created for each service, but you write it once.", "napr. Selekcia Obchodníci Bratislava": "e.g. Selection Sales reps Bratislava", "napr. Týždenná porada obchodu": "e.g. Weekly sales meeting", "Sem vlož text zápisu z e-mailu od Fathomu (Ctrl+V)…": "Paste the minutes text from the Fathom e-mail here (Ctrl+V)…", "Sídlo klienta: Slovensko. Klikni pre zmenu.": "Client's country: Slovakia. Click to change.", "1. mesiac": "1st month", "Vývoj XLS": "Trend XLS", "Len prípady, ktoré vo zvolenom mesiaci začínajú NB obdobie — 1/12, 1/36…": "Only deals whose NB period starts in the selected month — 1/12, 1/36…", "Klienti × mesiace NB obdobia — Výnosy, Marža, Kusy; nevyplnené mesiace s odhadom": "Clients × NB period months — Revenue, Margin, Pieces; missing months estimated", "Oslovení · konverzia · klik = zoznam": "Approached · conversion · click = list", "Klienti s aktivitou v období · klik = zoznam": "Clients with activity in the period · click = list", "Použi zelené tlačidlo Postreh, podnet, návrh — odpoveď uvidíš tu.": "Use the green Feedback button — you'll see the reply here.", "Zatiaľ žiadne kalkulačky": "No calculators yet", "Pridaj prvý odkaz tlačidlom vyššie.": "Add the first link with the button above.", "+ Pridať odkaz": "+ Add link", "Produktové bingo — existujúci klienti a služby, ktoré ešte nevyužívajú. Klik na bunku = zápis potenciálu alebo odmietnutia.": "Product bingo — existing clients and services they don't use yet. Click a cell = record potential or rejection.", "S potenciálom": "With potential", "Skúsiť znova": "Try again", "Bez potenciálu": "No potential", "Klienti so spoluprácou": "Clients with cooperation", "Využívajú 2+ služby": "Use 2+ services", "Identifikovaný potenciál": "Identified potential", "Termín po splatnosti": "Deadline overdue", "využíva": "uses", "potenciál": "potential", "skúsiť znova": "try again", "v jednaní": "in negotiation", "odmietol": "declined", "neponúkané – voľné pre iných": "not offered – free for others", "zatiaľ nič": "nothing yet", "ďalší krok": "next step", "Doplň fakturáciu za september 2026": "Fill in invoicing for September 2026", "po termíne": "overdue", "Prevzaté: 0": "Taken: 0", "Zápis": "Entry", "Mesiac:": "Month:", "Zatiaľ žiadne výsledky ani odmeny": "No results or rewards yet", "Odoslané": "Sent", "Odoslané po termíne": "Sent late", "Rozpísané": "Draft", "0 nevybavených · 0 celkovo": "0 open · 0 total", "Obchodníci posielajú postrehy cez zelené tlačidlo.": "Sales reps send feedback via the green button.", "Prihlás sa": "Sign in"};
+  const PREF={"⚠ Nepodarilo sa uložiť: ": "⚠ Could not save: ", "⚠ Záznam sa nepodarilo uložiť: ": "⚠ Entry could not be saved: ", "⚠ Uloženie zlyhalo: ": "⚠ Saving failed: ", "⚠ Zmazanie zlyhalo: ": "⚠ Deleting failed: ", "⚠ Stav sa nepodarilo uložiť: ": "⚠ Status could not be saved: ", "⚠ Poznámku sa nepodarilo pridať: ": "⚠ Note could not be added: ", "⚠ Nepodarilo sa: ": "⚠ Failed: ", "Report sa nepodarilo uložiť: ": "The report could not be saved: "};
+  const norm=s=>String(s).replace(/\s+/g," ").trim();
+  const MAP=new Map(Object.entries(D).map(([k,v])=>[norm(k),v]));
+  const MES_SK=["január","február","marec","apríl","máj","jún","júl","august","september","október","november","december"];
+  const MES_EN=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const mes=s=>s.replace(/\b(január|február|marec|apríl|máj|jún|júl|august|september|október|november|december|Január|Február|Marec|Apríl|Máj|Jún|Júl|August|September|Október|November|December)\b/g,m=>MES_EN[MES_SK.indexOf(m.toLowerCase())]||m);
+  const pl=(n,one,many)=>`${n} ${Number(n)===1?one:many}`;
+  const PAT=[
+    [/^(\d+) (záznam|záznamy|záznamov)$/, m=>pl(m[1],"entry","entries")],
+    [/^Zobraziť (\d+) (záznam|záznamy|záznamov)$/, m=>"Show "+pl(m[1],"entry","entries")],
+    [/^(\d+) (aktivita|aktivity|aktivít)$/, m=>pl(m[1],"activity","activities")],
+    [/^(\d+) (klient|klienti|klientov) · (\d+) (aktivita|aktivity|aktivít)$/, m=>pl(m[1],"client","clients")+" · "+pl(m[3],"activity","activities")],
+    [/^(\d+) (prípad|prípady|prípadov)$/, m=>pl(m[1],"deal","deals")],
+    [/^(\d+) (prípad|prípady|prípadov) · (\d+) (mesiac|mesiace|mesiacov) bez čísel$/, m=>pl(m[1],"deal","deals")+" · "+pl(m[3],"month","months")+" without numbers"],
+    [/^(\d+) (vybraný mesiac|vybrané mesiace|vybraných mesiacov)$/, m=>pl(m[1],"selected month","selected months")],
+    [/^Zobraziť ďalších (\d+)(?: z (\d+))?$/, m=>`Show ${m[1]} more`+(m[2]?` of ${m[2]}`:"")],
+    [/^Týždeň (\d+)$/, m=>`Week ${m[1]}`],
+    [/^úprava (.+)$/, m=>`edited ${m[1]}`],
+    [/^import (\d.+)$/, m=>`imported ${m[1]}`],
+    [/^vložené (.+)$/, m=>`added ${m[1]}`],
+    [/^z DMIS (.+)$/, m=>`from DMIS ${m[1]}`],
+    [/^aj v: (.+)$/, m=>`also in: ${tr(m[1])||m[1]}`],
+    [/^Úloha · o (\d+) (dni|dní) ↗$/, m=>`Task · in ${m[1]} days ↗`],
+    [/^Úloha · zajtra ↗$/, ()=>"Task · tomorrow ↗"],
+    [/^Úloha · dnes ↗$/, ()=>"Task · today ↗"],
+    [/^Úloha · meškanie (\d+) d ↗$/, m=>`Task · ${m[1]} d overdue ↗`],
+    [/^(.+) — otvoriť detail klienta$/, m=>`${m[1]} — open client detail`],
+    [/^(.+) — otvoriť mesačné výsledky$/, m=>`${m[1]} — open monthly results`],
+    [/^(.+) — klikni pre zmenu$/, m=>`${tr(m[1])||m[1]} — click to change`],
+    [/^Zobraziť (.+) v segmente (.+)$/, m=>`Show ${m[1]} in ${tr(m[2])||m[2]}`],
+    [/^Zoradiť podľa: (.+)$/, m=>`Sort by: ${tr(m[1])||m[1]}`],
+    [/^Poznámky \((\d+)\)$/, m=>`Notes (${m[1]})`],
+    [/^(\d+) (poznámka|poznámky|poznámok)$/, m=>pl(m[1],"note","notes")],
+    [/^(Odoslané|odoslané) (\d+) z (\d+)$/, m=>`${m[1][0]==="O"?"Sent":"sent"} ${m[2]} of ${m[3]}`],
+    [/^Odoslané · (.+)$/, m=>`Sent · ${m[1]}`],
+    [/^Odoslané po termíne · (.+)$/, m=>`Sent late · ${m[1]}`],
+    [/^Rozpracované · po termíne$/, ()=>"Draft · overdue"],
+    [/^Rozpísané uložené (.+)$/, m=>`Draft saved ${m[1]}`],
+    [/^upravené · (.+)$/, m=>`edited · ${m[1]}`],
+    [/^piatok (.+) do (\d+:\d+)$/, m=>`Friday ${m[1]} by ${m[2]}`],
+    [/^Pridať progres · (.+)$/, m=>`Add progress · ${m[1]}`],
+    [/^bez zmeny \((.+)\)$/, m=>`no change (${tr(m[1])||m[1]})`],
+    [/^chýba (\d+\/\d+)$/, m=>`missing ${m[1]}`],
+    [/^Mesiac (\d+\/\d+) v NB období$/, m=>`Month ${m[1]} of the NB period`],
+    [/^Za (\S+ \d{4}) ešte nie sú čísla — treba ich doplniť$/, m=>`No numbers for ${mes(m[1])} yet — please fill them in`],
+    [/^(\S+ \d{4}) — kliknutím pridáš$/, m=>`${mes(m[1])} — click to add`],
+    [/^(\S+ \d{4}) — kliknutím odoberieš$/, m=>`${mes(m[1])} — click to remove`],
+    [/^(január|február|marec|apríl|máj|jún|júl|august|september|október|november|december|Január|Február|Marec|Apríl|Máj|Jún|Júl|August|September|Október|November|December) (\d{4})$/, m=>mes(m[0])],
+    [/^· vs\. (.+)$/, m=>`· vs. ${mes(m[1])}`],
+    [/^(\d+) (prípad má|prípady majú|prípadov má) nedoplnené čísla$/, m=>`${m[1]} ${Number(m[1])===1?"deal has":"deals have"} missing numbers`],
+    [/^(\d+) (klient je pridaný|klienti sú pridaní|klientov je pridaných) do reportu\.$/, m=>`${pl(m[1],"client","clients")} added to the report.`],
+    [/^Hotovo — (\d+) nových, (\d+) .+$/, m=>`Done — ${m[1]} new, ${m[2]} updated.`],
+    [/^Aktivita je pridaná do reportu.*$/, ()=>"The activity has been added to the report."],
+    [/^(\d+) odoslaných postrehov · (\d+) zodpovedaných$/, m=>`${m[1]} feedback sent · ${m[2]} answered`],
+    [/^(\d+) nevybavených · (\d+) celkovo$/, m=>`${m[1]} open · ${m[2]} total`],
+    [/^Doplň fakturáciu za (\S+ \d{4})$/, m=>`Fill in invoicing for ${mes(m[1])}`],
+    [/^Prevzaté: (\d+)$/, m=>`Taken: ${m[1]}`],
+    [/^(\d+)\. mesiac$/, m=>`Month ${m[1]}`],
+    [/^(\d+) (záznam|záznamy|záznamov) · (.+)$/, m=>`${pl(m[1],"entry","entries")} · ${m[3].split(", ").map(x=>tr(x)||x).join(", ")}`],
+    [/^(.+) \((\d+)\)$/, m=>{ const t=tr(m[1]); return t?`${t} (${m[2]})`:null; }],
+    [/^Reporty lídrov · (tento|minulý) týždeň · odoslané (\d+) z (\d+)$/, m=>`Leader reports · ${m[1]==="tento"?"this":"last"} week · sent ${m[2]} of ${m[3]}`],
+  ];
+  const SYM=/^([+✓✕⚠↻★⬆⬇✎⧉🔍✦↺]\s*)(.+)$/u;
+  function tr(s){
+    const t=norm(s); if(!t) return null;
+    if(MAP.has(t)) return MAP.get(t);
+    for(const [p,f] of Object.entries(PREF)) if(t.startsWith(p.trim())) return f+t.slice(p.trim().length).replace(/^\s*/," ").trimStart();
+    const sy=t.match(SYM); if(sy){ const r=MAP.get(sy[2]); if(r) return sy[1]+r; }
+    if(/ ▾$/.test(t)){ const r=MAP.get(t.slice(0,-2)); if(r) return r+" ▾"; }
+    for(const [re,f] of PAT){ const m=t.match(re); if(m){ const r=f(m); if(r) return r; } }
+    if(t.includes(", ")){ const ps=t.split(", "); const rs=ps.map(x=>MAP.get(x)); if(rs.every(Boolean)) return rs.join(", "); }
+    for(const sep of [" · "," — "]){
+      if(t.includes(sep)){ let ok=false; const parts=t.split(sep).map(x=>{ if(!/[a-záäčďéíĺľňóôŕšťúýž]/i.test(x)) return x; const r=MAP.get(x)||tr(x); if(r){ ok=true; return r; } return x; });
+        if(ok) return parts.join(sep); }
+    }
+    return null;
+  }
+  window.zappisTr=tr;
+  if(LANG!=="en") return;
+  document.documentElement.lang="en";
+  const SKIP="textarea,input,select option[data-raw],[contenteditable],script,style,.e-events,.pg-t,.rl-kl-t,.rl-kl-ta,.rl-cb-t,.rl-lt,.rl-lt-r,.mk-ai-t,.kl-text,.no-tr";
+  const ATTR=["title","placeholder","aria-label"];
+  const hotove=new WeakMap();
+  function preloz(node){
+    if(node.nodeType===3){
+      const p=node.parentElement; if(!p || p.closest(SKIP)) return;
+      const v=node.nodeValue; if(!v || !/[A-Za-zÁ-ž]/.test(v) || hotove.get(node)===v) return;
+      const r=tr(v); if(r && r!==norm(v)){ const lead=v.match(/^\s*/)[0], trail=v.match(/\s*$/)[0]; const nv=lead+r+trail; hotove.set(node,nv); node.nodeValue=nv; }
+      return;
+    }
+    if(node.nodeType!==1) return;
+    const el=node;
+    if(el.closest && el.closest("script,style")) return;
+    ATTR.forEach(a=>{ const v=el.getAttribute && el.getAttribute(a); if(v && /[A-Za-zÁ-ž]/.test(v)){ const r=tr(v); if(r && r!==v) el.setAttribute(a,r); } });
+    if(el.tagName==="INPUT" && (el.type==="button"||el.type==="submit") && el.value){ const r=tr(el.value); if(r) el.value=r; }
+    const w=document.createTreeWalker(el, NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);
+    let n=w.nextNode();
+    while(n){ if(n.nodeType===3) preloz(n); else ATTR.forEach(a=>{ const v=n.getAttribute(a); if(v && /[A-Za-zÁ-ž]/.test(v)){ const r=tr(v); if(r && r!==v) n.setAttribute(a,r); } }); n=w.nextNode(); }
+  }
+  const mo=new MutationObserver(list=>{
+    for(const m of list){
+      if(m.type==="characterData") preloz(m.target);
+      else if(m.type==="attributes"){ const v=m.target.getAttribute(m.attributeName); if(v){ const r=tr(v); if(r && r!==v) m.target.setAttribute(m.attributeName,r); } }
+      else m.addedNodes.forEach(preloz);
+    }
+  });
+  const start=()=>{ preloz(document.body); mo.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:ATTR}); };
+  if(document.body) start(); else document.addEventListener("DOMContentLoaded",start);
+  const tt=document.querySelector("title"); if(tt){ const r=tr(tt.textContent); if(r) tt.textContent=r; }
+  // vyskakovacie okná prehliadača
+  const oc=window.confirm.bind(window), oa=window.alert.bind(window), op=window.prompt.bind(window);
+  window.confirm=m=>oc(tr(m)||m); window.alert=m=>oa(tr(m)||m); window.prompt=(m,d)=>op(tr(m)||m,d);
+})();
+/* Vlajočka — prepína jazyk a stránku načíta znova */
+function zappisPrepniJazyk(){
+  let en=false; try{ en=localStorage.getItem("zappisLang")==="en"; }catch(_){}
+  try{ localStorage.setItem("zappisLang", en?"sk":"en"); }catch(_){}
+  location.reload();
+}
+(function(){
+  const UK=`<svg viewBox="0 0 60 30" width="22" height="11" aria-hidden="true"><clipPath id="ukc"><path d="M0,0v30h60V0z"/></clipPath><clipPath id="ukt"><path d="M30,15h30v15zv15H0zH0V0zV0h30z"/></clipPath><g clip-path="url(#ukc)"><path d="M0,0v30h60V0z" fill="#012169"/><path d="M0,0L60,30M60,0L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0L60,30M60,0L0,30" clip-path="url(#ukt)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></g></svg>`;
+  const SK=`<svg viewBox="0 0 9 6" width="18" height="12" aria-hidden="true"><rect width="9" height="2" fill="#fff"/><rect y="2" width="9" height="2" fill="#0B4EA2"/><rect y="4" width="9" height="2" fill="#EE1C25"/><path d="M2.4 1.3h2.2v1.9c0 .9-.6 1.4-1.1 1.6-.5-.2-1.1-.7-1.1-1.6z" fill="#EE1C25" stroke="#fff" stroke-width=".25"/><path d="M3.5 1.7v2.2M3.05 2.3h.9M3.15 2.8h.7" stroke="#fff" stroke-width=".22"/></svg>`;
+  const vloz=()=>{
+    const lo=document.getElementById("logoutBtn"); if(!lo || document.getElementById("langBtn")) return;
+    const en=(window.ZAPPIS_LANG==="en");
+    const b=document.createElement("button");
+    b.className="iconbtn lang-btn"; b.id="langBtn"; b.type="button";
+    b.title = en ? "Prepnúť do slovenčiny" : "Switch to English";
+    b.classList.add("no-tr");
+    b.innerHTML = en ? SK : UK;
+    b.onclick=zappisPrepniJazyk;
+    lo.parentNode.insertBefore(b, lo);
+  };
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",vloz); else vloz();
+})();
+</script>
+<style>
+.lang-btn{display:inline-flex;align-items:center;justify-content:center}
+.lang-btn svg{display:block;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+@media (max-width:520px){ .lang-btn{width:26px !important;min-width:26px !important;padding:0 !important;border:0 !important;background:none !important;box-shadow:none !important} .lang-btn svg{width:20px;height:13px} .topbar .brand{gap:8px} .topbar .zp-box{padding:5px 9px} .topbar .user{gap:6px} }
+@media (max-width:400px){ .topbar .brand-sep{display:none} .topbar #topLogo{height:22px !important;width:auto !important} .topbar .zp-box{padding:4px 7px} .topbar .user{gap:4px} .topbar .user .iconbtn{width:32px !important;height:32px !important;min-width:32px !important} .topbar .user .avatar{width:32px !important;height:32px !important} .topbar .user .lang-btn{width:22px !important;min-width:22px !important} .topbar #topLogo{height:19px !important} .topbar .zp-box b.zappis{font-size:14px} }
+</style>
+
 </body>
 </html>
