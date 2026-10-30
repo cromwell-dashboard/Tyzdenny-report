@@ -3425,6 +3425,10 @@ select:disabled{cursor:default; opacity:.65}
 .res-rez-rad{display:flex;justify-content:flex-end;margin:0 0 14px}
 .res-rok-sel{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23646d7e%27 stroke-width=%272.4%27 stroke-linecap=%27round%27%3E%3Cpath d=%27M6 9l6 6 6-6%27/%3E%3C/svg%3E") !important;background-repeat:no-repeat !important;background-position:right 8px center !important;background-size:14px !important;height:34px;border:1px solid var(--line);border-radius:5px;background:#fff;font:inherit;font-size:13px;font-weight:700;color:var(--ink);padding:0 28px 0 10px;cursor:pointer;margin-right:4px}
 .res-lidri{display:flex;align-items:center;gap:6px;margin-left:auto;padding-left:8px;order:99}
+.res-pod-listou{display:flex;align-items:center;gap:12px;margin:-4px 0 12px}
+.res-pod-listou>.feed-count{flex:1 1 auto;min-width:0;margin:0}
+.res-pod-listou>.res-lidri{flex:0 0 auto;margin-left:auto;padding-left:0}
+@media (max-width:980px){ .res-pod-listou{flex-wrap:wrap} .res-pod-listou>.res-lidri{width:auto;margin-left:auto} }
 .res-lidri-t{font-size:11.5px;font-weight:600;color:var(--muted);margin-right:2px;white-space:nowrap}
 .res-lk{position:relative;border:0;background:none;padding:2px;cursor:pointer;border-radius:50%;display:inline-flex}
 .res-lk-av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;font-weight:700;background:#fff;border:2px dashed #D3D7DE;color:var(--muted);transition:transform .12s}
@@ -3448,6 +3452,20 @@ select:disabled{cursor:default; opacity:.65}
 .res-mb.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .res-mb.buduci{opacity:.45}
 .res-mb-sep{width:1px;height:20px;background:var(--line);margin:0 4px}
+/* Lišta obdobia sa na počítači nezalomí — mesiace sa zúžia podľa šírky obrazovky */
+@media (min-width:761px){
+  .res-mes.res-mes-rad{flex-wrap:nowrap}
+  .res-mes-rad .res-mes-mes{flex-wrap:nowrap;flex:1 1 auto;min-width:0}
+  .res-mes-rad .res-mes-mes .res-mb{flex:1 1 0;min-width:0;max-width:64px;padding:0 2px;overflow:hidden;text-overflow:clip}
+  .res-mes-rad .res-mes-mes .res-mb:first-of-type{flex:0 0 auto;min-width:0;padding:0 10px;max-width:none}
+  .res-mes-rad .res-mes-mes{gap:4px}
+  .res-mes-rad .res-rok-sel{flex:0 0 auto}
+  .res-rez-miesto{flex:0 0 auto}
+}
+@media (min-width:761px) and (max-width:1400px){
+  .res-rez-miesto .mp-rezim button{padding-left:10px;padding-right:10px;font-size:12px}
+  .res-mes-rad{gap:8px !important}
+}
 @media (max-width:760px){
   .res-mes-mes{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
   .res-mes-mes::-webkit-scrollbar{display:none}
@@ -3563,6 +3581,14 @@ select:disabled{cursor:default; opacity:.65}
 .mk-zoz{border:1px solid var(--line); border-collapse:collapse}
 .mk-zoz th,.mk-zoz td{border:1px solid var(--line)!important; padding:6px 8px!important}
 .mk-zoz th{background:#F7F8FA}
+/* hlavička tabuľky Leady ostáva viditeľná pri posúvaní */
+.mk-zoz thead th{position:sticky;top:0;z-index:3;background:#F7F8FA;box-shadow:inset 0 -1px 0 var(--line)}
+/* Keď sa tabuľka zmestí na šírku, hlavička sa prilepí pod hornú lištu pri
+   posúvaní stránky. Keď je širšia (menší monitor, mobil), tabuľka sa posúva
+   vo vlastnom okne a hlavička ostáva hore v ňom. */
+.mp-tw.mk-zoz-tw.lepi{overflow:visible}
+.mk-zoz-tw.lepi .mk-zoz thead th{top:var(--mk-top,62px)}
+.mp-tw.mk-zoz-tw:not(.lepi){max-height:calc(100vh - var(--mk-top,62px) - 24px);overflow:auto}
 th.mk-zth{cursor:pointer; user-select:none; white-space:nowrap}
 th.mk-zth:hover{color:var(--brand)}
 th.mk-zth .mk-sip{display:inline-block; margin-left:4px; font-size:9px; color:#B5BAC3; font-weight:400}
@@ -4365,6 +4391,8 @@ td.mp-nm[data-roz]{cursor:pointer}
 .rs-zam-d b{font-weight:700}
 .mk-kto{display:block;margin-top:3px;font-size:10.5px;line-height:1.3;color:var(--muted);white-space:nowrap}
 .mk-kto i{display:block;font-style:normal;color:#B45F0C}
+.mk-kto>span,.mk-kto>i{display:flex;align-items:center;gap:3px}
+.mk-kto svg{width:10px;height:10px;flex:0 0 auto;opacity:.8}
 .rs-name > .rs-prod{grid-column:2;display:block;font-size:11px;font-weight:600;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
 .rs-zam-d i{display:block;font-style:normal;font-size:10.5px;color:var(--muted)}
 .odm-cl .rs-zam-d{max-width:340px}
@@ -18034,7 +18062,7 @@ function viewMarketing(){
     oslVyber(b, tv, v=>dopZmen(L.entries, v, [...L.opps]), true); });
   t3.querySelectorAll("[data-mk-info]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); const L=zoz[Number(b.dataset.mkInfo)];
     infoVyber(b, L.kamp.startsWith("—")?"":L.kamp, v=>infoZmen(L.entries, v, [...L.opps])); });
-  const tw3=el("div","mp-tw"); tw3.appendChild(t3); k3.appendChild(tw3);
+  const tw3=el("div","mp-tw mk-zoz-tw"); tw3.appendChild(t3); k3.appendChild(tw3);
   if(zoz.length>S.limit){ const v=el("button","mp-viac",`Zobraziť ďalšie (${zoz.length-S.limit})`); v.type="button"; v.onclick=()=>{ S.limit+=100; render(); }; k3.appendChild(v); }
   main.appendChild(k3);
 
@@ -18049,6 +18077,10 @@ function viewMarketing(){
   };
 
   wrap.appendChild(fRad); wrap.appendChild(main);
+  // výška hornej lišty — pod ňu sa prilepí hlavička tabuľky Leady
+  setTimeout(()=>{ const tb=document.querySelector(".topbar"); if(tb) document.documentElement.style.setProperty("--mk-top", Math.round(tb.getBoundingClientRect().height)+"px");
+    const tw=wrap.querySelector(".mk-zoz-tw"), tt=tw?.querySelector(".mk-zoz");
+    if(tw && tt){ tw.classList.add("lepi"); if(tt.scrollWidth>tw.clientWidth+1) tw.classList.remove("lepi"); } },0);
   /* popup filtra zostane otvorený aj po prekreslení — znova ho otvoríme */
   return wrap;
 }
@@ -18419,7 +18451,6 @@ function viewResults(){
      vedenie — obchodník vidí svoje prípady tak či tak. */
   const lista=el("div","res-lista flista res-flista");
   lista.appendChild(prep);
-  if(vidiLiderFilter()) lista.appendChild(resLidriKolieska());
   /* Nový biznis — len prípady, ktorým zvolený mesiac je prvým mesiacom
      NB obdobia (1/12, 1/36…). Bez zvoleného mesiaca platí posledný uzavretý. */
   {
@@ -18447,6 +18478,29 @@ function viewResults(){
     ex.title="Klienti × mesiace NB obdobia — Výnosy, Marža, Kusy; nevyplnené mesiace s odhadom";
     ex.onclick=async()=>{ ex.disabled=true; try{ await exportVyvojaNb(_vyvojRows||[]); } finally{ ex.disabled=false; } };
     lista.appendChild(ex);
+  }
+  /* Export odmien do XLS — rovnaký ako v Odmenách; za zvolené mesiace (alebo celý
+     zvolený rok), podľa filtra služieb a lídra. */
+  if(smieExportOdmien()){
+    const eo=el("button","fpill",
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span>Export odmien XLS</span>`);
+    eo.type="button";
+    eo.title="Exportovať schválené odmeny za zvolené mesiace — každý mesiac na samostatnom hárku";
+    eo.onclick=async()=>{
+      eo.disabled=true;
+      try{
+        const teraz=terajsiMesiac();
+        const vyb=resVybrane() || Array.from({length:12},(_,i)=>`${state.resRok}-${String(i+1).padStart(2,"0")}`).filter(m=>m<=teraz);
+        const sOdm=new Set(mesiaceSOdmenami());
+        const mes=vyb.filter(m=>sOdm.has(m)).sort().reverse();
+        const sl=state.aktSluzby||[], ld=state.liderFilter;
+        const filtr=r=>(!sl.length || sl.includes(r.opp?.segment)) && (!ld || patriLidrovi(ld, r.opp));
+        const veduci=["admin","sef","lider"].includes(state.user?.role);
+        await exportOdmienXls(mes, filtr, { lenMoje:!veduci });
+      }catch(e){ console.error("export odmien:", e); toast("⚠ Export zlyhal: "+(e?.message||e)); }
+      finally{ eo.disabled=false; }
+    };
+    lista.appendChild(eo);
   }
   if(["admin","sef","lider","marketing"].includes(state.user?.role)){
     [["obchodnik","Obchodník"],["oslovenie","Oslovenie"]].forEach(([k,popis])=>{
@@ -18477,7 +18531,12 @@ function viewResults(){
   [...lista.children].slice(1).forEach(d=>lista.insertBefore(el("span","flista-sep"), d));
   wrap.appendChild(lista);
 
-  const info=el("div","feed-count"); wrap.appendChild(info);
+  /* Pod sivou lištou: vľavo počet prípadov, vpravo schválenie lídrov — vždy
+     viditeľné, nie v posúvacej lište. */
+  const podListou=el("div","res-pod-listou");
+  const info=el("div","feed-count"); podListou.appendChild(info);
+  if(vidiLiderFilter()) podListou.appendChild(resLidriKolieska());
+  wrap.appendChild(podListou);
   /* Súčtové karty nad zoznamom — sčítajú presne to, čo je v zozname pod nimi
      (zvolené mesiace, záložka, hľadanie, obchodník aj filtre stĺpcov). */
   const karty=el("div","res-karty"); wrap.appendChild(karty);
@@ -20034,7 +20093,10 @@ function mkKto(obj, f, jePripad){
 function mkKtoHtml(k){
   if(!k || !(k.pov?.meno || k.upr)) return "";
   const d=t=>t?new Date(t).toLocaleDateString("sk-SK"):"";
-  return `<span class="mk-kto"><span title="Zadal${k.pov.kedy?" "+esc(d(k.pov.kedy)):""}">${esc(uplneMeno(k.pov.meno||"—"))}</span>${k.upr?`<i title="Naposledy zmenil ${esc(uplneMeno(k.upr.meno||""))}${k.upr.kedy?" "+esc(d(k.upr.kedy)):""}">upravené · ${esc(uplneMeno(k.upr.meno||""))}${k.upr.kedy?" · "+esc(d(k.upr.kedy)):""}</i>`:""}</span>`;
+  // vlajka = kto hodnotu pôvodne označil, ceruzka = kto ju naposledy zmenil
+  const VLAJKA=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>`;
+  const CERUZKA=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`;
+  return `<span class="mk-kto"><span title="Pôvodne označil${k.pov.kedy?" "+esc(d(k.pov.kedy)):""}">${VLAJKA}${esc(uplneMeno(k.pov.meno||"—"))}</span>${k.upr?`<i title="Upravil ${esc(uplneMeno(k.upr.meno||""))}${k.upr.kedy?" "+esc(d(k.upr.kedy)):""}">${CERUZKA}${esc(uplneMeno(k.upr.meno||""))}</i>`:""}</span>`;
 }
 async function oslZmen(zaznamy, v, extraOpp){
   const oppIds=new Set([...zaznamy.map(e=>e.opportunityId).filter(Boolean), ...(extraOpp||[])]);
