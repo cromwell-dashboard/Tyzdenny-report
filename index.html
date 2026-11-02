@@ -3581,6 +3581,13 @@ select:disabled{cursor:default; opacity:.65}
 .mk-zoz{border:1px solid var(--line); border-collapse:collapse}
 .mk-zoz th,.mk-zoz td{border:1px solid var(--line)!important; padding:6px 8px!important}
 .mk-zoz th{background:#F7F8FA}
+.mk-ch-in{display:inline-flex;align-items:center;gap:4px}
+.mk-rozb{width:22px;height:22px;display:inline-grid;place-items:center;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--brand);cursor:pointer;padding:0;flex:0 0 auto}
+.mk-rozb:hover{border-color:var(--brand);background:var(--brand-soft)}
+.mk-rozb svg{width:13px;height:13px;transition:transform .15s}
+.mk-rozb.otv{background:var(--brand);border-color:var(--brand);color:#fff}
+.mk-rozb.otv svg{transform:rotate(180deg)}
+.mk-rozb-x{width:22px;flex:0 0 auto}
 /* hlavička tabuľky Leady ostáva viditeľná pri posúvaní */
 .mk-zoz thead th{position:sticky;top:0;z-index:3;background:#F7F8FA;box-shadow:inset 0 -1px 0 var(--line)}
 /* Keď sa tabuľka zmestí na šírku, hlavička sa prilepí pod hornú lištu pri
@@ -3623,7 +3630,7 @@ th.mk-zth-ik .mk-sip{margin-left:0}
 .mk-lr{cursor:pointer}
 .mk-lr:hover td{background:#FAFBFC}
 .mk-lr.otv td{border-bottom:none}
-.mk-ch{width:22px; text-align:center!important}
+.mk-ch{width:52px; text-align:left!important; white-space:nowrap}
 .mk-ch svg{display:block; margin:0 auto}
 .mk-lr.otv td{background:#F3F5FC}
 .mk-sic{display:inline-flex; vertical-align:-2px; margin-right:6px}
@@ -3940,6 +3947,19 @@ td.mp-nm[data-roz]{cursor:pointer}
 
 .rail .rf-svc-r.rl-svc{font-weight:600;margin-bottom:4px}
 .rail #railFiltre.rf-off .navitem.rl-svc{opacity:1 !important;pointer-events:auto !important}
+/* Reporty lídrov — služby v menu ako filter reportu */
+.rail .navitem.rl-flt-on{background:#fff;color:var(--brand);font-weight:600;box-shadow:inset 3px 0 0 var(--brand)}
+.rail .navitem.rl-flt-on .ic svg{stroke:var(--brand)}
+.rail .navitem .rl-flt-ct{font-size:10.5px;font-weight:600;color:var(--muted);white-space:nowrap}
+.rail .navitem .rl-flt-ct.ok{color:#0E7A4B}
+.rl-ost-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.rl-ost-f{font-size:12px;font-weight:500;color:var(--muted)}
+.rl-fz{border:0;background:none;padding:0;color:var(--brand);font:inherit;font-weight:600;cursor:pointer;text-decoration:underline}
+.rl-sl-ic{width:36px;height:36px;border-radius:8px;background:var(--brand-soft);display:grid;place-items:center;flex:0 0 auto}
+.rl-sl-lid{display:flex;align-items:center;gap:7px;margin:12px 16px 0;font-size:12px;font-weight:600;color:var(--ink-soft)}
+.rl-av.rl-av-s{width:22px;height:22px;font-size:9.5px}
+.rl-vseob{margin-left:8px;font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);background:#F1F2F5;border-radius:4px;padding:1px 6px}
+.rl-bl-sl{flex:0 0 auto;height:30px;border:1px solid var(--line);border-radius:5px;background:#fff;font:inherit;font-size:12px;color:var(--ink);padding:0 6px;margin-left:8px;max-width:220px}
 /* Logo Cromwell + Zappis sa nesmie stláčať — filtre v hornej lište ustúpia (posúvajú sa do strany) */
 @media (min-width:861px){ .topbar .brand{flex:0 0 auto !important; overflow:visible !important} .topbar .svc-bar{min-width:0} }
 .rl-new-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#C2362B;margin-left:6px;vertical-align:2px}
@@ -4052,6 +4072,10 @@ td.mp-nm[data-roz]{cursor:pointer}
 .zdroj-row .zdroj-vysv{display:flex; align-items:flex-end}
 .zdroj-row .zdroj-txt{font-size:11.5px; line-height:1.4; color:var(--muted); padding-bottom:2px}
 .zdroj-row .zdroj-txt b{color:var(--ink-soft); font-weight:600}
+.odk-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.odk-chips button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 9px;font:inherit;font-size:11.5px;color:var(--ink-soft);cursor:pointer}
+.odk-chips button:hover{border-color:var(--brand);color:var(--brand)}
+.odk-chips button.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600}
 #fKindHint{color:#0E7C4C; font-size:11.5px; margin-top:5px}
 #fFirmaSection .firma-r1{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
   gap:8px 14px;align-items:end;margin-top:11px}
@@ -4389,6 +4413,8 @@ td.mp-nm[data-roz]{cursor:pointer}
 .rs-zamb.spat{width:auto;padding:0 9px;border-color:var(--line);color:var(--muted);font-family:inherit;font-size:11.5px;font-weight:600}
 .rs-zam-d{grid-column:2;display:block;margin-top:3px;font-size:11.5px;font-weight:500;color:#B5443A;white-space:normal;line-height:1.35}
 .rs-zam-d b{font-weight:700}
+.wk-prazdny{font-size:12.5px;color:var(--muted);padding:6px 2px 14px}
+.wk-head.wk-pred{margin-top:18px;padding-top:12px;border-top:1px dashed var(--line)}
 .mk-kto{display:block;margin-top:3px;font-size:10.5px;line-height:1.3;color:var(--muted);white-space:nowrap}
 .mk-kto i{display:block;font-style:normal;color:#B45F0C}
 .mk-kto>span,.mk-kto>i{display:flex;align-items:center;gap:3px}
@@ -4960,6 +4986,27 @@ td.mp-nm[data-roz]{cursor:pointer}
 </style>
 </head>
 <body>
+<script>
+/* Poistka proti bielej obrazovke — keď appka spadne ešte pred vykreslením,
+   ukáže sa aspoň chyba (na snímku obrazovky pre Miroslavu). */
+(function(){
+  function ukaz(msg){
+    setTimeout(function(){
+      try{
+        var t=(document.body.innerText||"").trim();
+        if(t.length>40 || document.getElementById("bielaChyba")) return;
+        var d=document.createElement("div"); d.id="bielaChyba";
+        d.style.cssText="position:fixed;inset:auto 16px 16px 16px;z-index:99999;background:#fff;border:1px solid #E9C4C0;border-radius:8px;padding:14px 16px;font:13px/1.45 system-ui,sans-serif;color:#1F2430;box-shadow:0 8px 30px rgba(0,0,0,.12)";
+        d.innerHTML="<b>Zappis sa nenačítal.</b> Skús Ctrl+F5. Ak to nepomôže, pošli snímku obrazovky Miroslave.<div style='margin-top:6px;font:12px/1.4 monospace;color:#B5443A;word-break:break-word'></div>";
+        d.lastChild.textContent=String(msg||"");
+        document.body.appendChild(d);
+      }catch(e){}
+    },1500);
+  }
+  window.addEventListener("error",function(e){ ukaz((e&&e.message)||"chyba"); });
+  window.addEventListener("unhandledrejection",function(e){ ukaz((e&&e.reason&&(e.reason.message||e.reason))||"chyba"); });
+})();
+</script>
 
 <!-- ============================ LOGIN ============================ -->
 <div id="loginView" class="login-wrap hidden">
@@ -5427,6 +5474,18 @@ td.mp-nm[data-roz]{cursor:pointer}
         </div>
         <div class="field zdroj-vysv">
         <div class="zdroj-txt"><b>Nepovinné pole.</b> Vyber ho, ak bol klient oslovený aj iným spôsobom. Napríklad: klient síce vyplnil kontaktný formulár, ale urobil tak na základe tvojho aktívneho oslovenia.</div>
+        </div>
+        </div>
+        <!-- Ako sa o nás klient dozvedel — pri marketingovom oslovení (okrem konferencie), povinné -->
+        <div class="row zdroj-row" id="fOdkialRow" style="display:none">
+        <div class="field">
+        <label>Ako sa o nás klient dozvedel? <span class="req">povinné</span></label>
+        <input id="fOdkial" list="odkialList" placeholder="heslovite — napr. Google, odporúčanie, LinkedIn…" autocomplete="off">
+        <datalist id="odkialList"></datalist>
+        </div>
+        <div class="field zdroj-vysv">
+        <div class="zdroj-txt"><b>Píš heslovite.</b> Čo raz niekto napíše, ponúkne sa nabudúce všetkým. Ak to nevieš:
+          <span class="odk-chips"><button type="button" data-odk="Klient nevedel">Klient nevedel</button><button type="button" data-odk="Klient nechcel povedať">Klient nechcel povedať</button><button type="button" data-odk="Nespýtal(a) som sa">Nespýtal(a) som sa</button></span></div>
         </div>
         </div>
 
@@ -8607,13 +8666,29 @@ const APPROACH_OPTIONS = [
 ];
 /* Číselník textov "Oslovenie — info". Napísaný text sa uloží a ponúka sa všetkým. */
 /* Doplnkové oslovenie — výber sa ukáže, len keď je hlavné oslovenie marketingové. */
+/* „Ako sa o nás klient dozvedel?" — pri marketingovom oslovení okrem konferencie */
+const pytajOdkial = v => jeMarketing(v) && !/konferencia|event/i.test(String(v||""));
+const ODKIAL_NEZISTENE=["Klient nevedel","Klient nechcel povedať","Nespýtal(a) som sa"];
+function fillOdkial(current){
+  const inp=$("#fOdkial"); if(!inp) return;
+  inp.value=current||""; inp.style.borderColor="";
+  // vlastný číselník — všetko, čo už niekto napísal (bez „nezistené" možností)
+  const hod=[...new Set((state.all||[]).map(e=>String(e.nbOdkial||"").trim()).filter(x=>x && !ODKIAL_NEZISTENE.includes(x)))].sort((a,b)=>a.localeCompare(b,"sk"));
+  const dl=$("#odkialList"); if(dl) dl.innerHTML=hod.map(x=>`<option value="${esc(x)}"></option>`).join("");
+  document.querySelectorAll("#fOdkialRow [data-odk]").forEach(b=>{
+    b.classList.toggle("on", inp.value===b.dataset.odk);
+    b.onclick=()=>{ inp.value=b.dataset.odk; inp.style.borderColor=""; document.querySelectorAll("#fOdkialRow [data-odk]").forEach(x=>x.classList.toggle("on", x===b)); };
+  });
+  inp.oninput=()=>{ inp.style.borderColor=""; document.querySelectorAll("#fOdkialRow [data-odk]").forEach(x=>x.classList.toggle("on", x.dataset.odk===inp.value)); };
+}
 function fillApproach2(current){
   const sel=$("#fApproach2"); if(!sel) return;
   sel.innerHTML=`<option value="">— nevybrané —</option>`+APPROACH_OPTIONS.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join("");
   if(current && !APPROACH_OPTIONS.includes(current)) sel.insertAdjacentHTML("beforeend",`<option value="${esc(current)}">${esc(current)}</option>`);
   sel.value=current||"";
   const hl=$("#fApproach");
-  const ukaz=()=>{ const r=$("#fApproach2Row"); if(r) r.style.display = jeMarketing(hl?.value) ? "" : "none"; };
+  const ukaz=()=>{ const r=$("#fApproach2Row"); if(r) r.style.display = jeMarketing(hl?.value) ? "" : "none";
+    const o=$("#fOdkialRow"); if(o) o.style.display = pytajOdkial(hl?.value) ? "" : "none"; };
   if(hl && !hl.dataset.mk2){ hl.dataset.mk2="1"; hl.addEventListener("change", ukaz); }
   ukaz();
 }
@@ -8806,10 +8881,19 @@ function viewActivities(lenMoje){
      druhýkrát. Tu zostáva filter služby a filter týždňa. */
   state.listScope="week";
   let zdroj = lenMoje ? state.all.filter(isMine) : state.all;
-  const zoznam = zdroj.filter(vSluzbach).filter(vObdobi);
+  let zoznam = zdroj.filter(vSluzbach).filter(vObdobi);
+  /* Pri filtri Týždeň ukazujeme pod ním aj predchádzajúci týždeň — v pondelok
+     ráno by inak zoznam vyzeral prázdny. */
+  const o=state.obdobie||{};
+  let predWeek=null;
+  if((o.preset||"tyzden")==="tyzden" && !o.od && !o.do){
+    predWeek=shiftWeek(zvolenyTyzden(),-1);
+    const uz=new Set(zoznam.map(e=>e.id));
+    zoznam=zoznam.concat(zdroj.filter(vSluzbach).filter(e=>e.weekId===predWeek && !uz.has(e.id)));
+  }
   const w=viewList(zoznam, lenMoje?"Moje aktivity":"Aktivity",
     "Zoradené od najnovších.", null, "",
-    {tyzden:true, segChip:(state.aktSluzby||[]).length!==1, bezNadpisu:true});
+    {tyzden:true, segChip:(state.aktSluzby||[]).length!==1, bezNadpisu:true, predWeek});
   if(!lenMoje){ const rk=rlUvodnaKarta(); if(rk) w.prepend(rk); }   // Reporty lídrov — vždy navrchu
   w.prepend(filtrovaciaLista({ kopirovat:true }));
   w.prepend(mobilTyzden());          // na mobile prepínanie týždňa úplne navrchu
@@ -8858,6 +8942,12 @@ function vykresliRailFiltre(){
     sr.appendChild(si);
     box.appendChild(sr);
     vykresliFiltreVysledkov(box);
+    railSluzby(box);
+    return;
+  }
+  /* Reporty lídrov — v menu ostane len filter služieb, ktorý filtruje report */
+  if(state.view==="reportLidra" && !state.activeClient){
+    box.classList.remove("rf-off"); if(grp) grp.classList.remove("rf-off");
     railSluzby(box);
     return;
   }
@@ -9004,16 +9094,47 @@ function railSluzby(box){
   /* Reporty lídrov — prvé, nad Všetkými službami. Farba textu ide od červenej
      (nikto neodoslal) cez oranžovú po zelenú (odoslali všetci). Obchodníci ho nevidia. */
   if(vidiReportLidrov()){
-    const week=rlUvodnyTyzden(), lid=rlLidri();
-    const n=lid.filter(x=>rlReport(week,x)?.stav==="odoslane").length, pom=lid.length? n/lid.length : 0;
+    const week=rlUvodnyTyzden(), {n, z}=rlPocetHotovych(week), pom=z? n/z : 0;
     const farba=rlFarbaPodiel(pom), nove=rlNeprecitane(week);
     const on=state.view==="reportLidra" && !state.activeClient;
     const b=el("button","navitem rf-svc-r rl-svc"+(on?" zap":""));
-    b.type="button"; b.title=`Reporty lídrov · ${week===CURRENT_WEEK?"tento":"minulý"} týždeň · odoslané ${n} z ${lid.length}`;
-    b.innerHTML=`<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg></span><span class="lbl">Reporty lídrov${nove?`<i class="rl-new-dot" title="${nove} ${plural(nove,"nový report","nové reporty","nových reportov")} na prečítanie"></i>`:""}</span><span class="ct">${n}/${lid.length}</span>`;
+    b.type="button"; b.title=`Reporty lídrov · ${week===CURRENT_WEEK?"tento":"minulý"} týždeň · hotové segmenty ${n} z ${z}${on?" · klik = späť na Aktivity":""}`;
+    b.innerHTML=`<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg></span><span class="lbl">Reporty lídrov${nove?`<i class="rl-new-dot" title="${nove} ${plural(nove,"nový report","nové reporty","nových reportov")} na prečítanie"></i>`:""}</span><span class="ct">${n}/${z}</span>`;
     if(!on){ b.style.color=farba; b.querySelector(".ic svg").style.stroke=farba; b.querySelector(".ct").style.color=farba; }
-    b.onclick=()=>{ state.rl={ week, otv:{} }; rlKoncept=null; state.activeClient=null; state.view="reportLidra"; render(); };
+    b.onclick=()=>{
+      // druhý klik na zvolené Reporty lídrov ich vypne — späť na bežné Aktivity s filtrom služieb
+      if(on){ state.view="activities"; state.rlSluzby=[]; render(); return; }
+      state.rl={ week, otv:{} }; rlKoncept=null; state.activeClient=null; state.view="reportLidra"; render(); };
     zoz.appendChild(b);
+  }
+  const jeRL = state.view==="reportLidra" && !state.activeClient;
+  if(jeRL){
+    /* V reporte lídrov služby filtrujú report (aj viac naraz); namiesto počtu
+       aktivít je pri službe líder a či už odoslal. */
+    const week=state.rl?.week || rlUvodnyTyzden(), vyb=state.rlSluzby||[];
+    const inic=n=>String(n||"").split(" ").map(x=>x[0]||"").join("").slice(0,2).toUpperCase();
+    const all=el("button","navitem rf-svc-r rl-flt"+(!vyb.length?" rl-flt-all":""));
+    all.type="button";
+    all.innerHTML=`<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="lbl">Všetky služby</span>`;
+    all.title="Zobraziť report za všetky služby";
+    all.onclick=()=>{ state.rlSluzby=[]; render(); };
+    zoz.appendChild(all);
+    RL_SLUZBY_PORADIE.forEach(sg=>{
+      const hl=rlHlavniLidri(sg); if(!hl.length && !rlVynimkyLidri(sg).length) return;
+      const on=vyb.includes(sg);
+      const hot=rlSegmentHotovy(week,sg);
+      const st=hl.map(L=>({ L, k:rlStavPre(week,L).k }));
+      const ct=st.map(({L})=>`${inic(rlMenoLidra(L))} ${hot?"✓":"–"}`).join(" ");
+      const b=el("button","navitem rf-svc-r rl-flt"+(on?" rl-flt-on":""));
+      b.type="button";
+      b.title=`${rlNazovSluzby(sg)} · ${hot?"hotové":"zatiaľ nie je hotové"} · ${st.map(({L})=>`${rlMenoLidra(L)}: ${rlStavPre(week,L).t}`).join(", ")}${on?" · klik zruší filter":" · klik zobrazí len túto službu"}`;
+      b.innerHTML=`<span class="ic">${rlIkonaSluzby(sg,16)}</span><span class="lbl">${esc(rlNazovSluzby(sg))}</span><span class="ct rl-flt-ct${hot?" ok":""}">${esc(ct)}</span>`;
+      // vždy len jedna služba — klik na inú službu ju prepne, klik na zvolenú zruší filter
+      b.onclick=()=>{ state.rlSluzby = on ? [] : [sg]; render(); };
+      zoz.appendChild(b);
+    });
+    box.appendChild(zoz);
+    return;
   }
   const pol=(id, ikona, nazov, n)=>{
     const b=el("button","navitem rf-svc-r"+(zvol===id && state.view!=="reportLidra"?" zap":""));
@@ -10364,7 +10485,24 @@ function render(){
     const a=document.activeElement;
     const keep = a && (a.tagName==="INPUT"||a.tagName==="TEXTAREA") && a.id
       ? { id:a.id, start:a.selectionStart, end:a.selectionEnd } : null;
-    renderNow();
+    /* Keby kreslenie sekcie zlyhalo (napr. nečakané dáta), nesmie ostať biela
+       obrazovka — ukážeme chybu a cestu späť. */
+    try{ renderNow(); }
+    catch(err){
+      console.error("Zobrazenie zlyhalo:", err);
+      const c=document.getElementById("content");
+      if(c){
+        const v=state.activeClient ? "detail klienta" : (state.view||"");
+        c.innerHTML=`<div class="empty" style="max-width:640px;margin:40px auto;text-align:left">
+          <b>Túto časť sa nepodarilo zobraziť</b>
+          Pošli prosím snímku obrazovky Miroslave. Medzitým môžeš prejsť na Aktivity.
+          <div style="margin:10px 0;font:12px/1.4 var(--mono);color:#B5443A;white-space:pre-wrap;word-break:break-word">${esc(v)}: ${esc(String(err?.message||err))}
+${esc(String(err?.stack||"").split("\n").slice(1,4).join("\n"))}</div>
+          <button type="button" class="btn solid" id="chybaSpat">Prejsť na Aktivity</button></div>`;
+        const b=document.getElementById("chybaSpat");
+        if(b) b.onclick=()=>{ state.activeClient=null; state.view="activities"; render(); };
+      }
+    }
     if(keep){
       const n=document.getElementById(keep.id);
       if(n && n!==document.activeElement){
@@ -10545,8 +10683,8 @@ function renderNow(){
   { const rlr=$("#ssReporty"), cal=$("#ssCenove"), vidi=vidiReportLidrov();
     if(rlr) rlr.style.display = vidi ? "" : "none";
     if(cal) cal.style.display = vidi ? "none" : "";
-    if(rlr && vidi){ const w=rlUvodnyTyzden(), lid=rlLidri(), n=lid.filter(x=>rlReport(w,x)?.stav==="odoslane").length, f=rlFarbaPodiel(lid.length?n/lid.length:0);
-      rlr.style.color=f; rlr.querySelector(".ss-name").style.color=f; const ct=$("#ssReportyCt"); if(ct){ ct.textContent=`${n}/${lid.length}`; ct.style.color=f; }
+    if(rlr && vidi){ const w=rlUvodnyTyzden(), {n, z}=rlPocetHotovych(w), f=rlFarbaPodiel(z?n/z:0);
+      rlr.style.color=f; rlr.querySelector(".ss-name").style.color=f; const ct=$("#ssReportyCt"); if(ct){ ct.textContent=`${n}/${z}`; ct.style.color=f; }
       rlr.classList.toggle("active", state.view==="reportLidra"); } }
   const _sp=svcPocty();
   document.querySelectorAll("[data-ssct]").forEach(c=>{
@@ -15412,11 +15550,12 @@ function pocetVsetkychFiltrov(){
     + ((state.aktSluzby||[]).length?1:0)
     + (state.liderFilter?1:0) + (state.resLenNove?1:0) + (state.resUkoncene?1:0)
     + ((state.resTab && state.resTab!=="vsetko")?1:0) + (state.resObchodnik?1:0) + (state.resOnlyChyba?1:0)
-    + ((state.resStlpce?.obchodnik||[]).length?1:0) + ((state.resStlpce?.oslovenie||[]).length?1:0);
+    + ((state.resStlpce?.obchodnik||[]).length?1:0) + ((state.resStlpce?.oslovenie||[]).length?1:0)
+    + ((state.rlSluzby||[]).length?1:0);
 }
 function zrusVsetkyFiltre(){
   clearEntryFilters();
-  state.aktSluzby=[];
+  state.aktSluzby=[]; state.rlSluzby=[];
   state.liderFilter=""; state.resLenNove=false; state.resUkoncene=false; state.resTab="vsetko";
   state.resObchodnik=""; state.resStlpce={}; state.resOnlyChyba=false;
   state.feedLimit=20; state.groupLimit=60; state.tyzdneLimit=2;
@@ -17344,7 +17483,8 @@ function rlFmtCas(t){ if(!t) return ""; const d=new Date(t);
 function rlStav(week, em){
   const r=rlReport(week, em), term=rlTermin(week).getTime(), po=Date.now()>term;
   if(r && r.stav==="odoslane"){ const t=r.prveOdoslanie||r.odoslaneAt||0;
-    return t>term ? { k:"neskoro", t:`Odoslané po termíne · ${rlFmtCas(t)}` } : { k:"ok", t:`Odoslané · ${rlFmtCas(t)}` }; }
+    // odoslaný report je vždy zelený — aj keď prišiel po termíne
+    return { k:"ok", t:`Odoslané · ${rlFmtCas(t)}` }; }
   if(rlMaObsah(r)) return po ? { k:"chyba", t:"Rozpracované · po termíne" } : { k:"rozp", t:"Rozpracované" };
   return po ? { k:"chyba", t:"Chýba" } : { k:"caka", t:"Zatiaľ nič" };
 }
@@ -17390,13 +17530,12 @@ function rlFarbaPodiel(pom){
    Na počítači je to v bočnom menu (Filter služieb). Obchodníci ho nevidia. */
 function rlUvodnaKarta(){
   if(!vidiReportLidrov()) return null;
-  const week=rlUvodnyTyzden(), lidri=rlLidri();
-  const n=lidri.filter(x=>rlReport(week,x)?.stav==="odoslane").length;
-  const farba=rlFarbaPodiel(lidri.length? n/lidri.length : 0), nove=rlNeprecitane(week);
+  const week=rlUvodnyTyzden(), {n, z}=rlPocetHotovych(week);
+  const farba=rlFarbaPodiel(z? n/z : 0), nove=rlNeprecitane(week);
   const box=el("button","rl-uvod-m");
   box.type="button"; box.style.color=farba;
   box.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
-    <b>Reporty lídrov</b>${nove?`<i class="rl-new-dot"></i>`:""}<span class="rl-uvod-m-n">${n}/${lidri.length}</span><span class="rl-uvod-m-sip">›</span>`;
+    <b>Reporty lídrov</b>${nove?`<i class="rl-new-dot"></i>`:""}<span class="rl-uvod-m-n">${n}/${z}</span><span class="rl-uvod-m-sip">›</span>`;
   box.onclick=()=>{ state.rl={ week, otv:{} }; rlKoncept=null; state.activeClient=null; state.view="reportLidra"; render(); };
   return box;
 }
@@ -17425,11 +17564,11 @@ function rlNacitajKoncept(week, em){
   const predUprava = (rlKoncept && rlKoncept.id===id) ? rlKoncept.uprava : null;
   if(r){ rlKoncept={ id, week,
       klienti:(r.klienti||[]).map(x=>({...x})),
-      bloky:(r.bloky||[]).map(b=>({ id:b.id, nazov:b.nazov||"", riadky:rlRiadky(b).map(x=>({...x})) })),
+      bloky:(r.bloky||[]).map(b=>({ id:b.id, nazov:b.nazov||"", sluzba:b.sluzba||"", riadky:rlRiadky(b).map(x=>({...x})) })),
       stav:r.stav||"koncept", uprava: predUprava ?? (r.stav!=="odoslane") }; }
   else {
     const minule=(state.reportyLidrov||[]).filter(x=>x.leaderKey===em && x.week<week).sort((a,b)=>weekCmpDesc(a.week,b.week))[0];
-    const bl = minule && (minule.bloky||[]).length ? minule.bloky.filter(b=>(b.nazov||"").trim()).map(b=>rlNovyBlok(b.nazov)) : [];
+    const bl = minule && (minule.bloky||[]).length ? minule.bloky.filter(b=>(b.nazov||"").trim()).map(b=>({ ...rlNovyBlok(b.nazov), sluzba:b.sluzba||"" })) : [];
     rlKoncept={ id, week, klienti:[], bloky:bl, stav:"koncept", uprava:true };
   }
   return rlKoncept;
@@ -17440,7 +17579,7 @@ async function rlUloz(odoslat){
   const em=(state.user.key||"").toLowerCase();
   const stary=rlReport(k.week, em);
   const bloky=k.bloky.map(b=>{ const ri=rlRiadky(b).map(x=>({ t:x.t||"", odr:!!x.odr }));
-    return { id:b.id, nazov:(b.nazov||"").trim(), riadky:ri, text:ri.map(x=>x.t).join("\n") }; });
+    return { id:b.id, nazov:(b.nazov||"").trim(), sluzba:b.sluzba||"", riadky:ri, text:ri.map(x=>x.t).join("\n") }; });
   const klienti=(k.klienti||[]).map(x=>({ ...x, komentar:(x.komentar||"").trim() }));
   const data={ id:k.id, week:k.week, leaderKey:em, leaderName:rlMenoLidra(em), sluzby:LIDER_EMAILS[em]||[],
     klienti, bloky, pridane:klienti.map(x=>x.eid) };
@@ -17631,6 +17770,69 @@ function rlKresliRiadky(b, box, farba){
     };
   });
 }
+/* ---- Report po službách ----
+   Vedenie číta reporty po službách (Tlač, Adresné…), nie po lídroch. Filter
+   služieb je v bočnom menu (state.rlSluzby, dá sa zvoliť viac služieb). */
+const RL_SLUZBY_PORADIE=["tlac","ad","nad","zelena","baliky","digital","newbusiness"];
+/* Segmenty reportu navyše k službám lídra (len pre reporty, nie pre odmeny) */
+const RL_EXTRA_SLUZBY={ "michal.svec@cromwell.sk":["newbusiness"] };
+function rlSluzbyLidraVsetky(em){ return [...(LIDER_EMAILS[em]||[]), ...(RL_EXTRA_SLUZBY[em]||[])]; }
+const rlNazovSluzby = s => s==="newbusiness" ? "New business" : (SEG[s]?.short||s);
+const rlIkonaSluzby = (s,px=16) => s==="newbusiness" ? `<svg viewBox="0 0 24 24" width="${px}" height="${px}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>` : segIcon(s,px);
+function rlHlavniLidri(s){ return rlLidri().filter(em=>rlSluzbyLidraVsetky(em).includes(s)); }
+/* Klient reportu patrí do segmentu: New business = klienti označení ako NB, inak podľa služby */
+const rlKlientVSluzbe = (x,s) => s==="newbusiness" ? !!x.nb : (x.seg||"ine")===s;
+/* Segment je hotový, keď sú odoslané reporty jeho lídrov a za segment v nich niečo je
+   (klient alebo sekcia „Od lídra“ priradená k segmentu; všeobecné sekcie sa nerátajú). */
+function rlSegmentHotovy(week, s){
+  const hl=rlHlavniLidri(s); if(!hl.length) return false;
+  if(!hl.every(L=>rlReport(week,L)?.stav==="odoslane")) return false;
+  return [...hl, ...rlVynimkyLidri(s)].some(L=>{ const r=rlReport(week,L); if(!(r && r.stav==="odoslane")) return false;
+    return (r.klienti||[]).some(x=>rlKlientVSluzbe(x,s)) || (r.bloky||[]).some(b=>rlBlokText(b).trim() && rlBlokSluzbaPresna(b,L)===s); });
+}
+function rlSegmentyReportu(){ return RL_SLUZBY_PORADIE.filter(s=>rlHlavniLidri(s).length); }
+function rlPocetHotovych(week){ const sg=rlSegmentyReportu(); return { n:sg.filter(s=>rlSegmentHotovy(week,s)).length, z:sg.length }; }
+/* Líder je hotový, keď má hotové všetky svoje segmenty */
+function rlLiderHotovy(week, em){ const sg=rlSluzbyLidraVsetky(em); return sg.length>0 && sg.every(s=>rlSegmentHotovy(week,s)); }
+function rlVynimkyLidri(s){ if(s==="newbusiness") return []; return [...new Set(Object.entries(LIDER_VYNIMKY).filter(([k])=>k.split(":")[0]===s).map(([,e])=>e))].filter(e=>!(LIDER_EMAILS[e]||[]).includes(s)); }
+/* Služby, ku ktorým môže líder priradiť blok (vlastné + výnimky, napr. Tlač – Letáky ND) */
+function rlSluzbyNaVyber(em){
+  const vl=rlSluzbyLidraVsetky(em).map(x=>[x, rlNazovSluzby(x)]);
+  const vy=Object.entries(LIDER_VYNIMKY).filter(([,e])=>e===em).map(([k])=>{ const [sg,pr]=k.split(":"); return [sg, `${SEG[sg]?.short||sg} – ${produktLabel(sg,pr)}`]; })
+    .filter(([sg])=>!vl.some(([x])=>x===sg));
+  return [...vl, ...vy];
+}
+/* Ku ktorej službe blok patrí: zvolená služba; líder s jednou službou → jeho služba; inak „" = všeobecné */
+function rlBlokSluzba(b, em){ if(b.sluzba) return b.sluzba; const sg=rlSluzbyLidraVsetky(em); return sg.length===1 ? sg[0] : ""; }
+/* Na „hotový segment“ sa ráta len sekcia priradená k segmentu (alebo líder s jediným segmentom) */
+function rlBlokSluzbaPresna(b, em){ return rlBlokSluzba(b, em); }
+function rlSekciaSluzby(week, s){
+  const hlavni=rlHlavniLidri(s), vyn=rlVynimkyLidri(s);
+  const inic=n=>String(n||"").split(" ").map(x=>x[0]||"").join("").slice(0,2).toUpperCase();
+  const casti=[];
+  [...hlavni, ...vyn].forEach(L=>{
+    const r=rlReport(week,L), st=rlStavPre(week,L), jeHl=hlavni.includes(L);
+    if(!(r && r.stav==="odoslane")){
+      if(jeHl) casti.push({ L, st, html:`<div class="rl-nic">${st.k==="rozp"||(st.k==="chyba"&&r)?"Report sa práve píše — zobrazí sa po odoslaní.":"Report zatiaľ nie je odoslaný."}</div>` });
+      return;
+    }
+    const kl=(r.klienti||[]).map((x,i)=>({x,i})).filter(({x})=>rlKlientVSluzbe(x,s));
+    const bl=(r.bloky||[]).filter(b=>(b.nazov||"").trim()||rlBlokText(b).trim()).filter(b=>{ const bs=rlBlokSluzba(b,L); return bs===s || (!bs && jeHl); });
+    if(!kl.length && !bl.length){ if(jeHl) casti.push({ L, st, html:`<div class="rl-nic">Za túto službu v reporte nič nie je.</div>` }); return; }
+    const farba=rlFarba(L);
+    let h="";
+    if(kl.length) h+=`<div class="rl-sek">Klienti a aktivity<em>${kl.length}</em></div>`+kl.map(({x,i})=>rlKlientHtml(x,false,i)).join("");
+    if(bl.length) h+=`<div class="rl-sek">Od lídra</div>`+bl.map(b=>`<div class="rl-gh rl-gh-b"><b>${esc(b.nazov||"Bez názvu")}</b>${!rlBlokSluzba(b,L)?`<span class="rl-vseob">všeobecné</span>`:""}</div><div class="rl-lns">${rlRiadkyHtml(b,farba)}</div>`).join("");
+    casti.push({ L, st, html:h, vynimka:!jeHl });
+  });
+  const hot=rlSegmentHotovy(week,s);
+  const hlStav=hlavni.map(L=>{ const st=rlStavPre(week,L);
+    return (st.k==="ok" && !hot) ? `<span class="rl-stav rl-chyba">Odoslané · za segment nič</span>` : `<span class="rl-stav rl-${st.k}">${esc(st.t)}</span>`; }).join("");
+  const sek=el("div","rl-karta rl-sluzba"); sek.id="rl-s-"+s;
+  sek.innerHTML=`<div class="rl-karta-h"><span class="rl-sl-ic">${rlIkonaSluzby(s,20)}</span><div><b>${esc(rlNazovSluzby(s))}</b><small>${esc(hlavni.map(rlMenoLidra).join(", "))}</small></div>${hlStav}</div>
+    ${casti.map(c=>`${casti.length>1||c.vynimka?`<div class="rl-sl-lid"><span class="rl-av rl-av-s">${esc(inic(rlMenoLidra(c.L)))}</span>${esc(rlMenoLidra(c.L))}${c.vynimka?` · ${esc(rlSluzbyNaVyber(c.L).filter(([x])=>x===s).map(([,t])=>t).join(", "))}`:""}</div>`:""}<div class="rl-citanie">${c.html}</div>`).join("")}`;
+  return sek;
+}
 function viewReportLidra(){
   const wrap=el("div","rl");
   if(!vidiReportLidrov()){ wrap.appendChild(el("div","empty","<b>Len pre lídrov a vedenie</b>")); return wrap; }
@@ -17655,15 +17857,19 @@ function viewReportLidra(){
   // prehľad — kto už odovzdal
   if(rlNeprecitane(week)){ rlOznacPrecitane(week); setTimeout(render,0); }   // zhasne bodka v menu
   const lidri=rlLidri();
-  const odosl=lidri.filter(x=>rlReport(week,x)?.stav==="odoslane").length;
+  const {n:hotSeg, z:vsetSeg}=rlPocetHotovych(week);
+  /* stav koliesok: zelené len keď má líder hotové všetky svoje segmenty */
+  const stavK=x=>{ const st=rlStavPre(week,x); if(st.k==="ok" && !rlLiderHotovy(week,x)){
+      const ch=rlSluzbyLidraVsetky(x).filter(sg=>!rlSegmentHotovy(week,sg)).map(rlNazovSluzby);
+      return { k:"rozp", t:`Odoslané, chýba: ${ch.join(", ")}` }; } return st; };
   /* Prehľad — kolieska s iniciálami: zelené = odoslané, oranžové = po termíne,
      modré prerušované = píše sa, červené = chýba, sivé prerušované = zatiaľ nič. */
   const inic=n=>String(n||"").split(" ").map(x=>x[0]||"").join("").slice(0,2).toUpperCase();
   const pr=el("div","rl-prehlad rl-v1");
-  pr.innerHTML=`<div class="rl-v1-l"><b>Odoslané ${odosl} z ${lidri.length}</b><div class="rl-v1-bar">${lidri.map(x=>`<i class="rl-${rlStavPre(week,x).k}"></i>`).join("")}</div></div>
-    <div class="rl-v1-av">${lidri.map(x=>{ const st=rlStavPre(week,x), hot=st.k==="ok"||st.k==="neskoro", ja=x===em&&jeLiderReportu();
+  pr.innerHTML=`<div class="rl-v1-l"><b>Hotové segmenty ${hotSeg} z ${vsetSeg}</b><div class="rl-v1-bar">${rlSegmentyReportu().map(sg=>`<i class="rl-${rlSegmentHotovy(week,sg)?"ok":"caka"}" title="${esc(rlNazovSluzby(sg))}"></i>`).join("")}</div></div>
+    <div class="rl-v1-av">${lidri.map(x=>{ const st=stavK(x), hot=st.k==="ok"||st.k==="neskoro", ja=x===em&&jeLiderReportu();
       return `<button type="button" class="rl-p rl-${st.k}${ja?" ja":""}" data-em="${esc(x)}" aria-label="${esc(rlMenoLidra(x))} · ${esc(st.t)}"><span class="rl-p-av">${esc(inic(rlMenoLidra(x)))}</span>${hot?`<span class="rl-p-ck">✓</span>`:""}<small>${ja?"Ja":esc(rlMenoLidra(x).split(" ")[0])}</small><span class="rl-p-tip">${esc(rlMenoLidra(x))} · ${esc(st.t)}</span></button>`; }).join("")}</div>`;
-  pr.querySelectorAll(".rl-p").forEach(b=>b.onclick=()=>{ const c=document.getElementById("rl-r-"+b.dataset.em.replace(/[^a-z0-9]/gi,"_")); if(!c) return;
+  pr.querySelectorAll(".rl-p").forEach(b=>b.onclick=()=>{ const c=document.getElementById("rl-r-"+b.dataset.em.replace(/[^a-z0-9]/gi,"_")) || document.getElementById("rl-s-"+((LIDER_EMAILS[b.dataset.em]||[])[0]||"")); if(!c) return;
     c.scrollIntoView({behavior:"smooth", block:"center"}); c.classList.remove("rl-flash"); void c.offsetWidth; c.classList.add("rl-flash"); });
   wrap.appendChild(pr);
 
@@ -17714,12 +17920,14 @@ function viewReportLidra(){
       const bx=box.querySelector(".rl-bloky");
       k.bloky.forEach((b,i)=>{
         const d=el("div","rl-blok2");
-        d.innerHTML=`<div class="rl-gh rl-gh-b rl-gh-ed"><input id="rlN_${b.id}" class="rl-nazov" placeholder="Názov sekcie — napr. Projekty, Riziká, Plán na budúci týždeň" value="${esc(b.nazov||"")}" autocomplete="off">
+        const naVyber=rlSluzbyNaVyber(em);
+        d.innerHTML=`<div class="rl-gh rl-gh-b rl-gh-ed"><input id="rlN_${b.id}" class="rl-nazov" placeholder="Názov sekcie — napr. Projekty, Riziká, Plán na budúci týždeň" value="${esc(b.nazov||"")}" autocomplete="off">${naVyber.length>1?`<select class="rl-bl-sl" title="Ku ktorej službe sekcia patrí — podľa toho sa ukáže v reporte po službách"><option value="">Všeobecné (všetky moje služby)</option>${naVyber.map(([v,t])=>`<option value="${esc(v)}"${b.sluzba===v?" selected":""}>${esc(t)}</option>`).join("")}</select>`:""}
           <span class="rl-blok-ak"><button type="button" data-a="hore" title="Posunúť vyššie"${i===0?" disabled":""}>↑</button><button type="button" data-a="dole" title="Posunúť nižšie"${i===k.bloky.length-1?" disabled":""}>↓</button><button type="button" data-a="zmaz" title="Odstrániť sekciu">✕</button></span></div>
           <div class="rl-lns rl-lns-ed"></div>`;
         rlKresliRiadky(b, d.querySelector(".rl-lns-ed"), farba);
         const nz=d.querySelector(".rl-nazov");
         nz.oninput=ev=>{ b.nazov=ev.target.value; rlNaplanujUlozenie(); };
+        d.querySelector(".rl-bl-sl")?.addEventListener("change",ev=>{ b.sluzba=ev.target.value; rlNaplanujUlozenie(); });
         nz.onkeydown=ev=>{ if(ev.key==="Enter"){ ev.preventDefault(); document.getElementById(`rlL_${b.id}_0`)?.focus(); } };
         d.querySelectorAll("[data-a]").forEach(btn=>btn.onclick=()=>{
           const a=btn.dataset.a;
@@ -17742,19 +17950,13 @@ function viewReportLidra(){
     wrap.appendChild(box);
   }
 
-  // reporty ostatných
-  const ini=n=>String(n||"").split(" ").map(x=>x[0]||"").join("").slice(0,2).toUpperCase();
-  const ost=lidri.filter(x=>x!==em || !jeLiderReportu());
+  // reporty po službách (filter v bočnom menu)
+  const vyb=(state.rlSluzby||[]).filter(x=>RL_SLUZBY_PORADIE.includes(x));
+  const sluzby=RL_SLUZBY_PORADIE.filter(x=>(!vyb.length || vyb.includes(x)) && (rlHlavniLidri(x).length || rlVynimkyLidri(x).length));
   const zoz=el("div","rl-ostatni");
-  zoz.appendChild(el("h3","rl-ost-h", jeLiderReportu() ? "Reporty ostatných lídrov" : "Reporty lídrov"));
-  ost.forEach(x=>{
-    const r=rlReport(week,x), st=rlStavPre(week,x);
-    const c=el("div","rl-karta rl-k-"+st.k); c.id="rl-r-"+x.replace(/[^a-z0-9]/gi,"_");
-    const odos = r && r.stav==="odoslane";
-    c.innerHTML=`<div class="rl-karta-h"><span class="rl-av">${esc(ini(rlMenoLidra(x)))}</span><div><b>${esc(rlMenoLidra(x))}</b><small>${esc(rlSluzbyLidra(x))}</small></div><span class="rl-stav rl-${st.k}">${esc(st.t)}</span></div>
-      ${odos ? `<div class="rl-citanie">${rlCitanie(r)}</div>` : `<div class="rl-nic">${st.k==="rozp"||(st.k==="chyba"&&r)?"Report sa práve píše — zobrazí sa po odoslaní.":"Report zatiaľ nie je odoslaný."}</div>`}`;
-    zoz.appendChild(c);
-  });
+  zoz.appendChild(el("h3","rl-ost-h", `Reporty po službách<span class="rl-ost-f">${vyb.length?`Zobrazené: ${esc(vyb.map(rlNazovSluzby).join(", "))} · <button type="button" class="rl-fz">zobraziť všetky</button>`:"Všetky služby · filter je v bočnom menu"}</span>`));
+  zoz.querySelector(".rl-fz")?.addEventListener("click",()=>{ state.rlSluzby=[]; render(); });
+  sluzby.forEach(x=>zoz.appendChild(rlSekciaSluzby(week,x)));
   wrap.appendChild(zoz);
   return wrap;
 }
@@ -18017,7 +18219,7 @@ function viewMarketing(){
     kl:L=>L.client||"", dop:L=>L.dopl.startsWith("—")?"":L.dopl, kan:L=>L.kan.startsWith("—")?"":L.kan, kamp:L=>L.kamp.startsWith("—")?"":L.kamp,
     ob:L=>L.ob.join(", "), prvy:L=>L.prvy||"", fz:L=>MK_FZ_PORADIE[L.status] ?? 99, t:L=>L.t||0, mz:L=>L.mz||0, ks:L=>L.ks||0, nb:L=>L.nbOd||"", sl:L=>L.sl||"" });
   const k3=el("div","mp-card"); k3.style.marginTop="12px";
-  k3.appendChild(el("div","mp-card-h",`<h3>Leady${S.vyb?` · ${esc(S.vyb)}`:""} (${zoz.length})</h3>${S.vyb?`<button type="button" class="mk-zrus">✕ zrušiť výber</button>`:""}<span>Klik na riadok ukáže všetky aktivity, klik na názov otvorí detail klienta.</span>`));
+  k3.appendChild(el("div","mp-card-h",`<h3>Leady${S.vyb?` · ${esc(S.vyb)}`:""} (${zoz.length})</h3>${S.vyb?`<button type="button" class="mk-zrus">✕ zrušiť výber</button>`:""}<span>Šípka vľavo rozbalí históriu aktivít, klik na názov otvorí detail klienta.</span>`));
   k3.querySelector(".mk-zrus")?.addEventListener("click",()=>{ S.vyb=null; render(); });
   const dt=t=>t?new Date(t).toLocaleDateString("sk-SK"):"";
   if(!S.otv) S.otv=new Set();
@@ -18027,7 +18229,7 @@ function viewMarketing(){
   let h3=`<thead><tr>${mkTh("","sl",Z,"mk-zth-ik")}${mkTh("Klient","kl",Z)}<th>Kontaktná osoba</th>${mkTh("Zdroj leadu","dop",Z)}${mkTh("Spôsob oslovenia","kan",Z)}${mkTh("Oslovenie info","kamp",Z)}${mkTh("Obchodník","ob",Z)}${mkTh("Prvé oslovenie","prvy",Z)}${mkTh("Fáza","fz",Z)}${mkTh("Tržby NB","t",Z)}${mkTh("Marža NB","mz",Z)}${mkTh("Kusy","ks",Z)}${mkTh("Obdobie NB","nb",Z)}</tr></thead><tbody>`;
   zoz.slice(0,S.limit).forEach((L,i)=>{
     const otv=S.otv.has(L.k), kt=kontaktLeadu(L);
-    h3+=`<tr class="mk-lr${otv?" otv":""}" data-r="${i}"><td class="mk-ch" title="${esc(L.sl)}">${segIcon(L.seg,15)}</td>
+    h3+=`<tr class="mk-lr${otv?" otv":""}" data-r="${i}"><td class="mk-ch" title="${esc(L.sl)}"><span class="mk-ch-in">${L.entries.length?`<button type="button" class="mk-rozb${otv?" otv":""}" data-rozb="${i}" title="${otv?"Skryť":"Zobraziť"} históriu aktivít (${L.entries.length})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>`:`<span class="mk-rozb-x"></span>`}${segIcon(L.seg,15)}</span></td>
       <td class="mp-nm"><button type="button" class="mk-kl" data-i="${i}">${esc(L.client||"—")}</button>${L.lenPripad?` <small class="mk-pz" title="Lead je len ako obchodný prípad (napr. import kampaní), zatiaľ bez aktivity">len prípad</small>`:""}${L.ico?`<small class="mk-ico">IČO ${esc(L.ico)}</small>`:""}</td>
       <td class="mk-kt">${kt?`${kt.meno?`<b>${esc(kt.meno)}</b>`:""}${kt.mail?`<a href="mailto:${esc(kt.mail)}">${esc(kt.mail)}</a>`:""}`:""}</td><td>${(()=>{ const d=L.dopl.startsWith("—")?"":L.dopl;
         return (smieMenitOslovenie() ? `<button type="button" class="approach-badge osl-edit${d?"":" prazdne"}" data-mk-dop="${i}" title="Zdroj leadu — kliknutím zmeníš">${d?esc(d):"+ zdroj leadu"}${EDIT_IKO}</button>` : (d?esc(d):""))+(d?mkKtoHtml(L.kto?.dopl):""); })()}</td><td>${smieMenitOslovenie()?kanalBtn(L.kan,`data-mk-osl="${i}"`):esc(L.kan)}${mkKtoHtml(L.kto?.kan)}</td><td>${smieMenitOslovenie()?kampBtn(L.kamp.startsWith("—")?"":L.kamp,`data-mk-info="${i}"`):esc(L.kamp)}${L.kamp.startsWith("—")?"":mkKtoHtml(L.kto?.kamp)}</td><td>${esc(L.ob.join(", "))}</td>
@@ -18050,6 +18252,8 @@ function viewMarketing(){
   t3.querySelectorAll(".mk-kl").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); const L=zoz[Number(b.dataset.i)]; goClient(clientKey(L.client), L.client); });
   t3.querySelectorAll("tr.mk-lr").forEach(tr=>tr.onclick=ev=>{ if(ev.target.closest("button,a,input")) return;
     const L=zoz[Number(tr.dataset.r)]; if(!L.entries.length) return; S.otv.has(L.k)?S.otv.delete(L.k):S.otv.add(L.k); render(); });
+  t3.querySelectorAll("[data-rozb]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
+    const L=zoz[Number(b.dataset.rozb)]; S.otv.has(L.k)?S.otv.delete(L.k):S.otv.add(L.k); render(); });
   t3.querySelectorAll(".mk-ai-ot").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); const e=(state.all||[]).find(x=>x.id===b.dataset.e); if(e) openModal(e, e.segment); });
   t3.querySelectorAll("[data-mk-osl]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); const L=zoz[Number(b.dataset.mkOsl)];
     const tv=(L.entries.find(e=>e.nbApproach)||{}).nbApproach || (oppById([...L.opps][0])||{}).sposobOslovenia;
@@ -19931,11 +20135,26 @@ function viewList(list,title,sub,seg,logoHtml,opts){
 
       const spiace=rows.filter(e=>e.sleeping), bezne=rows.filter(e=>!e.sleeping);
       let poslednyT=null, prvyStarsi=true, prvyNadpis=true;
-      [...bezne, ...spiace].forEach(e=>{
+      const predW=opts?.predWeek||null;
+      /* S predchádzajúcim týždňom ide každý týždeň zvlášť (spiace na konci svojho týždňa) */
+      const poradie = predW
+        ? [...new Set(rows.map(e=>e.weekId))].sort(weekCmpDesc).flatMap(w=>[...bezne.filter(e=>e.weekId===w), ...spiace.filter(e=>e.weekId===w)])
+        : [...bezne, ...spiace];
+      poradie.forEach(e=>{
         if(e.weekId!==poslednyT){
           poslednyT=e.weekId;
           const {week}=parseWeekId(e.weekId);
-          if(prvyNadpis){
+          if(predW && e.weekId===predW){
+            if(prvyNadpis){
+              // zvolený týždeň je zatiaľ prázdny
+              listWrap.appendChild(el("div","wk-head teraz",
+                `${esc(obdobiePopis())} <small>${esc(obdobieRozsah())}</small>`));
+              listWrap.appendChild(el("div","wk-prazdny","Zatiaľ žiadne aktivity."));
+            }
+            prvyNadpis=false; prvyStarsi=false;
+            listWrap.appendChild(el("div","wk-head wk-pred",
+              `Predchádzajúci týždeň · týždeň ${week} <small>${esc(weekRangeLabel(e.weekId))}</small>`));
+          } else if(prvyNadpis){
             /* Prvý nadpis nesie názov zvoleného obdobia — pri „Poslednom
                mesiaci" tam nemá visieť „Tento týždeň". */
             prvyNadpis=false;
@@ -19975,7 +20194,7 @@ function viewList(list,title,sub,seg,logoHtml,opts){
           const [r0,m0,d0]=h.od.split("-").map(Number);
           const od=new Date(Date.UTC(r0,m0-1,d0));
           const dow=(od.getUTCDay()+6)%7;                  // pondelok = 0
-          od.setUTCDate(od.getUTCDate()-dow-7);            // pondelok predchádzajúceho týždňa
+          od.setUTCDate(od.getUTCDate()-dow-7*(predW?2:1));  // pondelok predchádzajúceho (pri zobrazenom predchádzajúcom o týždeň skôr)
           const novyOd=od.toISOString().slice(0,10);
           const ned=new Date(od); ned.setUTCDate(od.getUTCDate()+6);
           const f=d=>`${d.getUTCDate()}. ${d.getUTCMonth()+1}.`;
@@ -21338,6 +21557,7 @@ function openModal(entry,presetSeg){
   }
   fillApproachSelect(entry?.nbApproach || "");
   fillApproach2(entry?.nbApproach2 || "");
+  fillOdkial(entry?.nbOdkial || "");
   $("#fLossReason").value = entry?.lossReason || "";
   if(typeof window.__syncLossField==="function") setTimeout(window.__syncLossField,0);
   {
@@ -21620,6 +21840,11 @@ async function saveFromModalInner(){
     return;
   }
   $("#fApproach").style.borderColor="";
+  if($("#fApproachSection").style.display!=="none" && pytajOdkial($("#fApproach").value) && !$("#fOdkial")?.value.trim()){
+    $("#fOdkial").focus(); $("#fOdkial").style.borderColor="var(--red)";
+    toast("Doplň prosím, ako sa o nás klient dozvedel (alebo vyber „Klient nevedel“ a pod.).");
+    return;
+  }
   // IČO je povinné len tam, kde je firma. Interný záznam sekciu Firma vôbec nemá,
   // takže by sa kontrola dožadovala poľa, ktoré používateľ ani nevidí —
   // uloženie by sa ticho prerušilo a nič by sa nestalo.
@@ -21802,6 +22027,7 @@ async function saveFromModalInner(){
     nbApproach: $("#fApproach").value || (baseEntry.nbApproach ?? null),
     nbApproachInfo: $("#fApproachInfo").value.trim() || (baseEntry.nbApproachInfo ?? null),
     nbApproach2: jeMarketing($("#fApproach").value || baseEntry.nbApproach) ? ($("#fApproach2")?.value || null) : (baseEntry.nbApproach2 ?? null),
+    nbOdkial: pytajOdkial($("#fApproach").value || baseEntry.nbApproach) ? ($("#fOdkial")?.value.trim() || null) : (baseEntry.nbOdkial ?? null),
     fromDatabase: pendingLeadOrigin ? pendingLeadOrigin.dbName : (baseEntry.fromDatabase ?? null),
     fromLeadId:   pendingLeadOrigin ? pendingLeadOrigin.leadId : (baseEntry.fromLeadId ?? null),
     sleeping: forceSleeping ? true : (baseEntry.sleeping ?? false),
