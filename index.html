@@ -3317,6 +3317,13 @@ select:disabled{cursor:default; opacity:.65}
 .rail #railFiltre.rf-off .rf-svc,
 .rail #railFiltre.rf-off .rf-db-list{opacity:.4; pointer-events:none}
 .rail #railFiltre.rf-off .rf-search{opacity:1; pointer-events:auto}
+/* Hľadanie je v hornej (prilepenej) časti menu pod Nový záznam a Kopírovať */
+.rail .rail-top-2{flex-wrap:wrap}
+.rail #railSearchBox{flex:0 0 100%;margin-top:8px}
+.rail #railSearchBox .rf-search{margin:0;background:#fff}
+@media (max-height:780px){ .rail #railSearchBox{margin-top:6px} }
+/* Na počítači sa v Marketingu hľadá cez menu — lupa v lište len v mobile */
+@media (min-width:901px){ .mk .mk-lupa, .mk .mk-hl-w{display:none !important} }
 
 /* ================================================== DETAIL KLIENTA */
 .cd2-h{margin:0 0 14px}
@@ -3638,6 +3645,53 @@ th.mk-zth-ik .mk-sip{margin-left:0}
 .mk-bar .mk-obd-lbl{margin-left:6px}
 .mk-bar .mp-ex{margin-left:auto}
 .mp .mk-frad{background:#fff;border:1px solid var(--line);border-radius:5px;padding:8px;margin:-2px 0 10px}
+/* Marketing — filtre v hornej lište */
+.svc-bar .mk-top-wrap{display:flex;align-items:center;min-width:0;max-width:100%}
+.svc-bar .mk-top-wrap .mk-bar{background:transparent;border:0;padding:0;margin:0;min-width:0}
+.svc-bar .mk-top-wrap .mk-bar .mp-lista{min-height:32px}
+.svc-bar .mk-top-wrap .mk-bar .mp-ex{margin-left:10px}
+@media (max-width:1600px){ .svc-bar .mk-top-wrap .mk-obd-lbl{display:none} }
+@media (max-width:1400px){ .svc-bar .mk-top-wrap .mp-rychle button{padding:0 6px} .svc-bar .mk-top-wrap .mk-chip{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} }
+.svc-bar .mk-lista-hore{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;min-height:32px;overflow:visible}
+.svc-bar .mk-lista-hore>*{flex:0 0 auto}
+.mk-hl-hore{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 8px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--muted);cursor:text}
+.mk-hl-hore svg{width:14px;height:14px;flex:0 0 auto}
+.mk-hl-hore input{border:0;outline:0;background:transparent;width:110px;font:inherit;font-size:12.5px;padding:0;margin:0;height:auto;color:var(--ink)}
+.mk-hl-hore:focus-within{border-color:var(--brand)}
+.mk-hl-hore.zbal{width:30px;padding:0;justify-content:center;cursor:pointer;color:var(--ink-soft)}
+.mk-hl-hore.zbal:hover{border-color:var(--brand);color:var(--brand)}
+.svc-bar .mk-lista-hore .mk-fz-ik{width:30px;padding:0;justify-content:center;font-weight:700;color:#B5443A}
+.mk-tabs{align-items:flex-end}
+.mk-sucty{display:flex;gap:6px;align-self:center;margin:0 0 6px 12px}
+.mk-sucty.vpravo{margin-left:auto}
+.mk-sucet{display:flex;align-items:baseline;gap:6px;background:#fff;border:1px solid var(--line);border-radius:5px;padding:4px 10px;white-space:nowrap}
+.mk-sucet small{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mk-sucet b{font-size:13.5px;font-weight:700;color:var(--ink)}
+.mk-sucet i{font-style:normal;font-size:11px;font-weight:600;color:#1F8A4C}
+.mk .mk-tabs{margin-top:0}
+@media (min-width:901px){ .main:has(> #content .mk-tabs), .main:has(.mk-tabs){padding-top:10px} }
+@media (max-width:900px){ .mk-tabs{flex-wrap:wrap} .mk-sucty{flex-basis:100%;margin:6px 0;order:9} .mk-sucet{flex:1 1 0;padding:4px 8px} }
+.mk-tabs .mk-riadky-tab{margin:0 0 6px auto;align-self:center}
+.mp-card-h .mk-ex-karta{margin-left:auto;height:28px;font-size:12px}
+.mk .mp-card-h:has(.mk-ex-karta){display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.svc-bar .mk-lista-hore .mk-fp{height:30px;padding:0 7px;font-size:12px;gap:3px;max-width:140px}
+/* v Marketingu potrebujú filtre miesto — na menšej obrazovke sa skryje nápis Zappis vedľa loga */
+@media (max-width:1680px){ .topbar:has(.mk-top-wrap) .zp-box, .topbar:has(.mk-top-wrap) .brand-sep{display:none !important} }
+@media (max-width:1400px){ .svc-bar .mk-lista-hore{gap:3px} .svc-bar .mk-lista-hore .mk-fp{padding:0 6px;font-size:11.5px} .mk-obd-btn{padding:0 7px;font-size:11.5px} .mk-obd-btn svg:not(.car){display:none} .mk-hl-hore input{width:84px} }
+.svc-bar .mk-lista-hore .mk-fp svg{width:10px;height:10px}
+.svc-bar .mk-lista-hore .mk-fz{height:30px;font-size:12px}
+.mk-obd-btn{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 9px;border:1px solid var(--line);border-radius:4px;background:#fff;font:inherit;font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer;white-space:nowrap}
+.mk-obd-btn svg{width:14px;height:14px;color:var(--brand)} .mk-obd-btn svg.car{width:10px;height:10px;color:var(--muted)}
+.mk-obd-btn.otv,.mk-obd-btn:hover{border-color:var(--brand);color:var(--brand)}
+.mk-obd-pop{position:fixed;z-index:60;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px 12px;box-shadow:0 14px 34px rgba(16,20,30,.16)}
+.mk-obd-pop .qsp-h{margin-bottom:8px}
+.mk-obd-pop .mp-obd{display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:440px}
+.mk-obd-pop select{height:30px}
+.mk-obd-pop .mp-rychle{display:flex;gap:4px;flex-basis:100%}
+.mk-obd-pop .mp-rychle button{height:28px}
+.svc-bar .mk-lista-hore .mp-ex{margin-left:6px;height:30px}
+.svc-bar .mk-lista-hore .mp-vyb select{height:30px}
+.mk-frad.mk-frad-pop{position:fixed;z-index:60;margin:0;max-width:min(900px,calc(100vw - 16px));background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;box-shadow:0 14px 34px rgba(16,20,30,.16)}
 @media (max-width:900px){
   .mk .mk-karty{display:none !important}
   .mk .mk-bar .mp-ex{display:none !important}
@@ -3701,6 +3755,7 @@ th.mk-zth-ik .mk-sip{margin-left:0}
 .mk-t tr.mk-r:hover td{background:#FBF4F7}
 .mk-t tr.mk-r.roz td{border-bottom:2px solid var(--mkt)}
 .mk-n{white-space:nowrap}
+.mp .mk-n .mk-bar{display:inline-block;height:8px;padding:0;margin:0 6px 0 0;border-radius:4px;background:var(--mkt);opacity:.55;vertical-align:middle}
 .mk-bar{display:inline-block; height:8px; border-radius:4px; background:var(--mkt); opacity:.55; margin-right:6px; vertical-align:middle}
 .mk-f{color:var(--ink-soft)}
 .mk-fak,.mk-pot{color:var(--nb)!important; font-weight:600}
@@ -4455,6 +4510,55 @@ td.mp-nm[data-roz]{cursor:pointer}
 .rs-zamb.spat{width:auto;padding:0 9px;border-color:var(--line);color:var(--muted);font-family:inherit;font-size:11.5px;font-weight:600}
 .rs-zam-d{grid-column:2;display:block;margin-top:3px;font-size:11.5px;font-weight:500;color:#B5443A;white-space:normal;line-height:1.35}
 .rs-zam-d b{font-weight:700}
+.prez-btn svg{width:17px;height:17px}
+#tourWrap{position:fixed;inset:0;z-index:9000;pointer-events:none;font-family:Inter,system-ui,sans-serif}
+#tourSpot{position:fixed;border-radius:9px;border:3px solid #3E56CB;box-shadow:0 0 0 6px rgba(62,86,203,.18);transition:top .25s,left .25s,width .25s,height .25s;animation:tourPulz 1.8s ease-in-out infinite}
+@keyframes tourPulz{0%,100%{box-shadow:0 0 0 5px rgba(62,86,203,.20)}50%{box-shadow:0 0 0 11px rgba(62,86,203,.07)}}
+#tourDim{display:none!important}
+#tourBar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:14px;padding:0 18px;background:#1F2430;color:#fff;font-size:13px;pointer-events:auto;z-index:2}
+#tourBar .tb-l{font-weight:700;letter-spacing:.02em}
+#tourSek{background:#3E56CB;border-radius:999px;padding:3px 12px;font-weight:600}
+#tourPoc{margin-left:auto;color:#C9CED8}
+#tourProg{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.12)}
+#tourProg i{display:block;height:100%;background:#73DE9E;transition:width .3s}
+#tourBox{position:fixed;background:#fff;border-radius:14px;border:1px solid #DDE1E8;box-shadow:0 22px 60px rgba(16,20,30,.22),0 2px 6px rgba(16,20,30,.06);overflow:hidden;padding:16px 18px 12px;pointer-events:auto;transition:top .25s,left .25s;z-index:3}
+#tourBox::after{content:"";position:absolute;bottom:-6px;left:-6px;width:90px;height:44px;pointer-events:none;opacity:.35;
+  background-image:radial-gradient(#3E56CB 1.1px, transparent 1.3px);background-size:8px 8px;-webkit-mask-image:linear-gradient(45deg,#000 10%,transparent 80%);mask-image:linear-gradient(45deg,#000 10%,transparent 80%)}
+#tourBox>*{position:relative;z-index:1}
+#tourBox{cursor:grab;touch-action:none;user-select:none}
+#tourBox.tah{cursor:grabbing;transition:none;box-shadow:0 28px 70px rgba(16,20,30,.30)}
+#tourBox button{cursor:pointer}
+.tbx-grip{display:grid;grid-template-columns:repeat(2,3px);gap:2px;margin-right:2px;opacity:.45}
+.tbx-grip i{width:3px;height:3px;border-radius:50%;background:#6B7385}
+#tourBox:hover .tbx-grip{opacity:.8}
+#tourEb{margin-right:auto;display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#3E56CB}
+#tourEb::before{content:"";width:7px;height:7px;border-radius:50%;background:#73DE9E;box-shadow:0 0 0 3px rgba(115,222,158,.25)}
+#tourRing{position:relative;width:34px;height:34px;margin-left:auto;display:inline-flex;align-items:center;justify-content:center}
+#tourRing svg{position:absolute;inset:0;transform:rotate(-90deg)}
+#tourRing circle{fill:none;stroke-width:3}
+#tourRing .rg-bg{stroke:#E8EBF2}
+#tourRing .rg-fg{stroke:#3E56CB;stroke-linecap:round;transition:stroke-dashoffset .35s}
+#tourRing b{font-size:11.5px;font-weight:700;color:#1F2430;position:relative}
+.tbx-f #tourRing+button{margin-left:0}
+#tourBox.stred{padding:24px 26px 16px}
+#tourBox.stred #tourT{font-size:22px}
+.tbx-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+#tourT{display:block;font-size:18px;line-height:1.3;color:#1F2430;margin-bottom:6px}
+#tourX{border:0;background:none;color:#9AA1AE;font-size:16px;cursor:pointer;padding:0 2px}
+#tourTxt{font-size:14px;line-height:1.5;color:#3A4152;white-space:pre-line}
+.tbx-f{display:flex;align-items:center;gap:8px;margin-top:14px}
+.tbx-f button{border:1px solid #D5D9E0;background:#fff;border-radius:6px;padding:7px 14px;font:inherit;font-size:13px;font-weight:600;color:#3A4152;cursor:pointer}
+.tbx-f button.on{background:#3E56CB;border-color:#3E56CB;color:#fff;margin-left:auto}
+.tbx-f button:disabled{opacity:.4;cursor:default}
+.tbx-f #tourN+button{margin-left:0}
+body.tour-on .modal{z-index:auto}
+.prez-start-w{position:fixed;right:20px;bottom:20px;z-index:8000;display:flex;align-items:center;gap:8px}
+.prez-start span{font-weight:500;opacity:.8;margin-left:6px;font-size:12.5px}
+.prez-znova{background:#fff;color:#3A4152;border:1px solid #D5D9E0;border-radius:999px;padding:11px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+#tourPauza{border:1px solid #D5D9E0;background:#fff;color:#3A4152;border-radius:6px;font:inherit;font-size:12px;font-weight:600;padding:3px 9px;cursor:pointer;white-space:nowrap}
+#tourPauza:hover{background:#F2F4F8}
+.prez-start{background:#3E56CB;color:#fff;border:0;border-radius:999px;padding:12px 20px;font:inherit;font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(62,86,203,.35);cursor:pointer}
+
 .wk-prazdny{font-size:12.5px;color:var(--muted);padding:6px 2px 14px}
 .wk-head.wk-pred{margin-top:18px;padding-top:12px;border-top:1px dashed var(--line)}
 .mk-kto{display:block;margin-top:3px;font-size:10.5px;line-height:1.3;color:var(--muted);white-space:nowrap}
@@ -4758,7 +4862,7 @@ td.mp-nm[data-roz]{cursor:pointer}
   body.rail-zbal .rail .btn-primary{font-size:0 !important; gap:0 !important; padding:0 !important; justify-content:center}
   body.rail-zbal .rail .rail-top-2 #addBtnTop,body.rail-zbal .rail .rail-top-2 #kopirujBtnTop{flex:0 0 38px; width:100%}
   body.rail-zbal .rail .btn-primary svg{width:15px !important; height:15px !important}
-  body.rail-zbal .rail #railFiltre,body.rail-zbal .rail .build-stamp{display:none}
+  body.rail-zbal .rail #railFiltre,body.rail-zbal .rail #railSearchBox,body.rail-zbal .rail .build-stamp{display:none}
   body.rail-zbal .rail .grp{font-size:0; margin:10px 2px; padding-top:10px; letter-spacing:0}
   body.rail-zbal .rail .navitem{justify-content:center; padding:0 !important; gap:0}
   body.rail-zbal .rail .navitem .lbl,body.rail-zbal .rail .navitem .ct,body.rail-zbal .rail .navitem .seg-logo2{display:none}
@@ -5149,6 +5253,7 @@ td.mp-nm[data-roz]{cursor:pointer}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Kopírovať
         </button>
+        <div id="railSearchBox"></div>
       </div>
 
       <div id="railFiltre"></div>
@@ -5845,6 +5950,9 @@ const ADMIN_EMAILS = [ "miroslava.stalmaskova@cromwell.sk" ];
    manažérsky prehľad), ale NEVIDÍ odmeny obchodníkov a nič neschvaľuje. */
 const MARKETING_EMAILS = [ "linda.husarovicova@cromwell.sk" ];
 const jeMarketingRola = () => state.user?.role==="marketing";
+/* Prezentačný režim (školenie pred všetkými obchodníkmi) – odmeny sa nikde nezobrazujú. */
+const prezBezOdmien = () => /[?&]prezentacia=1\b/.test(location.search);
+const skryOdmeny = () => jeMarketingRola() || prezBezOdmien();
 const LIDER_EMAILS = {     // email → segmenty ktoré líder riadi
   "katarina.chmelova@cromwell.sk": ["ad","nad"],
   "michal.svec@cromwell.sk":       ["tlac"],
@@ -8948,6 +9056,26 @@ function viewActivities(lenMoje){
 /* --------------------------------------------------------- FILTRE V MENU
    Filtre boli nad zoznamom a pri rolovaní zmizli. V bočnom menu sú stále
    po ruke a nezaberajú miesto nad tabuľkou. */
+/* Hľadanie je v menu vždy viditeľné (prilepené hore) — aj keď sa menu
+   odroluje až dole, napr. na Marketing. */
+function railHladanie(sr){
+  const h=$("#railSearchBox"); if(!h) return;
+  h.innerHTML=""; h.appendChild(sr);
+}
+function hladajVsade(si){
+  return ()=>{
+    const kdeFiltre=["activities","mine","clients","myclients","internal","newbusiness","results"];
+    state.search=si.value;
+    state.feedLimit=20; state.groupLimit=60;
+    if(si.value.trim()){
+      state.obdobie={preset:"vsetko"}; state.tyzdneLimit=2;
+      if(!kdeFiltre.includes(state.view) || state.activeClient){
+        state.activeClient=null; state.view="clients";
+      }
+    }
+    render();
+  };
+}
 function vykresliRailFiltre(){
   const box=$("#railFiltre");
   if(!box) return;
@@ -8983,7 +9111,7 @@ function vykresliRailFiltre(){
     si.value=state.resQ||"";
     si.oninput=()=>{ state.resQ=si.value; render(); };
     sr.appendChild(si);
-    box.appendChild(sr);
+    railHladanie(sr);
     vykresliFiltreVysledkov(box);
     railSluzby(box);
     return;
@@ -8991,25 +9119,21 @@ function vykresliRailFiltre(){
   /* Reporty lídrov — v menu ostane len filter služieb, ktorý filtruje report */
   if(state.view==="reportLidra" && !state.activeClient){
     box.classList.remove("rf-off"); if(grp) grp.classList.remove("rf-off");
+    si.value=state.search||""; si.oninput=hladajVsade(si); sr.appendChild(si); railHladanie(sr);
     railSluzby(box);
     return;
   }
+  /* Marketing — to isté hľadanie filtruje tabuľku leadov (vlastná lupa v lište
+     sa na počítači už nezobrazuje). */
+  if(state.view==="marketing" && !state.activeClient){
+    const M=mkStav(); si.value=M.q||""; si.placeholder="Hľadať klienta alebo IČO v marketingu…";
+    si.oninput=()=>{ M.q=si.value; M.vyb=null; render(); };
+  } else {
   si.value=state.search||"";
-  si.oninput=()=>{
-    state.search=si.value;
-    state.feedLimit=20; state.groupLimit=60;
-    if(si.value.trim()){
-      /* Hľadá sa vždy naprieč celým obdobím — inak by sa klient z minulého
-         mesiaca nenašiel a vyzeralo by to, že v databáze nie je. */
-      state.obdobie={preset:"vsetko"}; state.tyzdneLimit=2;
-      if(!kdeFiltre.includes(state.view) || state.activeClient){
-        state.activeClient=null; state.view="clients";
-      }
-    }
-    render();
-  };
+  si.oninput=hladajVsade(si);
+  }
   sr.appendChild(si);
-  box.appendChild(sr);
+  railHladanie(sr);
 
   /* Filtre používajú tú istú triedu ako položky menu — rovnaké písmo,
      rozmery aj rozostupy. Vlastné štýly sa od menu vždy rozišli. */
@@ -9195,6 +9319,7 @@ function railSluzby(box){
 function vykresliSvcBar(){
   const box=$("#svcBar");
   if(!box) return;
+  document.getElementById("mkFradPop")?.remove(); document.getElementById("mkObdPop")?.remove();
   /* Výsledky NB — v hornej lište filter služieb (Všetky služby + jednotlivé služby). */
   if(state.view==="results" && !state.activeClient){
     box.style.display=""; box.innerHTML="";
@@ -10135,6 +10260,30 @@ function showApp(){ $("#loginView").classList.add("hidden"); $("#appView").class
 function showLogin(){ $("#appView").classList.add("hidden"); $("#loginView").classList.remove("hidden"); $("#logEmail").value=""; $("#logPass").value=""; }
 
 async function boot(){
+  /* Prezentačný režim – skutočné dáta zo Zappisu, ale len na čítanie
+     (nič sa neukladá) a bez odmien. Bez Firebase (test) ukážkové dáta. */
+  if(PREZ){
+    Object.defineProperty(state,"rewards",{ get:()=>[], set:()=>{}, configurable:true });
+    if(USE_FIREBASE){
+      try{ backend=await firebaseBackend(); }catch(err){ console.error(err); backend=null; }
+      if(backend){
+        prezReal=true; prezZamkniZapis(backend);
+        backend.onUser(u=>{
+          if(u){
+            state.user=u; showApp(); buildStatic(); backend.start(); render();
+            banner(`<b>Prezentačný režim</b> — skutočné dáta, ale nič sa neukladá a odmeny sa nezobrazujú. Ovládanie: šípky ← →, Esc ukončí.`, false);
+            if(!prezBezi){ prezBezi=true; setTimeout(()=>tourStart(0), 1800); }
+          } else showLogin();
+        });
+        wireLogin();
+        return;
+      }
+    }
+    backend=demoBackend(); state.demoRole="obchodnik"; demoStart(); prezZamkniZapis(backend);
+    banner(`<b>Prezentačný režim</b> — ukážkové dáta, nič sa neukladá. Ovládanie: šípky ← →, Esc ukončí.`, true);
+    setTimeout(()=>{ try{ render(); }catch(e){ console.warn(e); } tourStart(0); }, 1200);
+    return;
+  }
   if(USE_FIREBASE){
     try{ backend=await firebaseBackend(); }
     catch(err){ console.error(err); banner("Nepodarilo sa načítať Firebase — skontroluj config a pripojenie. Beží demo režim."); backend=demoBackend(); demoStart(); return; }
@@ -10574,6 +10723,7 @@ function renderNow(){
      v nich niečo zlyhalo, obsah stránky sa musí vykresliť tak či tak.
      Inak zostane appka prázdna a vyzerá to, akoby sa nenačítali dáta. */
   try{ vykresliSvcBar(); }catch(e){ console.error("filter služieb:", e); }
+  try{ prezTlacidlo(); }catch(e){}
   try{ vykresliRailFiltre(); }catch(e){ console.error("filtre v menu:", e); }
   /* Otvorenú ponuku zatvárame len pri zmene sekcie — inak by ju zavrel
      každý príchod dát z Firestore. */
@@ -10633,7 +10783,7 @@ function renderNow(){
     const veduci=["admin","sef","lider"].includes(state.user.role);
     // pre vedenie sa sekcia volá len „Odmeny"
     { const l=document.querySelector('.navitem[data-view="rewards"] .lbl'); if(l) l.textContent = veduci ? "Odmeny" : "Moje odmeny";
-      const nb=document.querySelector('.navitem[data-view="rewards"]'); if(nb) nb.style.display = jeMarketingRola() ? "none" : ""; }
+      const nb=document.querySelector('.navitem[data-view="rewards"]'); if(nb) nb.style.display = skryOdmeny() ? "none" : ""; }
     const mes=mesiaceSOdmenami();
     const obd=state.odmObdobie && mes.includes(state.odmObdobie) ? state.odmObdobie : (mes[0]||"");
     const r=obd ? odmenyZaMesiac(obd, !(veduci && state.odmVsetci)) : [];
@@ -12724,6 +12874,7 @@ function pravidloPrePripad(opp){
 }
 
 function odmenaZaVysledok(opp, res){
+  if(prezBezOdmien()) return { suma:null, dovod:"" };
   /* Ručne zadaná suma má prednosť pred všetkým — aj pred službou alebo
      oslovením bez nároku na odmenu. Predtým sa pri takej službe ukázalo 0 €,
      hoci líder odmenu zadal ručne. */
@@ -12772,7 +12923,7 @@ const eur = n => n==null ? "—" : n.toLocaleString("sk-SK",{minimumFractionDigi
    Schválením sa zmrazí: uloží sa dokument s vypočítanou sumou, sadzbou aj
    podielmi. Ak sa výsledok neskôr opraví, odmena sa NEPREPOČÍTA — označí sa
    ako nesúlad a rozhodne o nej človek. */
-const odmenaFor = resId => (state.rewards||[]).find(r=>r.id===resId) || null;
+const odmenaFor = resId => prezBezOdmien() ? null : ((state.rewards||[]).find(r=>r.id===resId) || null);
 
 /* Stav odmeny za jeden mesiac jedného prípadu. */
 function stavOdmeny(opp, res){
@@ -13304,6 +13455,7 @@ function liderPill(){
    vymenovaným používateľom. */
 const EXPORT_ODMIEN_POUZIVATELIA = ["miroslava.stalmaskova@cromwell.sk", "michal.svec@cromwell.sk"];
 const smieExportOdmien = () => {
+  if(prezBezOdmien()) return false;
   const k=String(state.user?.key||state.user?.email||"").toLowerCase();
   return EXPORT_ODMIEN_POUZIVATELIA.includes(k);
 };
@@ -13946,7 +14098,7 @@ function openResultsModal(opp, zameraj){
           <button type="button" class="tk-btn" data-act="typklienta" title="Ovplyvňuje sadzbu odmeny">${
             typKlientaPre(opp)==="existujuce" ? "Existujúce IČO" : "Nové IČO"}${
             opp.typKlientaZdroj==="rucne" ? `<span class="tk-rucne">ručne</span>` : ""}</button>
-          ${(()=>{ const pr=pravidloPrePripad(opp);
+          ${(()=>{ if(prezBezOdmien()) return ""; const pr=pravidloPrePripad(opp);
             const pct=pr ? Math.round((pr.sadzba||0)*1000)/10 : null;
             return `<button type="button" class="tk-btn${pr?.sadzbaRucne?" rucna":""}" data-act="sadzba"
               title="Sadzba odmeny pre celé obdobie${pr?.sadzbaRucne?" — nastavená ručne":""}">Sadzba ${
@@ -16889,7 +17041,7 @@ function viditelnePripady(volby){
 }
 
 /* Kto smie prepísať odmenu ručne. */
-const smieMenitOdmenu = () => ["admin","sef","lider"].includes(state.user?.role);
+const smieMenitOdmenu = () => !prezBezOdmien() && ["admin","sef","lider"].includes(state.user?.role);
 /* Kto vidí vypočítanú odmenu počas zadávania výsledkov. Obchodníkovi ju
    zámerne neukazujeme — priebežné číslo sa mení podľa spôsobu oslovenia
    a typu klienta a vzbudzuje očakávania, ktoré sa po kontrole nemusia
@@ -17050,6 +17202,7 @@ async function vratOdmenu(r, btn){
    Vedenie vidí všetkých a môže mesiac schváliť. */
 function viewRewards(){
   const wrap=el("div");
+  if(skryOdmeny() && !jeMarketingRola()){ wrap.appendChild(el("div","empty","<b>Odmeny sa v prezentácii nezobrazujú</b>Každý obchodník vidí v Zappise len svoje odmeny.")); return wrap; }
   if(jeMarketingRola()){ wrap.appendChild(el("div","empty","<b>Odmeny nie sú v tejto role dostupné</b>Rola Marketing vidí výsledky, ale nie odmeny obchodníkov.")); return wrap; }
   const veduci=["admin","sef","lider"].includes(state.user?.role);
   const mesiace=mesiaceSOdmenami();
@@ -17517,7 +17670,7 @@ function vidiMarketing(){ return ["admin","sef","lider","marketing"].includes(st
 const RL_TEST_EMAILS = [];   // testovací líder zrušený (predtým Mirkin účet)
 const jeRlTest = em => RL_TEST_EMAILS.includes(String(em||"").toLowerCase());
 function jeLiderReportu(){ const k=(state.user?.key||"").toLowerCase(); return !!LIDER_EMAILS[k] || jeRlTest(k); }
-function vidiReportLidrov(){ return (state.user?.role && state.user.role!=="obchodnik") || jeLiderReportu(); }
+function vidiReportLidrov(){ if(prezBezOdmien()) return false; return (state.user?.role && state.user.role!=="obchodnik") || jeLiderReportu(); }
 function rlMenoLidra(em){ return jeRlTest(em) ? "Test líder" : (OBCHODNIK_EMAILS[em]?.name || em); }
 function rlSluzbyLidra(em){ return jeRlTest(em) ? "testovací účet" : (LIDER_EMAILS[em]||[]).map(s=>SEG[s]?.short||s).join(", "); }
 /* Lídri v prehľade — piati skutoční; testovací len pre toho, kto ním je. */
@@ -18161,7 +18314,7 @@ function viewMarketing(){
     const b=el("button","mk-fp"+(vyb.length?" on":""),`<span>${esc(vyb.length?`${popis}: ${vyb.length===1?nazovH(vyb[0]):vyb.length+" vybrané"}`:popis)}</span>${vyb.length
       ? `<b class="mk-fp-x" title="Zrušiť tento filter">✕</b>`
       : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`}`);
-    b.type="button"; b.title=popis;
+    b.type="button"; b.title=popis; b.dataset.k=k;
     b.onclick=ev=>{
       ev.stopPropagation();
       if(ev.target.closest(".mk-fp-x")){ document.querySelector(".qsp.mk-pop")?.remove(); S.f[k]=[]; render(); return; }
@@ -18192,8 +18345,12 @@ function viewMarketing(){
   const bar=el("div","mp-bar mk-bar");
   const l1=el("div","mp-lista");
   if(!S.tab) S.tab="leady";
+  /* Na počítači sú filtre Marketingu v hornej (prilepenej) lište, hľadá sa v bočnom menu */
+  const mkHore = innerWidth>860;
+  document.getElementById("mkFradPop")?.remove(); document.getElementById("mkObdPop")?.remove();
   /* Hľadanie — len lupa ako v hornej lište; klik ju rozbalí na políčko */
-  if(S.hlOtv || S.q){ const w=el("span","mk-hl-w"); w.appendChild(hl); l1.appendChild(w); if(S.hlOtv && !S.q) setTimeout(()=>document.getElementById("mkHladaj")?.focus(),0); }
+  if(mkHore){}
+  else if(S.hlOtv || S.q){ const w=el("span","mk-hl-w"); w.appendChild(hl); l1.appendChild(w); if(S.hlOtv && !S.q) setTimeout(()=>document.getElementById("mkHladaj")?.focus(),0); }
   else { const lb=el("button","mk-lupa",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
     lb.type="button"; lb.title="Hľadať klienta / IČO"; lb.onclick=()=>{ S.hlOtv=true; render(); }; l1.appendChild(lb); }
   /* Filtre — schované v rozbaľovacom paneli; v lište len tlačidlo a zvolené filtre */
@@ -18226,7 +18383,47 @@ function viewMarketing(){
   ex.type="button"; ex.title="Export zoznamu leadov do Excelu";
   l1.appendChild(obd); obd.style.border="0"; obd.style.padding="0";
   l1.appendChild(ex);
-  bar.appendChild(l1); main.appendChild(bar);
+  bar.appendChild(l1);
+  let mkRiadky=null;
+  if(mkHore){
+    /* Počítač: hľadanie, všetky filtre a obdobie (zbalené v tlačidle) v hornej lište */
+    const l2=el("div","mp-lista mk-lista-hore");
+    const hw=el("label","mk-hl-hore",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
+    hl.placeholder="Klient / IČO"; hl.onchange=null;
+    hl.oninput=()=>{ S.q=hl.value; S.vyb=null; render(); };
+    hl.onkeydown=e=>{ if(e.key==="Escape"){ S.q=""; S.hlOtv=false; render(); } };
+    hl.onblur=()=>{ if(!hl.value.trim() && S.hlOtv){ S.hlOtv=false; setTimeout(render,120); } };
+    if(S.q || S.hlOtv){ hw.appendChild(hl); if(S.hlOtv && !S.q) setTimeout(()=>document.getElementById("mkHladaj")?.focus(),0); }
+    else { hw.classList.add("zbal"); hw.title="Hľadať klienta / IČO"; hw.onclick=()=>{ S.hlOtv=true; render(); }; }
+    l2.appendChild(hw);
+    const KR={dopl:"Zdroj leadu",kan:"Oslovenie",kamp:"Osl. info",odk:"Dozvedel sa",ob:"Obchodník",sl:"Služba",fz:"Fáza"};
+    [...fRad.children].forEach(c=>{
+      if(c.dataset.k){ const v=S.f[c.dataset.k]||[]; const sp=c.querySelector("span");
+        const nz=x=>c.dataset.k==="fz"?fzPopis(x):x;
+        if(sp) sp.textContent = v.length ? (v.length===1 ? nz(v[0]) : `${KR[c.dataset.k]||c.title} (${v.length})`) : (KR[c.dataset.k]||c.title); }
+      if(c.classList.contains("mk-fz")){ c.innerHTML="✕"; c.title="Zrušiť všetky filtre"; c.classList.add("mk-fz-ik"); }
+      l2.appendChild(c); });
+    const ob=el("button","mk-obd-btn"+(S.obdOtv?" otv":""),
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>${esc(mpKratkyMes(S.od))} – ${esc(mpKratkyMes(S.do))}</span><svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`);
+    ob.type="button"; ob.title="Obdobie prvého oslovenia"; ob.onclick=ev=>{ ev.stopPropagation(); S.obdOtv=!S.obdOtv; render(); };
+    l2.appendChild(ob);
+    mkRiadky=l1.querySelector(".mp-vyb");
+    bar.innerHTML=""; bar.appendChild(l2);
+    if(S.obdOtv){
+      const pop=el("div","mk-obd-pop"); pop.id="mkObdPop";
+      pop.appendChild(el("div","qsp-h","Obdobie prvého oslovenia"));
+      pop.appendChild(obd);
+      document.body.appendChild(pop);
+      requestAnimationFrame(()=>{ const b2=document.querySelector("#svcBar .mk-obd-btn"); if(!b2||!pop.isConnected) return; const r=b2.getBoundingClientRect();
+        pop.style.top=Math.round(r.bottom+8)+"px"; pop.style.left=Math.round(Math.max(8, Math.min(r.left, innerWidth-pop.offsetWidth-8)))+"px"; });
+      setTimeout(()=>{ const zavri=e3=>{ if(!pop.isConnected){ document.removeEventListener("mousedown",zavri); return; }
+        if(!pop.contains(e3.target) && !e3.target.closest(".mk-obd-btn")){ S.obdOtv=false; document.removeEventListener("mousedown",zavri); render(); } };
+        document.addEventListener("mousedown",zavri); },0);
+    }
+    const sb=$("#svcBar");
+    if(sb){ sb.style.display=""; sb.innerHTML=""; const w=el("div","mp mk mk-top-wrap"); w.appendChild(bar); sb.appendChild(w); }
+    else main.appendChild(bar);
+  } else main.appendChild(bar);
 
   // KPI
   const n=leady.length, poF=f=>leady.filter(L=>L.fz===f).length;
@@ -18239,12 +18436,24 @@ function viewMarketing(){
    ["Konverzia",n?`${Math.round(ziskane/n*100)} %`:"–",`odmietnuté ${odm}`,""],
    ["Tržby NB",mpFmt(T,"t")||"0 €",T?`marža ${mpFmt(MZ,"mz")} · ${Math.round(MZ/T*100)} %`:"zatiaľ bez fakturácie","pos"]
   ].forEach(([a,b,c,cl])=>karty.appendChild(el("div","mp-kpi",`<small>${esc(a)}</small><b>${esc(b)}</b><span class="${cl}">${esc(c)}</span>`)));
-  main.appendChild(karty);
+  if(!mkHore) main.appendChild(karty);
+  /* Tri malé súčty v riadku so záložkami — za všetko, čo je práve vyfiltrované */
+  let mkSucty=null;
+  { const KS=leady.reduce((a,L)=>a+(L.ks||0),0);
+    const sm=el("div","mk-sucty");
+    [["Tržby", mpFmt(T,"t")||"0 €", ""],
+     ["Marža", mpFmt(MZ,"mz")||"0 €", T?`${Math.round(MZ/T*100)} %`:""],
+     ["Kusy", KS?Math.round(KS).toLocaleString("sk-SK"):"0", ""]
+    ].forEach(([a,b,c])=>sm.appendChild(el("div","mk-sucet",`<small>${esc(a)}</small><b>${esc(b)}</b>${c?`<i>${esc(c)}</i>`:""}`)));
+    mkSucty=sm; }
   /* Záložky — Leady sú hlavný pohľad, Lievik a Po mesiacoch o klik ďalej */
   { const t=el("div","mk-tabs");
+    if(S.tab==="prehlad") S.tab="leady";
     [["leady","Leady",n],["lievik","Lievik",null],["mesiace","Nové leady po mesiacoch",null]].forEach(([id,txt,poc])=>{
       const b=el("button","mk-tab"+(S.tab===id?" on":""),`${esc(txt)}${poc!=null?`<em>${poc}</em>`:""}`); b.type="button";
       b.onclick=()=>{ S.tab=id; render(); }; t.appendChild(b); });
+    if(mkRiadky){ mkRiadky.classList.add("mk-riadky-tab"); t.appendChild(mkRiadky); }
+    if(mkSucty){ if(!mkRiadky) mkSucty.classList.add("vpravo"); t.appendChild(mkSucty); }
     main.appendChild(t); }
 
   // lievik podľa dimenzie
@@ -18347,6 +18556,7 @@ function viewMarketing(){
     infoVyber(b, L.kamp.startsWith("—")?"":L.kamp, v=>infoZmen(L.entries, v, [...L.opps])); });
   const tw3=el("div","mp-tw mk-zoz-tw"); tw3.appendChild(t3); k3.appendChild(tw3);
   if(zoz.length>S.limit){ const v=el("button","mp-viac",`Zobraziť ďalšie (${zoz.length-S.limit})`); v.type="button"; v.onclick=()=>{ S.limit+=100; render(); }; k3.appendChild(v); }
+  if(mkHore){ const hh=k3.querySelector(".mp-card-h"); if(hh){ ex.classList.add("mk-ex-karta"); hh.appendChild(ex); } }
   if(S.tab==="leady") main.appendChild(k3);
 
   ex.onclick=async()=>{
@@ -18359,7 +18569,15 @@ function viewMarketing(){
     X.writeFile(wb, `Marketing_leady_${S.od}_${S.do}.xlsx`);
   };
 
-  if(S.filtreOtv) main.insertBefore(fRad, karty);
+  if(S.filtreOtv && !mkHore){
+    if(false){
+      /* panel filtrov sa otvorí pod tlačidlom Filtre v hornej lište */
+      fRad.id="mkFradPop"; fRad.classList.add("mk-frad-pop"); document.body.appendChild(fRad);
+      requestAnimationFrame(()=>{ const fb=document.querySelector("#svcBar .mk-filtre"); if(!fb || !fRad.isConnected) return;
+        const r=fb.getBoundingClientRect(); fRad.style.top=Math.round(r.bottom+8)+"px";
+        fRad.style.left=Math.round(Math.max(8, Math.min(r.left, innerWidth-fRad.offsetWidth-8)))+"px"; });
+    } else main.insertBefore(fRad, karty);
+  }
   wrap.appendChild(main);
   // výška hornej lišty — pod ňu sa prilepí hlavička tabuľky Leady
   setTimeout(()=>{ const tb=document.querySelector(".topbar"); if(tb) document.documentElement.style.setProperty("--mk-top", Math.round(tb.getBoundingClientRect().height)+"px");
@@ -18367,6 +18585,244 @@ function viewMarketing(){
     if(tw && tt){ tw.classList.add("lepi"); if(tt.scrollWidth>tw.clientWidth+1) tw.classList.remove("lepi"); } },0);
   /* popup filtra zostane otvorený aj po prekreslení — znova ho otvoríme */
   return wrap;
+}
+
+/* ============================================================================
+   PREZENTAČNÝ REŽIM (školenie)
+   Otvára sa cez ?prezentacia=1 v novej karte. Beží VŽDY na ukážkových dátach
+   (demo backend v pamäti) – nič nezapisuje do Firebase. Sprievodca krok za
+   krokom zvýrazní časť obrazovky a ukáže k nej krátky text.
+   Ovládanie: → / medzerník / PageDown = ďalej, ← / PageUp = späť, Esc = koniec.
+   ============================================================================ */
+const PREZ = /[?&]prezentacia=1\b/.test(location.search);
+let tourI=-1, tourTimer=null, prezReal=false, prezBezi=false, tourPosl=0, tourMan=null;
+/* V prezentácii na skutočných dátach sa nič nezapíše do databázy. */
+const PREZ_ZAPIS=["save","doplnIco","remove","hideClientName","unhideClientName","toggleWeeklyDone","addComment","updateComment","removeComment",
+  "saveClientProfile","saveXsell","saveUserPref","saveRewardRules","saveRewards","setUserPassword","saveResult","confirmResult","saveOpportunity",
+  "setOpportunityOnEntries","opravMena","renameClient","setIcoOnEntries","saveTask","removeTask","toggleTask","saveMeeting","removeMeeting",
+  "addApproachInfo","addSluzbaIna","addMaterial","removeMaterial","saveDmisOwners","saveCalculators","saveReportLidra","sendFeedback",
+  "setFeedbackDone","replyFeedback","removeFeedback","releaseDmisOwner","removeApproachInfo","saveLead","saveLeadsBulk"];
+let prezLok=new Map(), prezSkryte=new Set(), _allBase=[], _allMix=null, prezPoslId=null;
+/* Aktivity založené počas prezentácie sa ukážu len v tomto okne – do databázy sa nezapíšu. */
+function prezLokalneAll(){
+  _allBase=state.all||[];
+  Object.defineProperty(state,"all",{ configurable:true,
+    get(){ if(!_allMix){ _allMix=[..._allBase.filter(e=>!prezLok.has(e.id) && !prezSkryte.has(e.id)), ...prezLok.values()]; } return _allMix; },
+    set(v){ _allBase=v||[]; _allMix=null; } });
+}
+function prezObnov(){ _allMix=null; try{ _ciCache=null; }catch(e){} try{ gsInvalidate(); }catch(e){} render(); }
+function prezZamkniZapis(b){
+  let posl=0;
+  prezLokalneAll();
+  PREZ_ZAPIS.forEach(n=>{ if(typeof b[n]==="function") b[n]=async()=>{
+    const t=Date.now(); if(t-posl>3000){ posl=t; try{ toast("Prezentačný režim — nič sa neukladá."); }catch(e){} }
+    return null; }; });
+  b.save=async entry=>{
+    const id=entry.id || ("prez_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+    const pred=prezLok.get(id) || _allBase.find(e=>e.id===id) || { comments:[] };
+    if(!entry.id) prezPoslId=id;
+    prezLok.set(id,{ ...pred, ...entry, id, updatedAt:Date.now() });
+    const t=Date.now(); if(t-posl>3000){ posl=t; try{ toast("Uložené len pre prezentáciu — do databázy sa nezapíše."); }catch(e){} }
+    prezObnov();
+  };
+  b.doplnIco=async(id,ico)=>b.save({ id, leadIco:ico });
+  b.remove=async id=>{ prezLok.delete(id); prezSkryte.add(id); prezObnov(); };
+}
+/* Selektor karty aktivity, ktorú sme v prezentácii práve založili (ak existuje). */
+function prezKarta(cast){
+  const z=prezPoslId && document.querySelector(`#content .entry[data-eid="${prezPoslId}"]`);
+  return (z ? `#content .entry[data-eid="${prezPoslId}"]` : "#content .entry") + (cast?" "+cast:"");
+}
+function prezRola(r){ if(prezReal) return; if(state.demoRole!==r){ state.demoRole=r; setDemoUser(); const s=$("#roleSel"); if(s) s.value=r; } }
+function prezView(v){ closeModal?.(); state.activeClient=null; state.view=v; state.obdobie={preset:"tyzden"}; state.aktSluzby=[]; render(); window.scrollTo(0,0); }
+function prezOpenNovy(){ if(!$("#scrim")?.classList.contains("open")){ openModal(null, "zelena"); setTimeout(()=>document.activeElement?.blur?.(),60); } }
+function prezNb(){ const nb=document.querySelector('#fKind input[value="nb"]'); if(nb && !nb.checked && !$("#fApproachSection")?.getClientRects().length){ nb.click(); nb.dispatchEvent(new Event("change",{bubbles:true})); } }
+const TOUR=[
+ {sek:"Úvod", t:"Zappis krok po kroku", x:"Zappis už všetci denne používate. Aj tak je v ňom určite veľa vecí, ktoré ste možno ešte neobjavili.\n\nPoďme si ho preto spolu prejsť krok po kroku – ako funguje, aké všetky funkcie má a ako vám môže prácu čo najviac uľahčiť a zefektívniť.", pred:()=>{prezRola("obchodnik"); prezView("activities");}},
+ {sek:"Úvod", t:"Hľadanie", sel:"#railSearch", x:"Rýchle hľadanie klienta podľa názvu, IČO alebo e-mailu. Hľadá sa vždy naprieč celým obdobím. Políčko ostáva stále hore v menu – aj keď menu odrolujete až dole."},
+ {sek:"Úvod", t:"Pridať postreh", sel:"#railFb", x:"Nápad, chyba alebo niečo, čo vám chýba? Napíšte to sem."},
+ {sek:"Úvod", t:"Zrušiť filtre", sel:"#taZrus", x:"Keď je zapnutý akýkoľvek filter, krížik sčervenie. Jedným klikom zrušíte všetky filtre naraz."},
+ {sek:"Úvod", t:"Logo Cromwell Group", sel:"#topLogo", x:"Podobne ako krížik funguje aj logo – klikom naň sa vrátite na úvodnú obrazovku, teda na podrobný prehľad aktivít."},
+ {sek:"Orientácia", t:"Filter obdobia", sel:[".rf-obd-btns",".rf-tyz"], x:"Týždeň alebo Všetko. Šípkami pod tým sa posúvate po týždňoch dozadu aj dopredu – klik na názov týždňa vás vráti na tento týždeň.", pred:()=>prezObdZoznam(false)},
+ {sek:"Orientácia", t:"Iné obdobia", sel:[".rf-obd-btns",".rf-obd-list"], x:"Pod „Iné“ nájdete ďalšie obdobia – napríklad posledný mesiac, posledné 3 mesiace alebo tento rok – a dole si viete zadať aj vlastné obdobie od – do.", pred:()=>{ if(state.obdobie?.preset!=="tyzden" || state.view!=="activities") prezView("activities"); prezObdZoznam(true); }},
+ {sek:"Orientácia", t:"Filter služieb", sel:".rf-svc-list", pred:()=>prezObdZoznam(false), x:"Klikom na službu uvidíte len jej aktivity. Číslo vpravo je počet aktivít."},
+ {sek:"Je klient voľný?", t:"Je klient voľný?", sel:"#ovBtn", x:"Skôr než začnete písať aktivitu, overte si, či je klient voľný – či s ním už nepracuje kolega.", pred:()=>{ document.getElementById("ovScrim")?.remove(); prezObdZoznam(false); if(state.view!=="activities") prezView("activities"); }},
+ {sek:"Je klient voľný?", t:"Overenie klienta", sel:"#ovScrim .modal-ov", roh:true, x:"Napíšte názov firmy alebo IČO. Zappis hľadá v Zappise, v registri z DMIS aj v databázach. „Môžeš osloviť“ = klient je voľný. „Pozor – niekto tu už bol“ = posledná aktivita je staršia ako pol roka. „Neoslovuj bez dohody“ = na klientovi niekto pracuje alebo ho má pridelený v DMIS – najprv sa dohodnite.", pred:()=>{ if(!document.getElementById("ovScrim")) otvorOverenie(); setTimeout(()=>document.getElementById("ovSearch")?.focus(),80); }},
+ {sek:"Zápis aktivity", formStart:true, t:"Nový záznam", sel:"#addBtnTop", pred:()=>{ document.getElementById("ovScrim")?.remove(); prezObdZoznam(false); if(state.view!=="activities") prezView("activities"); }, x:"Skúsme si spolu založiť jednu aktivitu New business. Každú začnete tu. Potom stačí klikať do jednotlivých políčok – ku každému sa ukáže vysvetlenie. V mobile je to modré tlačidlo + vpravo dole."},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Dátum aktivity", sel:"#fKindField", x:"Podľa dátumu sa aktivita zaradí do správneho týždňa. Predvolený je dnešok.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"IČO a Finstat", sel:["#fIcoField",".r1-btn"], x:"Zadajte IČO a kliknite Načítať z Finstat – Zappis doplní názov a adresu firmy. IČO sa nikdy nepredvypĺňa, aby sa nepomiešali klienti.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Agentúra / fyzická osoba", sel:".r1-ikony", x:"Budova = agentúra, ktorá objednáva pre svojho klienta (pribudne pole Materiál). Postavička = fyzická osoba bez IČO.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Web klienta", sel:"#fWebField", x:"Nepovinné – web firmy, ak ho poznáte.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Klient", sel:".field:has(> #fClient)", x:"Názov firmy. Po načítaní z Finstatu sa doplní sám aj s adresou.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Názov zákazky", sel:"#fZakazkaField", x:"Nepovinné. Krátky názov, napr. „Vianočný leták“ – pomôže odlíšiť viac obchodov u jedného klienta.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Materiál", sel:"#fMaterialField", x:"Pri agentúre povinné – pre ktorého klienta / aký materiál agentúra objednáva.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Kontaktné osoby", sel:"#fContactsField", x:"Pridajte kontaktnú osobu – meno, pozícia, telefón a e-mail. Pri známom klientovi sa ponúknu kontakty, ktoré už poznáme.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Typ záznamu", sel:"#fKindPod", x:"Dnes zakladáme New business – nového klienta alebo novú službu. Customer care je práca s existujúcim klientom, Interné / projekty interná práca. Pri novom IČO sa New business ponúkne sám.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Služba", sel:"#fKindPod + .field", x:"Vyberte službu, ktorej sa obchod týka.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Produkt", sel:"#fProduktField", x:"Pri niektorých službách upresníte produkt (napr. Aut., Ad-hoc, Balíky) – rozhoduje o pravidle odmeňovania.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Súvisiaca služba", sel:"#fLinkField", x:"Jedna zákazka, viac služieb – napr. tlač letákov a ich roznos. Vznikne záznam pre každú službu, ale píšete ho raz.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Posledná aktivita s klientom", sel:"#lwHint", x:"Ak s klientom už aktivita bola, Zappis ju ukáže a text viete jedným klikom skopírovať.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Predpokladaná tržba a typ aktivity", sel:"#fDmisSection", x:"Nepovinné – rozbaľte a doplňte predpokladanú mesačnú tržbu a typ aktivity.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Spôsob oslovenia", sel:".field:has(> #fApproach)", x:"Pri New business povinné – ako ste klienta oslovili (aktívne, kontaktný formulár, kampaň…).", pred:()=>{ prezOpenNovy(); prezNb(); }},
+ {sek:"Zápis New business", form:true, roh:true, t:"Oslovenie – info", sel:".field:has(> #fApproachInfo)", x:"Nepovinný doplnok, napr. názov kampane alebo konferencie. Nový text sa pridá do číselníka a ponúkne sa aj ostatným.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Zdroj leadu", sel:"#fApproach2Row", x:"Pri marketingovom oslovení: ak klient prišiel aj iným spôsobom (napr. vyplnil formulár, ale oslovili ste ho vy), vyberte ho tu.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Ako sa o nás klient dozvedel?", sel:"#fOdkialRow", x:"Pri marketingovom oslovení povinné – heslovite, napr. Google, odporúčanie, LinkedIn. Ak to neviete, kliknite na jednu z volieb vpravo.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Popis", sel:"#fPopisField", x:"Čo sa udialo – stručne a vecne, každú myšlienku na nový riadok. Tlačidlom Upozornenie pridáte výraznú poznámku, ktorá svieti na karte.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Obchodník", sel:".field:has(> #fObch)", x:"Predvolene ste to vy. Zmeniť ho treba len vtedy, ak zapisujete za kolegu.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Spolupracujúci", sel:"#coObchField", x:"Ak na klientovi pracujete s kolegom, pridajte ho – aktivita sa zobrazí aj jemu.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Úloha", sel:"#taskField", x:"Pridajte úlohu s termínom (napr. poslať ponuku do piatku) – Zappis vám ju pripomenie.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Fáza obchodu", sel:"#fStatusField", x:"Nový obchod začína Oslovením klienta. Ďalšie fázy neskôr posúvate priamo na karte aktivity.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Dôvod straty", sel:"#fLossField", x:"Ak obchod nevyšiel, vyberte dôvod – pomôže nám to v štatistikách.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Firma", sel:"#firmaField", x:"Za ktorú firmu skupiny obchod je.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, t:"Uložiť záznam", sel:"#saveBtn", x:"Kliknite Uložiť záznam. V prezentácii sa aktivita do databázy nezapíše – ukáže sa len tu, aby sme si na nej mohli ukázať, ako s ňou ďalej pracovať.", pred:()=>{}},
+ {sek:"Karta aktivity", t:"Karta aktivity", sel:()=>prezKarta(""), pred:()=>{ if($("#scrim")?.classList.contains("open")) closeModal(); if(state.view!=="activities") prezView("activities"); }, x:"Takto vyzerá aktivita, ktorú sme práve založili. Každá aktivita je jedna karta: klient, typ (New business / Customer care), služba a čo sa udialo."},
+ {sek:"Karta aktivity", t:"Fáza obchodu", sel:()=>prezKarta(".e-top"), x:"Fázu (napr. Prebieha jednanie, Realizuje sa) zmeníte priamo na karte – kliknite na farebný štítok."},
+ {sek:"Karta aktivity", t:"Spodná lišta karty", sel:()=>prezKarta(".e-foot"), x:"Obchodník, spolupracujúci kolegovia, štítok „aj v:“ (klient je aj v inej službe), poznámka a ceruzka na úpravu."},
+ {sek:"Karta aktivity", t:"Pridať progres", sel:()=>prezKarta(".pg-btn"), x:"Keď sa na obchode niečo pohne, netreba zakladať novú aktivitu – kliknite Pridať progres a doplňte, čo sa udialo. Celá história ostane pekne pod sebou na jednej karte. Tlačidlo je pri aktivitách New business."},
+ {sek:"Karta aktivity", t:"Tento a minulý týždeň", sel:"#content .wk-pred", x:"Pod aktuálnym týždňom vidíte aj predchádzajúci – v pondelok ráno teda zoznam nie je prázdny."},
+ {sek:"Práca s aktivitami", t:"Kopírovať z minulého týždňa", sel:"#kopirujBtnTop", x:"Opakujúce sa aktivity netreba písať znova – skopírujete ich z niektorého z minulých týždňov.", pred:()=>prezView("activities")},
+ {sek:"Práca s aktivitami", t:"Filtre aktivít", sel:"#svcBar", x:"New business, Customer care, Marketing, Obchodník, Oslovenie – rýchle zúženie zoznamu."},
+ {sek:"Klienti a úlohy", t:"Klienti", sel:"#content", x:"Všetci klienti a ich história naprieč službami. Klik na klienta otvorí detail s aktivitami a kontaktmi.", pred:()=>prezView("clients")},
+ {sek:"Klienti a úlohy", t:"Úlohy a termíny", sel:"#content", x:"Úlohy s termínom – pre seba aj od vedenia. Zappis upozorní, keď sa termín blíži.", pred:()=>prezView("tasks")},
+ {sek:"Klienti a úlohy", t:"Databázy", sel:"#content", x:"Databázy firiem na oslovenie. Aktivitu viete zapísať priamo z databázy.", pred:()=>prezView("leads")},
+ {sek:"Klienti a úlohy", t:"X-Sell", sel:"#content", x:"Kde má klient potenciál v ďalších službách – príležitosti na cross-sell.", pred:()=>prezView("xsell")},
+ {sek:"Výsledky a odmeny", t:"Výsledky NB – obdobie", sel:".res-mes-rad", x:"Vyberte rok a mesiace. Každý New business má NB obdobie (napr. 12 mesiacov), počas ktorého dopĺňate tržby.", pred:()=>{ prezView("results"); state.resMesiace=[]; render(); }},
+ {sek:"Výsledky a odmeny", t:"Prípad a mesačné čísla", sel:".gl-list .rs-row", x:"Klik na riadok otvorí okno s mesiacmi – doplníte tržbu a maržu, prípadne „bez fakturácie“, a potvrdíte čísla."},
+ {sek:"Výsledky a odmeny", t:"Hotové", sel:".gl-list .rs-row .rs-act", x:"Fajkou označíte prípad za hotový. Potom ho líder skontroluje a schváli odmenu."},
+ {sek:"Výsledky a odmeny", t:"Moje odmeny", x:"V sekcii Odmeny vidí každý len svoje vlastné odmeny – preto ich v dnešnej prezentácii neukazujeme. Suma sa zobrazí až po schválení lídrom."},
+ {sek:"Mobil", t:"Zappis v mobile", x:"V mobile otvorte Zappis v prehliadači a pridajte si ho na plochu. Dole je lišta (Prehľad, Výsledky, Klienti, Služby, Úlohy, Moje aktivity) a modré + na rýchly zápis.", pred:()=>prezView("activities")},
+ {sek:"Záver", t:"Pravidlá", x:"• Aktivity zapisujte priebežne, najneskôr do piatku.\n• Spôsob oslovenia je pri New business povinný.\n• Pri New business doplňte každý mesiac tržby vo Výsledkoch NB.\n• Otázky a nápady → Pridať postreh."},
+ {sek:"Záver", t:"Ďakujem!", x:"To je všetko. Ak niečo nebude jasné, napíšte postreh priamo v Zappise.", pred:()=>{ prezRola("obchodnik"); prezView("activities"); }},
+];
+function tourEl(){
+  let w=$("#tourWrap"); if(w) return w;
+  w=el("div"); w.id="tourWrap";
+  w.innerHTML=`<div id="tourSpot"></div><div id="tourDim"></div>
+    <div id="tourBar"><span class="tb-l">Zappis · školenie</span><span id="tourSek"></span><span id="tourPoc"></span><div id="tourProg"><i></i></div></div>
+    <div id="tourBox"><div class="tbx-h" title="Okno môžete chytiť myšou a presunúť"><span class="tbx-grip"><i></i><i></i><i></i><i></i><i></i><i></i></span><span id="tourEb"></span><button type="button" id="tourPauza" title="Pozastaviť – neskôr pokračujete na tomto kroku (Esc)"><svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" style="vertical-align:-1px;margin-right:4px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>Pozastaviť</button><button type="button" id="tourX" title="Pozastaviť (Esc)">✕</button></div><b id="tourT"></b><div id="tourTxt"></div>
+      <div class="tbx-f"><button type="button" id="tourPrev">◀ Späť</button><span id="tourRing" title="Krok"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" class="rg-bg"/><circle cx="18" cy="18" r="15.5" class="rg-fg" id="tourRingFg"/></svg><b id="tourN"></b></span><button type="button" id="tourNext" class="on">Ďalej ▶</button></div></div>`;
+  document.body.appendChild(w);
+  tourTahaj($("#tourBox")); $("#tourX").onclick=tourEnd; $("#tourPauza").onclick=tourEnd; $("#tourPrev").onclick=()=>tourGo(tourI-1); $("#tourNext").onclick=()=>tourGo(tourI+1);
+  return w;
+}
+function tourStart(i=0){ tourEl().style.display=""; document.body.classList.add("tour-on"); tourGo(i);
+  clearInterval(tourTimer); tourTimer=setInterval(tourPlace, 400); $("#prezStart")?.remove(); }
+function tourEnd(dokoncene){ clearInterval(tourTimer); tourPosl = dokoncene===true ? 0 : Math.max(0,tourI); tourI=-1; $("#prezStart")?.remove(); const w=$("#tourWrap"); if(w) w.style.display="none"; document.body.classList.remove("tour-on"); if(PREZ) prezStartBtn(); }
+function tourGo(i, opt={}){
+  if(i<0) i=0; if(i>=TOUR.length){ tourEnd(true); return; }
+  const smer = i<tourI ? -1 : 1;
+  tourI=i; tourMan=null; const k=TOUR[i];
+  if(!/^#f|#coObch/.test(tourS1(k)||"") && $("#scrim")?.classList.contains("open") && !k.pred) closeModal();
+  if(!opt.bezPred){ try{ k.pred?.(); }catch(e){ console.warn("tour pred", e); } }
+  /* políčko, ktoré sa v tomto zázname nezobrazuje (napr. Materiál bez agentúry), preskočíme */
+  if(k.skryt && !opt.klik && !tourRect(k)){ const n=i+smer; if(n>=0 && n<TOUR.length && (opt.hlbka||0)<40){ tourGo(n,{hlbka:(opt.hlbka||0)+1}); return; } }  $("#tourT").textContent=k.t; $("#tourTxt").textContent=k.x; $("#tourSek").textContent=k.sek;
+  $("#tourPoc").textContent=`Krok ${i+1} z ${TOUR.length}`; $("#tourN").textContent=String(i+1); $("#tourRing").title=`Krok ${i+1} z ${TOUR.length}`; $("#tourEb").textContent=k.sek;
+  { const obv=2*Math.PI*15.5; const fg=$("#tourRingFg"); fg.style.strokeDasharray=obv; fg.style.strokeDashoffset=obv*(1-(i+1)/TOUR.length); }
+  $("#tourProg i").style.width=((i+1)/TOUR.length*100)+"%";
+  $("#tourPrev").disabled=i===0; $("#tourNext").textContent = i===TOUR.length-1 ? "Koniec ✓" : "Ďalej ▶";
+  let n=0; const pokus=()=>{ const t=tourS1(k) && document.querySelector(tourS1(k)); if(t && !opt.klik){ const ra=t.closest(".rail"); if(ra){ const rr=ra.getBoundingClientRect(), tr=t.getBoundingClientRect(); ra.scrollBy({top: tr.top-rr.top-rr.height/2+tr.height/2, behavior:"smooth"}); } else t.scrollIntoView({block:"center",behavior:"smooth"}); } tourPlace(); if(k.sel && !t && n++<8) setTimeout(pokus,150); };
+  setTimeout(pokus,120);
+}
+/* sel môže byť aj zoznam – rámik potom obopne všetky prvky naraz */
+function tourSel(k){ return typeof k.sel==="function" ? k.sel() : k.sel; }
+function tourS1(k){ const q=tourSel(k); return Array.isArray(q) ? q[0] : q; }
+function tourRect(k){
+  const q=tourSel(k); if(!q) return null;
+  const rs=(Array.isArray(q)?q:[q]).map(q=>document.querySelector(q))
+    .filter(t=>t && t.getClientRects().length).map(t=>t.getBoundingClientRect()).filter(r=>r.width||r.height);
+  if(!rs.length) return null;
+  const top=Math.min(...rs.map(r=>r.top)), left=Math.min(...rs.map(r=>r.left)),
+        bottom=Math.max(...rs.map(r=>r.bottom)), right=Math.max(...rs.map(r=>r.right));
+  return { top, left, width:right-left, height:bottom-top };
+}
+function prezObdZoznam(otvor){
+  const l=document.querySelector(".rf-obd-list"); if(!l) return;
+  const je=l.style.display!=="none"; if(je===otvor) return;
+  const b=document.querySelectorAll(".rf-obd-btns .rf-odk")[2]; if(b) b.click();
+}
+/* Okno prezentácie sa dá chytiť a presunúť – platí do ďalšieho kroku. */
+function tourManPoz(box){
+  if(!tourMan) return;
+  const x=Math.max(4, Math.min(innerWidth-box.offsetWidth-4, tourMan.x)), y=Math.max(50, Math.min(innerHeight-box.offsetHeight-4, tourMan.y));
+  box.style.left=x+"px"; box.style.top=y+"px";
+}
+function tourTahaj(box){
+  let st=null;
+  box.addEventListener("pointerdown",e=>{
+    if(e.button>0 || e.target.closest("button,a,input")) return;
+    const r=box.getBoundingClientRect(); st={dx:e.clientX-r.left, dy:e.clientY-r.top, id:e.pointerId};
+    box.classList.add("tah"); box.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  box.addEventListener("pointermove",e=>{ if(!st) return; tourMan={x:e.clientX-st.dx, y:e.clientY-st.dy}; tourManPoz(box); });
+  const stop=()=>{ if(!st) return; st=null; box.classList.remove("tah"); };
+  box.addEventListener("pointerup",stop); box.addEventListener("pointercancel",stop);
+}
+function tourPlace(){
+  if(tourI<0) return; const k=TOUR[tourI]; const box=$("#tourBox"), spot=$("#tourSpot"), dim=$("#tourDim");
+  const r=tourRect(k); const vw=innerWidth, vh=innerHeight, bw=Math.min(380, vw-24);
+  box.style.width=bw+"px";
+  if(!r && k.roh){ spot.style.display="none"; box.classList.remove("stred"); box.style.left=(vw-bw-18)+"px"; box.style.top=(vh-box.offsetHeight-18)+"px"; tourManPoz(box); return; }
+  if(!r){
+    spot.style.display="none"; dim.style.display="";
+    box.classList.add("stred"); box.style.left=Math.round((vw-bw)/2)+"px"; box.style.top=Math.round(vh/2-box.offsetHeight/2)+"px"; tourManPoz(box); return;
+  }
+  box.classList.remove("stred"); dim.style.display="none"; spot.style.display="";
+  const p=6;
+  if(k.roh){
+    const top=Math.max(4,r.top-p), left=Math.max(4,r.left-p), w=Math.min(vw-8,r.width+2*p), h=Math.min(vh-8, r.height+2*p);
+    Object.assign(spot.style,{top:top+"px",left:left+"px",width:w+"px",height:h+"px"});
+    box.style.left=(vw-bw-18)+"px"; box.style.top=(vh-box.offsetHeight-18)+"px"; tourManPoz(box); return;
+  }
+  const top=Math.max(4,r.top-p), left=Math.max(4,r.left-p), w=Math.min(vw-8,r.width+2*p), h=Math.min(vh-8, r.height+2*p);
+  Object.assign(spot.style,{top:top+"px",left:left+"px",width:w+"px",height:h+"px"});
+  const bh=box.offsetHeight; let bt, bl;
+  if(top+h+12+bh < vh-8) bt=top+h+12; else if(top-12-bh>58) bt=top-12-bh; else bt=Math.max(58, Math.min(vh-bh-8, top));
+  bl=Math.min(vw-bw-12, Math.max(12, left));
+  if(bt===Math.max(58, Math.min(vh-bh-8, top)) && left+w+bw+24<vw) bl=left+w+12;   // vedľa, keď nie je miesto hore ani dole
+  box.style.top=bt+"px"; box.style.left=bl+"px"; tourManPoz(box);
+}
+document.addEventListener("keydown",e=>{
+  if(tourI<0) return;
+  const vPoli = e.target.closest && e.target.closest("input,textarea,select");
+  if(vPoli && !["PageDown","PageUp","Escape"].includes(e.key)) return;   // v políčku fungujú len klávesy klikača
+  if(["ArrowRight","PageDown"," ","Enter"].includes(e.key)){ e.preventDefault(); tourGo(tourI+1); }
+  else if(["ArrowLeft","PageUp"].includes(e.key)){ e.preventDefault(); tourGo(tourI-1); }
+  else if(e.key==="Escape"){ tourEnd(); }
+});
+window.addEventListener("resize",()=>tourPlace());
+function tourKlikPole(e){
+  if(tourI<0 || !(TOUR[tourI]?.form || TOUR[tourI]?.formStart)) return;
+  const t=e.target; if(!t.closest || !t.closest("#scrim .modal")) return;
+  for(let i=0;i<TOUR.length;i++){
+    const k=TOUR[i]; if(!k.form) continue;
+    const q=tourSel(k); const qs=Array.isArray(q)?q:[q];
+    if(qs.some(x=>{ const el=document.querySelector(x); return el && el.contains(t); })){ if(i!==tourI) tourGo(i,{bezPred:true, klik:true}); return; }
+  }
+}
+document.addEventListener("focusin", tourKlikPole, true);
+document.addEventListener("pointerdown", tourKlikPole, true);
+function prezStartBtn(){
+  if($("#prezStart")) return;
+  const w=el("div","prez-start-w"); w.id="prezStart";
+  if(tourPosl>0){
+    const b=el("button","prez-start",`▶ Pokračovať v prezentácii <span>krok ${tourPosl+1} z ${TOUR.length}</span>`); b.type="button";
+    b.onclick=()=>tourStart(tourPosl);
+    const z=el("button","prez-znova","↺ Od začiatku"); z.type="button"; z.onclick=()=>tourStart(0);
+    w.append(z,b);
+  } else {
+    const b=el("button","prez-start","▶ Spustiť prezentáciu"); b.type="button"; b.onclick=()=>tourStart(0); w.append(b);
+  }
+  document.body.appendChild(w);
+}
+/* Tlačidlo v hornej lište – len admin; otvorí prezentáciu v novej karte (ukážkové dáta) */
+function prezTlacidlo(){
+  if(PREZ || $("#prezBtn")) return;
+  if(state.user?.role!=="admin" && USE_FIREBASE) return;
+  const ta=document.querySelector(".top-actions"); if(!ta) return;
+  const b=el("button","ta-btn prez-btn",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M10 7.5v5l4-2.5z" fill="currentColor"/></svg>`);
+  b.id="prezBtn"; b.type="button"; b.title="Prezentácia / školenie – otvorí sa v novej karte na ukážkových dátach";
+  b.onclick=()=>window.open(location.pathname+"?prezentacia=1","_blank");
+  ta.insertBefore(b, ta.firstChild);
 }
 
 function viewManazerskyPrehlad(){
@@ -18910,7 +19366,7 @@ function viewResults(){
         <div class="res-k"><span>Tržby NB</span><b>${maT?eur(t):"—"}</b></div>
         <div class="res-k mz${m<0?" zap":""}"><span>Marža NB</span><b>${maM?eur(m):"—"}</b></div>
         <div class="res-k"><span>Marža v %</span><b>${pct!=null?pct.toLocaleString("sk-SK")+" %":"—"}</b></div>
-        ${jeMarketingRola()?"":`<div class="res-k od"><span>${vidiOdmenu()?"Odmena":"Moja schválená odmena"}</span><b>${maO?eur(Math.round(odm*100)/100):"—"}</b>${
+        ${skryOdmeny()?"":`<div class="res-k od"><span>${vidiOdmenu()?"Odmena":"Moja schválená odmena"}</span><b>${maO?eur(Math.round(odm*100)/100):"—"}</b>${
           vidiOdmenu() && maO ? `<i>z toho schválené ${eur(Math.round(odmSchv*100)/100)}</i>` : ""}</div>`}
         <div class="res-k sm"><span>Obdobie</span><b>${esc(resPopisObdobia())}</b><i>${rows.length} ${plural(rows.length,"prípad","prípady","prípadov")}</i></div>`;
     }
@@ -20472,6 +20928,7 @@ function entryCard(e,clients,opts={}){
   const special = specialClientInfo(e);
   const card=el("div","entry"+(isHighlighted?" highlighted":"")+(e.isNewBusiness?" nb":"")+(e.sleeping?" sleeping":"")); card.style.gridTemplateColumns="1fr";
   card.dataset.lnk = e.linkId || "";
+  card.dataset.eid = e.id || "";
   if(special && !e.isNewBusiness && !e.sleeping){ card.style.border=`1.5px solid ${hexA(special.color,.35)}`; }
   const canEditE=canEdit(e);
   // Spiaci záznam: koľko týždňov už "spí" a či je čas ho pripomenúť (4+ týždňov bez zmeny)
