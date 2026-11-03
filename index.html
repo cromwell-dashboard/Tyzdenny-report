@@ -3616,6 +3616,37 @@ th.mk-zth-ik .mk-sip{margin-left:0}
 .mk-zoz tr.mk-akt td{border-left:none!important; border-right:none!important}
 .mk-frad{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:0 0 10px}
 .mk-frad .mk-hl{width:180px; margin:0}
+/* Marketing — úzka sivá filtračná lišta */
+.mp .mk-bar{display:block;height:auto;background:var(--line-2);border-color:transparent;padding:5px 8px;margin-bottom:8px}
+.mk-bar .mp-lista{flex-wrap:nowrap;gap:6px;overflow-x:auto;scrollbar-width:none;flex:0 0 auto;min-height:30px;align-items:center}
+.mk-bar .mp-lista::-webkit-scrollbar{display:none}
+.mk-bar .mp-lista>*{flex:0 0 auto}
+.mk-bar select,.mk-bar .mp-rychle button,.mk-bar .mp-ex{height:28px}
+.mk-lupa{width:30px;height:28px;display:grid;place-items:center;border:1px solid var(--line);background:#fff;border-radius:4px;color:var(--ink-soft);cursor:pointer;padding:0}
+.mk-lupa svg{width:15px;height:15px}
+.mk-lupa:hover{border-color:var(--brand);color:var(--brand)}
+.mk-hl-w .mk-hl{width:170px;height:28px;margin:0;padding:0 8px}
+.mk-filtre{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 9px;border:1px solid var(--line);background:#fff;border-radius:4px;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-soft);cursor:pointer}
+.mk-filtre svg{width:13px;height:13px}
+.mk-filtre i{font-style:normal;font-size:10.5px;background:var(--brand);color:#fff;border-radius:9px;padding:0 6px}
+.mk-filtre.on,.mk-filtre.otv{border-color:var(--brand);color:var(--brand)}
+.mk-filtre .mk-f-car{font-size:10px;transition:transform .15s}
+.mk-filtre.otv .mk-f-car{transform:rotate(180deg)}
+.mk-chip{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border:0;border-radius:999px;background:var(--brand-soft);color:var(--brand);font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.mk-chip b{font-size:10px;opacity:.7}
+.mk-chip:hover b{opacity:1;color:#B5443A}
+.mk-bar .mk-obd-lbl{margin-left:6px}
+.mk-bar .mp-ex{margin-left:auto}
+.mp .mk-frad{background:#fff;border:1px solid var(--line);border-radius:5px;padding:8px;margin:-2px 0 10px}
+@media (max-width:900px){
+  .mk .mk-karty{display:none !important}
+  .mk .mk-bar .mp-ex{display:none !important}
+  .mk .mk-bar .mk-obd-lbl{display:none}
+  .mk .mk-bar .mp-rychle{display:none}
+  /* tabuľka sa v mobile posúva len do strany, nie vo vlastnom okne hore-dole */
+  .mp-tw.mk-zoz-tw:not(.lepi){max-height:none;overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch}
+  .mk-zoz-tw .mk-zoz thead th{position:static}
+}
 .mk-frad .mk-fp{padding:0 8px}
 .mk-fp{display:inline-flex; align-items:center; gap:5px; height:32px; padding:0 10px; border:1px solid var(--fborder); background:#fff; border-radius:4px; font:inherit; font-size:12.5px; font-weight:500; color:var(--ink-soft); cursor:pointer; white-space:nowrap; max-width:220px}
 .mk-fp span{overflow:hidden; text-overflow:ellipsis}
@@ -18117,9 +18148,9 @@ function viewMarketing(){
   /* ---- filtre v hornom riadku (viac miesta pre tabuľku) ---- */
   const nAkt=MK_SKUPINY.reduce((a,[k])=>a+((S.f[k]||[]).length),0)+(S.q?1:0);
   const fRad=el("div","mk-frad");
-  const hl=el("input","mp-hladaj mk-hl"); hl.placeholder="Hľadať klienta / IČO…"; hl.value=S.q||"";
-  hl.onkeydown=e=>{ if(e.key==="Enter"){ S.q=hl.value.trim(); render(); } }; hl.onchange=()=>{ S.q=hl.value.trim(); render(); };
-  fRad.appendChild(hl);
+  const hl=el("input","mp-hladaj mk-hl"); hl.id="mkHladaj"; hl.placeholder="Klient / IČO…"; hl.value=S.q||"";
+  hl.onkeydown=e=>{ if(e.key==="Enter"){ S.q=hl.value.trim(); render(); } if(e.key==="Escape"){ S.hlOtv=false; S.q=""; render(); } };
+  hl.onchange=()=>{ S.q=hl.value.trim(); render(); };
   MK_SKUPINY.forEach(([k,popis])=>{
     const poc=new Map();
     vsetky.filter(L=>sedi(L,k)).forEach(L=>hodn(L,k).forEach(h=>poc.set(h,(poc.get(h)||0)+1)));
@@ -18158,13 +18189,26 @@ function viewMarketing(){
 
   /* ---- hlavná časť ---- */
   const main=el("div","mp-main");
-  const bar=el("div","mp-bar");
+  const bar=el("div","mp-bar mk-bar");
   const l1=el("div","mp-lista");
   if(!S.tab) S.tab="leady";
+  /* Hľadanie — len lupa ako v hornej lište; klik ju rozbalí na políčko */
+  if(S.hlOtv || S.q){ const w=el("span","mk-hl-w"); w.appendChild(hl); l1.appendChild(w); if(S.hlOtv && !S.q) setTimeout(()=>document.getElementById("mkHladaj")?.focus(),0); }
+  else { const lb=el("button","mk-lupa",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`);
+    lb.type="button"; lb.title="Hľadať klienta / IČO"; lb.onclick=()=>{ S.hlOtv=true; render(); }; l1.appendChild(lb); }
+  /* Filtre — schované v rozbaľovacom paneli; v lište len tlačidlo a zvolené filtre */
+  { const fb=el("button","mk-filtre"+(nAkt?" on":"")+(S.filtreOtv?" otv":""),
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg>Filtre${nAkt?` <i>${nAkt}</i>`:""}<span class="mk-f-car">▾</span>`);
+    fb.type="button"; fb.onclick=()=>{ S.filtreOtv=!S.filtreOtv; render(); }; l1.appendChild(fb);
+    MK_SKUPINY.forEach(([k,popis])=>{ const v=S.f[k]||[]; if(!v.length) return;
+      const nz=x=>k==="fz"?((MK_FAZY.find(f=>f[0]===x)||[])[1]||x):x;
+      const ch=el("button","mk-chip",`${esc(popis)}: ${esc(v.length===1?nz(v[0]):v.length+" vybrané")} <b>✕</b>`); ch.type="button"; ch.title="Zrušiť tento filter";
+      ch.onclick=()=>{ S.f[k]=[]; render(); }; l1.appendChild(ch); });
+    if(S.vyb){ const ch=el("button","mk-chip",`${esc(S.vyb)} <b>✕</b>`); ch.type="button"; ch.onclick=()=>{ S.vyb=null; render(); }; l1.appendChild(ch); } }
   if(S.tab!=="leady"){ const w=el("label","mp-vyb",`<span>Riadky</span>`); const s2=el("select");
     MK_RIADKY.forEach(([v,t])=>{ const o=el("option",null,esc(t)); o.value=v; if(v===S.riadky) o.selected=true; s2.appendChild(o); });
     s2.onchange=()=>{ S.riadky=s2.value; S.vyb=null; render(); }; w.appendChild(s2); l1.appendChild(w); }
-  l1.appendChild(el("span","mp-lbl","Obdobie prvého oslovenia"));
+  l1.appendChild(el("span","mp-lbl mk-obd-lbl","Prvé oslovenie"));
   const ponuka=[]; { const prvyM=mkMesiac(Math.min(...vsetky.map(L=>L.prvy).filter(Boolean)));
     for(let m=prvyM < pridajMesiace(terajsiMesiac(),-47) ? pridajMesiace(terajsiMesiac(),-47) : prvyM; m<=terajsiMesiac(); m=pridajMesiace(m,1)) ponuka.push(m);
     [S.od,S.do].forEach(m=>{ if(!ponuka.includes(m)) ponuka.push(m); }); ponuka.sort(); }
@@ -18180,15 +18224,15 @@ function viewMarketing(){
   obd.appendChild(ry);
   const ex=el("button","btn mp-ex",`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg> XLS`);
   ex.type="button"; ex.title="Export zoznamu leadov do Excelu";
-  obd.appendChild(ex);
   l1.appendChild(obd); obd.style.border="0"; obd.style.padding="0";
+  l1.appendChild(ex);
   bar.appendChild(l1); main.appendChild(bar);
 
   // KPI
   const n=leady.length, poF=f=>leady.filter(L=>L.fz===f).length;
   const ziskane=poF("pot")+poF("fak"), vProc=poF("osl")+poF("jed"), odm=poF("odm");
   const T=leady.reduce((a,L)=>a+L.t,0), MZ=leady.reduce((a,L)=>a+L.mz,0);
-  const karty=el("div","mp-karty mk-karty");
+  const karty=el("div","mp-karty mk-karty");   // v mobile skryté — hneď ide tabuľka Leady
   [["Leady",String(n),`${new Set(leady.map(L=>L.k.split("|")[0])).size} rôznych klientov`,""],
    ["V procese",String(vProc),`oslovené ${poF("osl")} · ponuka/jednanie ${poF("jed")}`,""],
    ["Získané",String(ziskane),`potvrdené ${poF("pot")} · zákazka/faktúra ${poF("fak")}`,"pos"],
@@ -18315,7 +18359,8 @@ function viewMarketing(){
     X.writeFile(wb, `Marketing_leady_${S.od}_${S.do}.xlsx`);
   };
 
-  main.insertBefore(fRad, karty); wrap.appendChild(main);
+  if(S.filtreOtv) main.insertBefore(fRad, karty);
+  wrap.appendChild(main);
   // výška hornej lišty — pod ňu sa prilepí hlavička tabuľky Leady
   setTimeout(()=>{ const tb=document.querySelector(".topbar"); if(tb) document.documentElement.style.setProperty("--mk-top", Math.round(tb.getBoundingClientRect().height)+"px");
     const tw=wrap.querySelector(".mk-zoz-tw"), tt=tw?.querySelector(".mk-zoz");
