@@ -10455,6 +10455,13 @@ function buildStatic(){
     rl.onclick=()=>{ closeSegSheet(); state.rl={ week:rlUvodnyTyzden(), otv:{} }; rlKoncept=null; state.activeClient=null; state.view="reportLidra"; render(); window.scrollTo(0,0); };
     segSheetList.appendChild(rl);
   }
+  /* Marketing — v mobile v ponuke Služby; obchodníci ho nevidia */
+  {
+    const mk=el("button","seg-sheet-row"); mk.id="ssMarketing"; mk.style.display="none";
+    mk.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;flex:0 0 auto"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><span class="ss-name">Marketing</span><span class="ss-ct"></span>`;
+    mk.onclick=()=>{ closeSegSheet(); state.activeClient=null; state.view="marketing"; render(); window.scrollTo(0,0); };
+    segSheetList.appendChild(mk);
+  }
   {
     const cal=el("button","seg-sheet-row"); cal.id="ssCenove";
     cal.innerHTML=`<span class="ss-dot" style="background:#12915A"></span><span class="ss-name">Cenové ponuky</span><span class="ss-ct" data-ssct="calculators">0</span>`;
@@ -10692,6 +10699,7 @@ function renderNow(){
   const badge=$("#bnTaskBadge");
   if(badge){ if(overdueTasks.length){ badge.textContent=overdueTasks.length>9?"9+":overdueTasks.length; badge.classList.add("show"); } else badge.classList.remove("show"); }
   // Segment sheet — Reporty lídrov namiesto Cenových ponúk (obchodník má ďalej Cenové ponuky)
+  { const m=$("#ssMarketing"); if(m){ m.style.display = vidiMarketing() ? "" : "none"; m.classList.toggle("active", state.view==="marketing"); } }
   { const rlr=$("#ssReporty"), cal=$("#ssCenove"), vidi=vidiReportLidrov();
     if(rlr) rlr.style.display = vidi ? "" : "none";
     if(cal) cal.style.display = vidi ? "none" : "";
