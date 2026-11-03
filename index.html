@@ -18626,6 +18626,14 @@ function prezZamkniZapis(b){
     prezObnov();
   };
   b.doplnIco=async(id,ico)=>b.save({ id, leadIco:ico });
+  /* hromadné opravy (oslovenie, oslovenie info, zdroj…) — v prezentácii len lokálne pri aktivitách */
+  b.opravMena=async zapisy=>{
+    (zapisy||[]).forEach(([kol,id,data])=>{ if(kol!=="entries" || !id) return;
+      const pred=prezLok.get(id) || _allBase.find(e=>e.id===id); if(!pred) return;
+      prezLok.set(id,{ ...pred, ...data, id }); });
+    prezObnov(); return null;
+  };
+  b.addApproachInfo=async v=>{ if(v && !(state.approachInfos||[]).includes(v)) state.approachInfos=[...(state.approachInfos||[]), v]; };
   b.remove=async id=>{ prezLok.delete(id); prezSkryte.add(id); prezObnov(); };
 }
 /* Selektor karty aktivity, ktorú sme v prezentácii práve založili (ak existuje). */
