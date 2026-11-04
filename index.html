@@ -3662,6 +3662,13 @@ th.mk-zth-ik .mk-sip{margin-left:0}
 .mk-hl-hore.zbal:hover{border-color:var(--brand);color:var(--brand)}
 .svc-bar .mk-lista-hore .mk-fz-ik{width:30px;padding:0;justify-content:center;font-weight:700;color:#B5443A}
 .mk-tabs{align-items:flex-end}
+.kn-akc{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.kn-btn{background:#fff !important;color:var(--ink-soft) !important;border:1px dashed #C3C8D2 !important}
+.kn-btn.on{background:#FFF6E5 !important;border:1px solid #E7B95A !important;color:#8A5A00 !important}
+.kn-oz{color:#8A5A00}
+.e-contacts:has(> .e-bez-kont){display:block}
+.e-bez-kont{display:inline-flex;width:auto;border:1px dashed #E1A84A;background:#FFF8EC;color:#9A6200;border-radius:999px;font:inherit;font-size:11.5px;font-weight:600;padding:2px 10px;cursor:pointer}
+.e-bez-kont:hover{background:#FFEFD3}
 .mk-sucty{display:flex;gap:6px;align-self:center;margin:0 0 6px 12px}
 .mk-sucty.vpravo{margin-left:auto}
 .mk-sucet{display:flex;align-items:baseline;gap:6px;background:#fff;border:1px solid var(--line);border-radius:5px;padding:4px 10px;white-space:nowrap}
@@ -5487,8 +5494,9 @@ body.tour-on .modal{z-index:auto}
         <div class="field cele" id="fContactsField" style="display:none">
           <div class="lead-contacts-box">
             <div class="lead-contacts-head">
-              <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Kontaktné osoby</b>
-              <button type="button" class="btn btn-sm" id="eAddContactBtn">+ Pridať kontakt</button>
+              <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Kontaktné osoby <span class="req" id="fContactsReq" style="display:none">povinné</span></b>
+              <span class="kn-akc"><button type="button" class="btn btn-sm kn-btn" id="eNoContactBtn" style="display:none" title="Kontakt naozaj nemáte? Označte to — kontakt doplníte neskôr.">Kontakt zatiaľ nemám</button>
+              <button type="button" class="btn btn-sm" id="eAddContactBtn">+ Pridať kontakt</button></span>
             </div>
             <div class="lead-contacts-inner">
               <div id="eContacts"></div>
@@ -8556,6 +8564,33 @@ function wireAddrInputs(){
 }
 /* --- Kontaktné osoby priamo v zázname --- */
 let entryContacts=[];
+/* New business: kontakt je povinný — alebo obchodník označí „Kontakt zatiaľ nemám".
+   Pri marketingovom oslovení je povinný vždy. Customer care a interné bez povinnosti. */
+let entryBezKontaktu=false;
+function kontaktUI(){
+  const kind=document.querySelector("#fKind input:checked")?.value;
+  const nb = kind==="nb";
+  const mk = nb && jeMarketing($("#fApproach")?.value);
+  if((entryContacts||[]).length || !nb || mk) entryBezKontaktu=false;
+  const kr=$("#fContactsReq"); if(kr) kr.style.display = nb ? "" : "none";
+  const b=$("#eNoContactBtn");
+  if(b){ b.style.display = (nb && !mk && !(entryContacts||[]).length) ? "" : "none"; b.classList.toggle("on", entryBezKontaktu);
+    b.innerHTML = entryBezKontaktu ? "✓ Kontakt zatiaľ nemám" : "Kontakt zatiaľ nemám"; }
+  const box=$("#eContacts"); const h=box?.querySelector(".lead-hint");
+  if(h) h.innerHTML = entryBezKontaktu
+    ? `<b class="kn-oz">Označené: kontakt zatiaľ nemám.</b> Na karte aktivity sa ukáže „bez kontaktu – doplniť“, aby ste ho neskôr nezabudli doplniť.`
+    : `Zatiaľ žiadna kontaktná osoba. Keď zadáš klienta, doplnia sa tie, ktoré naň už poznáme — alebo pridaj novú tlačidlom vyššie.`;
+}
+document.addEventListener("click", ev=>{
+  const d=ev.target.closest?.("[data-dopl-kontakt]"); if(!d) return;
+  ev.stopPropagation(); const e=(state.all||[]).find(x=>x.id===d.dataset.doplKontakt); if(!e) return;
+  if(!canEdit(e)){ toast("Kontakt doplní obchodník, ktorý aktivitu zapísal."); return; }
+  openModal(e); setTimeout(()=>{ const cf=$("#fContactsField"); if(cf){ cf.style.display=""; cf.scrollIntoView({block:"center"}); } $("#eAddContactBtn")?.click(); },120);
+}, true);
+document.addEventListener("click", ev=>{
+  const b=ev.target.closest?.("#eNoContactBtn"); if(!b) return;
+  ev.preventDefault(); entryBezKontaktu=!entryBezKontaktu; kontaktUI();
+});
 /* Kontakty, ktoré na klienta už niekto zapísal — v záznamoch aj v databázach.
    Obchodník ich tak nemusí nahadzovať druhýkrát. */
 function znameKontakty(meno, ico){
@@ -8593,6 +8628,7 @@ function doplnZnameKontakty(){
 function renderEntryContacts(){
   const box=$("#eContacts");
   if(!box) return;
+  setTimeout(()=>{ try{ kontaktUI(); }catch(e){} },0);
   if(!entryContacts.length){
     box.innerHTML=`<div class="lead-hint">Zatiaľ žiadna kontaktná osoba. Keď zadáš klienta,
       doplnia sa tie, ktoré naň už poznáme — alebo pridaj novú tlačidlom vyššie.</div>`;
@@ -8839,7 +8875,9 @@ function fillApproach2(current){
   sel.value=current||"";
   const hl=$("#fApproach");
   const ukaz=()=>{ const r=$("#fApproach2Row"); if(r) r.style.display = jeMarketing(hl?.value) ? "" : "none";
-    const o=$("#fOdkialRow"); if(o) o.style.display = pytajOdkial(hl?.value) ? "" : "none"; };
+    const o=$("#fOdkialRow"); if(o) o.style.display = pytajOdkial(hl?.value) ? "" : "none";
+    /* pri marketingovom oslovení je kontaktná osoba povinná */
+    try{ kontaktUI(); }catch(e){} };
   if(hl && !hl.dataset.mk2){ hl.dataset.mk2="1"; hl.addEventListener("change", ukaz); }
   ukaz();
 }
@@ -18664,7 +18702,7 @@ const TOUR=[
  {sek:"Zápis New business", form:true, roh:true, t:"Klient", sel:".field:has(> #fClient)", x:"Názov firmy. Po načítaní z Finstatu sa doplní sám aj s adresou.", pred:()=>prezOpenNovy()},
  {sek:"Zápis New business", form:true, roh:true, t:"Názov zákazky", sel:"#fZakazkaField", x:"Nepovinné. Krátky názov, napr. „Vianočný leták“ – pomôže odlíšiť viac obchodov u jedného klienta.", pred:()=>prezOpenNovy()},
  {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Materiál", sel:"#fMaterialField", x:"Pri agentúre povinné – pre ktorého klienta / aký materiál agentúra objednáva.", pred:()=>prezOpenNovy()},
- {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Kontaktné osoby", sel:"#fContactsField", x:"Pridajte kontaktnú osobu – meno, pozícia, telefón a e-mail. Pri známom klientovi sa ponúknu kontakty, ktoré už poznáme.", pred:()=>prezOpenNovy()},
+ {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Kontaktné osoby", sel:"#fContactsField", x:"Pridajte kontaktnú osobu – meno, pozícia, telefón a e-mail. Pri známom klientovi sa ponúknu kontakty, ktoré už poznáme. Pri New business je kontakt povinný – ak ho naozaj nemáte, kliknite „Kontakt zatiaľ nemám“ a na karte sa ukáže pripomienka „bez kontaktu – doplniť“. Pri marketingovom oslovení je povinný vždy.", pred:()=>prezOpenNovy()},
  {sek:"Zápis New business", form:true, roh:true, t:"Typ záznamu", sel:"#fKindPod", x:"Dnes zakladáme New business – nového klienta alebo novú službu. Customer care je práca s existujúcim klientom, Interné / projekty interná práca. Pri novom IČO sa New business ponúkne sám.", pred:()=>prezOpenNovy()},
  {sek:"Zápis New business", form:true, roh:true, t:"Služba", sel:"#fKindPod + .field", x:"Vyberte službu, ktorej sa obchod týka.", pred:()=>prezOpenNovy()},
  {sek:"Zápis New business", form:true, roh:true, skryt:true, t:"Produkt", sel:"#fProduktField", x:"Pri niektorých službách upresníte produkt (napr. Aut., Ad-hoc, Balíky) – rozhoduje o pravidle odmeňovania.", pred:()=>prezOpenNovy()},
@@ -21011,7 +21049,7 @@ function entryCard(e,clients,opts={}){
       const ph=(c.phone||"").split(/·|,|;/)[0]?.trim();
       const ml=(c.email||"").split(/[,;]/)[0]?.trim();
       return `<span class="e-contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><b>${esc(nm)}</b>${c.position?` · ${esc(c.position)}`:""}${ph?` · <a href="tel:${esc(ph.replace(/\s/g,""))}">${esc(ph)}</a>`:""}${ml?` · <a href="mailto:${esc(ml)}">${esc(ml)}</a>`:""}</span>`;
-    }).join("")}</div>`:""}
+    }).join("")}</div>`:(kindOf(e)==="nb" && !e._suggested ? `<div class="e-contacts"><button type="button" class="e-bez-kont" data-dopl-kontakt="${esc(e.id)}" title="${e.kontaktNeznamy?`Označil(a) ${esc(e.kontaktNeznamyKto||"")} – kontakt zatiaľ nemá`:"Pri aktivite chýba kontaktná osoba"}">bez kontaktu – doplniť</button></div>`:"")}
     <div class="e-foot"><span class="obch"><span class="obch-info"><span>${esc(resolveOwnerName(e))}${coOwnerNames(e).length?` <span class="co-obch-note">+ ${esc(coOwnerNames(e).join(", "))}</span>`:""}</span>${updDateHtml}</span></span>
       ${e.editedByName?`<span class="edited-by">✎ upravil ${esc(resolveEditedByName(e))}</span>`:""}
       ${(footBits.length||xsTags)?`<span class="ft-chips">${xsTags||""}${footBits.join("")}</span>`:""}
@@ -22125,6 +22163,7 @@ function openModal(entry,presetSeg){
   $("#fApproachInfo").value = entry?.nbApproachInfo || "";
   // pri zápise z databázy sa kontaktné osoby firmy prenesú do záznamu
   entryContacts = (entry?.contacts || pendingLeadOrigin?.contacts || []).map(c=>({...c}));
+  entryBezKontaktu = !!entry?.kontaktNeznamy;
   renderEntryContacts();
   $("#eContactForm").style.display="none";
   $("#fIcoHint").textContent = "Ak firmu máme v databázach, doplní sa názov automaticky.";
@@ -22137,6 +22176,7 @@ function openModal(entry,presetSeg){
   syncFlagBtn();
   $("#fFlagBtn").onclick=(ev)=>{ ev.stopPropagation(); openKrajinaPicker(ev.currentTarget); };
   const syncKindUI=()=>{
+    setTimeout(()=>{ try{ kontaktUI(); }catch(e){} },0);
     const kind = $("#fKind").querySelector("input:checked")?.value || "cc";
     const nb = kind==="nb", vnutorne = kind==="int";
     // Interný záznam sa nikdy neviaže na firmu — celá sekcia Firma zmizne.
@@ -22389,6 +22429,22 @@ async function saveFromModalInner(){
     toast("Doplň prosím, ako sa o nás klient dozvedel (alebo vyber „Klient nevedel“ a pod.).");
     return;
   }
+  /* New business — kontaktná osoba povinná, alebo „Kontakt zatiaľ nemám".
+     Pri marketingovom oslovení vždy povinná. Staršie NB záznamy bez kontaktu
+     sa dajú ďalej upravovať (povinnosť len pri novom NB alebo zmene na marketing). */
+  { const kindV=$("#fKind").querySelector("input:checked")?.value;
+    if(!vnutorne && kindV==="nb" && !(entryContacts||[]).length){
+      const mk = $("#fApproachSection").style.display!=="none" && jeMarketing($("#fApproach").value);
+      const uzBolNb = !!editing && kindOf(editing)==="nb";
+      const povinne = mk ? !(uzBolNb && jeMarketing(editing.nbApproach)) : (!uzBolNb && !entryBezKontaktu);
+      if(povinne){
+        const cf=$("#fContactsField"); if(cf){ cf.style.display=""; cf.scrollIntoView({block:"center",behavior:"smooth"});
+          const bx=cf.querySelector(".lead-contacts-box"); if(bx){ bx.style.outline="2px solid var(--red)"; setTimeout(()=>{ bx.style.outline=""; },2500); } }
+        toast(mk ? "Pri marketingovom oslovení je kontaktná osoba povinná — pridajte ju cez + Pridať kontakt (a kliknite Pridať)."
+                 : "Pri New business doplňte kontaktnú osobu — alebo kliknite „Kontakt zatiaľ nemám“.");
+        return;
+      }
+    } }
   // IČO je povinné len tam, kde je firma. Interný záznam sekciu Firma vôbec nemá,
   // takže by sa kontrola dožadovala poľa, ktoré používateľ ani nevidí —
   // uloženie by sa ticho prerušilo a nič by sa nestalo.
@@ -22560,6 +22616,9 @@ async function saveFromModalInner(){
     // údaje firmy načítané pri zadaní IČO — záznam aj klient vzniknú naraz
     companyInfo: pendingFinstat ? {...pendingFinstat} : (baseEntry.companyInfo ?? null),
     contacts: entryContacts.length ? entryContacts.map(c=>({...c})) : (baseEntry.contacts ?? []),
+    ...(()=>{ const ma=entryContacts.length || (baseEntry.contacts||[]).length;
+      if(ma || !entryBezKontaktu) return { kontaktNeznamy:null };
+      return baseEntry.kontaktNeznamy ? { kontaktNeznamy:true } : { kontaktNeznamy:true, kontaktNeznamyKto:state.user?.name||null, kontaktNeznamyKedy:Date.now() }; })(),
     dmisCountry: $("#fCountry").value || "SK",
     dmisRevenue: $("#fRevenue").value!=="" ? Number($("#fRevenue").value) : (baseEntry.dmisRevenue ?? null),
     dmisActType: $("#fActType").value || (baseEntry.dmisActType ?? null),
