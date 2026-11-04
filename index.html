@@ -237,6 +237,7 @@ input,select,textarea{font-family:inherit; font-size:14px}
   background:var(--card); border:1px solid var(--line); color:var(--stav,var(--muted));
   cursor:pointer; padding:0}
 .lnk-chain svg{width:12px; height:12px}
+.lnk-chain:has(span){width:auto; height:22px; top:-11px; border-radius:999px; display:inline-flex; gap:5px; align-items:center; padding:0 9px; font:inherit; font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; white-space:nowrap}
 .lnk-chain:hover{background:var(--stav,var(--line)); border-color:var(--stav,var(--line)); color:#fff}
 .proj-badge{margin-left:7px; font-size:10.5px; font-weight:600; color:#5B3FB0;
   background:#F3EFFE; border-radius:5px; padding:1px 8px}
@@ -8418,6 +8419,8 @@ function normalizujWeb(v){
   return /^[a-z0-9][a-z0-9-]*(\.[a-z0-9-]+)*\.[a-z]{2,8}$/i.test(u) ? u.toLowerCase() : "";
 }
 /* Prepojené záznamy — jedna zákazka rozpísaná na viac služieb. */
+/* Kľúč spojenej zákazky — rovnaké linkId (ručne prepojené) A rovnaký názov zákazky. */
+const lnkKluc = e => e?.linkId ? e.linkId+"|"+normalizeForCompare(String(e.zakazka||"").trim()) : "";
 const linkSurodenci = e => (!e?.linkId) ? []
   : state.all.filter(x=>x.linkId===e.linkId && x.id!==e.id);
 /* Spojka pri prepojených záznamoch. Prejde vykreslený zoznam a susedným
@@ -8464,8 +8467,8 @@ function oznacPrepojene(){
     [...box.children].slice(1).forEach(karta=>{
       const b=el("button","lnk-chain");
       b.type="button";
-      b.title="Jedna zákazka rozpísaná na viac služieb — klikni pre zvýraznenie";
-      b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>`;
+      b.title=(prva.dataset.zak ? `Spojená zákazka „${prva.dataset.zak}“` : "Jedna zákazka rozpísaná na viac služieb")+" — klikni pre zvýraznenie";
+      b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span>spojená zákazka</span>`;
       b.onclick=(ev)=>{
         ev.stopPropagation();
         box.classList.add("zvyraznene");
@@ -8479,7 +8482,44 @@ function oznacPrepojene(){
 /* Polia, ktoré má celá skupina spoločné. Služba, produkt, obchodný prípad
    a výsledky spoločné NIE sú — každá služba si ich nesie vlastné. */
 const LINK_SPOLOCNE = ["events","status","lossReason","client","ico","leadIco","web",
-  "zakazka","nbApproach","nbApproachInfo","isAgency","material","sleeping","sleepingSince"];
+  "zakazka","nbApproach","nbApproachInfo","nbApproach2","nbOdkial","isAgency","material","sleeping","sleepingSince",
+  /* dátum / týždeň, progresy a kontakty — spojené záznamy sú kópia, nesmú sa rozísť */
+  "weekId","datum","povodnyTyzden","povodnyDatum","progres","contacts","kontaktNeznamy","warning"];
+const linkRovnake = (a,b) => (a==null && b==null) || (typeof a==="object" || typeof b==="object" ? JSON.stringify(a??null)===JSON.stringify(b??null) : a===b);
+/* Každé uloženie záznamu zo spojenej zákazky (zmena fázy na karte, progres,
+   úprava…) sa prenesie aj na ostatné služby zákazky. */
+/* Jednorazová oprava po načítaní: ak sa spojené záznamy rozišli (napr. progres
+   len pri jednej službe), zjednotia sa podľa naposledy upraveného. Len skupiny,
+   ktoré prihlásený smie upravovať. */
+let _linkOpravaNaplanovana=false;
+function linkOpravaNaplanuj(){
+  if(_linkOpravaNaplanovana || !(state.all||[]).length || /[?&]prezentacia=1\b/.test(location.search)) return;
+  _linkOpravaNaplanovana=true;
+  setTimeout(async()=>{
+    const sk=new Map();
+    (state.all||[]).forEach(e=>{ if(e.linkId){ if(!sk.has(e.linkId)) sk.set(e.linkId,[]); sk.get(e.linkId).push(e); } });
+    for(const arr of sk.values()){
+      if(arr.length<2 || !arr.every(e=>{ try{ return canEdit(e); }catch(_){ return false; } })) continue;
+      const naj=arr.slice().sort((a,b)=>(b.updatedAt||b.editedByAt||0)-(a.updatedAt||a.editedByAt||0))[0];
+      if(arr.some(x=>x!==naj && LINK_SPOLOCNE.some(f=>f in naj && !linkRovnake(x[f], naj[f])))){
+        try{ await zosuladSurodencov(naj); }catch(err){ console.warn("oprava spojenej zákazky:", err); }
+      }
+    }
+  }, 5000);
+}
+function prepojSave(b){
+  if(!b || b._prepoj) return b;
+  const povodne=b.save.bind(b);
+  b.save=async entry=>{
+    const r=await povodne(entry);
+    if(entry?.linkId && !_linkSync){
+      const plny={ ...((state.all||[]).find(x=>x.id===entry.id)||{}), ...entry };
+      try{ await zosuladSurodencov(plny); }catch(err){ console.warn("spojená zákazka:", err); }
+    }
+    return r;
+  };
+  b._prepoj=true; return b;
+}
 
 let _linkSync=false;   // poistka proti donekonečna sa opakujúcemu prepisovaniu
 /* Prepíše spoločné polia na ostatné záznamy skupiny. */
@@ -8491,7 +8531,7 @@ async function zosuladSurodencov(e){
   try{
     for(const x of su){
       const zmeny={};
-      LINK_SPOLOCNE.forEach(k=>{ if((x[k] ?? null) !== (e[k] ?? null)) zmeny[k]=e[k] ?? null; });
+      LINK_SPOLOCNE.forEach(k=>{ if(k in e && !linkRovnake(x[k], e[k])) zmeny[k]=e[k] ?? null; });
       if(!Object.keys(zmeny).length) continue;
       const novy={ ...x, ...zmeny,
         editedByName: state.user?.name || null, editedByKey: state.user?.key || null,
@@ -9071,6 +9111,13 @@ function viewActivities(lenMoje){
   state.listScope="week";
   let zdroj = lenMoje ? state.all.filter(isMine) : state.all;
   let zoznam = zdroj.filter(vSluzbach).filter(vObdobi);
+  /* Pri zvolenej službe pridáme aj ručne prepojené záznamy tej istej zákazky
+     (rovnaké linkId aj názov zákazky) z iných služieb — zobrazia sa hneď pod ňou so spinkou. */
+  if((state.aktSluzby||[]).length){
+    const kluce=new Set(zoznam.map(lnkKluc).filter(Boolean));
+    if(kluce.size){ const uz=new Set(zoznam.map(e=>e.id));
+      zoznam=zoznam.concat(zdroj.filter(e=>!uz.has(e.id) && kluce.has(lnkKluc(e)) && vObdobi(e))); }
+  }
   /* Pri filtri Týždeň ukazujeme pod ním aj predchádzajúci týždeň — v pondelok
      ráno by inak zoznam vyzeral prázdny. */
   const o=state.obdobie||{};
@@ -10303,7 +10350,7 @@ async function boot(){
   if(PREZ){
     Object.defineProperty(state,"rewards",{ get:()=>[], set:()=>{}, configurable:true });
     if(USE_FIREBASE){
-      try{ backend=await firebaseBackend(); }catch(err){ console.error(err); backend=null; }
+      try{ backend=prepojSave(await firebaseBackend()); }catch(err){ console.error(err); backend=null; }
       if(backend){
         prezReal=true; prezZamkniZapis(backend);
         backend.onUser(u=>{
@@ -10323,7 +10370,7 @@ async function boot(){
     return;
   }
   if(USE_FIREBASE){
-    try{ backend=await firebaseBackend(); }
+    try{ backend=prepojSave(await firebaseBackend()); }
     catch(err){ console.error(err); banner("Nepodarilo sa načítať Firebase — skontroluj config a pripojenie. Beží demo režim."); backend=demoBackend(); demoStart(); return; }
     backend.onUser(u=>{
       if(u){
@@ -10338,7 +10385,7 @@ async function boot(){
       } else showLogin();
     });
     wireLogin();
-  } else { backend=demoBackend(); demoStart(); }
+  } else { backend=prepojSave(demoBackend()); demoStart(); }
 }
 
 async function importDemoData(){
@@ -10761,6 +10808,7 @@ function renderNow(){
      v nich niečo zlyhalo, obsah stránky sa musí vykresliť tak či tak.
      Inak zostane appka prázdna a vyzerá to, akoby sa nenačítali dáta. */
   try{ vykresliSvcBar(); }catch(e){ console.error("filter služieb:", e); }
+  try{ linkOpravaNaplanuj(); }catch(e){}
   try{ prezTlacidlo(); }catch(e){}
   try{ vykresliRailFiltre(); }catch(e){ console.error("filtre v menu:", e); }
   /* Otvorenú ponuku zatvárame len pri zmene sekcie — inak by ju zavrel
@@ -15612,9 +15660,9 @@ function renderGroupedList(container, list, opts={}){
     row.appendChild(hd);
     if(isOpen){
       const body=el("div","gl-body");
-      zoradPrepojene([...g.entries], e=>e.linkId).forEach(e=>{
+      zoradPrepojene([...g.entries], lnkKluc).forEach(e=>{
         const it=el("div","gl-item"+(e.sleeping?" sleeping":""));
-        it.dataset.lnk = e.linkId || "";
+        it.dataset.lnk = lnkKluc(e);
         if(e.linkId){
           const st=e.isNewBusiness ? (ST[e.status]?.color||"#12915A")
                                    : (SEG[e.segment]?.color||"#9AA1AC");
@@ -15768,7 +15816,13 @@ function sortEntries(rows){
   if(state.sortBy==="client")           rows.sort((a,b)=>(a.client||"").localeCompare(b.client||"","sk") || entryTs(b)-entryTs(a));
   else if(state.sortBy==="salesperson") rows.sort((a,b)=>resolveOwnerName(a).localeCompare(resolveOwnerName(b),"sk") || (a.client||"").localeCompare(b.client||"","sk"));
   else                                  rows.sort((a,b)=>entryTs(b)-entryTs(a));   // podľa dátumu, najnovšie hore
-  return zoradPrepojene(rows, e=>e.linkId);
+  /* pri zvolenej službe ide jej záznam v spojenej zákazke prvý, prepojené pod ním */
+  let r2=rows;
+  if((state.aktSluzby||[]).length) r2=[...rows.filter(vSluzbach), ...rows.filter(e=>!vSluzbach(e))];
+  /* zoradenie aj „na mieste" — niektoré zoznamy výsledok nepreberajú */
+  const out=zoradPrepojene(r2, lnkKluc);
+  rows.splice(0, rows.length, ...out);
+  return rows;
 }
 /* Prepojené položky postaví hneď za seba. Skupina si drží miesto podľa svojho
    prvého člena, takže zvolené zoradenie zostáva v platnosti. */
@@ -20973,7 +21027,8 @@ function entryCard(e,clients,opts={}){
   const firmaLogoSrc = e.firma ? (isKolos ? LOGOS.kolos_s : LOGOS.post) : null;
   const special = specialClientInfo(e);
   const card=el("div","entry"+(isHighlighted?" highlighted":"")+(e.isNewBusiness?" nb":"")+(e.sleeping?" sleeping":"")); card.style.gridTemplateColumns="1fr";
-  card.dataset.lnk = e.linkId || "";
+  card.dataset.lnk = lnkKluc(e);
+  card.dataset.zak = e.zakazka || "";
   card.dataset.eid = e.id || "";
   if(special && !e.isNewBusiness && !e.sleeping){ card.style.border=`1.5px solid ${hexA(special.color,.35)}`; }
   const canEditE=canEdit(e);
