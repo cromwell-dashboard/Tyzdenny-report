@@ -11019,7 +11019,8 @@ function renderNow(){
   const c=$("#content"); c.innerHTML="";
   if(state.openColFilter) document.onclick=()=>{ if(state.openColFilter){ state.openColFilter=null; document.onclick=null; render(); } };
   _quickStatusTipShown=false;                          // tip o zmene stavu sa ukáže raz za obrazovku
-  setTimeout(oznacPrepojene, 0);                       // spojka pri prepojených záznamoch
+  /* spojka pri prepojených záznamoch — ešte pred vykreslením na obrazovku, inak karty preblikávali */
+  queueMicrotask(()=>{ try{ oznacPrepojene(); }catch(e){ console.warn(e); } });
   /* Práve uložený záznam zvýrazníme a posunieme naň obrazovku. Bez toho ho
      človek po zápise z pripomienky hľadá medzi desiatkami ostatných. */
   if(state.poslednyZapis){
@@ -15784,6 +15785,16 @@ function fpill(icon,label,active,opts,onPick,title,extra){
 /* Čas, podľa ktorého sa záznam radí. Pri New business je to dátum aktivity
    z DMIS — nie čas importu, ten by staré aktivity vyhadzoval navrch. */
 const entryTs = e => {
+  /* Spojená zákazka: poradie podľa poslednej skutočnej aktivity (vznik, dátum,
+     progres / zmena fázy) — nie podľa času uloženia, ktorý menia aj
+     automatické zjednotenia kópií. Inak skákala navrch. */
+  if(e?.linkId){
+    const t=[e.createdAt||0, e.nbImportedAt||0];
+    if(e.datum){ const d=Date.parse(e.datum+"T12:00:00Z"); if(!isNaN(d)) t.push(d); }
+    (e.progres||[]).forEach(p=>{ const k=p.kedy || (p.datum ? Date.parse(p.datum+"T12:00:00Z") : 0); if(k && !isNaN(k)) t.push(k); });
+    const m=Math.max(...t);
+    if(m>0) return m;
+  }
   if(e?.isNewBusiness && e.nbDatum){
     const t=Date.parse(e.nbDatum+"T12:00:00Z");
     if(!isNaN(t)) return Math.max(t, e.updatedAt||0);
