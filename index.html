@@ -4862,6 +4862,8 @@ td.mp-nm[data-roz]{cursor:pointer}
 .flista-btn.kop:hover{background:#DCE2F9}
 .flista-btn.nastroj{background:#EEF0F3;border-color:#D5D9E0;color:#3E56CB}
 .flista-btn.nastroj:hover{background:#E4E7EC;border-color:#C3C9D4}
+/* Mobil: Nový záznam aj Kopírovať sú v okrúhlom „+“ dole, Objednávky a Cenové ponuky netreba */
+@media (max-width:900px){ .flista-len-btn .flista-btn{display:none !important} .flista-len-btn:not(:has(> :not(.flista-btn))){display:none} }
 @media (max-width:900px){ .flista-btn span{display:none} .flista-btn{padding:0 12px} }
 /* Tenšia filtračná lišta (Aktivity, Klienti) — tlačidlá vedľa nej sú tak nižšie */
 .flista:not(.res-flista){padding:2px 6px;border-radius:5px}
@@ -5752,6 +5754,9 @@ td.mp-nm[data-roz]{cursor:pointer}
   <div class="fab-menu" id="fabMenu">
     <button class="fab-item" id="mobFab">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Pridať záznam
+    </button>
+    <button class="fab-item" id="mobKopiruj">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopírovať záznamy
     </button>
     <button class="fab-item fb" id="fbBubble">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Postreh, podnet, návrh
@@ -8469,6 +8474,29 @@ const linkKanon = v => {
 const linkRovnake = (a,b) => JSON.stringify(linkKanon(a))===JSON.stringify(linkKanon(b));
 /* Každé uloženie záznamu zo spojenej zákazky (zmena fázy na karte, progres,
    úprava…) sa prenesie aj na ostatné služby zákazky. */
+/* Jednorazová oprava (len admin, raz v prehliadači): spojené záznamy, ktorým
+   predchádzajúca chyba opakovane prepisovala čas úpravy, dostanú späť čas
+   svojej poslednej skutočnej aktivity — aby sa nedávali navrch zoznamu. */
+let _linkCasNaplanovane=false;
+function linkCasOpravaNaplanuj(){
+  if(_linkCasNaplanovane || state.user?.role!=="admin" || !(state.all||[]).length) return;
+  try{ if(localStorage.getItem("zappis_linkCas1")) return; }catch(_){ return; }
+  _linkCasNaplanovane=true;
+  setTimeout(async()=>{
+    let n=0;
+    for(const e of (state.all||[]).filter(x=>x.linkId)){
+      const casy=[e.createdAt||0, e.nbImportedAt||0,
+        ...(e.progres||[]).map(p=>p.kedy || (p.datum ? Date.parse(p.datum+"T12:00:00Z") : 0) || 0)];
+      if(e.datum){ const t=Date.parse(e.datum+"T12:00:00Z"); if(!isNaN(t)) casy.push(t); }
+      const real=Math.max(...casy.filter(x=>x && !isNaN(x)));
+      if(real>0 && (e.updatedAt||0)-real > 36*3600*1000){
+        try{ await backend.save({...e, updatedAt:real}, { zachovajCas:true }); n++; }catch(err){ console.warn(err); }
+      }
+    }
+    try{ localStorage.setItem("zappis_linkCas1", String(Date.now())); }catch(_){}
+    if(n) console.info("Opravený čas pri spojených záznamoch:", n);
+  }, 6000);
+}
 function prepojSave(b){
   if(!b || b._prepoj) return b;
   const povodne=b.save.bind(b);
@@ -9922,7 +9950,50 @@ function demoBackend(){
 async function firebaseBackend(){
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js");
   const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js");
-  const { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, query, where, onSnapshot, doc, setDoc, deleteDoc, getDoc, getDocs, arrayUnion, arrayRemove, writeBatch } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js");
+  const { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, query, where, onSnapshot, doc, setDoc: setDocRaw, deleteDoc, getDoc, getDocs, arrayUnion, arrayRemove, writeBatch: writeBatchRaw,
+    serverTimestamp, Timestamp, getDocsFromCache, CACHE_SIZE_UNLIMITED } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js");
+  /* Každý zápis do aktivít dostane čas zmeny zo servera (zmenene). Podľa neho
+     si Zappis pri otvorení stiahne len to, čo sa od minula zmenilo. */
+  const tagni=(ref,data)=> (ref?.parent?.id==="entries" && data && typeof data==="object" && !Array.isArray(data)) ? {...data, zmenene:serverTimestamp()} : data;
+  const setDoc=(ref,data,opts)=> opts===undefined ? setDocRaw(ref,tagni(ref,data)) : setDocRaw(ref,tagni(ref,data),opts);
+  const writeBatch=d=>{ const b=writeBatchRaw(d); const st=b.set.bind(b), up=b.update.bind(b);
+    b.set=(r,data,o)=> o===undefined ? st(r,tagni(r,data)) : st(r,tagni(r,data),o);
+    b.update=(r,data,...rest)=> (data && typeof data==="object") ? up(r,tagni(r,data),...rest) : up(r,data,...rest);
+    return b; };
+  /* Aktivity: raz týždenne (alebo pri prvom otvorení) sa stiahnu všetky, inak sa
+     zobrazia z kópie v prehliadači a zo servera prídu len zmeny od posledného
+     otvorenia. Výrazne to znižuje počet čítaní z databázy. */
+  function spustiZaznamy(){
+    const mapa=new Map(); let zmazane=new Set(); const zrus=[]; let koniec=false;
+    const KLUC="zappis_sync_v1";
+    let info={}; try{ info=JSON.parse(localStorage.getItem(KLUC)||"{}")||{}; }catch(_){ info={}; }
+    const ulozInfo=()=>{ try{ localStorage.setItem(KLUC, JSON.stringify(info)); }catch(_){} };
+    const daj=d=>({ id:d.id, comments:[], ...d.data() });
+    const publikuj=()=>{ if(koniec) return; state.all=[...mapa.values()].filter(e=>!zmazane.has(e.id)); _ciCache=null; gsInvalidate(); render(); };
+    const teraz=Date.now();
+    const plne = !info.posl || !info.plne || (teraz-info.plne) > 7*864e5;
+    (async()=>{
+      const vsetko=async()=>{ const sn=await getDocs(query(collection(db,"entries"))); mapa.clear(); sn.docs.forEach(d=>mapa.set(d.id,daj(d))); info.plne=Date.now(); };
+      try{
+        if(plne) await vsetko();
+        else {
+          const sn=await getDocsFromCache(query(collection(db,"entries")));
+          if(sn.size) sn.docs.forEach(d=>mapa.set(d.id,daj(d))); else await vsetko();
+        }
+      }catch(err){ console.warn("Aktivity z kópie sa nepodarilo načítať, sťahujem všetko:", err); try{ await vsetko(); }catch(e2){ console.error(e2); } }
+      if(koniec) return;
+      publikuj();
+      const od=(plne ? teraz : info.posl) - 15*60*1000;          // rezerva na rozdiel hodín
+      const zmeny=sn=>{ let n=0; sn.docChanges().forEach(ch=>{ if(ch.type==="removed") return; mapa.set(ch.doc.id, daj(ch.doc)); n++; });
+        if(!sn.metadata.fromCache){ info.posl=Date.now(); ulozInfo(); }
+        if(n) publikuj(); };
+      ulozInfo();
+      zrus.push(onSnapshot(query(collection(db,"entries"), where("zmenene",">",Timestamp.fromMillis(od))), zmeny, err=>console.warn("zmeny aktivít:", err)));
+      zrus.push(onSnapshot(query(collection(db,"entries"), where("updatedAt",">",od)), zmeny, err=>console.warn("zmeny aktivít (čas):", err)));
+      zrus.push(onSnapshot(doc(db,"meta","zmazaneZaznamy"), sn=>{ zmazane=new Set(sn.exists()?(sn.data().ids||[]):[]); publikuj(); }, ()=>{}));
+    })();
+    return ()=>{ koniec=true; zrus.forEach(f=>{ try{ f(); }catch(_){} }); };
+  }
   const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js");
   const app=initializeApp(firebaseConfig); const auth=getAuth(app);
   /* Lokálna kópia dát v prehliadači (IndexedDB): pri ďalšom otvorení sa Zappis
@@ -9930,7 +10001,7 @@ async function firebaseBackend(){
      štarte sťahovali všetky záznamy, výsledky a odmeny nanovo. Ak prehliadač
      lokálne úložisko nedovolí, Firestore funguje ďalej ako doteraz. */
   let db;
-  try{ db=initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+  try{ db=initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager(), cacheSizeBytes: CACHE_SIZE_UNLIMITED }) }); }
   catch(e){ console.warn("Lokálna cache nie je dostupná:", e); db=getFirestore(app); }
   const fx=getFunctions(app,"europe-west1");
   const improveTextCallable=httpsCallable(fx,"improveText");
@@ -9984,7 +10055,7 @@ async function firebaseBackend(){
     logout(){ return signOut(auth); },
     start(){
       if(unsub) unsub();
-      const u1=onSnapshot(query(collection(db,"entries")), snap=>{ state.all=snap.docs.map(d=>({id:d.id,comments:[],...d.data()})); _ciCache=null; gsInvalidate(); render(); });
+      const u1=spustiZaznamy();
       const u2=onSnapshot(query(collection(db,"tasks")), snap=>{ state.tasks=snap.docs.map(d=>({id:d.id,...d.data()})); gsInvalidate(); render(); });
       const u3=onSnapshot(doc(db,"meta","hiddenClients"), snap=>{ state.hiddenClientNames=snap.exists()?(snap.data().names||[]):[]; render(); });
       const u7=onSnapshot(doc(db,"meta","approachInfo"), snap=>{ state.approachInfos=snap.exists()?(snap.data().values||[]):[]; render(); });
@@ -10097,7 +10168,11 @@ async function firebaseBackend(){
     async doplnIco(id, ico){ await setDoc(doc(db,"entries",id),{leadIco:ico},{merge:true}); },
     async improveText(text){ const res=await improveTextCallable({text}); return res.data; },
     async generateSuggestionsAI(payload){ const res=await generateSuggestionsCallable(payload); return res.data; },
-    remove(id){ return deleteDoc(doc(db,"entries",id)); },
+    async remove(id){
+      await deleteDoc(doc(db,"entries",id));
+      /* zoznam zmazaných — ostatní si zmazanie všimnú bez nového sťahovania všetkého */
+      try{ await setDocRaw(doc(db,"meta","zmazaneZaznamy"),{ids:arrayUnion(id)},{merge:true}); }catch(err){ console.warn("zmazané:", err); }
+    },
     async hideClientName(name){ await setDoc(doc(db,"meta","hiddenClients"),{names:arrayUnion(name)},{merge:true}); },
     async unhideClientName(name){ await setDoc(doc(db,"meta","hiddenClients"),{names:arrayRemove(name)},{merge:true}); },
     async toggleWeeklyDone(weekId,group,userKey,userName){
@@ -10630,6 +10705,10 @@ function buildStatic(){
     document.addEventListener("click", (ev)=>{
       const fb=ev.target.closest && ev.target.closest("#fbBubble,#railFb");
       if(fb){ ev.preventDefault(); closeFabMenu(); openFeedback(); return; }
+      if(ev.target.closest && ev.target.closest("#mobKopiruj")){ ev.preventDefault(); ev.stopPropagation(); closeFabMenu(); kopirujZaznamy($("#fabToggle"));
+        /* výber služby otvoríme nad tlačidlom „+“, nie pod obrazovkou */
+        setTimeout(()=>{ const q=document.querySelector(".qsp"); if(q){ Object.assign(q.style,{position:"fixed",top:"auto",left:"auto",right:"14px",bottom:"calc(150px + env(safe-area-inset-bottom))",maxHeight:"60vh",overflow:"auto"}); } },0);
+        return; }
       const ad=ev.target.closest && ev.target.closest("#railAdd,#mobFab,#addBtn,#addBtnTop");
       if(ad){ ev.preventDefault(); closeFabMenu(); openModal(null, (state.aktSluzby||[]).length===1 ? state.aktSluzby[0] : null); }
     });
@@ -10761,6 +10840,7 @@ function renderNow(){
      v nich niečo zlyhalo, obsah stránky sa musí vykresliť tak či tak.
      Inak zostane appka prázdna a vyzerá to, akoby sa nenačítali dáta. */
   try{ vykresliSvcBar(); }catch(e){ console.error("filter služieb:", e); }
+  try{ linkCasOpravaNaplanuj(); }catch(e){}
   try{ vykresliRailFiltre(); }catch(e){ console.error("filtre v menu:", e); }
   /* Otvorenú ponuku zatvárame len pri zmene sekcie — inak by ju zavrel
      každý príchod dát z Firestore. */
