@@ -16,7 +16,11 @@
   p{margin:0 0 18px;color:#5A6478}
   a.btn{display:inline-block;background:#3E56CB;color:#fff;text-decoration:none;font-weight:600;padding:10px 18px;border-radius:8px}
   .pozn{background:#FFF8E6;border:1px solid #F1DFAE;border-radius:8px;padding:10px 12px;color:#6B5A2E;font-size:14px;text-align:left}
-  .odp{font-size:13px;margin-bottom:14px}
+  .odp{margin:0 0 16px;padding:12px 14px;background:#EEF1FC;border:1px solid #C9D2F4;border-radius:8px;color:#2E43A8;font-size:16px;font-weight:600}
+  .odp b{font-size:22px;color:#3E56CB}
+  .bar{height:5px;background:#D6DCF5;border-radius:3px;margin-top:10px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:#3E56CB;animation:napln 5s linear forwards}
+  @keyframes napln{to{width:100%}}
   .url{display:block;margin-top:14px;font-size:13px;color:#3E56CB;word-break:break-all}
 </style>
 </head>
@@ -25,7 +29,7 @@
     <h1>Zappis sa presťahoval</h1>
     <p>Zappis má novú adresu. Prosím, zmeňte si záložku.</p>
     <p class="pozn">Prvé otvorenie na novej adrese môže trvať dlhšie, pretože sa načítavajú všetky záznamy. Každé ďalšie otvorenie už prebehne normálne.</p>
-    <p class="odp">Presmerujeme vás o <b id="s">5</b> s…</p>
+    <div class="odp">Automaticky vás presmerujeme o <b id="s">5</b> s<div class="bar"><i></i></div></div>
     <a class="btn" href="https://cromwellgroup-nastroje.web.app/zappis/">Otvoriť Zappis</a>
     <span class="url">cromwellgroup-nastroje.web.app/zappis/</span>
   </div>
