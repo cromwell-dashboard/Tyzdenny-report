@@ -4034,6 +4034,21 @@ td.mp-nm[data-roz]{cursor:pointer}
 .rl-karta-h>div{flex:1;min-width:0}
 .rl-karta-h b{display:block;font-size:13.5px}
 .rl-karta-h small{font-size:11.5px;color:var(--muted)}
+.rl-mseg{margin:4px 0 14px}
+.rl-mseg-rad{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.rl-mseg-b{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:58px;padding:6px 2px;border-radius:10px;
+  border:1.5px dashed #CDD2DB;background:#F4F5F7;font:inherit;cursor:pointer;min-width:0}
+.rl-mseg-b .rl-mseg-ic{color:#A3A9B5;display:grid;place-items:center;line-height:0}
+.rl-mseg-b .rl-mseg-ic svg{stroke:#A3A9B5 !important;width:20px;height:20px}
+.rl-mseg-b .rl-mseg-t{font-size:10px;font-weight:600;color:#9AA1AE;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rl-mseg-b.hot{border:1.5px solid color-mix(in srgb, var(--sf) 45%, #fff);background:color-mix(in srgb, var(--sf) 10%, #fff)}
+.rl-mseg-b.hot .rl-mseg-ic,.rl-mseg-b.hot .rl-mseg-t{color:var(--sf)}
+.rl-mseg-b.hot .rl-mseg-ic svg{stroke:var(--sf) !important}
+.rl-mseg-b.on{box-shadow:0 0 0 2px var(--brand);border-style:solid}
+.rl-mseg-leg{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.rl-mseg-leg .d{width:9px;height:9px;border-radius:3px;border:1.5px dashed #CDD2DB;background:#F4F5F7;margin-left:4px}
+.rl-mseg-leg .d.hot{border:1.5px solid #AFC0F0;background:#E9EEFC;margin-left:0}
+.rl-mseg-vs{border:0;background:none;color:var(--brand);font:inherit;font-weight:600;padding:0;cursor:pointer}
 .rl-av{width:32px;height:32px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
 .rl-citanie{display:block}
 .rl-cb-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--brand);margin-bottom:3px}
@@ -18213,7 +18228,28 @@ function viewReportLidra(){
       return `<button type="button" class="rl-p rl-${st.k}${ja?" ja":""}" data-em="${esc(x)}" aria-label="${esc(rlMenoLidra(x))} · ${esc(st.t)}"><span class="rl-p-av">${esc(inic(rlMenoLidra(x)))}</span>${hot?`<span class="rl-p-ck">✓</span>`:""}<small>${ja?"Ja":esc(rlMenoLidra(x).split(" ")[0])}</small><span class="rl-p-tip">${esc(rlMenoLidra(x))} · ${esc(st.t)}</span></button>`; }).join("")}</div>`;
   pr.querySelectorAll(".rl-p").forEach(b=>b.onclick=()=>{ const c=document.getElementById("rl-r-"+b.dataset.em.replace(/[^a-z0-9]/gi,"_")) || document.getElementById("rl-s-"+((LIDER_EMAILS[b.dataset.em]||[])[0]||"")); if(!c) return;
     c.scrollIntoView({behavior:"smooth", block:"center"}); c.classList.remove("rl-flash"); void c.offsetWidth; c.classList.add("rl-flash"); });
-  wrap.appendChild(pr);
+  if(innerWidth>900) wrap.appendChild(pr);
+  else {
+    /* Mobil: 7 ikoniek služieb vedľa seba — farebná = report odovzdaný,
+       sivá = zatiaľ nie. Klik zobrazí len report tej služby, druhý klik všetky. */
+    const vybM=state.rlSluzby||[];
+    const ms=el("div","rl-mseg");
+    const rad=el("div","rl-mseg-rad");
+    RL_SLUZBY_PORADIE.forEach(sg=>{
+      if(!rlHlavniLidri(sg).length && !rlVynimkyLidri(sg).length) return;
+      const hot=rlSegmentHotovy(week,sg), on=vybM.includes(sg);
+      const farba = sg==="newbusiness" ? "var(--nb)" : (SEG[sg]?.color||"var(--brand)");
+      const b=el("button","rl-mseg-b"+(hot?" hot":"")+(on?" on":""),
+        `<span class="rl-mseg-ic">${rlIkonaSluzby(sg,20)}</span><span class="rl-mseg-t">${esc(({ad:"Adresné",nad:"Neadr.",zelena:"Zelená",digital:"Digitál",newbusiness:"NB"})[sg] || rlNazovSluzby(sg))}</span>`);
+      b.type="button"; b.style.setProperty("--sf", farba);
+      b.title=`${rlNazovSluzby(sg)} · ${hot?"report odovzdaný":"zatiaľ nie je odovzdaný"}`;
+      b.onclick=()=>{ state.rlSluzby = on ? [] : [sg]; render(); };
+      rad.appendChild(b);
+    });
+    ms.appendChild(rad);
+    ms.appendChild(el("div","rl-mseg-leg",`<span class="d hot"></span>odovzdané<span class="d"></span>zatiaľ nie · klik zobrazí len danú službu`));
+    wrap.appendChild(ms);
+  }
 
   // môj report — editor
   if(jeLiderReportu()){
